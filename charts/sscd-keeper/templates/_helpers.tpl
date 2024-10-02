@@ -49,14 +49,3 @@ Selector labels
 app.kubernetes.io/name: {{ include "sscd-keeper.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
-
-{{/*
-Create the name of the service account to use
-*/}}
-{{- define "sscd-keeper.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "sscd-keeper.fullname" .) .Values.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.serviceAccount.name }}
-{{- end }}
-{{- end }}
