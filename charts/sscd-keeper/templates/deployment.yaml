@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sscd-keeper.fullname" . }}
+  labels:
+    {{- include "sscd-keeper.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.keeper.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "sscd-keeper.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.keeper.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "sscd-keeper.labels" . | nindent 8 }}
+        {{- with .Values.keeper.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.keeper.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.keeper.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.keeper.securityContext | nindent 12 }}
+          image: "{{ .Values.keeper.image.repository }}:{{ .Values.keeper.image.tag }}"
+          imagePullPolicy: {{ .Values.keeper.image.pullPolicy }}
+          {{- if .Values.keeper.resources }}
+          resources: {{- toYaml .Values.keeper.resources | nindent 12 }}
+          {{- else if ne .Values.keeper.resourcesPreset "none" }}
+          resources: {{- include "resources.preset" (dict "type" .Values.keeper.resourcesPreset) | nindent 12 }}
+          {{- end }}
+          {{- with .Values.keeper.extraVolumeMounts }}
+          extraVolumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.keeper.extraVolumes }}
+      extraVolumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.keeper.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.keeper.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.keeper.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
