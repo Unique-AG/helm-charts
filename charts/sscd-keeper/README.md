@@ -33,7 +33,7 @@ Note that if you need more sophisticated features, or a officially maintained ch
 | keeper.podLabels | object | `{}` | This is for setting Kubernetes Labels to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ |
 | keeper.podSecurityContext | object | `{}` | Toggle and define pod-level security context. |
 | keeper.replicaCount | int | `2` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
-| keeper.resourcesPreset | string | `"yocto"` | Set container resources according to one common preset (allowed values: none, yocto, zepto, atto).  |
+| keeper.resourcesPreset | string | `"yocto"` | Set container resources according to one common preset (allowed values: none, yocto, zepto, atto). |
 | keeper.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true}` | Toggle and define security context. |
 | keeper.tolerations | list | `[]` | Tolerations for the keeper |
 | nameOverride | string | `""` | This is to override the release name. |
