@@ -47,9 +47,9 @@ keeper:
 
   # keeper containers' resource requests and limits
   # ref: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
-  # -- Set container resources according to one common preset (allowed values: none, yocto, zepto, atto). 
+  # -- Set container resources according to one common preset (allowed values: none, yocto, zepto, atto).
   resourcesPreset: "yocto"
-  
+
   # -- Set container requests and limits for different resources like CPU or memory (essential for production workloads)
   # resources: {}
   # @ignored
