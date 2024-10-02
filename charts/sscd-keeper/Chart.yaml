@@ -1,5 +1,8 @@
 apiVersion: v2
 type: application
+maintainers:
+  - name: unique-ag
+    url: https://unique.ch/
 name: sscd-keeper
 version: 0.1.0
 description: |
