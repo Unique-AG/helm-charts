@@ -1,0 +1,12 @@
+apiVersion: v2
+type: application
+name: sscd-keeper
+version: 0.1.0
+description: |
+  The SSCD ([Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/)) Keeper (`sscd-keeper`) is a chart that combines the often used `SecretProviderClass`, which is part of the SSCD with a running deployment that mounts the matching secrets making them available to others within the same namespace.
+  
+  This chart is a pet project of Unique to code more _DRY_ and not officially supported by the maintainers of the `Secrets Store CSI Driver`. Unique also prototypes new features, processes or ideas with this chart (e.g. chart signing). This chart is also not an official Helm chart of Unique AG and underlies no SLA or support even if used in production.
+  
+  Since Unique is at the time of writing Azure focused, leveraging the Azure managed AKS CSI Extension is sometimes simpler than manually installing other Secret _solutions_.
+  
+  Note that if you need more sophisticated features, or a officially maintained chart or option that supports reloading, ClusterSecrets etc, seek matching alternatives on your own behalf (e.g. [External Secrets Operator](https://external-secrets.io/latest/)).
