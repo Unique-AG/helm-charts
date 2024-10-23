@@ -1,4 +1,4 @@
-# Default values for sscd-keeper.
+# Default values for sscsid-keeper.
 # -- This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -8,6 +8,7 @@ nameOverride: ""
 # -- This is to override the full name.
 fullnameOverride: ""
 
+# -- Set options for the deployed keeper, its deployment and pods respectively.
 keeper:
   # -- This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
   replicaCount: 2
@@ -20,6 +21,10 @@ keeper:
     pullPolicy: IfNotPresent
     # -- Overrides the image tag whose default is the chart appVersion.
     tag: 1.37.0
+
+  # -- command to run in the container
+  # @default - `["/bin/sleep", "99999"]`
+  # command: ["/bin/sleep", "99999"]
 
   # -- This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
   imagePullSecrets: []
@@ -59,20 +64,6 @@ keeper:
     # requests:
     #   cpu: 100m
     #   memory: 128Mi
-
-  # -- Additional volumes on the output Deployment definition.
-  extraVolumes: []
-  # - name: foo
-  #   secret:
-  #     secretName: mysecret
-  #     optional: false
-
-  # -- Additional volumeMounts on the output Deployment definition.
-  extraVolumeMounts: []
-  # - name: foo
-  #   mountPath: "/etc/foo"
-  #   readOnly: true
-
   # -- Node Selector for the keeper
   nodeSelector: {}
 
@@ -81,3 +72,20 @@ keeper:
 
   # -- Default affinity preset for the keeper
   affinity: {}
+
+# -- Set options for the Secret Provider Class
+spc:
+
+  # -- Azure KeyVault which stores the secrets, must be available over the network
+  kvName: "keyvault-name"
+
+  # -- Azure Entra ID Tenant ID wherein the Managed Identity is present
+  tenantId: "00000000-0000-0000-0000-000000000000"
+
+  # -- Azure Entra ID Identity Client ID
+  identityId: "00000000-0000-0000-0000-000000000000"
+
+  # -- Set the secret objects for the Secret Provider Class
+  secrets: []
+    # - k8sSecretDataKey: APISecret
+    #   kvObjectName: some-secret-in-kv
