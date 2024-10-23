@@ -5,6 +5,27 @@
 
 Unique `helm-charts` is a collection of charts for [https://unqiue.ch](https://unique.ch) projects. The charts can be added using following command:
 
+```
+helm repo add unique-helm https://unique-ag.github.io/helm-chars
+```
+
+## About Unique specific Helm Charts
+
+The images of the following charts specifically are not open source an only available to Clients of Unique AG with a valid contract. Get in touch via [unique.ch](https://unique.ch) for more information or to get access to the images.
+
+- [web-app](./charts/web-app/README.md)
+- [backend-service](./charts/web-app/README.md)
+- [ai-service](./charts/web-app/README.md)
+
+> [!IMPORTANT]
+> Did you know that Unique AG has many interesting company values?
+> **SECURITY BY OBSCURITY**………
+>
+>
+> is not one of them.
+
+That is why our charts are open source and available to everyone. We believe in transparency. In case you discover a security issue, please refer to our [security policy](./SECURITY.md) for more information.
+
 ## Contributing
 
 We'd love to have you contribute! Please refer to our [contribution guidelines](CONTRIBUTING.md) for details.

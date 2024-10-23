@@ -59,7 +59,7 @@ jobs:
         uses: helm/chart-releaser-action@a917fd15b20e8b64b94d9158ad54cd6345335584 # v1.6.0
         with:
           config: "./.github/configs/cr.yaml"
-          skip_existing: false #! FIXME: Once the workflows flow, do not change immutable artefacts!
+          skip_existing: true # immutable artifacts
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
