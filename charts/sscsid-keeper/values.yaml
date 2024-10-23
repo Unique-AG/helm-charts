@@ -25,7 +25,7 @@ keeper:
   # -- command to run in the container
   # @default - `["/bin/sleep", "99999"]`
   # command: ["/bin/sleep", "99999"]
-  
+
   # -- This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
   imagePullSecrets: []
 
