@@ -32,12 +32,12 @@ securityContext: {}
 
 deployment:
   enabled: true
-  # metadata: 
+  # metadata:
   #   labels:
   #     app: backend-service
   #   annotations:
   #     prometheus: "true"
-  # initContainers: 
+  # initContainers:
   #   - command:
   #       - sh
   #       - -c
@@ -57,7 +57,8 @@ tyk:
   enabled: true
   listenPath: ""
   jwtSource: https://id.unique.app/oauth/v2/keys
-  rateLimit: {}
+  rateLimit:
+    {}
     # Limit per interval, example values are default values
     # Rate limit can not be disabled fully only increased, we learned some lessons 🩸
     # rate: 20 # requests to the key
@@ -106,9 +107,9 @@ httproute:
   hostnames: []
   rules:
     - matches:
-      - path:
-          type: PathPrefix
-          value: /
+        - path:
+            type: PathPrefix
+            value: /
       # backendRefs can be omitted to use the default service
       # backendRefs:
       #   - name: custom-service
@@ -126,7 +127,7 @@ httproute:
     #     - name: api-v2
     #       kind: Service
     #       port: 8081
-    
+
   # Additional HTTPRoutes
   additionalRoutes: []
 
@@ -217,7 +218,7 @@ cronJob:
     containers:
       name: ""
   env: {}
-  # initContainers: 
+  # initContainers:
   #   - command:
   #       - sh
   #       - -c
@@ -285,7 +286,7 @@ hooks:
     enabled: false
     # name: "" defaults to db-migration
     command: ""
-    # initContainers: 
+    # initContainers:
     #   - command:
     #       - sh
     #       - -c
@@ -304,16 +305,17 @@ eventBasedAutoscaling:
     timezone: Europe/Zurich
     start: 0 8 * * 1-5
     end: 0 19 * * 1-5
-    desiredReplicas: '1'
+    desiredReplicas: "1"
   rabbitmq:
     protocol: auto
     # queueName: ""
     mode: QueueLength
-    value: '1'
+    value: "1"
     hostFromEnv: AMQP_URL
   customTriggers: []
 
-externalSecrets: []
+externalSecrets:
+  []
   # - keyvaultName: my-keyvault
   #   keyvaultURL: "https://my-keyvault:8989" # private keyvault
   #   identityId: "xxx-xxxxxx-xxx-xxxx"

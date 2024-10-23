@@ -17,7 +17,7 @@ fullnameOverride: ""
 serviceAccount:
   enabled: false
   annotations: {}
-  #name: ""
+  # name: ""
   workloadIdentity: {}
 
 podAnnotations: {}
@@ -47,7 +47,7 @@ extraEnvSecrets: []
 
 probes:
   enabled: false
-  liveness: 
+  liveness:
     httpGet:
       path: /probe
       port: http
@@ -94,12 +94,12 @@ eventBasedAutoscaling:
     timezone: Europe/Zurich
     start: 0 8 * * 1-5
     end: 0 19 * * 1-5
-    desiredReplicas: '1'
+    desiredReplicas: "1"
   rabbitmq:
     protocol: auto
     queueName: ""
     mode: QueueLength
-    value: '1'
+    value: "1"
     hostFromEnv: AMQP_URL
   customTriggers: []
 
@@ -138,10 +138,11 @@ secretProvider: {}
 #       MY_ENV_VARIABLE_1: keyvault-secret-name-a
 #     vault-name-2:
 #       MY_ENV_VARIABLE_2: keyvault-secret-name-b
-deployment: {}
+deployment:
+  {}
   # initContainers:
   # - name: model-downloader
-  #   image: python:3.9  
+  #   image: python:3.9
   #   command:
   #     - sh
   #     - -c

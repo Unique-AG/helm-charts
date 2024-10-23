@@ -51,9 +51,9 @@ httproute:
   hostnames: []
   rules:
     - matches:
-      - path:
-          type: PathPrefix
-          value: /
+        - path:
+            type: PathPrefix
+            value: /
       # backendRefs can be omitted to use the default service
       # backendRefs:
       #   - name: custom-service
@@ -71,10 +71,9 @@ httproute:
     #     - name: api-v2
     #       kind: Service
     #       port: 8081
-    
+
   # Additional HTTPRoutes
   additionalRoutes: []
-
 
 env: {}
 
