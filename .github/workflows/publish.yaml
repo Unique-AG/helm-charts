@@ -77,5 +77,6 @@ jobs:
             if [ -z "${pkg:-}" ]; then
               break
             fi
+            echo "Pushing $pkg"
             helm push "${pkg}" oci://ghcr.io/${{ github.repository }}
           done
