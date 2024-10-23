@@ -2,6 +2,31 @@ apiVersion: v1
 entries:
   sscsid-keeper:
   - apiVersion: v2
+    created: "2024-10-23T19:41:57.280494084Z"
+    description: 'The SSCSID ([Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/))
+      Keeper (`sscsid-keeper`) is a chart that combines the often used `SecretProviderClass`,
+      which is part of the SSCSID with a running deployment that mounts the matching
+      secrets making them available to others within the same namespace.  This chart
+      is a pet project of Unique to code more _DRY_ and not officially supported by
+      the maintainers of the `Secrets Store CSI Driver`. Unique also prototypes new
+      features, processes or ideas with this chart (e.g. chart signing). This chart
+      is also not an official Helm chart of Unique AG and underlies no SLA or support
+      even if used in production.  Since Unique is at the time of writing Azure focused,
+      leveraging the Azure managed AKS CSI Extension is sometimes simpler than manually
+      installing other Secret _solutions_.  Note that if you need more sophisticated
+      features, or a officially maintained chart or option that supports reloading,
+      ClusterSecrets etc, seek matching alternatives on your own behalf (e.g. [External
+      Secrets Operator](https://external-secrets.io/latest/)). '
+    digest: 8d33a563d4118954d00ac6f768a35ce781eb1dabd18d6e40d06ffb8a1385a511
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: sscsid-keeper
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/sscsid-keeper-0.1.2/sscsid-keeper-0.1.2.tgz
+    version: 0.1.2
+  - apiVersion: v2
     created: "2024-10-23T19:35:13.049203606Z"
     description: 'The SSCSID ([Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/))
       Keeper (`sscsid-keeper`) is a chart that combines the often used `SecretProviderClass`,
@@ -51,4 +76,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/sscsid-keeper-0.1.0/sscsid-keeper-0.1.0.tgz
     version: 0.1.0
-generated: "2024-10-23T19:35:13.049218064Z"
+generated: "2024-10-23T19:41:57.280505706Z"
