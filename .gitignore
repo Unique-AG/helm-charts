@@ -4,3 +4,5 @@ output
 .idea
 **/*.tgz
 **/charts/*/charts
+__snapshot__
+.debug

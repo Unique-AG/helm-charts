@@ -1,0 +1,191 @@
+{{- $fullName := include "common.fullname" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  {{- if and (not .Values.autoscaling.enabled) (not .Values.eventBasedAutoscaling.enabled) }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "common.selectorLabels" . | nindent 6 }}
+  strategy:
+    {{- with .Values.rollingUpdate }}
+    rollingUpdate:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  minReadySeconds: {{ .Values.minReadySeconds | default 0 }}
+  template:
+    metadata:
+      annotations:
+      {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+        checksum/deployment-env: {{ include (print $.Chart.Name "/templates/deployment-env.yaml") . | sha256sum | trunc 8 | quote }}
+        {{- if .Values.envSecrets }}
+        checksum/secrets: {{ include (print $.Chart.Name "/templates/secrets.yaml") . | sha256sum | trunc 8 | quote }}
+        {{- end }}
+      labels:
+        {{- include "common.selectorLabels" . | nindent 8 }}
+       {{- if and (.Values.secretProvider) (not .Values.secretProvider.useVMManagedIdentity) }}
+        aadpodidbinding: {{ default "keyvault" (.Values.secretProvider).aadPodIdBinding }}
+        {{- end }}
+        {{- if .Values.serviceAccount.workloadIdentity.enabled }}
+        azure.workload.identity/use: 'true'
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "common.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if .Values.deployment.initContainers }}
+      initContainers:
+      {{- range .Values.deployment.initContainers }}
+        - name: {{ .name | default (printf "init-%s" $fullName) }}
+          image: "{{ .image | default "busybox:1.28" }}"
+          restartPolicy: "{{ .restartPolicy | default "Always" }}"
+          command: {{ .command | toYaml | nindent 10 }}
+          {{- if .volumeMounts }}
+          volumeMounts:
+          {{- range .volumeMounts }}
+            - name: {{ .name}}
+              mountPath: {{ .mountPath}}
+              readOnly: {{ .readOnly | default false }}
+          {{- end }}
+          {{- end }}
+      {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ include "common.fullname" . }}
+          lifecycle:
+            {{- toYaml .Values.lifecycle | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          {{- if .Values.probes.enabled }}
+          {{- if .Values.probes.liveness }}
+          livenessProbe:
+            {{- toYaml .Values.probes.liveness | nindent 12 }}
+          {{- end }}
+          {{- if .Values.probes.readiness }}
+          readinessProbe:
+            {{- toYaml .Values.probes.readiness | nindent 12 }}
+          {{- end }}
+          {{- if .Values.probes.startup }}
+          startupProbe:
+            {{- toYaml .Values.probes.startup | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: {{ $fullName }}-env
+            {{- if .Values.envSecrets }}
+            - secretRef:
+                name: {{ $fullName }}-secrets
+            {{- end }}
+            {{- if .Values.extraEnvCM }}
+            {{- range $v := .Values.extraEnvCM }}
+            - configMapRef:
+                name: {{ $v }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.extraEnvSecrets }}
+            {{- range $v := .Values.extraEnvSecrets }}
+            - secretRef:
+                name: {{ $v }}
+            {{- end }}
+            {{- end }}
+          env:
+            {{- if .Values.secretProvider }}
+            {{- range $k, $v := .Values.secretProvider.vaults }}
+            {{- range $key, $value := $v }}
+            - name: {{ $key }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $fullName }}-{{ $k }}
+                  key: {{ $value }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
+          volumeMounts:
+          {{- if .Values.deployment.initContainers }}
+          {{- range .Values.deployment.initContainers }}
+          {{- if .volumeMounts }}
+          {{- range .volumeMounts }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPathDeployment | default .mountPath }}
+              readOnly: {{ .readOnly | default false }}
+          {{- end }}
+          {{- end }}   
+          {{- end }}
+          {{- end }}
+          {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if .Values.secretProvider }}
+          {{- range $k, $v := .Values.secretProvider.vaults }}
+             - name: {{ $fullName }}-{{ $k }}
+               mountPath: "/mnt/{{ $fullName }}-{{ $k }}"
+               readOnly: true
+           {{- end }}
+           {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+      {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.pvc.enabled }}
+        - name: {{ .Values.pvc.name | default $fullName }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.pvc.name | default $fullName }}
+      {{- end }}
+      {{- if .Values.deployment.initContainers }}
+      {{- range .Values.deployment.initContainers }}
+      {{- if .volumeMounts }}
+      {{- range .volumeMounts }}
+       {{- if eq .emptyDir true }}
+        - name: {{ .name }}
+          emptyDir: {}
+       {{- end }}
+      {{- end }}
+      {{- end }}   
+      {{- end }}
+      {{- end }}
+      {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.secretProvider }}
+      {{- range $k, $v := .Values.secretProvider.vaults }}
+        - name: {{ $fullName }}-{{ $k }}
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ $fullName }}-{{ $k }}
+      {{- end }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}

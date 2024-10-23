@@ -1,0 +1,44 @@
+{{- if .Values.prometheus.enabled }}
+{{- $fullName := include "backendService.fullname" . -}}
+{{- $labels := include "backendService.labels" . -}}
+{{- $team := .Values.prometheus.team -}}
+{{- $selectorLabels := include "backendService.selectorLabels" . -}}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{- include "backendService.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "backendService.selectorLabels" . | nindent 6 }}
+  podMetricsEndpoints:
+  - port: http
+{{- if gt (len .Values.prometheus.rules) 0 }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{- $labels | nindent 4 }}
+    role: alert-rules
+spec:
+  groups:
+    - name: {{ $fullName }}
+      rules:
+      {{- range $k, $v := .Values.prometheus.rules }}
+      - alert: {{ $k }}
+        expr: >-
+          {{- $v.expression | nindent 10 }}
+        for: {{ $v.for }}
+        labels:
+          team: {{ $team }}
+          severity: {{ $v.severity }}
+          {{- range $k, $value := $v.labels }}
+          {{ $k }}: {{`"{{ $labels.`}}{{ $value }}{{` }}"`}}
+          {{- end }}
+      {{- end }}
+{{- end }}
+{{- end }}
