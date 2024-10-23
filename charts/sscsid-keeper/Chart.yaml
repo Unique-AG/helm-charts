@@ -1,5 +1,6 @@
 apiVersion: v2
 type: application
+icon: https://raw.githubusercontent.com/unique-ag/helm-charts/main/icon.svg
 maintainers:
   - name: unique-ag
     url: https://unique.ch/
