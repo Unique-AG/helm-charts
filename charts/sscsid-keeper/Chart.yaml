@@ -3,10 +3,10 @@ type: application
 maintainers:
   - name: unique-ag
     url: https://unique.ch/
-name: sscd-keeper
+name: sscsid-keeper
 version: 0.1.0
 description: |
-  The SSCD ([Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/)) Keeper (`sscd-keeper`) is a chart that combines the often used `SecretProviderClass`, which is part of the SSCD with a running deployment that mounts the matching secrets making them available to others within the same namespace.
+  The SSCSID ([Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/)) Keeper (`sscsid-keeper`) is a chart that combines the often used `SecretProviderClass`, which is part of the SSCSID with a running deployment that mounts the matching secrets making them available to others within the same namespace.
 
   This chart is a pet project of Unique to code more _DRY_ and not officially supported by the maintainers of the `Secrets Store CSI Driver`. Unique also prototypes new features, processes or ideas with this chart (e.g. chart signing). This chart is also not an official Helm chart of Unique AG and underlies no SLA or support even if used in production.
 

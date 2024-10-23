@@ -73,7 +73,7 @@ Each change requires a new bullet point following the pattern. See more informat
 You can use the following template:
 
 ```yaml
-name: sscd-keeper
+name: sscsid-keeper
 version: 1.23.4
 ...
 annotations:
