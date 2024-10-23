@@ -83,7 +83,7 @@ jobs:
         run: |
           for chart in ${{steps.list-changed.outputs.changed_charts}}; do
             echo "Unit testing chart: $chart"
-            helm unittest charts/$chart
+            helm unittest $chart
           done
 
       # - name: Create kind cluster
