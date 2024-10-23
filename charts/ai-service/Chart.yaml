@@ -1,0 +1,12 @@
+apiVersion: v2
+type: application
+icon: https://raw.githubusercontent.com/unique-ag/helm-charts/main/icon.svg
+maintainers:
+  - name: unique-ag
+    url: https://unique.ch/
+name: ai-service
+version: 1.0.6
+description: |
+  The 'ai-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy simple AI workloads to Kubernetes.
+
+  Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.

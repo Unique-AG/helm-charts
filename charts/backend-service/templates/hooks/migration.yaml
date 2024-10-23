@@ -1,0 +1,172 @@
+{{- $fullName := include "backendService.fullname" . -}}
+{{- if .Values.hooks.migration.enabled -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $fullName }}-db-migration
+  labels:
+    {{- include "backendService.labelsHooksDbMigrations" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "10"
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      name: "{{ .Release.Name }}"
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "backendService.labelsHooksDbMigrations" . | nindent 8 }}
+        {{- if .Values.secretProvider }}
+        aadpodidbinding: {{ default "keyvault" (.Values.secretProvider).aadPodIdBinding }}
+        {{- end }}
+        {{- if .Values.serviceAccount.workloadIdentity.enabled }}
+        azure.workload.identity/use: 'true'
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.serviceAccount.enabled }}
+      serviceAccountName: {{ include "backendService.serviceAccountName" . }}-migration
+      {{- end }}
+      restartPolicy: Never
+      {{- if .Values.hooks.migration.initContainers }}
+      initContainers:
+      {{- range .Values.hooks.migration.initContainers }}
+        - name: {{ .name | default (printf "init-%s" $fullName) }}
+          image: "{{ .image | default "busybox:1.28" }}"
+          restartPolicy: "{{ .restartPolicy | default "Always" }}"
+          command: {{ .command | toYaml | nindent 10 }}
+          {{- if .volumeMounts }}
+          volumeMounts:
+          {{- range .volumeMounts }}
+            - name: {{ .name}}
+              mountPath: {{ .mountPath }}   
+              readOnly: {{ .readOnly | default false }}
+          {{- end }}
+          {{- end }}
+      {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ default "db-migration" .Values.hooks.migration.name | quote }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - {{ .Values.hooks.migration.command | quote }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+          {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if .Values.secretProvider }}
+          {{- range $k, $v := .Values.secretProvider.vaults }}
+            - name: {{ $fullName }}-{{ $k }}
+              mountPath: "/mnt/{{ $fullName }}-{{ $k }}"
+              readOnly: true
+           {{- end }}
+           {{- end }}
+          {{- if .Values.hooks.migration.initContainers }}
+          {{- range .Values.hooks.migration.initContainers }}
+          {{- if .volumeMounts }}
+          {{- range .volumeMounts }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPathJob | default .mountPath }}
+              readOnly: {{ .readOnly | default false }}
+          {{- end }}
+          {{- end }}   
+          {{- end }}
+          {{- end }}
+          securityContext: {{- toYaml .Values.securityContext | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: {{ $fullName }}-migration-env
+            {{- if .Values.envSecrets }}
+            - secretRef:
+                name: {{ $fullName }}-migration-secrets
+            {{- end }}
+            {{- if .Values.extraEnvCM }}
+            {{- range $v := .Values.extraEnvCM }}
+            - configMapRef:
+                name: {{ $v }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.extraEnvSecrets }}
+            {{- range $v := .Values.extraEnvSecrets }}
+            - secretRef:
+                name: {{ $v }}
+            {{- end }}
+            {{- end }}
+          env:
+            {{- with .Values.envVars }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- if .Values.secretProvider }}
+            {{- range $k, $v := .Values.secretProvider.vaults }}
+            {{- range $key, $value := $v }}
+            - name: {{ $key }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $fullName }}-{{ $k }}
+                  key: {{ $value }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.externalSecrets }}
+            {{- range $k, $v := .Values.externalSecrets }}
+            {{- range $key := $v.secrets }}
+            {{- range $d := $key.data }}
+            - name: {{ $key.name }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $v.keyvaultName }}
+                  key: {{ $d.key }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+      {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.hooks.migration.initContainers }}
+      {{- range .Values.hooks.migration.initContainers }}
+      {{- if .volumeMounts }}
+      {{- range .volumeMounts }}
+        - name: {{ .name }}
+          emptyDir: {}
+      {{- end }}
+      {{- end }}   
+      {{- end }}
+      {{- end }}
+      {{- if .Values.secretProvider }}
+      {{- range $k, $v := .Values.secretProvider.vaults }}
+        - name: {{ $fullName }}-{{ $k }}
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ $fullName }}-{{ $k }}-migration
+      {{- end }}
+      {{- end }}
+{{- end }}

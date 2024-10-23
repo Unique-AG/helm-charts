@@ -1,0 +1,19 @@
+{{- if .Values.cronJob.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "backendService.fullname" . }}-cronjob-env
+  namespace: {{ .Release.Namespace  }}
+  labels:
+    {{- include "backendService.labels" . | nindent 4 }}
+data:
+  VERSION: "{{ .Values.image.tag }}"
+  {{- range $key, $value := .Values.env }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
+  {{- if .Values.cronJob.env }}
+  {{- range $key, $value := .Values.cronJob.env }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
+  {{- end }}
+{{- end }}

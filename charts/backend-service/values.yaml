@@ -1,0 +1,337 @@
+# clusterInternalServiceSuffix allows to override the default ".svc.cluster.local" service address suffix which is used to reach internal services in the cluster.
+# Note: It must start with a dot.
+# clusterInternalServiceSuffix: .domain.local
+
+replicaCount: 1
+
+rollingUpdate:
+  maxSurge: 1
+  maxUnavailable: 0
+
+image:
+  repository: ""
+  pullPolicy: IfNotPresent
+  tag: ""
+
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  enabled: false
+  annotations: {}
+  # name: ""
+  workloadIdentity: {}
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+deployment:
+  enabled: true
+  # metadata:
+  #   labels:
+  #     app: backend-service
+  #   annotations:
+  #     prometheus: "true"
+  # initContainers:
+  #   - command:
+  #       - sh
+  #       - -c
+  #       - export MY_VARIABLE="some_value" && sleep 1
+  #     volumeMounts:
+  #       - name: data
+  #         mountPath: /opt
+  #         mountPathDeployment: /opt/folder
+  #         readOnly: true
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 80
+
+tyk:
+  enabled: true
+  listenPath: ""
+  jwtSource: https://id.unique.app/oauth/v2/keys
+  rateLimit:
+    {}
+    # Limit per interval, example values are default values
+    # Rate limit can not be disabled fully only increased, we learned some lessons 🩸
+    # rate: 20 # requests to the key
+    # per: 60 # each minute (faster a human can not type)
+    # Quota per longer section
+    # quotaMax: 15000 # 500 chats per day for 30 days, generous as we are for now
+    # quotaRenewalRate: 2592000 # 30 days in seconds
+    # If quota or limit gets hit, what happens
+    # throttleInterval: -1 # for now we do not throttle
+    # throttleRetryLimit: -1 # for now we do not throttle
+  # hardTimeouts allows you to increase/decrease timeouts for specific paths
+  # hardTimeouts:
+  #   - path: "/longer"
+  #     method: "GET"
+  #     timeoutSeconds: 1000
+  exposePublicApi:
+    enabled: false
+    # appRepositoryUrlOverride: "" # defaults to http://node-app-repository.namespace.svc.cluster.local
+    # appRepositoryPortOverride: "" # defaults to 8088
+    # appRepositoryNamespaceOverride: "" # defaults to apps
+    # publicPathOverride: "" # defaults to '/public'
+    # hardTimeouts:
+    #   - path: "/longer"
+    #     method: "GET"
+    #     timeoutSeconds: 1000
+  # defaultTimeout: 30 # This setting is only to be modified after consulting the platform team. Disagreed changes will be reverted unquestioned.
+  scopedApi:
+    enabled: false
+    # scopedPathOverride: "" # defaults to '/scoped'
+    # hardTimeouts:
+    #   - path: "/longer"
+    #     method: "GET"
+    #     timeoutSeconds: 1000
+  # defaultTimeout: 30 # This setting is only to be modified after consulting the platform team. Disagreed changes will be reverted unquestioned.
+
+ingress:
+  enabled: false
+  tls:
+    enabled: false
+
+httproute:
+  enabled: false
+  annotations: {}
+  gatewayName: kong
+  gatewayNamespace: system
+  hostnames: []
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      # backendRefs can be omitted to use the default service
+      # backendRefs:
+      #   - name: custom-service
+      #     kind: Service
+      #     port: 8080
+    # Example of a more complex rule
+    # - matches:
+    #   - headers:
+    #       - name: "X-Version"
+    #         value: "v3"
+    #     path:
+    #       type: PathPrefix
+    #       value: /test
+    #   backendRefs:
+    #     - name: api-v2
+    #       kind: Service
+    #       port: 8081
+
+  # Additional HTTPRoutes
+  additionalRoutes: []
+
+# env is a flat map of ENV_NAME: $VALUE which will get encapsulated into a ConfigMap and loaded using the envFrom syntax
+# It only supports the flat object syntax with key value pairs
+env: {}
+
+# envVars is a list of ENV_NAME: $VALUE which will be added to the pods where the $VALUE supports the same syntax as the native pod spec
+# https://kubernetes.io/docs/tasks/inject-data-application/define-environment-variable-container/
+envVars: []
+
+# extraEnvCM is a list of existing ConfigMaps to be loaded using the envFrom syntax
+extraEnvCM: []
+
+# envSecrets is a map of ENV_NAME: $SECRET_VALUE which will get encapsulated into a Secret and loaded using the envFrom syntax
+envSecrets: {}
+
+# extraEnvSecrets is a list of existing Secrets to be loaded using the envFrom syntax
+extraEnvSecrets: []
+
+probes:
+  enabled: true
+  liveness:
+    httpGet:
+      path: /probe
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    failureThreshold: 6
+  readiness:
+    httpGet:
+      path: /probe
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    failureThreshold: 6
+  startup:
+    httpGet:
+      path: /probe
+      port: http
+    initialDelaySeconds: 10
+    failureThreshold: 30
+    periodSeconds: 10
+
+pdb:
+  maxUnavailable: 30%
+
+resources: {}
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+volumeMounts: []
+
+volumes: []
+
+auditVolume:
+  enabled: false
+  mountPath: /audit # defaults to /audit
+  capacity: 1Ti # defaults to 1Ti
+  attributes:
+    resourceGroup: my-azure-resource-group
+    storageAccount: my-azure-storage-account
+    # containerName: my-azure-container-in-my-azure-storage-account # defaults to release name
+
+cronJob:
+  enabled: false
+  name: ""
+  suspend: false
+  schedule: ""
+  timeZone: "Europe/Zurich"
+  concurrencyPolicy: Allow
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  startingDeadlineSeconds: 60
+  jobTemplate:
+    restartPolicy: OnFailure
+    containers:
+      name: ""
+  env: {}
+  # initContainers:
+  #   - command:
+  #       - sh
+  #       - -c
+  #       - export MY_VARIABLE="some_value" && sleep 1
+  #     volumeMounts:
+  #       - name: data
+  #         mountPath: /opt
+  #         mountPathCronjob: /opt/folder
+  #         readOnly: true
+
+# !!! usePodIdentity will be deprecated in the future please use useVMManagedIdentity with the clientID
+# .Values.secretProvider lets you mount secrets from Azure Key Vault into the pod
+# Note that 'vault-1' is the literal vault name from azure
+# The line format is 'make <ENV>: from <KEY_VAULT_SECRET_NAME>'
+# The conversion from - to _ is done automatically
+secretProvider: {}
+# Example
+# secretProvider:
+#   tenantId: 99330c76-81d2-460e-861e-35af8e2a4266
+#   aadPodIdBinding: binding-21 # optional, defaults to 'keyvault'
+#   useVMManagedIdentity: "true" # optional, if not present usePodIdentity is set to "true" useVMManagedIdentity to "false"
+#   userAssignedIdentityID: "xx-pls-provide-client-id-xx"   # Should not be empty if useVMManagedIdentity is present and has the value "true"
+#   vaults:
+#     vault-name-1:
+#       MY_ENV_VARIABLE_1: keyvault-secret-name-a
+#     vault-name-2:
+#       MY_ENV_VARIABLE_2: keyvault-secret-name-b
+
+prometheus:
+  enabled: false
+  # enabled: true
+  # team: <team-name> # defines alert routing
+  # rules:
+  #   QNodeChat5xx:
+  #     expression: >
+  #       sum(
+  #         max_over_time(
+  #           nestjs_http_server_responses_total{status=~"^5..$", app="node_chat"}[1m]
+  #         )
+  #         or
+  #         vector(0)
+  #       )
+  #         by (app, path, method, status)
+  #       -
+  #       sum(
+  #         max_over_time(
+  #           nestjs_http_server_responses_total{status=~"^5..$", app="node_chat"}[1m]
+  #           offset 1m
+  #         )
+  #         or vector(0)
+  #       )
+  #         by (app, path, method, status)
+  #       > 0
+  #     for: 0m
+  #     severity: critical
+  #     # Left side are alert labels, right side are the metrics labels ($labels.*)
+  #     labels:
+  #       app: app
+  #       path: path
+  #       method: method
+  #       status: status
+
+hooks:
+  migration:
+    enabled: false
+    # name: "" defaults to db-migration
+    command: ""
+    # initContainers:
+    #   - command:
+    #       - sh
+    #       - -c
+    #       - export MY_VARIABLE="some_value" && sleep 1
+    #     volumeMounts:
+    #       - name: data
+    #         mountPath: /opt
+    #         mountPathJob: /opt/folder
+    #         readOnly: true
+
+eventBasedAutoscaling:
+  enabled: false
+  minReplicaCount: 0
+  maxReplicaCount: 2
+  cron:
+    timezone: Europe/Zurich
+    start: 0 8 * * 1-5
+    end: 0 19 * * 1-5
+    desiredReplicas: "1"
+  rabbitmq:
+    protocol: auto
+    # queueName: ""
+    mode: QueueLength
+    value: "1"
+    hostFromEnv: AMQP_URL
+  customTriggers: []
+
+externalSecrets:
+  []
+  # - keyvaultName: my-keyvault
+  #   keyvaultURL: "https://my-keyvault:8989" # private keyvault
+  #   identityId: "xxx-xxxxxx-xxx-xxxx"
+  #   tenantId: "yyyy-yyy-yyyy-yyyy-yy"
+  #   secrets:
+  #     - name: golden-secret
+  #       type: Opaque
+  #       metadata:
+  #         labels:
+  #           app: my-app
+  #           environment: production
+  #         annotations:
+  #           description: "This secret created by external-secrets.io from kv my-keyvault "
+  #       data:
+  #         - objectName: my-secret-in-kv-1
+  #           key: my-secret-in-kv-1
+
+  #         - objectName: my-secret-in-kv-2
+  #           key: my-secret-in-kv-2

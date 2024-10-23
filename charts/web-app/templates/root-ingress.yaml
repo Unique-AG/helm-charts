@@ -1,0 +1,32 @@
+{{- if .Values.rootIngress.enabled }}
+{{- $fullName := include "common.fullname" . -}}
+{{- $svcPort := .Values.service.port -}}
+{{- $redirectPath := .Values.rootIngress.redirectPath | required ".Values.rootIngress.redirectPath is required." }}
+{{- $rootHost := .Values.rootIngress.host | required ".Values.rootIngress.host is required." }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: next-root-redirect
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: $scheme://$host{{ .Values.rootIngress.redirectPath }}
+  {{- with .Values.rootIngress.annotations }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ $rootHost }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: {{ $svcPort }}
+  tls:
+    - hosts:
+        - {{ $rootHost }}
+      secretName: {{ $fullName }}-tls
+{{- end }}

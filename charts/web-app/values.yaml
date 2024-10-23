@@ -1,0 +1,135 @@
+replicaCount: 1
+
+# Experimental `Recreate` update to short-term solve the caching issue, UN-6692
+strategy:
+  type: RollingUpdate # or `Recreate`
+
+rollingUpdate:
+  maxSurge: 1
+  maxUnavailable: 0
+
+image:
+  repository: ""
+  pullPolicy: IfNotPresent
+  tag: ""
+
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  enabled: false
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext:
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  runAsUser: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+service:
+  type: ClusterIP
+  port: 3000
+
+ingress:
+  enabled: false
+  tls:
+    enabled: false
+
+httproute:
+  enabled: false
+  annotations: {}
+  gatewayName: kong
+  gatewayNamespace: system
+  hostnames: []
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      # backendRefs can be omitted to use the default service
+      # backendRefs:
+      #   - name: custom-service
+      #     kind: Service
+      #     port: 8080
+    # Example of a more complex rule
+    # - matches:
+    #   - headers:
+    #       - name: "X-Version"
+    #         value: "v3"
+    #     path:
+    #       type: PathPrefix
+    #       value: /test
+    #   backendRefs:
+    #     - name: api-v2
+    #       kind: Service
+    #       port: 8081
+
+  # Additional HTTPRoutes
+  additionalRoutes: []
+
+env: {}
+
+# Names of existing config maps to be used as env vars (configMapRef in envFrom)
+extraEnvCM: []
+
+envSecrets: {}
+
+# Names of existing secrets to be used as env vars (secretRef in envFrom)
+extraEnvSecrets: []
+
+probes:
+  enabled: true
+  liveness:
+    httpGet:
+      path: /api/health
+      port: http
+    initialDelaySeconds: 5
+  readiness:
+    httpGet:
+      path: /api/health
+      port: http
+    initialDelaySeconds: 5
+
+pdb:
+  maxUnavailable: 30%
+
+resources: {}
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# .Values.secretProvider lets you mount secrets from Azure Key Vault into the pod
+# Note that 'vault-1' is the literal vault name from azure
+# The line format is 'make <ENV>: from <KEY_VAULT_SECRET_NAME>'
+# The conversion from - to _ is done automatically
+secretProvider: {}
+# Example
+# secretProvider:
+#   tenantId: 99330c76-81d2-460e-861e-35af8e2a4266
+#   aadPodIdBinding: binding-21 # optional, defaults to 'keyvault'
+#   vaults:
+#     vault-name-1:
+#       MY_ENV_VARIABLE_1: keyvault-secret-name-a
+#     vault-name-2:
+#       MY_ENV_VARIABLE_2: keyvault-secret-name-b
+
+rootIngress:
+  enabled: false

@@ -1,0 +1,162 @@
+replicaCount: 1
+
+rollingUpdate:
+  maxSurge: 1
+  maxUnavailable: 0
+
+image:
+  repository: ""
+  pullPolicy: IfNotPresent
+  tag: ""
+
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  enabled: false
+  annotations: {}
+  # name: ""
+  workloadIdentity: {}
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 8081
+
+ingress:
+  enabled: false
+  tls:
+    enabled: false
+
+env: {}
+
+# Names of existing config maps to be used as env vars (configMapRef in envFrom)
+extraEnvCM: []
+
+envSecrets: {}
+
+# Names of existing secrets to be used as env vars (secretRef in envFrom)
+extraEnvSecrets: []
+
+probes:
+  enabled: false
+  liveness:
+    httpGet:
+      path: /probe
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    failureThreshold: 6
+  readiness:
+    httpGet:
+      path: /probe
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    failureThreshold: 6
+  startup:
+    httpGet:
+      path: /probe
+      port: http
+    initialDelaySeconds: 10
+    failureThreshold: 30
+    periodSeconds: 10
+
+pdb:
+  maxUnavailable: 30%
+
+pvc:
+  enabled: false
+  storage: 32Gi
+  storageClassName: azurefile
+
+resources: {}
+
+autoscaling:
+  enabled: false
+  minReplicas: 0
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+eventBasedAutoscaling:
+  enabled: true
+  minReplicaCount: 0
+  maxReplicaCount: 8
+  cron:
+    timezone: Europe/Zurich
+    start: 0 8 * * 1-5
+    end: 0 19 * * 1-5
+    desiredReplicas: "1"
+  rabbitmq:
+    protocol: auto
+    queueName: ""
+    mode: QueueLength
+    value: "1"
+    hostFromEnv: AMQP_URL
+  customTriggers: []
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+volumeMounts: []
+
+volumes: []
+
+terminationGracePeriodSeconds: 3600
+
+lifecycle:
+  preStop:
+    httpGet:
+      path: can_shutdown
+      port: 8081
+
+# !!! usePodIdentity will be deprecated in the future please use useVMManagedIdentity with the clientID
+# .Values.secretProvider lets you mount secrets from Azure Key Vault into the pod
+# Note that 'vault-1' is the literal vault name from azure
+# The line format is 'make <ENV>: from <KEY_VAULT_SECRET_NAME>'
+# The conversion from - to _ is done automatically
+secretProvider: {}
+# Example
+# secretProvider:
+#   tenantId: 99330c76-81d2-460e-861e-35af8e2a4266
+#   aadPodIdBinding: binding-21 # optional, defaults to 'keyvault'
+#   useVMManagedIdentity: "true" # optional, if not present usePodIdentity is set to "true" useVMManagedIdentity to "false"
+#   userAssignedIdentityID: "xx-pls-provide-client-id-xx"   # Should not be empty if useVMManagedIdentity is present and has the value "true"
+#   vaults:
+#     vault-name-1:
+#       MY_ENV_VARIABLE_1: keyvault-secret-name-a
+#     vault-name-2:
+#       MY_ENV_VARIABLE_2: keyvault-secret-name-b
+deployment:
+  {}
+  # initContainers:
+  # - name: model-downloader
+  #   image: python:3.9
+  #   command:
+  #     - sh
+  #     - -c
+  #     - |
+  #       pip install huggingface-hub transformers;
+  #       huggingface-cli download bert-base-uncased --cache-dir /models/bert;
+  #       if [ -f /models/bert/pytorch_model.bin ]; then
+  #         echo "Model downloaded successfully";
+  #       else
+  #         echo "Model download failed";
+  #         exit 1;
+  #       fi;
+  #   volumeMounts:
+  #     - name: models-storage
+  #       mountPath: /models
+  #       readOnly: false
+  #       emptyDir: false

@@ -1,0 +1,114 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: Regression Test Deployment
+templates:
+  - deployment-env.yaml
+  - deployment.yaml
+release:
+  name: ut
+tests:
+  - it: When given a secretProvider, should always render volumeMounts and volumes for them
+    set:
+      tyk.listenPath: /unit-test
+      image.tag: pinned-version
+      secretProvider.tenantId: 99330c76-81d2-460e-861e-35af8e2a4266
+      secretProvider.vaults.qa-app-common.AMQP_URL: RABBITMQ-ORANGE-WOLF-URL
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - isNotNullOrEmpty:
+          path: spec.template.spec.volumes[?(@.name == "ut-qa-app-common")]
+      - isNotNullOrEmpty:
+          path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.name == "ut-qa-app-common")]
+      - isNotNullOrEmpty:
+          path: spec.template.metadata.labels.aadpodidbinding
+  
+  - it: When given a secretProvider and useVMManagedIdentity, should not render the keyvault label
+    set:
+      tyk.listenPath: /unit-test
+      image.tag: pinned-version
+      secretProvider.tenantId: 99330c76-81d2-460e-861e-35af8e2a4266
+      secretProvider.useVMManagedIdentity: "true"
+      secretProvider.vaults.qa-app-common.AMQP_URL: RABBITMQ-ORANGE-WOLF-URL
+    template: deployment.yaml
+    asserts:
+      - notExists:
+          path: spec.template.metadata.labels.aadpodidbinding
+
+  - it: When given an initContainer, should always render volumeMounts and volumes for them
+    set:
+      deployment.initContainers[0]:
+        volumeMounts:
+          - name: data
+            mountPath: /opt
+            mountPathDeployment: /opt/folder
+            readOnly: true
+            emptyDir: true
+        command:
+          - "sh"
+          - "-e"
+          - "echo"
+          - "helloWorld"
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - isNotNullOrEmpty:
+          path: spec.template.spec.initContainers[0]
+      - isNotNullOrEmpty:
+          path: spec.template.spec.initContainers[?(@.name == "init-ut")]
+      - isNotNullOrEmpty:
+          path: spec.template.spec.volumes[?(@.name == "data")]
+      - isNotNullOrEmpty:
+          path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.name == "data")]
+      - isNotNullOrEmpty:
+          path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.mountPath == "/opt/folder")]
+      - isNotNullOrEmpty:
+          path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.readOnly == true)]
+      - isNotNullOrEmpty:
+          path: spec.template.spec.volumes[?(@.name == "data")]
+
+  - it: When given an initContainer and PVC enabled, should always render volumeMounts and volumes for them
+    set:
+      pvc.enabled: true
+      pvc.name: data-pvc
+      pvc.storage: 1Gi
+      pvc.storageClassName: azurefile
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: static-claim
+      deployment.initContainers[0]:
+        volumeMounts:
+          - name: data-pvc
+            mountPath: /opt
+            mountPathDeployment: /opt/folder
+            readOnly: false
+            emptyDir: false 
+        command:
+          - "sh"
+          - "-e"
+          - "echo"
+          - "helloWorld"
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - isNotNullOrEmpty:
+          path: spec.template.spec.initContainers[0]
+      - isNotNullOrEmpty:
+          path: spec.template.spec.initContainers[?(@.name == "init-ut")]
+      - isNotNullOrEmpty:
+          path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.name == "data-pvc")]
+      - isNotNullOrEmpty:
+          path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.mountPath == "/opt/folder")]
+      - isNotNullOrEmpty:
+          path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.readOnly == false)]
+      - isNotNullOrEmpty:
+          path: spec.template.spec.volumes[?(@.name == "data-pvc")]
+      - isNotNullOrEmpty:
+          path: spec.template.spec.volumes[?(@.name == "data-pvc")].persistentVolumeClaim[?(@.claimName == "data-pvc")]
+      - isNotNullOrEmpty:
+          path: spec.template.spec.volumes[?(@.name == "data-volume")]
+      - isNotNullOrEmpty:
+          path: spec.template.spec.volumes[?(@.name == "data-volume")].persistentVolumeClaim[?(@.claimName == "static-claim")]
