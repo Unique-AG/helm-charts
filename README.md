@@ -1,6 +1,7 @@
 # Unique Helm Charts
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/unique-helm)](https://artifacthub.io/packages/search?repo=unique-helm)
 
 Unique `helm-charts` is a collection of charts for [https://unqiue.ch](https://unique.ch) projects. The charts can be added using following command:
 
