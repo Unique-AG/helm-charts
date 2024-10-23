@@ -4,7 +4,7 @@ maintainers:
   - name: unique-ag
     url: https://unique.ch/
 name: sscsid-keeper
-version: 0.1.1
+version: 0.1.2
 description: |
   The SSCSID ([Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/)) Keeper (`sscsid-keeper`) is a chart that combines the often used `SecretProviderClass`, which is part of the SSCSID with a running deployment that mounts the matching secrets making them available to others within the same namespace.
 
