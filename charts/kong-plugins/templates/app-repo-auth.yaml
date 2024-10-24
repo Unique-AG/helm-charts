@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: {{ .Values.appRepoAuth.name | default "kong-plugin-unique-app-repo-auth" }}
 data:
-  handler.lua: >-
+  handler.lua: |
     local constants = require "kong.constants"
 
     local http = require("resty.http")
@@ -319,14 +319,14 @@ data:
 
 
     return UniqueAppRepoAuthHandler
-  schema.lua: |-
+  schema.lua: |
     local typedefs = require "kong.db.schema.typedefs"
 
     local PLUGIN_NAME = "unique-app-repo-auth"
 
     local schema = {
         name = PLUGIN_NAME,
-        fields = {{
+        fields = {{`{{`}}
             -- this plugin will only be applied to Services or Routes
             consumer = typedefs.no_consumer
         }, {
@@ -335,7 +335,7 @@ data:
         }, {
             config = {
                 type = "record",
-                fields = {{
+                fields = {{`{{`}}
                     app_repository_url = {
                         -- description = "The URL of the app repository.",
                         type = "string",
@@ -381,9 +381,9 @@ data:
                         required = true,
                         default = true
                     }
-                }}
+                {{`}}`}}
             }
-        }}
+        {{`}}`}}
     }
 
     return schema

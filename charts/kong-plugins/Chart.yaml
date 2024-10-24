@@ -7,7 +7,7 @@ maintainers:
 name: kong-plugins
 version: 1.0.0
 description: |
-  The 'kong-plugins' chart provides a streamlined solution for deploying Kong plugins via ConfigMaps to be used with the Unique Software. 
+  The 'kong-plugins' chart provides a streamlined solution for deploying Kong plugins via ConfigMaps to be used with the Unique Software.
 
   Refer to each plugins readme section to learn more about them.
 

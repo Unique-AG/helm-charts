@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: {{ .Values.jwtAuth.name | default "kong-plugin-unique-jwt-auth" }}
 data:
-  handler.lua: >-
+  handler.lua: |
     local constants = require "kong.constants"
 
     local jwt_decoder = require "kong.plugins.jwt.jwt_parser"
@@ -640,7 +640,7 @@ data:
 
 
     return UniqueJwtAuthHandler
-  key_conversion.lua: >-
+  key_conversion.lua: |
     -- Taken from
     https://github.com/zmartzone/lua-resty-openidc/blob/master/lib/resty/openidc.lua
 
@@ -746,14 +746,14 @@ data:
     return {
         convert_kc_key = convert_kc_key
     }
-  schema.lua: |-
+  schema.lua: |
     local typedefs = require "kong.db.schema.typedefs"
 
     local PLUGIN_NAME = "unique-jwt-auth"
 
     local schema = {
         name = PLUGIN_NAME,
-        fields = {{
+        fields = {{`{{`}}
             -- this plugin will only be applied to Services or Routes
             consumer = typedefs.no_consumer
         }, {
@@ -762,7 +762,7 @@ data:
         }, {
             config = {
                 type = "record",
-                fields = {{
+                fields = {{`{{`}}
                     uri_param_names = {
                         -- description = "A list of querystring parameters that Kong will inspect to retrieve JWTs.",
                         type = "set",
@@ -867,13 +867,13 @@ data:
                         type = "boolean",
                         default = false
                     }
-                }}
+                {{`}}`}}
             }
-        }}
+        {{`}}`}}
     }
 
     return schema
-  validate_issuers.lua: |-
+  validate_issuers.lua: |
     local function validate_issuer(allowed_issuers, jwt_claims)
         if allowed_issuers == nil or table.getn(allowed_issuers) == 0 then
             return nil, "Allowed issuers is empty"
@@ -892,7 +892,7 @@ data:
     return {
         validate_issuer = validate_issuer
     }
-  zitadel_keys.lua: |-
+  zitadel_keys.lua: |
     local http = require("resty.http")
     local cjson = require("cjson.safe")
     local convert = require "kong.plugins.unique-jwt-auth.key_conversion"
