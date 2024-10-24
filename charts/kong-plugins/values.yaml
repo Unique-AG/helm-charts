@@ -1,0 +1,7 @@
+# Default values for kong-plugins.
+
+namespace: kong
+# jwtAuth:
+#   name: kong-plugin-unique-jwt-auth
+# appRepoAuth:
+#   name: kong-plugin-unique-app-repo-auth
