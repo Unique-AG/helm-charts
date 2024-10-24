@@ -1,7 +1,10 @@
 # Default values for kong-plugins.
 
-namespace: kong
 # jwtAuth:
-#   name: kong-plugin-unique-jwt-auth
-# appRepoAuth:
-#   name: kong-plugin-unique-app-repo-auth
+  # -- The name of the jwt auth config map
+  # name: kong-plugin-unique-jwt-auth
+appRepoAuth:
+  # -- The name of the app repository auth config map
+  # name: kong-plugin-unique-app-repo-auth
+  # -- The default app repository url
+  appRepositoryUrl: "http://service-app-repository.default.svc:8088"
