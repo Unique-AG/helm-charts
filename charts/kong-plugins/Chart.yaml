@@ -1,18 +1,17 @@
 apiVersion: v2
 type: application
-icon: https://raw.githubusercontent.com/unique-ag/helm-charts/main/icon.svg
+icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
 maintainers:
   - name: unique-ag
     url: https://unique.ch/
-name: kong plugins
+name: kong-plugins
 version: 1.0.0
 description: |
-  The Kong Plugins chart provides a streamlined solution for deploying two custom Kong plugins via ConfigMaps. These plugins enhance API security by enabling request authentication through JWT and API key mechanisms.
+  The 'kong-plugins' chart provides a streamlined solution for deploying Kong plugins via ConfigMaps to be used with the Unique Software. 
 
-  The UniqueJwtAuth plugin validates incoming requests by verifying JSON Web Tokens, ensuring that only authorized users can access your services.
+  Refer to each plugins readme section to learn more about them.
 
-  The UniqueAppRepoAuth plugin checks requests against the Unique app-repository service, allowing access only to those with valid API keys.
-
-  This chart is a pet project of Unique, designed to simplify the deployment of these authentication mechanisms within your Kubernetes environment. It is not officially supported by the maintainers of Kong or Unique AG and does not come with any SLA or support guarantees, even if used in production.
-
-  While this chart provides essential authentication features, users seeking more advanced capabilities or official support should explore other options, such as the Kong Enterprise plugins or community-supported alternatives.
+  Please report any security concerns with the plugins via the [Security Policy](https://github.com/Unique-AG/helm-charts/tree/main?tab=security-ov-file).
+artifacthub.io/changes: |
+  - Add app-repo-auth plugin
+  - Add jwt-auth plugin

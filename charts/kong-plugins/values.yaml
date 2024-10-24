@@ -1,10 +1,16 @@
 # Default values for kong-plugins.
 
-# jwtAuth:
+# -- List of plugins to be installed
+
+
+# -- jwtAuth enables the jwt-auth plugin
+jwtAuth:
   # -- The name of the jwt auth config map
-  # name: kong-plugin-unique-jwt-auth
+  name: kong-plugin-unique-jwt-auth
+
+# -- appRepoAuth enables the app-repo-auth plugin
 appRepoAuth:
   # -- The name of the app repository auth config map
-  # name: kong-plugin-unique-app-repo-auth
+  name: kong-plugin-unique-app-repo-auth
   # -- The default app repository url
   appRepositoryUrl: "http://service-app-repository.default.svc:8088"
