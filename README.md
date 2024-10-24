@@ -6,7 +6,7 @@
 Unique `helm-charts` is a collection of charts for [https://unqiue.ch](https://unique.ch) projects. The charts can be added using following command:
 
 ```
-helm repo add unique-helm https://unique-ag.github.io/helm-chars
+helm repo add unique-helm https://unique-ag.github.io/helm-charts
 ```
 
 ## About Unique specific Helm Charts
