@@ -12,5 +12,6 @@ description: |
   Refer to each plugins readme section to learn more about them.
 
   Please report any security concerns with the plugins via the [Security Policy](https://github.com/Unique-AG/helm-charts/tree/main?tab=security-ov-file).
-artifacthub.io/changes: |
-  - Fixes breaking line breaks in the lua scripts
+annotations:
+  artifacthub.io/changes: |
+    - Fixes breaking line breaks in the lua scripts
