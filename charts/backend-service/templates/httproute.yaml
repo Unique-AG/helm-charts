@@ -42,7 +42,7 @@ kind: HTTPRoute
 metadata:
   name: {{ .name }}
   labels:
-    {{- include "backend-service.labels" $ | nindent 4 }}
+    {{- include "backendService.labels" . | nindent 4 }}
   {{- with .annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
