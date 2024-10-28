@@ -12,4 +12,4 @@ description: |
   Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 annotations:
   artifacthub.io/changes: |
-    - Fixes the identation issue within the volumeMounts:
+    - Fixes the identation issue within the volumeMounts
