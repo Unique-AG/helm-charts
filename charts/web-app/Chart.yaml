@@ -1,12 +1,23 @@
 apiVersion: v2
 type: application
-icon: https://raw.githubusercontent.com/unique-ag/helm-charts/main/icon.svg
+icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
 maintainers:
   - name: unique-ag
     url: https://unique.ch/
 name: web-app
-version: 1.3.1
+version: 1.4.0
 description: |
   The 'web-app' chart is a "convenience" chart from Unique AG that can generically be used to deploy web-content serving workloads to Kubernetes.
 
   Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
+sources:
+  - https://github.com/Unique-AG/helm-charts/tree/main/charts/web-app
+annotations:
+  artifacthub.io/changes: |
+    - kind: added
+      description: Support for Azure Application Gateway Rewrite Rules in order to rewrite the root path to a different path (labelled 'rootIngress')
+      links:
+        - name: Rewrite Rule Set Custom Resource
+          url: https://azure.github.io/application-gateway-kubernetes-ingress/features/rewrite-rule-set-custom-resource/
+        - name: Rewrite HTTP headers and URL with Application Gateway
+          url: https://learn.microsoft.com/en-us/azure/application-gateway/rewrite-http-headers-url#server-variables

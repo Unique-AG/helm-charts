@@ -9,9 +9,12 @@ metadata:
   name: next-root-redirect
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: $scheme://$host{{ .Values.rootIngress.redirectPath }}
-  {{- with .Values.rootIngress.annotations }}
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- with .Values.rootIngress.annotations }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- if .Capabilities.APIVersions.Has "appgw.ingress.azure.io/v1beta1" }}
+    appgw.ingress.kubernetes.io/rewrite-rule-set-custom-resource: next-root-redirect
+    {{- end }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
@@ -29,4 +32,30 @@ spec:
     - hosts:
         - {{ $rootHost }}
       secretName: {{ $fullName }}-tls
+{{- if .Capabilities.APIVersions.Has "appgw.ingress.azure.io/v1beta1" }}
+---
+apiVersion: appgw.ingress.azure.io/v1beta1
+kind: AzureApplicationGatewayRewrite
+metadata:
+  name: next-root-redirect
+spec:
+  rewriteRules:
+  - name: next-root-redirect
+    ruleSequence: 11
+    conditions:
+    - ignoreCase: true
+      negate: false
+      variable: var_host
+      pattern: ".*"
+    actions:
+      urlConfiguration:
+        modifiedPath: {{ .Values.rootIngress.redirectPath | trim | quote }}
+        reroute: false
+      {{- if .Values.rootIngress.debugHeader }}
+        responseHeaderConfigurations:
+        - actionType: set
+          headerName: x-unique-debug-root-ingress
+          headerValue: rewrite-{{ regexReplaceAll "\\/" .Values.rootIngress.redirectPath "" }}
+      {{- end }}
+{{- end }}
 {{- end }}

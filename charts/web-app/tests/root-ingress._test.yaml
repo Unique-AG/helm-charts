@@ -1,0 +1,80 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: Root Ingress
+templates:
+  - root-ingress.yaml
+release:
+  name: ut
+tests:
+  - it: When given a root ingress, renders the ingress but no CRD annotation
+    set:
+      rootIngress:
+        enabled: true
+        redirectPath: /ut
+        host: ut.local
+    template: root-ingress.yaml
+    documentSelector:
+      path: kind
+      value: Ingress
+    asserts:
+      - isKind:
+          of: Ingress
+      - notExists:
+          path: metadata.annotations["appgw.ingress.kubernetes.io/rewrite-rule-set-custom-resource"]
+  
+  - it: When given a root ingress and capabilities, renders the ingress
+    set:
+      rootIngress:
+        enabled: true
+        redirectPath: /ut
+        host: ut.local
+    template: root-ingress.yaml
+    documentSelector:
+      path: kind
+      value: Ingress
+    capabilities:
+      apiVersions: 
+        - appgw.ingress.azure.io/v1beta1
+    asserts:
+      - isKind:
+          of: Ingress
+      - exists:
+          path: metadata.annotations["appgw.ingress.kubernetes.io/rewrite-rule-set-custom-resource"]
+
+  - it: When given a root ingress and capabilities, renders the Azure Application Gateway CRD
+    set:
+      rootIngress:
+        enabled: true
+        redirectPath: /ut
+        host: ut.local
+    template: root-ingress.yaml
+    documentSelector:
+      path: kind
+      value: AzureApplicationGatewayRewrite
+    capabilities:
+      apiVersions: 
+        - appgw.ingress.azure.io/v1beta1
+    asserts:
+      - isKind:
+          of: AzureApplicationGatewayRewrite
+      - notExists:
+          path: spec.rewriteRules[?(@.name == "next-root-redirect")].actions.urlConfiguration.responseHeaderConfigurations
+
+  - it: When given a root ingress and capabilities, renders the Azure Application Gateway CRD and the additional header
+    set:
+      rootIngress:
+        enabled: true
+        redirectPath: /ut
+        host: ut.local
+        debugHeader: yes
+    template: root-ingress.yaml
+    documentSelector:
+      path: kind
+      value: AzureApplicationGatewayRewrite
+    capabilities:
+      apiVersions: 
+        - appgw.ingress.azure.io/v1beta1
+    asserts:
+      - isKind:
+          of: AzureApplicationGatewayRewrite
+      - exists:
+          path: spec.rewriteRules[?(@.name == "next-root-redirect")].actions.urlConfiguration.responseHeaderConfigurations[?(@.headerName == "x-unique-debug-root-ingress")]
