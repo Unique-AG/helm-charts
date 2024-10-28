@@ -5,6 +5,10 @@ metadata:
   name: {{ $fullName }}
   labels:
     {{- include "common.labels" . | nindent 4 }}
+    helm.sh/chart: {{ include "common.chart" . }}
+    {{- if .Values.image.tag }}
+    app.kubernetes.io/version: {{ .Values.image.tag | quote }}
+    {{- end }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}

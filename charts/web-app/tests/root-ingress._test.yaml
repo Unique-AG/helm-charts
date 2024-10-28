@@ -77,4 +77,4 @@ tests:
       - isKind:
           of: AzureApplicationGatewayRewrite
       - exists:
-          path: spec.rewriteRules[?(@.name == "next-root-redirect")].actions.urlConfiguration.responseHeaderConfigurations[?(@.headerName == "x-unique-debug-root-ingress")]
+          path: spec.rewriteRules[?(@.name == "next-root-redirect")].actions.responseHeaderConfigurations[?(@.headerName == "x-unique-debug-root-ingress")]
