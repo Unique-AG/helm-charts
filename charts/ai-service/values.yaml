@@ -138,8 +138,8 @@ secretProvider: {}
 #       MY_ENV_VARIABLE_1: keyvault-secret-name-a
 #     vault-name-2:
 #       MY_ENV_VARIABLE_2: keyvault-secret-name-b
-deployment:
-  {}
+deployment: {}
+# deployment:
   # initContainers:
   # - name: model-downloader
   #   image: python:3.9

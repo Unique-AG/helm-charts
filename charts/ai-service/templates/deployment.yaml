@@ -137,9 +137,9 @@ spec:
           {{- end }}
           {{- if .Values.secretProvider }}
           {{- range $k, $v := .Values.secretProvider.vaults }}
-             - name: {{ $fullName }}-{{ $k }}
-               mountPath: "/mnt/{{ $fullName }}-{{ $k }}"
-               readOnly: true
+            - name: {{ $fullName }}-{{ $k }}
+              mountPath: "/mnt/{{ $fullName }}-{{ $k }}"
+              readOnly: true
            {{- end }}
            {{- end }}
       {{- with .Values.nodeSelector }}
