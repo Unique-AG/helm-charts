@@ -1,16 +1,28 @@
 # web-app
 
-![Version: 1.3.1](https://img.shields.io/badge/Version-1.3.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
-
 The 'web-app' chart is a "convenience" chart from Unique AG that can generically be used to deploy web-content serving workloads to Kubernetes.
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-## Maintainers
+![Version: 1.4.0](https://img.shields.io/badge/Version-1.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
-| Name | Email | Url |
-| ---- | ------ | --- |
-| unique-ag |  | <https://unique.ch/> |
+## Implementation Details
+
+### OCI availibility
+This chart is available both as Helm Repository as well as OCI artefact.
+```sh
+helm repo add unique https://unique-ag.github.io/helm-charts/
+helm install my-web-app unique/web-app --version 1.4.0
+
+# or
+helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 1.4.0
+```
+
+### Root Ingress
+The Root Ingress is a convenience ingress that routes all traffic from the root of the domain to the backend service. This functionality works different depending on the Ingress Class used. In order to keep the chart agnostic to the Ingress Class, the chart uses the `.Capabilities.APIVersions` [built-in object](https://helm.sh/docs/chart_template_guide/builtin_objects/). If you want to template charts locally you must supply matching capabilities like so:
+```
+helm template some-app oci://ghcr.io/unique-ag/helm-charts/web-app --api-versions appgw.ingress.azure.io/v1beta1 --values your-own-values.yaml
+```
 
 ## Values
 
@@ -57,7 +69,11 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 | resources | object | `{}` |  |
 | rollingUpdate.maxSurge | int | `1` |  |
 | rollingUpdate.maxUnavailable | int | `0` |  |
-| rootIngress.enabled | bool | `false` |  |
+| rootIngress | object | `{"debugHeader":false,"enabled":false,"host":"domain.example.com","redirectPath":"/chat"}` | rootIngress is a convenience ingress that routes all traffic from the root of the domain to the backend service. Refer to the readme section "Implementation Details". |
+| rootIngress.debugHeader | bool | `false` | Debugging redirection issues can be cumbersome, especially on Azure. You can enable the debugHeader to see the actual path that the request is being redirected to and if it was de facto rerouted. |
+| rootIngress.enabled | bool | `false` | Not all web-apps should act as root. In fact, only one deployed chart per cluster should enable this annotation, namely the one that should act as the root. |
+| rootIngress.host | string | `"domain.example.com"` | Hostname of the root domain, should match your ingress or httproute settings. |
+| rootIngress.redirectPath | string | `"/chat"` | The path to which the root should be redirected to |
 | secretProvider | object | `{}` |  |
 | securityContext.allowPrivilegeEscalation | bool | `false` |  |
 | securityContext.runAsNonRoot | bool | `true` |  |

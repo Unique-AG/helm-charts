@@ -1,0 +1,28 @@
+{{ template "chart.header" . }}
+{{ template "chart.description" . }}
+
+{{ template "chart.versionBadge" . }}{{ template "chart.typeBadge" . }}{{ template "chart.appVersionBadge" . }}
+
+{{ template "chart.requirementsSection" . }}
+
+## Implementation Details
+
+### OCI availibility
+This chart is available both as Helm Repository as well as OCI artefact.
+```sh
+helm repo add unique https://unique-ag.github.io/helm-charts/
+helm install my-{{ template "chart.name" . }} unique/{{ template "chart.name" . }} --version {{ template "chart.version" . }}
+
+# or
+helm install my-{{ template "chart.name" . }} oci://ghcr.io/unique-ag/helm-charts/{{ template "chart.name" . }} --version {{ template "chart.version" . }}
+```
+
+### Root Ingress
+The Root Ingress is a convenience ingress that routes all traffic from the root of the domain to the backend service. This functionality works different depending on the Ingress Class used. In order to keep the chart agnostic to the Ingress Class, the chart uses the `.Capabilities.APIVersions` [built-in object](https://helm.sh/docs/chart_template_guide/builtin_objects/). If you want to template charts locally you must supply matching capabilities like so:
+```
+helm template some-app oci://ghcr.io/unique-ag/helm-charts/web-app --api-versions appgw.ingress.azure.io/v1beta1 --values your-own-values.yaml
+```
+
+{{ template "chart.valuesSection" . }}
+
+{{ template "helm-docs.versionFooter" . }}
