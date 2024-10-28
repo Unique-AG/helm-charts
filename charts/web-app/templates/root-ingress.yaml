@@ -51,11 +51,11 @@ spec:
       urlConfiguration:
         modifiedPath: {{ .Values.rootIngress.redirectPath | trim | quote }}
         reroute: false
-      {{- if .Values.rootIngress.debugHeader }}
-        responseHeaderConfigurations:
-        - actionType: set
-          headerName: x-unique-debug-root-ingress
-          headerValue: rewrite-{{ regexReplaceAll "\\/" .Values.rootIngress.redirectPath "" }}
-      {{- end }}
+    {{- if .Values.rootIngress.debugHeader }}
+      responseHeaderConfigurations:
+      - actionType: set
+        headerName: x-unique-debug-root-ingress
+        headerValue: rewrite-{{ regexReplaceAll "\\/" .Values.rootIngress.redirectPath "" }}
+    {{- end }}
 {{- end }}
 {{- end }}

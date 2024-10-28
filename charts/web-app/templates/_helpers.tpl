@@ -34,11 +34,7 @@ Create chart name and version as used by the chart label.
 Common labels
 */}}
 {{- define "common.labels" -}}
-helm.sh/chart: {{ include "common.chart" . }}
 {{ include "common.selectorLabels" . }}
-{{- if .Values.image.tag }}
-app.kubernetes.io/version: {{ .Values.image.tag | quote }}
-{{- end }}
 {{- end }}
 
 {{/*
