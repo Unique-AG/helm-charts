@@ -1,4 +1,4 @@
-{{- if .Values.pvc.enabled -}}
+{{- if .Values.artifactsCache.enabled -}}
 kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
