@@ -1,6 +1,6 @@
 # ai-service
 
-![Version: 1.0.8](https://img.shields.io/badge/Version-1.0.8-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.0.9](https://img.shields.io/badge/Version-1.0.9-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 The 'ai-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy simple AI workloads to Kubernetes.
 
@@ -17,12 +17,15 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
+| artifactsCache.artifacts | list | `[]` |  |
+| artifactsCache.enabled | bool | `false` |  |
+| artifactsCache.storage | string | `"32Gi"` |  |
+| artifactsCache.storageClassName | string | `"azurefile"` |  |
 | autoscaling.enabled | bool | `false` |  |
 | autoscaling.maxReplicas | int | `10` |  |
 | autoscaling.minReplicas | int | `0` |  |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
 | autoscaling.targetMemoryUtilizationPercentage | int | `80` |  |
-| deployment | object | `{}` |  |
 | env | object | `{}` |  |
 | envSecrets | object | `{}` |  |
 | eventBasedAutoscaling.cron.desiredReplicas | string | `"1"` |  |
@@ -70,9 +73,6 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 | probes.startup.httpGet.port | string | `"http"` |  |
 | probes.startup.initialDelaySeconds | int | `10` |  |
 | probes.startup.periodSeconds | int | `10` |  |
-| pvc.enabled | bool | `false` |  |
-| pvc.storage | string | `"32Gi"` |  |
-| pvc.storageClassName | string | `"azurefile"` |  |
 | replicaCount | int | `1` |  |
 | resources | object | `{}` |  |
 | rollingUpdate.maxSurge | int | `1` |  |
