@@ -1,16 +1,22 @@
 # backend-service
 
-![Version: 1.3.1](https://img.shields.io/badge/Version-1.3.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
-
 The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-## Maintainers
+![Version: 1.3.2](https://img.shields.io/badge/Version-1.3.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
-| Name | Email | Url |
-| ---- | ------ | --- |
-| unique-ag |  | <https://unique.ch/> |
+## Implementation Details
+
+### OCI availibility
+This chart is available both as Helm Repository as well as OCI artefact.
+```sh
+helm repo add unique https://unique-ag.github.io/helm-charts/
+helm install my-backend-service unique/backend-service --version 1.3.2
+
+# or
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 1.3.2
+```
 
 ## Values
 
@@ -57,6 +63,7 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 | externalSecrets | list | `[]` |  |
 | extraEnvCM | list | `[]` |  |
 | extraEnvSecrets | list | `[]` |  |
+| extraObjects | list | `[]` | extraObjects allows you to add additional Kubernetes objects to the manifest. It is the responsibility of the user to ensure that the objects are valid, that they do not conflict with the existing objects and that they are not containing any sensitive information |
 | fullnameOverride | string | `""` |  |
 | hooks.migration.command | string | `""` |  |
 | hooks.migration.enabled | bool | `false` |  |

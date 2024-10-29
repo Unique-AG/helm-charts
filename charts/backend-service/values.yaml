@@ -335,3 +335,6 @@ externalSecrets:
 
   #         - objectName: my-secret-in-kv-2
   #           key: my-secret-in-kv-2
+
+# -- extraObjects allows you to add additional Kubernetes objects to the manifest. It is the responsibility of the user to ensure that the objects are valid, that they do not conflict with the existing objects and that they are not containing any sensitive information
+extraObjects: []
