@@ -35,80 +35,105 @@ tests:
       - notExists:
           path: spec.template.metadata.labels.aadpodidbinding
 
-  - it: When given an initContainer, should always render volumeMounts and volumes for them
+  - it: When artifactsCache is enabled with test artifacts, should render PVC, ConfigMap, and initContainer with correct mounts
     set:
-      deployment.initContainers[0]:
-        volumeMounts:
-          - name: data
-            mountPath: /opt
-            mountPathDeployment: /opt/folder
-            readOnly: true
-            emptyDir: true
-        command:
-          - "sh"
-          - "-e"
-          - "echo"
-          - "helloWorld"
+      artifactsCache:
+        enabled: true
+        storage: "10Gi"
+        storageClassName: "azurefile"
+        artifacts:
+          - blobUrl: "https://example.com/model1.tar.gz"
+            path: "/artifacts/model1"
+          - blobUrl: "https://example.com/model2.tar.gz"
+            path: "/artifacts/model2"
     template: deployment.yaml
     asserts:
       - isKind:
           of: Deployment
+      # Test initContainer existence and configuration
       - isNotNullOrEmpty:
-          path: spec.template.spec.initContainers[0]
+          path: spec.template.spec.initContainers[?(@.name == "download-artifacts")]
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: python:3.9-slim
+      - equal:
+          path: spec.template.spec.initContainers[0].command[0]
+          value: /scripts/download-artifacts.sh
+      - contains:
+          path: spec.template.spec.initContainers[0].args
+          content: "https://example.com/model1.tar.gz,/artifacts/model1"
+      - contains:
+          path: spec.template.spec.initContainers[0].args
+          content: "https://example.com/model2.tar.gz,/artifacts/model2"
+      
+      # Test volume mounts in initContainer
       - isNotNullOrEmpty:
-          path: spec.template.spec.initContainers[?(@.name == "init-ut")]
+          path: spec.template.spec.initContainers[0].volumeMounts[?(@.name == "artifacts-volume")]
+      - equal:
+          path: spec.template.spec.initContainers[0].volumeMounts[?(@.name == "artifacts-volume")].mountPath
+          value: /artifacts
       - isNotNullOrEmpty:
-          path: spec.template.spec.volumes[?(@.name == "data")]
+          path: spec.template.spec.initContainers[0].volumeMounts[?(@.name == "download-script")]
+      - equal:
+          path: spec.template.spec.initContainers[0].volumeMounts[?(@.name == "download-script")].mountPath
+          value: /scripts
+      
+      # Test volumes configuration
       - isNotNullOrEmpty:
-          path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.name == "data")]
+          path: spec.template.spec.volumes[?(@.name == "artifacts-volume")]
       - isNotNullOrEmpty:
-          path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.mountPath == "/opt/folder")]
+          path: spec.template.spec.volumes[?(@.name == "artifacts-volume")].persistentVolumeClaim.claimName
+      - equal:
+          path: spec.template.spec.volumes[?(@.name == "artifacts-volume")].persistentVolumeClaim.claimName
+          value: ut-artifacts
       - isNotNullOrEmpty:
-          path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.readOnly == true)]
+          path: spec.template.spec.volumes[?(@.name == "download-script")]
+      - equal:
+          path: spec.template.spec.volumes[?(@.name == "download-script")].configMap.name
+          value: ut-download-script
+      - equal:
+          path: spec.template.spec.volumes[?(@.name == "download-script")].configMap.defaultMode
+          value: 0755
+      
+      # Test main container volume mount
       - isNotNullOrEmpty:
-          path: spec.template.spec.volumes[?(@.name == "data")]
+          path: spec.template.spec.containers[0].volumeMounts[?(@.name == "artifacts-volume")]
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[?(@.name == "artifacts-volume")].mountPath
+          value: /artifacts
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[?(@.name == "artifacts-volume")].readOnly
+          value: true
 
-  - it: When given an initContainer and PVC enabled, should always render volumeMounts and volumes for them
+  - it: When artifactsCache is enabled but no artifacts specified, should still create PVC and ConfigMap but with no download args
     set:
-      pvc.enabled: true
-      pvc.name: data-pvc
-      pvc.storage: 1Gi
-      pvc.storageClassName: azurefile
-      volumes:
-        - name: data-volume
-          persistentVolumeClaim:
-            claimName: static-claim
-      deployment.initContainers[0]:
-        volumeMounts:
-          - name: data-pvc
-            mountPath: /opt
-            mountPathDeployment: /opt/folder
-            readOnly: false
-            emptyDir: false 
-        command:
-          - "sh"
-          - "-e"
-          - "echo"
-          - "helloWorld"
+      artifactsCache:
+        enabled: true
+        storage: "10Gi"
+        storageClassName: "azurefile"
+        artifacts: []
     template: deployment.yaml
     asserts:
       - isKind:
           of: Deployment
       - isNotNullOrEmpty:
-          path: spec.template.spec.initContainers[0]
-      - isNotNullOrEmpty:
-          path: spec.template.spec.initContainers[?(@.name == "init-ut")]
-      - isNotNullOrEmpty:
-          path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.name == "data-pvc")]
-      - isNotNullOrEmpty:
-          path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.mountPath == "/opt/folder")]
-      - isNotNullOrEmpty:
-          path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.readOnly == false)]
-      - isNotNullOrEmpty:
-          path: spec.template.spec.volumes[?(@.name == "data-pvc")]
-      - isNotNullOrEmpty:
-          path: spec.template.spec.volumes[?(@.name == "data-pvc")].persistentVolumeClaim[?(@.claimName == "data-pvc")]
-      - isNotNullOrEmpty:
-          path: spec.template.spec.volumes[?(@.name == "data-volume")]
-      - isNotNullOrEmpty:
-          path: spec.template.spec.volumes[?(@.name == "data-volume")].persistentVolumeClaim[?(@.claimName == "static-claim")]
+          path: spec.template.spec.initContainers[?(@.name == "download-artifacts")]
+      - isEmpty:
+          path: spec.template.spec.initContainers[0].args
+
+  - it: When artifactsCache is disabled, should not create any related resources
+    set:
+      artifactsCache:
+        enabled: false
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - notExists:
+          path: spec.template.spec.initContainers
+      - notExists:
+          path: spec.template.spec.volumes[?(@.name == "artifacts-volume")]
+      - notExists:
+          path: spec.template.spec.volumes[?(@.name == "download-script")]
+      - notExists:
+          path: spec.template.spec.containers[0].volumeMounts[?(@.name == "artifacts-volume")]
