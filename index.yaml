@@ -53,6 +53,33 @@ entries:
     - https://github.com/Unique-AG/helm-charts/releases/download/ai-service-1.0.6/ai-service-1.0.6.tgz
     version: 1.0.6
   backend-service:
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: changed
+          description: Removed chart version from common.labels to reduce noise when inspecting diffs
+        - kind: added
+          description: Capability to append extra objects as Kubernetes manifests to the release
+          links:
+            - name: Managing Workloads
+              url: https://kubernetes.io/docs/concepts/workloads/management/
+    apiVersion: v2
+    created: "2024-10-29T13:10:45.027171243Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: 1d99160481e77cd2adade6744b7a33f17feb74c003177c197dad6c32d0e1265c
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-1.3.2/backend-service-1.3.2.tgz
+    version: 1.3.2
   - apiVersion: v2
     created: "2024-10-25T14:02:56.276288312Z"
     description: 'The ''backend-service'' chart is a "convenience" chart from Unique
@@ -239,4 +266,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2024-10-28T15:00:34.923307937Z"
+generated: "2024-10-29T13:10:45.027218049Z"
