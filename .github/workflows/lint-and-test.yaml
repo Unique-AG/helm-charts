@@ -79,6 +79,7 @@ jobs:
       - name: Run Unit Tests
         if: |
           contains(steps.list-changed.outputs.changed_charts, 'backend-service') ||
+          contains(steps.list-changed.outputs.changed_charts, 'web-app') ||
           contains(steps.list-changed.outputs.changed_charts, 'ai-service')
         run: |
           for chart in ${{steps.list-changed.outputs.changed_charts}}; do

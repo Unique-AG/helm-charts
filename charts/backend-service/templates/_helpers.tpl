@@ -51,10 +51,6 @@ app.kubernetes.io/component: server
 {{/* These labels are shared between all components (or shared resources) and have no component awareness */}}
 {{- define "backendService.mutableLabels" -}}
 {{- include "backendService.immutableLabels" . }}
-helm.sh/chart: {{ include "backendService.chart" . }}
-{{- if .Values.image.tag }}
-app.kubernetes.io/version: {{ .Values.image.tag | quote }}
-{{- end }}
 {{- end }}
 
 {{/* These labels identify all resources that belong to our main deployment, called "server" */}}
