@@ -12,6 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 | ---- | ------ | --- |
 | unique-ag |  | <https://unique.ch/> |
 
+## Source Code
+
+* <https://github.com/Unique-AG/helm-charts/tree/main/charts/ai-service>
+
 ## Values
 
 | Key | Type | Default | Description |

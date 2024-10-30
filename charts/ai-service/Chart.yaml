@@ -12,4 +12,6 @@ description: |
   Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 annotations:
   artifacthub.io/changes: |
-    - Fixes the identation issue within the volumeMounts
+    - Add artifacts-cache template to automatically create a PVC for caching set of defined artifacts
+sources:
+  - https://github.com/Unique-AG/helm-charts/tree/main/charts/ai-service
