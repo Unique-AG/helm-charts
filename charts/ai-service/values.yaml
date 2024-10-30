@@ -72,12 +72,33 @@ probes:
 pdb:
   maxUnavailable: 30%
 
-artifactsCache:
+# -- Configuration for Persistent Volume Claim
+pvc:
+  # -- Enable persistent volume claim
   enabled: false
-  storage: "32Gi"
-  storageClassName: "azurefile"
+  # -- Storage size for PVC
+  storage: 32Gi
+  # -- Storage class name for PVC
+  storageClassName: azurefile
+  # -- Access mode for PVC. Possible values: ReadWriteOnce, ReadOnlyMany, ReadWriteMany
   accessMode: ReadWriteMany
+
+# -- Configuration for artifacts cache
+artifactsCache:
+  # -- Enable artifacts cache PVC
+  enabled: false
+  # -- Storage size for artifacts cache
+  storage: "32Gi"
+  # -- Storage class name for artifacts cache
+  storageClassName: "azurefile"
+  # -- Access mode for artifacts cache. Possible values: ReadWriteOnce, ReadOnlyMany, ReadWriteMany
+  accessMode: ReadWriteMany
+  # -- List of artifacts to download
+  # @param artifactsCache.artifacts[].blobUrl URL of the blob to download
+  # @param artifactsCache.artifacts[].path Path where to store the downloaded artifact
   artifacts: []
+  # - blobUrl: "https://example.com/model.bin"
+  #   path: "/model"
 
 resources: {}
 
@@ -141,11 +162,6 @@ secretProvider: {}
 #     vault-name-2:
 #       MY_ENV_VARIABLE_2: keyvault-secret-name-b
 
-pvc:
-  enabled: false
-  storage: 32Gi
-  storageClassName: azurefile
-
 deployment: {}
 # deployment:
   # initContainers:
@@ -168,3 +184,4 @@ deployment: {}
   #       mountPath: /models
   #       readOnly: false
   #       emptyDir: false
+

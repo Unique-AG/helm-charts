@@ -21,11 +21,12 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| artifactsCache.accessMode | string | `"ReadWriteMany"` |  |
-| artifactsCache.artifacts | list | `[]` |  |
-| artifactsCache.enabled | bool | `false` |  |
-| artifactsCache.storage | string | `"32Gi"` |  |
-| artifactsCache.storageClassName | string | `"azurefile"` |  |
+| artifactsCache | object | `{"accessMode":"ReadWriteMany","artifacts":[],"enabled":false,"storage":"32Gi","storageClassName":"azurefile"}` | Configuration for artifacts cache |
+| artifactsCache.accessMode | string | `"ReadWriteMany"` | Access mode for artifacts cache. Possible values: ReadWriteOnce, ReadOnlyMany, ReadWriteMany |
+| artifactsCache.artifacts | list | `[]` | List of artifacts to download @param artifactsCache.artifacts[].blobUrl URL of the blob to download @param artifactsCache.artifacts[].path Path where to store the downloaded artifact |
+| artifactsCache.enabled | bool | `false` | Enable artifacts cache PVC |
+| artifactsCache.storage | string | `"32Gi"` | Storage size for artifacts cache |
+| artifactsCache.storageClassName | string | `"azurefile"` | Storage class name for artifacts cache |
 | autoscaling.enabled | bool | `false` |  |
 | autoscaling.maxReplicas | int | `10` |  |
 | autoscaling.minReplicas | int | `0` |  |
@@ -79,9 +80,11 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 | probes.startup.httpGet.port | string | `"http"` |  |
 | probes.startup.initialDelaySeconds | int | `10` |  |
 | probes.startup.periodSeconds | int | `10` |  |
-| pvc.enabled | bool | `false` |  |
-| pvc.storage | string | `"32Gi"` |  |
-| pvc.storageClassName | string | `"azurefile"` |  |
+| pvc | object | `{"accessMode":"ReadWriteMany","enabled":false,"storage":"32Gi","storageClassName":"azurefile"}` | Configuration for Persistent Volume Claim |
+| pvc.accessMode | string | `"ReadWriteMany"` | Access mode for PVC. Possible values: ReadWriteOnce, ReadOnlyMany, ReadWriteMany |
+| pvc.enabled | bool | `false` | Enable persistent volume claim |
+| pvc.storage | string | `"32Gi"` | Storage size for PVC |
+| pvc.storageClassName | string | `"azurefile"` | Storage class name for PVC |
 | replicaCount | int | `1` |  |
 | resources | object | `{}` |  |
 | rollingUpdate.maxSurge | int | `1` |  |
