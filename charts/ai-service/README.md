@@ -80,6 +80,8 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 | probes.startup.initialDelaySeconds | int | `10` |  |
 | probes.startup.periodSeconds | int | `10` |  |
 | pvc.enabled | bool | `false` |  |
+| pvc.storage | string | `"32Gi"` |  |
+| pvc.storageClassName | string | `"azurefile"` |  |
 | replicaCount | int | `1` |  |
 | resources | object | `{}` |  |
 | rollingUpdate.maxSurge | int | `1` |  |
