@@ -1,0 +1,36 @@
+suite: test artifacts cache template
+templates:
+  - templates/artifacts-cache.yaml
+
+tests:
+  - it: should create PVC when enabled
+    set:
+      artifactsCache:
+        enabled: true
+        name: "test-cache"
+        accessMode: "ReadWriteOnce"
+        storageClassName: "standard"
+        storage: "10Gi"
+    asserts:
+      - isKind:
+          of: PersistentVolumeClaim
+      - equal:
+          path: metadata.name
+          value: test-cache
+      - equal:
+          path: spec.accessModes[0]
+          value: ReadWriteOnce
+      - equal:
+          path: spec.storageClassName
+          value: standard
+      - equal:
+          path: spec.resources.requests.storage
+          value: 10Gi
+
+  - it: should not create PVC when disabled
+    set:
+      artifactsCache:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0 

@@ -35,12 +35,46 @@ tests:
       - notExists:
           path: spec.template.metadata.labels.aadpodidbinding
 
+  - it: When given an initContainer, should always render volumeMounts and volumes for them
+    set:
+      deployment.initContainers[0]:
+        volumeMounts:
+          - name: data
+            mountPath: /opt
+            mountPathDeployment: /opt/folder
+            readOnly: true
+            emptyDir: true
+        command:
+          - "sh"
+          - "-e"
+          - "echo"
+          - "helloWorld"
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - isNotNullOrEmpty:
+          path: spec.template.spec.initContainers[0]
+      - isNotNullOrEmpty:
+          path: spec.template.spec.initContainers[?(@.name == "init-ut")]
+      - isNotNullOrEmpty:
+          path: spec.template.spec.volumes[?(@.name == "data")]
+      - isNotNullOrEmpty:
+          path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.name == "data")]
+      - isNotNullOrEmpty:
+          path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.mountPath == "/opt/folder")]
+      - isNotNullOrEmpty:
+          path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.readOnly == true)]
+      - isNotNullOrEmpty:
+          path: spec.template.spec.volumes[?(@.name == "data")]
+
   - it: When artifactsCache is enabled with test artifacts, should render PVC, ConfigMap, and initContainer with correct mounts
     set:
       artifactsCache:
         enabled: true
         storage: "10Gi"
         storageClassName: "azurefile"
+        accessMode: ReadWriteMany
         artifacts:
           - blobUrl: "https://example.com/model1.tar.gz"
             path: "/artifacts/model1"
@@ -89,10 +123,10 @@ tests:
       - isNotNullOrEmpty:
           path: spec.template.spec.volumes[?(@.name == "download-script")]
       - equal:
-          path: spec.template.spec.volumes[?(@.name == "download-script")].configMap.name
+          path: spec.template.spec.volumes[?(@.name == "download-script")].downloadArtifacts.name
           value: ut-download-script
       - equal:
-          path: spec.template.spec.volumes[?(@.name == "download-script")].configMap.defaultMode
+          path: spec.template.spec.volumes[?(@.name == "download-script")].downloadArtifacts.defaultMode
           value: 0755
       
       # Test main container volume mount
@@ -111,6 +145,7 @@ tests:
         enabled: true
         storage: "10Gi"
         storageClassName: "azurefile"
+        accessMode: ReadWriteMany
         artifacts: []
     template: deployment.yaml
     asserts:
@@ -129,8 +164,6 @@ tests:
     asserts:
       - isKind:
           of: Deployment
-      - notExists:
-          path: spec.template.spec.initContainers
       - notExists:
           path: spec.template.spec.volumes[?(@.name == "artifacts-volume")]
       - notExists:

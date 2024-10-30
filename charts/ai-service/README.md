@@ -17,6 +17,7 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
+| artifactsCache.accessMode | string | `"ReadWriteMany"` |  |
 | artifactsCache.artifacts | list | `[]` |  |
 | artifactsCache.enabled | bool | `false` |  |
 | artifactsCache.storage | string | `"32Gi"` |  |
@@ -26,6 +27,7 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 | autoscaling.minReplicas | int | `0` |  |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
 | autoscaling.targetMemoryUtilizationPercentage | int | `80` |  |
+| deployment | object | `{}` |  |
 | env | object | `{}` |  |
 | envSecrets | object | `{}` |  |
 | eventBasedAutoscaling.cron.desiredReplicas | string | `"1"` |  |
@@ -73,6 +75,7 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 | probes.startup.httpGet.port | string | `"http"` |  |
 | probes.startup.initialDelaySeconds | int | `10` |  |
 | probes.startup.periodSeconds | int | `10` |  |
+| pvc.enabled | bool | `false` |  |
 | replicaCount | int | `1` |  |
 | resources | object | `{}` |  |
 | rollingUpdate.maxSurge | int | `1` |  |

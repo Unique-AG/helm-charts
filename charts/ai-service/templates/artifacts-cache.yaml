@@ -2,12 +2,12 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "common.fullname" . }}-artifacts
+  name: {{ .Values.artifactsCache.name | default (include "common.fullname" .) }}
   labels:
     {{- include "common.labels" . | nindent 4 }}
 spec:
   accessModes:
-    - ReadWriteMany
+    - {{ .Values.artifactsCache.accessMode }}
   storageClassName: {{ .Values.artifactsCache.storageClassName }}
   resources:
     requests:

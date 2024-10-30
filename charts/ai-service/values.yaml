@@ -76,6 +76,7 @@ artifactsCache:
   enabled: false
   storage: "32Gi"
   storageClassName: "azurefile"
+  accessMode: ReadWriteMany
   artifacts: []
 
 resources: {}
@@ -139,3 +140,29 @@ secretProvider: {}
 #       MY_ENV_VARIABLE_1: keyvault-secret-name-a
 #     vault-name-2:
 #       MY_ENV_VARIABLE_2: keyvault-secret-name-b
+
+pvc: 
+  enabled: false
+
+deployment: {}
+# deployment:
+  # initContainers:
+  # - name: model-downloader
+  #   image: python:3.9
+  #   command:
+  #     - sh
+  #     - -c
+  #     - |
+  #       pip install huggingface-hub transformers;
+  #       huggingface-cli download bert-base-uncased --cache-dir /models/bert;
+  #       if [ -f /models/bert/pytorch_model.bin ]; then
+  #         echo "Model downloaded successfully";
+  #       else
+  #         echo "Model download failed";
+  #         exit 1;
+  #       fi;
+  #   volumeMounts:
+  #     - name: models-storage
+  #       mountPath: /models
+  #       readOnly: false
+  #       emptyDir: false

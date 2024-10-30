@@ -44,6 +44,38 @@ spec:
       serviceAccountName: {{ include "common.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+      {{- if .Values.deployment.initContainers }}
+      {{- range .Values.deployment.initContainers }}
+        - name: {{ .name | default (printf "init-%s" $fullName) }}
+          image: "{{ .image | default "busybox:1.28" }}"
+          restartPolicy: "{{ .restartPolicy | default "Always" }}"
+          command: {{ .command | toYaml | nindent 10 }}
+          {{- if .volumeMounts }}
+          volumeMounts:
+          {{- range .volumeMounts }}
+            - name: {{ .name}}
+              mountPath: {{ .mountPath}}
+              readOnly: {{ .readOnly | default false }}
+          {{- end }}
+          {{- end }}
+      {{- end }}
+      {{- end }}
+      {{- if .Values.artifactsCache.enabled }}
+        - name: download-artifacts
+          image: python:3.9-slim
+          command:
+            - /scripts/download-artifacts.sh
+          args:
+            {{- range .Values.artifactsCache.artifacts }}
+            - "{{ .blobUrl }},{{ .path }}"
+            {{- end }}
+          volumeMounts:
+            - name: artifacts-volume
+              mountPath: /artifacts
+            - name: download-script
+              mountPath: /scripts
+      {{- end }}
       containers:
         - name: {{ include "common.fullname" . }}
           lifecycle:
@@ -104,6 +136,17 @@ spec:
             {{- end }}
             {{- end }}
           volumeMounts:
+          {{- if .Values.deployment.initContainers }}
+          {{- range .Values.deployment.initContainers }}
+          {{- if .volumeMounts }}
+          {{- range .volumeMounts }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPathDeployment | default .mountPath }}
+              readOnly: {{ .readOnly | default false }}
+          {{- end }}
+          {{- end }}   
+          {{- end }}
+          {{- end }}
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -135,14 +178,34 @@ spec:
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.pvc.enabled }}
+        - name: {{ .Values.pvc.name | default $fullName }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.pvc.name | default $fullName }}
+      {{- end }}
       {{- if .Values.artifactsCache.enabled }}
         - name: artifacts-volume
           persistentVolumeClaim:
             claimName: {{ include "common.fullname" . }}-artifacts
         - name: download-script
-          configMap:
+          downloadArtifacts:
             name: {{ include "common.fullname" . }}-download-script
             defaultMode: 0755
+      {{- end }}
+      {{- if .Values.deployment.initContainers }}
+      {{- range .Values.deployment.initContainers }}
+      {{- if .volumeMounts }}
+      {{- range .volumeMounts }}
+       {{- if eq .emptyDir true }}
+        - name: {{ .name }}
+          emptyDir: {}
+       {{- end }}
+      {{- end }}
+      {{- end }}   
+      {{- end }}
+      {{- end }}
+      {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- if .Values.secretProvider }}
       {{- range $k, $v := .Values.secretProvider.vaults }}
@@ -153,21 +216,5 @@ spec:
             volumeAttributes:
               secretProviderClass: {{ $fullName }}-{{ $k }}
       {{- end }}
-      {{- end }}
-      {{- if .Values.artifactsCache.enabled }}
-      initContainers:
-        - name: download-artifacts
-          image: python:3.9-slim
-          command:
-            - /scripts/download-artifacts.sh
-          args:
-            {{- range .Values.artifactsCache.artifacts }}
-            - "{{ .blobUrl }},{{ .path }}"
-            {{- end }}
-          volumeMounts:
-            - name: artifacts-volume
-              mountPath: /artifacts
-            - name: download-script
-              mountPath: /scripts
       {{- end }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
