@@ -5,6 +5,8 @@ maintainers:
   - name: unique-ag
     url: https://unique.ch/
 name: ai-service
+sources:
+  - https://github.com/Unique-AG/helm-charts/tree/main/charts/ai-service
 version: 1.0.9
 description: |
   The 'ai-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy simple AI workloads to Kubernetes.
@@ -12,6 +14,5 @@ description: |
   Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 annotations:
   artifacthub.io/changes: |
-    - Add artifacts-cache template to automatically create a PVC for caching set of defined artifacts
-sources:
-  - https://github.com/Unique-AG/helm-charts/tree/main/charts/ai-service
+    - kind: changed
+      description: Add artifacts-cache template to automatically create a PVC for caching set of defined artifacts
