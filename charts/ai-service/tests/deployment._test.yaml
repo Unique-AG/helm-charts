@@ -74,25 +74,29 @@ tests:
         enabled: true
         storage: "10Gi"
         storageClassName: "azurefile"
-        accessMode: ReadWriteMany
+        accessModes: 
+          - ReadWriteMany
         artifacts:
           - blobUrl: "https://example.com/model1.tar.gz"
             path: "/artifacts/model1"
           - blobUrl: "https://example.com/model2.tar.gz"
             path: "/artifacts/model2"
+        downloader:
+          name: custom-download-artifacts
+          image: test-image
     template: deployment.yaml
     asserts:
       - isKind:
           of: Deployment
       # Test initContainer existence and configuration
       - isNotNullOrEmpty:
-          path: spec.template.spec.initContainers[?(@.name == "download-artifacts")]
+          path: spec.template.spec.initContainers[?(@.name == "custom-download-artifacts")]
       - equal:
           path: spec.template.spec.initContainers[0].image
-          value: python:3.9-slim
+          value: test-image
       - equal:
           path: spec.template.spec.initContainers[0].command[0]
-          value: /scripts/download-artifacts.sh
+          value: /files/download-artifacts.sh
       - contains:
           path: spec.template.spec.initContainers[0].args
           content: "https://example.com/model1.tar.gz,/artifacts/model1"
@@ -102,44 +106,44 @@ tests:
       
       # Test volume mounts in initContainer
       - isNotNullOrEmpty:
-          path: spec.template.spec.initContainers[0].volumeMounts[?(@.name == "artifacts-volume")]
+          path: spec.template.spec.initContainers[0].volumeMounts[?(@.name == "artifacts-cache-volume")]
       - equal:
-          path: spec.template.spec.initContainers[0].volumeMounts[?(@.name == "artifacts-volume")].mountPath
+          path: spec.template.spec.initContainers[0].volumeMounts[?(@.name == "artifacts-cache-volume")].mountPath
           value: /artifacts
       - isNotNullOrEmpty:
-          path: spec.template.spec.initContainers[0].volumeMounts[?(@.name == "download-script")]
+          path: spec.template.spec.initContainers[0].volumeMounts[?(@.name == "download-artifacts-volume")]
       - equal:
-          path: spec.template.spec.initContainers[0].volumeMounts[?(@.name == "download-script")].mountPath
-          value: /scripts
+          path: spec.template.spec.initContainers[0].volumeMounts[?(@.name == "download-artifacts-volume")].mountPath
+          value: /files
       
       # Test volumes configuration
       - isNotNullOrEmpty:
-          path: spec.template.spec.volumes[?(@.name == "artifacts-volume")]
+          path: spec.template.spec.volumes[?(@.name == "artifacts-cache-volume")]
       - isNotNullOrEmpty:
-          path: spec.template.spec.volumes[?(@.name == "artifacts-volume")].persistentVolumeClaim.claimName
+          path: spec.template.spec.volumes[?(@.name == "artifacts-cache-volume")].persistentVolumeClaim.claimName
       - equal:
-          path: spec.template.spec.volumes[?(@.name == "artifacts-volume")].persistentVolumeClaim.claimName
-          value: ut-artifacts
+          path: spec.template.spec.volumes[?(@.name == "artifacts-cache-volume")].persistentVolumeClaim.claimName
+          value: ut-artifacts-cache
       - isNotNullOrEmpty:
-          path: spec.template.spec.volumes[?(@.name == "download-script")]
+          path: spec.template.spec.volumes[?(@.name == "download-artifacts-volume")]
       - equal:
-          path: spec.template.spec.volumes[?(@.name == "download-script")].downloadArtifacts.name
-          value: ut-download-script
+          path: spec.template.spec.volumes[?(@.name == "download-artifacts-volume")].downloadArtifacts.name
+          value: ut-download-artifacts
       - equal:
-          path: spec.template.spec.volumes[?(@.name == "download-script")].downloadArtifacts.defaultMode
+          path: spec.template.spec.volumes[?(@.name == "download-artifacts-volume")].downloadArtifacts.defaultMode
           value: 0755
       
       # Test main container volume mount
       - isNotNullOrEmpty:
-          path: spec.template.spec.containers[0].volumeMounts[?(@.name == "artifacts-volume")]
+          path: spec.template.spec.containers[0].volumeMounts[?(@.name == "artifacts-cache-volume")]
       - equal:
-          path: spec.template.spec.containers[0].volumeMounts[?(@.name == "artifacts-volume")].mountPath
+          path: spec.template.spec.containers[0].volumeMounts[?(@.name == "artifacts-cache-volume")].mountPath
           value: /artifacts
       - equal:
-          path: spec.template.spec.containers[0].volumeMounts[?(@.name == "artifacts-volume")].readOnly
+          path: spec.template.spec.containers[0].volumeMounts[?(@.name == "artifacts-cache-volume")].readOnly
           value: true
 
-  - it: When artifactsCache is enabled but no artifacts specified, should still create PVC and ConfigMap but with no download args
+  - it: When artifactsCache is enabled but no artifacts specified, should notcreate PVC and ConfigMap
     set:
       artifactsCache:
         enabled: true
@@ -147,14 +151,19 @@ tests:
         storageClassName: "azurefile"
         accessMode: ReadWriteMany
         artifacts: []
+        downloader:
+          name: custom-download-artifacts
+          image: test-image
     template: deployment.yaml
     asserts:
       - isKind:
           of: Deployment
-      - isNotNullOrEmpty:
-          path: spec.template.spec.initContainers[?(@.name == "download-artifacts")]
-      - isEmpty:
-          path: spec.template.spec.initContainers[0].args
+      - notExists:
+          path: spec.template.spec.initContainers[?(@.name == "custom-download-artifacts")]
+      - notExists:
+          path: spec.template.spec.volumes[?(@.name == "artifacts-cache-volume")]
+      - notExists:
+          path: spec.template.spec.volumes[?(@.name == "download-artifacts-volume")]
 
   - it: When artifactsCache is disabled, should not create any related resources
     set:
@@ -165,8 +174,10 @@ tests:
       - isKind:
           of: Deployment
       - notExists:
-          path: spec.template.spec.volumes[?(@.name == "artifacts-volume")]
+          path: spec.template.spec.initContainers[?(@.name == "custom-download-artifacts")]
       - notExists:
-          path: spec.template.spec.volumes[?(@.name == "download-script")]
+          path: spec.template.spec.volumes[?(@.name == "artifacts-cache-volume")]
       - notExists:
-          path: spec.template.spec.containers[0].volumeMounts[?(@.name == "artifacts-volume")]
+          path: spec.template.spec.volumes[?(@.name == "download-artifacts-volume")]
+      - notExists:
+          path: spec.template.spec.containers[0].volumeMounts[?(@.name == "artifacts-cache-volume")]

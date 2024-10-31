@@ -1,14 +1,16 @@
 suite: test artifacts cache template
 templates:
   - templates/artifacts-cache.yaml
+release:
+  name: ut
 
 tests:
   - it: should create PVC when enabled
     set:
       artifactsCache:
         enabled: true
-        name: "test-cache"
-        accessMode: "ReadWriteOnce"
+        accessModes: 
+          - "ReadWriteOnce"
         storageClassName: "standard"
         storage: "10Gi"
     asserts:
@@ -16,7 +18,7 @@ tests:
           of: PersistentVolumeClaim
       - equal:
           path: metadata.name
-          value: test-cache
+          value: ut-artifacts-cache
       - equal:
           path: spec.accessModes[0]
           value: ReadWriteOnce

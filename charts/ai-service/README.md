@@ -1,6 +1,6 @@
 # ai-service
 
-![Version: 1.0.9](https://img.shields.io/badge/Version-1.0.9-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.1.0](https://img.shields.io/badge/Version-1.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 The 'ai-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy simple AI workloads to Kubernetes.
 
@@ -21,9 +21,12 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| artifactsCache | object | `{"accessMode":"ReadWriteMany","artifacts":[],"enabled":false,"storage":"32Gi","storageClassName":"azurefile"}` | Configuration for artifacts cache |
-| artifactsCache.accessMode | string | `"ReadWriteMany"` | Access mode for artifacts cache. Possible values: ReadWriteOnce, ReadOnlyMany, ReadWriteMany |
-| artifactsCache.artifacts | list | `[]` | List of artifacts to download @param artifactsCache.artifacts[].blobUrl URL of the blob to download @param artifactsCache.artifacts[].path Path where to store the downloaded artifact |
+| artifactsCache | object | `{"accessModes":["ReadWriteMany"],"artifacts":[],"downloader":{"image":"python:3.9-slim","name":"download-artifacts"},"enabled":false,"storage":"32Gi","storageClassName":"azurefile"}` | Configuration for artifacts cache |
+| artifactsCache.accessModes | list | `["ReadWriteMany"]` | Access modes for artifacts cache. Possible values: ReadWriteOnce, ReadOnlyMany, ReadWriteMany |
+| artifactsCache.artifacts | list | `[]` | artifactsCache.artifacts[].path Path where to store the downloaded artifact |
+| artifactsCache.downloader | object | `{"image":"python:3.9-slim","name":"download-artifacts"}` | Configuration for the artifacts downloader init container |
+| artifactsCache.downloader.image | string | `"python:3.9-slim"` | Image to use for the artifacts downloader init container |
+| artifactsCache.downloader.name | string | `"download-artifacts"` | Name of the artifacts downloader init container |
 | artifactsCache.enabled | bool | `false` | Enable artifacts cache PVC |
 | artifactsCache.storage | string | `"32Gi"` | Storage size for artifacts cache |
 | artifactsCache.storageClassName | string | `"azurefile"` | Storage class name for artifacts cache |

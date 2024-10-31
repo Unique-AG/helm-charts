@@ -45,8 +45,8 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       initContainers:
-      {{- if .Values.deployment.initContainers }}
-      {{- range .Values.deployment.initContainers }}
+      {{- with .Values.deployment.initContainers }}
+      {{- range . }}
         - name: {{ .name | default (printf "init-%s" $fullName) }}
           image: "{{ .image | default "busybox:1.28" }}"
           restartPolicy: "{{ .restartPolicy | default "Always" }}"
@@ -61,20 +61,20 @@ spec:
           {{- end }}
       {{- end }}
       {{- end }}
-      {{- if .Values.artifactsCache.enabled }}
-        - name: download-artifacts
-          image: python:3.9-slim
+      {{- if and .Values.artifactsCache.enabled .Values.artifactsCache.artifacts }}
+        - name: {{ .Values.artifactsCache.downloader.name }}
+          image: {{ .Values.artifactsCache.downloader.image }}
           command:
-            - /scripts/download-artifacts.sh
+            - /files/download-artifacts.sh
           args:
             {{- range .Values.artifactsCache.artifacts }}
             - "{{ .blobUrl }},{{ .path }}"
             {{- end }}
           volumeMounts:
-            - name: artifacts-volume
+            - name: artifacts-cache-volume
               mountPath: /artifacts
-            - name: download-script
-              mountPath: /scripts
+            - name: download-artifacts-volume
+              mountPath: /files
       {{- end }}
       containers:
         - name: {{ include "common.fullname" . }}
@@ -150,8 +150,8 @@ spec:
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if .Values.artifactsCache.enabled }}
-            - name: artifacts-volume
+          {{- if and .Values.artifactsCache.enabled .Values.artifactsCache.artifacts }}
+            - name: artifacts-cache-volume
               mountPath: /artifacts
               readOnly: true
           {{- end }}
@@ -183,13 +183,13 @@ spec:
           persistentVolumeClaim:
             claimName: {{ .Values.pvc.name | default $fullName }}
       {{- end }}
-      {{- if .Values.artifactsCache.enabled }}
-        - name: artifacts-volume
+      {{- if and .Values.artifactsCache.enabled .Values.artifactsCache.artifacts }}
+        - name: artifacts-cache-volume
           persistentVolumeClaim:
-            claimName: {{ include "common.fullname" . }}-artifacts
-        - name: download-script
+            claimName: {{ include "common.artifactsCacheName" . }}
+        - name: download-artifacts-volume
           downloadArtifacts:
-            name: {{ include "common.fullname" . }}-download-script
+            name: {{ include "common.downloadArtifactsName" . }}
             defaultMode: 0755
       {{- end }}
       {{- if .Values.deployment.initContainers }}
