@@ -1,0 +1,15 @@
+{{- if .Values.artifactsCache.enabled -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "common.artifactsCacheName" . }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    {{- toYaml .Values.artifactsCache.accessModes | nindent 4 }}
+  storageClassName: {{ .Values.artifactsCache.storageClassName | default "azurefile" }}
+  resources:
+    requests:
+      storage: {{ .Values.artifactsCache.storage }}
+{{- end }}

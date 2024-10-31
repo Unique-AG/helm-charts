@@ -1,0 +1,59 @@
+{{ template "chart.header" . }}
+{{ template "chart.description" . }}
+
+{{ template "chart.versionBadge" . }}{{ template "chart.typeBadge" . }}{{ template "chart.appVersionBadge" . }}
+
+{{ template "chart.requirementsSection" . }}
+
+## Implementation Details
+
+### OCI availibility
+This chart is available both as Helm Repository as well as OCI artefact.
+```sh
+helm repo add unique https://unique-ag.github.io/helm-charts/
+helm install my-{{ template "chart.name" . }} unique/{{ template "chart.name" . }} --version {{ template "chart.version" . }}
+
+# or
+helm install my-{{ template "chart.name" . }} oci://ghcr.io/unique-ag/helm-charts/{{ template "chart.name" . }} --version {{ template "chart.version" . }}
+```
+
+### Artifacts Cache
+The artifacts cache provides a mechanism to pre-download and persist files (like ML models) that your service needs. It creates a shared PersistentVolumeClaim that can be accessed by multiple pods, making the files available without needing to download them for each pod.
+
+#### Configuration
+Enable the artifacts cache and specify the files to download in your values.yaml:
+
+```yaml
+artifactsCache:
+  enabled: true
+  storage: "32Gi"  # Size of the PVC
+  storageClassName: "azurefile"  # Storage class to use
+  accessModes:
+    - ReadWriteMany  # Allows multiple pods to read the cache
+  artifacts: # specify the urls from which the artifacts are to be downloaded and the paths where they are to be saved
+    - blobUrl: "https://example.com/model1.bin"
+      path: "/models/model1"
+    - blobUrl: "https://example.com/model2.bin" 
+      path: "/models/model2"
+```
+
+#### How it works
+When enabled, the chart will:
+1. Create a PersistentVolumeClaim for storing the artifacts
+2. Add an init container that downloads the specified files before your application starts
+3. Mount the cache volume at `/artifacts` in your application container
+
+The downloader supports:
+- Automatic retries (3 attempts)
+- Skip downloading if file already exists
+- Custom destination paths within the cache
+
+#### Example Use Cases
+Common uses include:
+- Pre-downloading ML models
+- Caching large data files
+- Sharing static assets between pods
+
+{{ template "chart.valuesSection" . }}
+
+{{ template "helm-docs.versionFooter" . }}

@@ -60,3 +60,17 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Create the name for artifacts cache resources
+*/}}
+{{- define "common.artifactsCacheName" -}}
+{{- printf "%s-artifacts-cache" (include "common.fullname" .) -}}
+{{- end }}
+
+{{/*
+Create the name for download artifacts resources
+*/}}
+{{- define "common.downloadArtifactsName" -}}
+{{- printf "%s-download-artifacts" (include "common.fullname" .) -}}
+{{- end }}

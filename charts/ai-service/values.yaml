@@ -72,10 +72,36 @@ probes:
 pdb:
   maxUnavailable: 30%
 
+# -- Configuration for Persistent Volume Claim
 pvc:
+  # -- Enable persistent volume claim
   enabled: false
+  # -- Storage size for PVC
   storage: 32Gi
+  # -- Storage class name for PVC
   storageClassName: azurefile
+  # -- Access mode for PVC. Possible values: ReadWriteOnce, ReadOnlyMany, ReadWriteMany
+  accessMode: ReadWriteMany
+
+# -- Configuration for artifacts cache, see the readme above for examples and details.
+artifactsCache:
+  # -- Enable artifacts cache PVC
+  enabled: false
+  # -- Storage size for artifacts cache
+  storage: "32Gi"
+  # -- Storage class name for artifacts cache
+  storageClassName: "azurefile"
+  # -- Access modes for artifacts cache. Possible values: ReadWriteOnce, ReadOnlyMany, ReadWriteMany
+  accessModes:
+    - ReadWriteMany
+  # -- List of artifacts to download
+  # -- artifactsCache.artifacts[].blobUrl URL of the blob to download
+  # -- artifactsCache.artifacts[].path Path where to store the downloaded artifact
+  artifacts: []
+  # -- Configuration for the artifacts downloader init container
+  downloader:
+    # -- Image to use for the artifacts downloader init container
+    image: "python:3.9-slim"
 
 resources: {}
 
@@ -138,6 +164,7 @@ secretProvider: {}
 #       MY_ENV_VARIABLE_1: keyvault-secret-name-a
 #     vault-name-2:
 #       MY_ENV_VARIABLE_2: keyvault-secret-name-b
+
 deployment: {}
 # deployment:
   # initContainers:

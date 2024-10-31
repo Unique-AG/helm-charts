@@ -44,9 +44,9 @@ spec:
       serviceAccountName: {{ include "common.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      {{- if .Values.deployment.initContainers }}
       initContainers:
-      {{- range .Values.deployment.initContainers }}
+      {{- with .Values.deployment.initContainers }}
+      {{- range . }}
         - name: {{ .name | default (printf "init-%s" $fullName) }}
           image: "{{ .image | default "busybox:1.28" }}"
           restartPolicy: "{{ .restartPolicy | default "Always" }}"
@@ -60,6 +60,21 @@ spec:
           {{- end }}
           {{- end }}
       {{- end }}
+      {{- end }}
+      {{- if and .Values.artifactsCache.enabled .Values.artifactsCache.artifacts }}
+        - name: download-artifacts
+          image: {{ .Values.artifactsCache.downloader.image }}
+          command:
+            - /files/download-artifacts.sh
+          args:
+            {{- range .Values.artifactsCache.artifacts }}
+            - "{{ .blobUrl }},{{ .path }}"
+            {{- end }}
+          volumeMounts:
+            - name: artifacts-cache-volume
+              mountPath: /artifacts
+            - name: download-artifacts-volume
+              mountPath: /files
       {{- end }}
       containers:
         - name: {{ include "common.fullname" . }}
@@ -135,6 +150,11 @@ spec:
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          {{- if and .Values.artifactsCache.enabled .Values.artifactsCache.artifacts }}
+            - name: artifacts-cache-volume
+              mountPath: /artifacts
+              readOnly: true
+          {{- end }}
           {{- if .Values.secretProvider }}
           {{- range $k, $v := .Values.secretProvider.vaults }}
             - name: {{ $fullName }}-{{ $k }}
@@ -162,6 +182,15 @@ spec:
         - name: {{ .Values.pvc.name | default $fullName }}
           persistentVolumeClaim:
             claimName: {{ .Values.pvc.name | default $fullName }}
+      {{- end }}
+      {{- if and .Values.artifactsCache.enabled .Values.artifactsCache.artifacts }}
+        - name: artifacts-cache-volume
+          persistentVolumeClaim:
+            claimName: {{ include "common.artifactsCacheName" . }}
+        - name: download-artifacts-volume
+          configMap:
+            name: {{ include "common.downloadArtifactsName" . }}
+            defaultMode: 0755
       {{- end }}
       {{- if .Values.deployment.initContainers }}
       {{- range .Values.deployment.initContainers }}

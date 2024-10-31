@@ -1,22 +1,73 @@
 # ai-service
 
-![Version: 1.0.8](https://img.shields.io/badge/Version-1.0.8-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
-
 The 'ai-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy simple AI workloads to Kubernetes.
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-## Maintainers
+![Version: 1.1.0](https://img.shields.io/badge/Version-1.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
-| Name | Email | Url |
-| ---- | ------ | --- |
-| unique-ag |  | <https://unique.ch/> |
+## Implementation Details
+
+### OCI availibility
+This chart is available both as Helm Repository as well as OCI artefact.
+```sh
+helm repo add unique https://unique-ag.github.io/helm-charts/
+helm install my-ai-service unique/ai-service --version 1.1.0
+
+# or
+helm install my-ai-service oci://ghcr.io/unique-ag/helm-charts/ai-service --version 1.1.0
+```
+
+### Artifacts Cache
+The artifacts cache provides a mechanism to pre-download and persist files (like ML models) that your service needs. It creates a shared PersistentVolumeClaim that can be accessed by multiple pods, making the files available without needing to download them for each pod.
+
+#### Configuration
+Enable the artifacts cache and specify the files to download in your values.yaml:
+
+```yaml
+artifactsCache:
+  enabled: true
+  storage: "32Gi"  # Size of the PVC
+  storageClassName: "azurefile"  # Storage class to use
+  accessModes:
+    - ReadWriteMany  # Allows multiple pods to read the cache
+  artifacts: # specify the urls from which the artifacts are to be downloaded and the paths where they are to be saved
+    - blobUrl: "https://example.com/model1.bin"
+      path: "/models/model1"
+    - blobUrl: "https://example.com/model2.bin"
+      path: "/models/model2"
+```
+
+#### How it works
+When enabled, the chart will:
+1. Create a PersistentVolumeClaim for storing the artifacts
+2. Add an init container that downloads the specified files before your application starts
+3. Mount the cache volume at `/artifacts` in your application container
+
+The downloader supports:
+- Automatic retries (3 attempts)
+- Skip downloading if file already exists
+- Custom destination paths within the cache
+
+#### Example Use Cases
+Common uses include:
+- Pre-downloading ML models
+- Caching large data files
+- Sharing static assets between pods
 
 ## Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
+| artifactsCache | object | `{"accessModes":["ReadWriteMany"],"artifacts":[],"downloader":{"image":"python:3.9-slim"},"enabled":false,"storage":"32Gi","storageClassName":"azurefile"}` | Configuration for artifacts cache, see the readme above for examples and details. |
+| artifactsCache.accessModes | list | `["ReadWriteMany"]` | Access modes for artifacts cache. Possible values: ReadWriteOnce, ReadOnlyMany, ReadWriteMany |
+| artifactsCache.artifacts | list | `[]` | artifactsCache.artifacts[].path Path where to store the downloaded artifact |
+| artifactsCache.downloader | object | `{"image":"python:3.9-slim"}` | Configuration for the artifacts downloader init container |
+| artifactsCache.downloader.image | string | `"python:3.9-slim"` | Image to use for the artifacts downloader init container |
+| artifactsCache.enabled | bool | `false` | Enable artifacts cache PVC |
+| artifactsCache.storage | string | `"32Gi"` | Storage size for artifacts cache |
+| artifactsCache.storageClassName | string | `"azurefile"` | Storage class name for artifacts cache |
 | autoscaling.enabled | bool | `false` |  |
 | autoscaling.maxReplicas | int | `10` |  |
 | autoscaling.minReplicas | int | `0` |  |
@@ -70,9 +121,11 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 | probes.startup.httpGet.port | string | `"http"` |  |
 | probes.startup.initialDelaySeconds | int | `10` |  |
 | probes.startup.periodSeconds | int | `10` |  |
-| pvc.enabled | bool | `false` |  |
-| pvc.storage | string | `"32Gi"` |  |
-| pvc.storageClassName | string | `"azurefile"` |  |
+| pvc | object | `{"accessMode":"ReadWriteMany","enabled":false,"storage":"32Gi","storageClassName":"azurefile"}` | Configuration for Persistent Volume Claim |
+| pvc.accessMode | string | `"ReadWriteMany"` | Access mode for PVC. Possible values: ReadWriteOnce, ReadOnlyMany, ReadWriteMany |
+| pvc.enabled | bool | `false` | Enable persistent volume claim |
+| pvc.storage | string | `"32Gi"` | Storage size for PVC |
+| pvc.storageClassName | string | `"azurefile"` | Storage class name for PVC |
 | replicaCount | int | `1` |  |
 | resources | object | `{}` |  |
 | rollingUpdate.maxSurge | int | `1` |  |
