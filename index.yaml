@@ -3,6 +3,28 @@ entries:
   ai-service:
   - annotations:
       artifacthub.io/changes: |
+        - kind: added
+          description: Add artifacts-cache template to automatically create a PVC for caching set of defined artifacts
+    apiVersion: v2
+    created: "2024-10-31T18:04:44.933484892Z"
+    description: 'The ''ai-service'' chart is a "convenience" chart from Unique AG
+      that can generically be used to deploy simple AI workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: c504603f5eaf8ff1960601e4d13e7504ef790933402b1ebbbdc3741c17a895bc
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: ai-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/ai-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/ai-service-1.1.0/ai-service-1.1.0.tgz
+    version: 1.1.0
+  - annotations:
+      artifacthub.io/changes: |
         - Fixes the identation issue within the volumeMounts
     apiVersion: v2
     created: "2024-10-28T13:18:34.583052617Z"
@@ -266,4 +288,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2024-10-29T13:10:45.027218049Z"
+generated: "2024-10-31T18:04:44.933514106Z"
