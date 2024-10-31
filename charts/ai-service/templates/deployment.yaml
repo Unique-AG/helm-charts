@@ -188,7 +188,7 @@ spec:
           persistentVolumeClaim:
             claimName: {{ include "common.artifactsCacheName" . }}
         - name: download-artifacts-volume
-          downloadArtifacts:
+          configMap:
             name: {{ include "common.downloadArtifactsName" . }}
             defaultMode: 0755
       {{- end }}

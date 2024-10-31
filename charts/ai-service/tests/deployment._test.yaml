@@ -126,10 +126,10 @@ tests:
       - isNotNullOrEmpty:
           path: spec.template.spec.volumes[?(@.name == "download-artifacts-volume")]
       - equal:
-          path: spec.template.spec.volumes[?(@.name == "download-artifacts-volume")].downloadArtifacts.name
+          path: spec.template.spec.volumes[?(@.name == "download-artifacts-volume")].configMap.name
           value: ut-download-artifacts
       - equal:
-          path: spec.template.spec.volumes[?(@.name == "download-artifacts-volume")].downloadArtifacts.defaultMode
+          path: spec.template.spec.volumes[?(@.name == "download-artifacts-volume")].configMap.defaultMode
           value: 0755
       
       # Test main container volume mount
