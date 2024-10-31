@@ -62,7 +62,7 @@ spec:
       {{- end }}
       {{- end }}
       {{- if and .Values.artifactsCache.enabled .Values.artifactsCache.artifacts }}
-        - name: {{ .Values.artifactsCache.downloader.name }}
+        - name: download-artifacts
           image: {{ .Values.artifactsCache.downloader.image }}
           command:
             - /files/download-artifacts.sh

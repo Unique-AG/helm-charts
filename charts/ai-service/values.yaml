@@ -98,12 +98,8 @@ artifactsCache:
   # -- artifactsCache.artifacts[].blobUrl URL of the blob to download
   # -- artifactsCache.artifacts[].path Path where to store the downloaded artifact
   artifacts: []
-  # - blobUrl: "https://example.com/model.bin"
-  #   path: "/model"
   # -- Configuration for the artifacts downloader init container
   downloader:
-    # -- Name of the artifacts downloader init container
-    name: "download-artifacts"
     # -- Image to use for the artifacts downloader init container
     image: "python:3.9-slim"
 
