@@ -83,7 +83,7 @@ pvc:
   # -- Access mode for PVC. Possible values: ReadWriteOnce, ReadOnlyMany, ReadWriteMany
   accessMode: ReadWriteMany
 
-# -- Configuration for artifacts cache
+# -- Configuration for artifacts cache, see the readme above for examples and details.
 artifactsCache:
   # -- Enable artifacts cache PVC
   enabled: false
