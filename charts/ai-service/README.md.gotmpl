@@ -1,0 +1,39 @@
+{{ template "chart.header" . }}
+{{ template "chart.description" . }}
+
+{{ template "chart.versionBadge" . }}{{ template "chart.typeBadge" . }}{{ template "chart.appVersionBadge" . }}
+
+{{ template "chart.requirementsSection" . }}
+
+## Implementation Details
+
+### OCI availibility
+This chart is available both as Helm Repository as well as OCI artefact.
+```sh
+helm repo add unique https://unique-ag.github.io/helm-charts/
+helm install my-{{ template "chart.name" . }} unique/{{ template "chart.name" . }} --version {{ template "chart.version" . }}
+
+# or
+helm install my-{{ template "chart.name" . }} oci://ghcr.io/unique-ag/helm-charts/{{ template "chart.name" . }} --version {{ template "chart.version" . }}
+```
+
+### Artifacts Cache
+The artifacts cache ………… (do your thing Claude)
+
+Clients can fill the cache in two ways… downloader, or kubectl cp afterwards (or both).
+
+See these two examples that do HF magic
+
+```
+artifactsCache:
+  enabled: true
+  download:
+    - blob1
+    - blob2
+```
+
+Whatever else you want to say Martin.
+
+{{ template "chart.valuesSection" . }}
+
+{{ template "helm-docs.versionFooter" . }}
