@@ -89,7 +89,7 @@ jobs:
         with:
           config: .github/configs/kind-config.yaml
 
-      - name: Deploy latest secrets-store-csi-driver CRDs when testing affected charts
+      - name: Deploy latest CRDs (secrets-store.csi.x-k8s.io) when testing affected charts
         if: |
           contains(steps.list-changed.outputs.changed_charts, 'sscsid-keeper')
         run: |
