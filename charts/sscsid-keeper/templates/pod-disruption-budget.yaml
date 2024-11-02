@@ -1,0 +1,16 @@
+{{- if and .Values.keeper.pdb.enabled (gt (int .Values.keeper.replicaCount) 1) }}
+{{- if le (int .Values.keeper.replicaCount) (int (default 1 .Values.keeper.pdb.minAvailable)) }}
+{{- fail "replicaCount must be greater than minAvailable." }}
+{{- end }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "sscsid-keeper.fullname" . }}
+  labels:
+    {{- include "sscsid-keeper.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.keeper.pdb.minAvailable | default 1}}
+  selector:
+    matchLabels:
+    {{- include "sscsid-keeper.selectorLabels" . | nindent 6 }}
+{{- end }}

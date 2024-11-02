@@ -10,7 +10,7 @@ array:
 {{- define "renderData" -}}
 data:
   {{- range . }}
-  - key: APISecret
+  - key: {{ .k8sSecretDataKey }}
     objectName: {{ .kvObjectName }}
   {{- end -}}
 {{- end -}}

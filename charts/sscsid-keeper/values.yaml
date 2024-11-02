@@ -73,6 +73,13 @@ keeper:
   # -- Default affinity preset for the keeper
   affinity: {}
 
+  # -- Set the PodDisruptionBudget for the keeper
+  pdb:
+    # -- enabled by default as it keeps the secret
+    enabled: true
+    # -- defines how many pods should be kept around, half of the replica in our example
+    minAvailable: 1
+
 # -- Set options for the Secret Provider Class
 spc:
 
@@ -84,8 +91,14 @@ spc:
 
   # -- Azure Entra ID Identity Client ID
   identityId: "00000000-0000-0000-0000-000000000000"
+  
+  # -- Type of Kubernetes Secret
+  k8sSecretType: "Opaque"
 
   # -- Set the secret objects for the Secret Provider Class
-  secrets: []
-    # - k8sSecretDataKey: APISecret
-    #   kvObjectName: some-secret-in-kv
+  secrets:
+    - 
+      # -- defines, which key in the secret object should be used
+      k8sSecretDataKey: apiKeyExample
+      # -- defines, which object from the Key Vault should be used
+      kvObjectName: my-special-example-key
