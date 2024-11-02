@@ -38,7 +38,8 @@ keeper:
 
   # -- Toggle and define pod-level security context.
   # @default -- `{}`
-  podSecurityContext: {}
+  podSecurityContext:
+    {}
     # fsGroup: 2000
 
   # -- Toggle and define security context.
@@ -46,7 +47,7 @@ keeper:
     allowPrivilegeEscalation: false
     capabilities:
       drop:
-      - ALL
+        - ALL
     readOnlyRootFilesystem: true
     runAsNonRoot: true
 
@@ -58,12 +59,12 @@ keeper:
   # -- Set container requests and limits for different resources like CPU or memory (essential for production workloads)
   # resources: {}
   # @ignored
-    # limits:
-    #   cpu: 100m
-    #   memory: 128Mi
-    # requests:
-    #   cpu: 100m
-    #   memory: 128Mi
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
   # -- Node Selector for the keeper
   nodeSelector: {}
 
@@ -82,7 +83,6 @@ keeper:
 
 # -- Set options for the Secret Provider Class
 spc:
-
   # -- Azure KeyVault which stores the secrets, must be available over the network
   kvName: "keyvault-name"
 
@@ -91,14 +91,13 @@ spc:
 
   # -- Azure Entra ID Identity Client ID
   identityId: "00000000-0000-0000-0000-000000000000"
-  
+
   # -- Type of Kubernetes Secret
   k8sSecretType: "Opaque"
 
   # -- Set the secret objects for the Secret Provider Class
   secrets:
-    - 
-      # -- defines, which key in the secret object should be used
+    - # -- defines, which key in the secret object should be used
       k8sSecretDataKey: apiKeyExample
       # -- defines, which object from the Key Vault should be used
       kvObjectName: my-special-example-key
