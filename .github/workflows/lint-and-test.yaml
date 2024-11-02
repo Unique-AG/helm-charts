@@ -89,14 +89,12 @@ jobs:
         with:
           config: .github/configs/kind-config.yaml
 
-      # - name: Deploy latest ArgoCD CRDs when testing ArgoCD extensions
-      #   if: |
-      #     contains(steps.list-changed.outputs.changed_charts, 'argocd-image-updater') ||
-      #     contains(steps.list-changed.outputs.changed_charts, 'argocd-apps')
-      #   run: |
-      #     helm repo add dandydeveloper https://dandydeveloper.github.io/charts/
-      #     helm dependency build charts/argo-cd/
-      #     helm template charts/argo-cd/ --set server.extensions.enabled=true -s templates/crds/* | kubectl apply -f -
+      - name: Deploy latest secrets-store-csi-driver CRDs when testing affected charts
+        if: |
+          contains(steps.list-changed.outputs.changed_charts, 'sscsid-keeper')
+        run: |
+          helm repo add secrets-store-csi-driver https://kubernetes-sigs.github.io/secrets-store-csi-driver/charts
+          helm install csi-secrets-store secrets-store-csi-driver/secrets-store-csi-driver
 
       # - name: Skip HPA tests of ArgoCD
       #   if: contains(steps.list-changed.outputs.changed_charts, 'argo-cd')
