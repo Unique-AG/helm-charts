@@ -88,13 +88,16 @@ jobs:
         if: steps.list-changed.outputs.changed == 'true'
         with:
           config: .github/configs/kind-config.yaml
-
-      - name: Deploy latest CRDs (secrets-store.csi.x-k8s.io) when testing affected charts
-        if: |
-          contains(steps.list-changed.outputs.changed_charts, 'sscsid-keeper')
-        run: |
-          helm repo add csi-secrets-store-provider-azure https://azure.github.io/secrets-store-csi-driver-provider-azure/charts
-          helm install csi csi-secrets-store-provider-azure/csi-secrets-store-provider-azure
+      
+      # - name: Deploy latest CRDs (secrets-store.csi.x-k8s.io) when testing affected charts
+      #   if: |
+      #     contains(steps.list-changed.outputs.changed_charts, 'sscsid-keeper')
+      #   run: |
+      #     helm repo add csi-secrets-store-provider-azure https://azure.github.io/secrets-store-csi-driver-provider-azure/charts
+      #     helm install csi csi-secrets-store-provider-azure/csi-secrets-store-provider-azure
+      # csi-secrets-store-provider-azure can not be tested properly for sscsid-keeper as the underlying Machine Identities are not present and thus the pods fail to start
+      # helm repo add csi-secrets-store-provider-azure https://azure.github.io/secrets-store-csi-driver-provider-azure/charts
+      # helm install csi csi-secrets-store-provider-azure/csi-secrets-store-provider-azure
 
       # - name: Skip HPA tests of ArgoCD
       #   if: contains(steps.list-changed.outputs.changed_charts, 'argo-cd')

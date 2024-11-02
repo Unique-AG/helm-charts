@@ -19,8 +19,14 @@ description: |
 annotations:
   artifacthub.io/changes: |
     - kind: fixed
+      description: spc.secrets[*].k8sSecretDataKey no longer hardcoded
+    - kind: fixed
       description: Create and mount volumes correctly to the pod(s)
     - kind: added
       description: PodDisruptionBudget, enabled by default, can be disabled
     - kind: added
       description: Can specify the type of the secret object, defaults to Opaque
+    - kind: changed
+      description: Secrets in spc are required and can not be empty, templating now fails if there are no secrets
+    - kind: changed
+      description: Chart is now officially supported by Unique AG
