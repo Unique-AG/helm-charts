@@ -173,6 +173,46 @@ entries:
     - https://github.com/Unique-AG/helm-charts/releases/download/kong-plugins-1.0.0/kong-plugins-1.0.0.tgz
     version: 1.0.0
   sscsid-keeper:
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: fixed
+          description: spc.secrets[*].k8sSecretDataKey no longer hardcoded
+        - kind: fixed
+          description: Create and mount volumes correctly to the pod(s)
+        - kind: added
+          description: PodDisruptionBudget, enabled by default, can be disabled
+        - kind: added
+          description: Can specify the type of the secret object, defaults to Opaque
+        - kind: changed
+          description: Secrets in spc are required and can not be empty, templating now fails if there are no secrets
+        - kind: changed
+          description: Chart is now officially supported by Unique AG
+    apiVersion: v2
+    created: "2024-11-03T16:26:53.24658581Z"
+    description: 'The SSCSID ([Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/))
+      Keeper (`sscsid-keeper`) is a chart that combines the often used `SecretProviderClass`,
+      which is part of the SSCSID with a running deployment that mounts the matching
+      secrets making them available to others within the same namespace.  This chart
+      is a pet project of Unique to code more _DRY_ and not officially supported by
+      the maintainers of the `Secrets Store CSI Driver`. Unique also prototypes new
+      features, processes or ideas with this chart (e.g. chart signing).  Since Unique
+      is at the time of writing Azure focused, leveraging the Azure managed AKS CSI
+      Extension is sometimes simpler than manually installing other Secret _solutions_.  Note
+      that if you need more sophisticated features, or a officially maintained chart
+      or option that supports reloading, ClusterSecrets etc, seek matching alternatives
+      on your own behalf (e.g. [External Secrets Operator](https://external-secrets.io/latest/)). '
+    digest: 05c09b6671aea132bca34089ca34d9a522c2836f3c97d79166ccabd337311f34
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: sscsid-keeper
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/sscsid-keeper
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/sscsid-keeper-1.1.0/sscsid-keeper-1.1.0.tgz
+    version: 1.1.0
   - apiVersion: v2
     created: "2024-10-23T21:34:27.487274101Z"
     description: 'The SSCSID ([Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/))
@@ -288,4 +328,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2024-10-31T18:04:44.933514106Z"
+generated: "2024-11-03T16:26:53.246648668Z"
