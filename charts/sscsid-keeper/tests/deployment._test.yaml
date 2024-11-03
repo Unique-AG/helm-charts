@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: Test Deployment
+templates:
+  - deployment.yaml
+release:
+  name: ut
+tests:
+  - it: When given a SecretProviderClass, renders volumes and volumeMounts     
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - exists:
+          path: spec.template.spec.volumes[?(@.name == "ut-sscsid-keeper")]
+      - exists:
+          path: spec.template.spec.volumes[?(@.name == "ut-sscsid-keeper")].csi.volumeAttributes.secretProviderClass
+      - equal:
+          path: spec.template.spec.volumes[?(@.name == "ut-sscsid-keeper")].csi.volumeAttributes.secretProviderClass
+          value: ut-sscsid-keeper
+      - exists:
+          path: spec.template.spec.containers[?(@.name == "sscsid-keeper")].volumeMounts[?(@.mountPath == "/mnt/spc")]
+      - exists:
+          path: spec.template.spec.containers[?(@.name == "sscsid-keeper")].volumeMounts[?(@.name == "ut-sscsid-keeper")]

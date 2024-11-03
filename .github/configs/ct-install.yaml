@@ -1,0 +1,21 @@
+# SPDX-SnippetBegin
+# SPDX-License-Identifier: Apache License 2.0
+# SPDX-SnippetCopyrightText: 2024 © Argo Project, argoproj/argo-helm
+# SPDX-SnippetCopyrightText: 2024 © Unique AG
+# SPDX-SnippetEnd
+## Reference: https://github.com/helm/chart-testing/blob/master/doc/ct_lint-and-install.md
+# Don't add the 'debug' attribute, otherwise the workflow won't work anymore
+# Only Used for the CT Install Stage
+remote: origin
+target-branch: main
+chart-dirs:
+  - charts
+chart-repos:
+  # - dandydeveloper=https://dandydeveloper.github.io/charts/
+helm-extra-args: "--timeout 120s"  
+validate-chart-schema: false
+validate-maintainers: true
+validate-yaml: true
+exclude-deprecated: true
+excluded-charts:
+  - sscsid-keeper # Can sadly not be fully tested due to MountVolume.SetUp failed for volume "sscsid-keeper" : rpc error: code = Unknown desc = failed to mount secrets store objects for pod sscsid-keeper-0562g0ya8w/sscsid-keeper-0562g0ya8w-5bbf784b44-wxnzj, err: rpc error: code = Unknown desc = failed to mount objects, error: failed to get objectType:secret, objectName:my-special-example-key, objectVersion:: ManagedIdentityCredential authentication failed. ManagedIdentityCredential authentication failed. the requested identity isn't assigned to this resource

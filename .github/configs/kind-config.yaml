@@ -1,0 +1,12 @@
+# SPDX-SnippetBegin
+# SPDX-License-Identifier: Apache License 2.0
+# SPDX-SnippetCopyrightText: 2024 © Argo Project, argoproj/argo-helm
+# SPDX-SnippetCopyrightText: 2024 © Unique AG
+# SPDX-SnippetEnd
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+  - role: worker
+  - role: worker
+  - role: worker

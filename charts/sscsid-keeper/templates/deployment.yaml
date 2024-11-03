@@ -45,6 +45,17 @@ spec:
           {{- else if ne .Values.keeper.resourcesPreset "none" }}
           resources: {{- include "resources.preset" (dict "type" .Values.keeper.resourcesPreset) | nindent 12 }}
           {{- end }}
+          volumeMounts:
+            - mountPath: /mnt/spc
+              name: {{ include "sscsid-keeper.fullname" . }}
+              readOnly: true
+      volumes:
+        - csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ include "sscsid-keeper.fullname" . }}
+          name: {{ include "sscsid-keeper.fullname" . }}
       {{- with .Values.keeper.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
