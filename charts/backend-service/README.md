@@ -4,7 +4,7 @@ The 'backend-service' chart is a "convenience" chart from Unique AG that can gen
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 1.3.2](https://img.shields.io/badge/Version-1.3.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.3.3](https://img.shields.io/badge/Version-1.3.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 1.3.2
+helm install my-backend-service unique/backend-service --version 1.3.3
 
 # or
-helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 1.3.2
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 1.3.3
 ```
 
 ## Values
@@ -116,6 +116,7 @@ helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-serv
 | serviceAccount.enabled | bool | `false` |  |
 | serviceAccount.workloadIdentity | object | `{}` |  |
 | tolerations | list | `[]` |  |
+| tyk.blockList | list | `[{"methods":["GET"],"path":"/metrics"}]` | blockList allows you to block specific paths and methods |
 | tyk.enabled | bool | `true` |  |
 | tyk.exposePublicApi.enabled | bool | `false` |  |
 | tyk.jwtSource | string | `"https://id.unique.app/oauth/v2/keys"` |  |

@@ -37,6 +37,22 @@ spec:
         name: Default
         use_extended_paths: true
         extended_paths:
+          {{- if and ((.Values.tyk).blockList) (gt (len (.Values.tyk).blockList) 0) }}
+          black_list:
+            {{- range .Values.tyk.blockList }}
+            - ignore_case: true
+              method_actions:
+                {{- if .methods }}
+                {{- range .methods }}
+                {{ . }}:
+                  action: no_action
+                  code: 200
+                  headers: {}
+                {{- end }}
+                {{- end }}
+              path: {{ .path }}
+            {{- end }}
+          {{- end }}
           {{- if and ((.Values.tyk).ignorePaths) (gt (len (.Values.tyk).ignorePaths) 0) }}
           ignored:
             {{- range .Values.tyk.ignorePaths }}
