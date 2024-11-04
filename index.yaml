@@ -77,6 +77,28 @@ entries:
   backend-service:
   - annotations:
       artifacthub.io/changes: |
+        - kind: added
+          description: Add ability to block certain paths and methods from being accessed publicly
+    apiVersion: v2
+    created: "2024-11-04T19:07:40.842258444Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: 946f4e811a603f66a98a52d1bf500326d1e013695cd84f1ea2ea305ff96a4f94
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-1.3.3/backend-service-1.3.3.tgz
+    version: 1.3.3
+  - annotations:
+      artifacthub.io/changes: |
         - kind: changed
           description: Removed chart version from common.labels to reduce noise when inspecting diffs
         - kind: added
@@ -328,4 +350,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2024-11-03T16:26:53.246648668Z"
+generated: "2024-11-04T19:07:40.842323496Z"
