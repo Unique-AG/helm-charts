@@ -94,6 +94,13 @@ tyk:
     #     timeoutSeconds: 1000
   # defaultTimeout: 30 # This setting is only to be modified after consulting the platform team. Disagreed changes will be reverted unquestioned.
 
+  # blockList allows you to block specific paths and methods
+  blockList:
+    ignorePaths:
+      - methods:
+        - GET
+        path: /metrics
+
 ingress:
   enabled: false
   tls:
