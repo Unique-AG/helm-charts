@@ -116,8 +116,7 @@ helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-serv
 | serviceAccount.enabled | bool | `false` |  |
 | serviceAccount.workloadIdentity | object | `{}` |  |
 | tolerations | list | `[]` |  |
-| tyk.blockList[0].methods[0] | string | `"GET"` |  |
-| tyk.blockList[0].path | string | `"/metrics"` |  |
+| tyk.blockList | list | `[{"methods":["GET"],"path":"/metrics"}]` | blockList allows you to block specific paths and methods |
 | tyk.enabled | bool | `true` |  |
 | tyk.exposePublicApi.enabled | bool | `false` |  |
 | tyk.jwtSource | string | `"https://id.unique.app/oauth/v2/keys"` |  |

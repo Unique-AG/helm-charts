@@ -14,10 +14,5 @@ description: |
   Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 annotations:
   artifacthub.io/changes: |
-    - kind: changed
-      description: Removed chart version from common.labels to reduce noise when inspecting diffs
     - kind: added
-      description: Capability to append extra objects as Kubernetes manifests to the release
-      links:
-        - name: Managing Workloads
-          url: https://kubernetes.io/docs/concepts/workloads/management/
+      description: Add ability to block certain paths and methods from being accessed publicly
