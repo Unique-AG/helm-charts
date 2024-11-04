@@ -96,10 +96,9 @@ tyk:
 
   # blockList allows you to block specific paths and methods
   blockList:
-    ignorePaths:
-      - methods:
-        - GET
-        path: /metrics
+    - methods:
+      - GET
+      path: /metrics
 
 ingress:
   enabled: false
