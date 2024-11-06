@@ -89,12 +89,11 @@ jobs:
         with:
           config: .github/configs/kind-config.yaml
       
-      # - name: Deploy latest CRDs (secrets-store.csi.x-k8s.io) when testing affected charts
-      #   if: |
-      #     contains(steps.list-changed.outputs.changed_charts, 'sscsid-keeper')
-      #   run: |
-      #     helm repo add csi-secrets-store-provider-azure https://azure.github.io/secrets-store-csi-driver-provider-azure/charts
-      #     helm install csi csi-secrets-store-provider-azure/csi-secrets-store-provider-azure
+      - name: Deploy latest CRDs (secrets-store.csi.x-k8s.io) when testing affected charts
+        if: |
+          contains(steps.list-changed.outputs.changed_charts, 'backend-service')
+        run: |
+          kubectl apply -f https://raw.githubusercontent.com/TykTechnologies/tyk-operator/v0.18.0/helm/crds/crds.yaml
       # csi-secrets-store-provider-azure can not be tested properly for sscsid-keeper as the underlying Machine Identities are not present and thus the pods fail to start
       # helm repo add csi-secrets-store-provider-azure https://azure.github.io/secrets-store-csi-driver-provider-azure/charts
       # helm install csi csi-secrets-store-provider-azure/csi-secrets-store-provider-azure
@@ -112,6 +111,7 @@ jobs:
       #     helm repo add bitnami https://charts.bitnami.com/bitnami
       #     helm install redis bitnami/redis --wait --namespace redis --set auth.password=argocd --set architecture=standalone
 
+      #! fixme: for now we can not install our charts, because actually, they would need to pull the images, which are private
       # - name: Run chart-testing (install)
-      #  run: ct install --config ./.github/configs/ct-install.yaml
-      #  if: steps.list-changed.outputs.changed == 'true'
+      #   run: ct install --config ./.github/configs/ct-install.yaml
+      #   if: steps.list-changed.outputs.changed == 'true'
