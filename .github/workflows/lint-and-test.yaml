@@ -91,7 +91,7 @@ jobs:
       
       - name: Deploy latest CRDs (secrets-store.csi.x-k8s.io) when testing affected charts
         if: |
-          contains(steps.list-changed.outputs.changed_charts, 'sscsid-keeper')
+          contains(steps.list-changed.outputs.changed_charts, 'backend-service')
         run: |
           kubectl apply -f https://raw.githubusercontent.com/TykTechnologies/tyk-operator/0.18.0/helm/crds/crds.yaml
       # csi-secrets-store-provider-azure can not be tested properly for sscsid-keeper as the underlying Machine Identities are not present and thus the pods fail to start
