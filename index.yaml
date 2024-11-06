@@ -77,6 +77,30 @@ entries:
   backend-service:
   - annotations:
       artifacthub.io/changes: |
+        - kind: fixed
+          description: "'secretProvider.userAssignedIdentityID' will only be added when not null or not an empty string"
+        - kind: fixed
+          description: "'tyk.listenPath' not defaults to 'unset_default_path' so that chart can render by default"
+    apiVersion: v2
+    created: "2024-11-06T13:54:59.37473523Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: 3f8b134a563802a1e590e517af87473a85923e286d0463b070bb2084a8dae1e8
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-1.3.4/backend-service-1.3.4.tgz
+    version: 1.3.4
+  - annotations:
+      artifacthub.io/changes: |
         - kind: added
           description: Add ability to block certain paths and methods from being accessed publicly
     apiVersion: v2
@@ -350,4 +374,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2024-11-04T19:07:40.842323496Z"
+generated: "2024-11-06T13:54:59.374794521Z"
