@@ -15,6 +15,6 @@ description: |
 annotations:
   artifacthub.io/changes: |
     - kind: fixed
-      description: 'secretProvider.userAssignedIdentityID' will only be added when not null or not an empty string
+      description: "'secretProvider.userAssignedIdentityID' will only be added when not null or not an empty string"
     - kind: fixed
-      description: 'tyk.listenPath' not defaults to 'unset_default_path' so that chart can render by default
+      description: "'tyk.listenPath' not defaults to 'unset_default_path' so that chart can render by default"
