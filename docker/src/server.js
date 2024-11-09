@@ -34,12 +34,33 @@ const servers = [
       }
     }
   },
-]
+];
 
-// Create and start a server for each port
+const serverInstances = [];
+
 servers.forEach(srv => {
   const server = http.createServer(srv.handler);
   server.listen(srv.port, hostname, () => {
     console.log(`Server running at http://${hostname}:${srv.port}/ mimicking ${srv.mimicking}`);
   });
+  serverInstances.push(server);
+});
+
+process.on('SIGTERM', () => {
+  console.log('Received SIGTERM, shutting down gracefully...');
+  serverInstances.forEach(server => {
+    server.close(err => {
+      if (err) {
+        console.error('Error closing server:', err);
+        process.exit(1);
+      } else {
+        console.log('Server closed successfully');
+      }
+    });
+  });
+
+  setTimeout(() => {
+    console.error('Forcing shutdown due to timeout');
+    process.exit(1);
+  }, 10000);
 });
