@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - docker
+      - docker/**
       - .github/workflows/docker.publish.yaml
 
 jobs:
