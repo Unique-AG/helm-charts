@@ -69,4 +69,3 @@ app.kubernetes.io/component: cron-job
 {{- include "backendService.mutableLabels" . }}
 app.kubernetes.io/component: hooks-db-migration
 {{- end }}
-

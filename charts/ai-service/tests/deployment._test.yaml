@@ -22,7 +22,7 @@ tests:
           path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.name == "ut-qa-app-common")]
       - isNotNullOrEmpty:
           path: spec.template.metadata.labels.aadpodidbinding
-  
+
   - it: When given a secretProvider and useVMManagedIdentity, should not render the keyvault label
     set:
       tyk.listenPath: /unit-test
@@ -74,7 +74,7 @@ tests:
         enabled: true
         storage: "10Gi"
         storageClassName: "azurefile"
-        accessModes: 
+        accessModes:
           - ReadWriteMany
         artifacts:
           - blobUrl: "https://example.com/model1.tar.gz"
@@ -102,7 +102,7 @@ tests:
       - contains:
           path: spec.template.spec.initContainers[0].args
           content: "https://example.com/model2.tar.gz,/artifacts/model2"
-      
+
       # Test volume mounts in initContainer
       - isNotNullOrEmpty:
           path: spec.template.spec.initContainers[0].volumeMounts[?(@.name == "artifacts-cache-volume")]
@@ -114,7 +114,7 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[0].volumeMounts[?(@.name == "download-artifacts-volume")].mountPath
           value: /files
-      
+
       # Test volumes configuration
       - isNotNullOrEmpty:
           path: spec.template.spec.volumes[?(@.name == "artifacts-cache-volume")]
@@ -131,7 +131,7 @@ tests:
       - equal:
           path: spec.template.spec.volumes[?(@.name == "download-artifacts-volume")].configMap.defaultMode
           value: 0755
-      
+
       # Test main container volume mount
       - isNotNullOrEmpty:
           path: spec.template.spec.containers[0].volumeMounts[?(@.name == "artifacts-cache-volume")]

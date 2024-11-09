@@ -20,25 +20,25 @@ def download_file(blob_url, dest_dir):
         # Ensure the path starts with /artifacts/
         full_dest_dir = os.path.join('/artifacts', dest_dir.lstrip('/'))
         full_path = os.path.join(full_dest_dir, filename)
-        
+
         # Create directory if it doesn't exist
         logger.info(f"Creating directory: {full_dest_dir}")
         os.makedirs(full_dest_dir, exist_ok=True)
-        
+
         # Check if file already exists
         if os.path.exists(full_path):
             logger.info(f"File already exists: {full_path}")
             return True
-        
+
         # Download the file
         response = requests.get(blob_url, stream=True)
         response.raise_for_status()
-        
+
         # Save the file
         with open(full_path, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
-        
+
         logger.info(f"File downloaded successfully: {full_path}")
         return True
     except requests.exceptions.RequestException as e:

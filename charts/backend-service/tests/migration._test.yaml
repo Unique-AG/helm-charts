@@ -104,7 +104,7 @@ tests:
           - "-e"
           - "echo"
           - "helloWorld"
-        
+
     template: hooks/migration.yaml
     asserts:
       - isKind:

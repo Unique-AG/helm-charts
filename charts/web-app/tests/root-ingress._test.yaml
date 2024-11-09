@@ -20,7 +20,7 @@ tests:
           of: Ingress
       - notExists:
           path: metadata.annotations["appgw.ingress.kubernetes.io/rewrite-rule-set-custom-resource"]
-  
+
   - it: When given a root ingress and capabilities, renders the ingress
     set:
       rootIngress:
@@ -32,7 +32,7 @@ tests:
       path: kind
       value: Ingress
     capabilities:
-      apiVersions: 
+      apiVersions:
         - appgw.ingress.azure.io/v1beta1
     asserts:
       - isKind:
@@ -51,7 +51,7 @@ tests:
       path: kind
       value: AzureApplicationGatewayRewrite
     capabilities:
-      apiVersions: 
+      apiVersions:
         - appgw.ingress.azure.io/v1beta1
     asserts:
       - isKind:
@@ -71,7 +71,7 @@ tests:
       path: kind
       value: AzureApplicationGatewayRewrite
     capabilities:
-      apiVersions: 
+      apiVersions:
         - appgw.ingress.azure.io/v1beta1
     asserts:
       - isKind:

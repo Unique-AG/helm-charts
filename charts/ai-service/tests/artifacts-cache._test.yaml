@@ -9,7 +9,7 @@ tests:
     set:
       artifactsCache:
         enabled: true
-        accessModes: 
+        accessModes:
           - "ReadWriteOnce"
         storageClassName: "standard"
         storage: "10Gi"
@@ -35,4 +35,4 @@ tests:
         enabled: false
     asserts:
       - hasDocuments:
-          count: 0 
+          count: 0

@@ -5,7 +5,7 @@ const servers = [
   {
     mimicking: 'backend-service',
     port: 80,
-    handler: 
+    handler:
     (req, res) => {
       if (req.url === '/probe' && req.method === 'GET') {
         res.statusCode = 200;
@@ -21,7 +21,7 @@ const servers = [
   {
     mimicking: 'web-app',
     port: 3000,
-    handler: 
+    handler:
     (req, res) => {
       if (req.url === '/api/health' && req.method === 'GET') {
         res.statusCode = 200;

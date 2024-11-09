@@ -78,7 +78,7 @@ jobs:
             echo -e '\033[0;32mDocumentation up to date\033[0m ✔'
           fi
 
-      - run: helm plugin install https://github.com/helm-unittest/helm-unittest.git 
+      - run: helm plugin install https://github.com/helm-unittest/helm-unittest.git
 
       - name: Run Unit Tests
         run: |
@@ -92,7 +92,7 @@ jobs:
         if: steps.list-changed.outputs.changed == 'true'
         with:
           config: .github/configs/kind-config.yaml
-      
+
       - name: Deploy latest CRDs (secrets-store.csi.x-k8s.io) when testing affected charts
         if: |
           contains(steps.list-changed.outputs.changed_charts, 'backend-service')

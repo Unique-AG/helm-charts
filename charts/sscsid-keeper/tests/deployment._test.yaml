@@ -5,7 +5,7 @@ templates:
 release:
   name: ut
 tests:
-  - it: When given a SecretProviderClass, renders volumes and volumeMounts     
+  - it: When given a SecretProviderClass, renders volumes and volumeMounts
     template: deployment.yaml
     asserts:
       - isKind:

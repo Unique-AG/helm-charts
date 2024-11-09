@@ -12,7 +12,7 @@ tests:
       image.tag: pinned-version
       secretProvider.tenantId: 99330c76-81d2-460e-861e-35af8e2a4266
       secretProvider.vaults.qa-app-common.AMQP_URL: RABBITMQ-ORANGE-WOLF-URL
-        
+
     template: deployment.yaml
     asserts:
       - isKind:
@@ -107,7 +107,7 @@ tests:
           - "-e"
           - "echo"
           - "helloWorld"
-        
+
     template: deployment.yaml
     asserts:
       - isKind:

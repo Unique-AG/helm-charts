@@ -27,7 +27,7 @@ tests:
       - isNotNullOrEmpty:
           path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.name == "ut-qa-app-common")]
 
-      
+
 
   - it: When given initContainers in cronjob
     set:
