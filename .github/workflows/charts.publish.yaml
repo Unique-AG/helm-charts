@@ -4,7 +4,7 @@
 # SPDX-SnippetCopyrightText: 2024 © Unique AG
 # SPDX-SnippetEnd
 ## Reference: https://github.com/helm/chart-releaser-action
-name: Publish
+name: "[charts] Publish"
 on:
   workflow_dispatch:
   push:

@@ -4,7 +4,7 @@
 # SPDX-SnippetCopyrightText: 2024 © Unique AG
 # SPDX-SnippetEnd
 ## Reference: https://github.com/helm/chart-testing-action
-name: Linting and Testing
+name: "[charts] Lint & Test"
 on: pull_request
 
 permissions:
