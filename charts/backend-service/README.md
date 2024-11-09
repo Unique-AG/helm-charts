@@ -40,18 +40,7 @@ The chart itself uses `busybox` as its base image. This is due to automation asp
 | autoscaling.maxReplicas | int | `100` |  |
 | autoscaling.minReplicas | int | `1` |  |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
-| cronJob.concurrencyPolicy | string | `"Allow"` |  |
-| cronJob.enabled | bool | `false` |  |
-| cronJob.env | object | `{}` |  |
-| cronJob.failedJobsHistoryLimit | int | `1` |  |
-| cronJob.jobTemplate.containers.name | string | `""` |  |
-| cronJob.jobTemplate.restartPolicy | string | `"OnFailure"` |  |
-| cronJob.name | string | `""` |  |
-| cronJob.schedule | string | `""` |  |
-| cronJob.startingDeadlineSeconds | int | `60` |  |
-| cronJob.successfulJobsHistoryLimit | int | `1` |  |
-| cronJob.suspend | bool | `false` |  |
-| cronJob.timeZone | string | `"Europe/Zurich"` |  |
+| cronJob | object | `{"concurrencyPolicy":"Allow","enabled":false,"env":{},"failedJobsHistoryLimit":1,"jobTemplate":{"containers":{"name":""},"restartPolicy":"OnFailure"},"name":"","schedule":"","startingDeadlineSeconds":60,"successfulJobsHistoryLimit":1,"suspend":false,"timeZone":"Europe/Zurich"}` | cronJob allows you to define a cronJob that mostly bases on the general values. Note that since chart version 1.4.0 it is recommended to use preferably extraCronJobs (see readme for more information) |
 | deployment.enabled | bool | `true` |  |
 | env | object | `{}` |  |
 | envSecrets | object | `{}` |  |
@@ -69,7 +58,7 @@ The chart itself uses `busybox` as its base image. This is due to automation asp
 | eventBasedAutoscaling.rabbitmq.protocol | string | `"auto"` |  |
 | eventBasedAutoscaling.rabbitmq.value | string | `"1"` |  |
 | externalSecrets | list | `[]` |  |
-| extraCronJobs | list | `[{"envVars":[{"name":"NAME","value":"Kubernetes"}],"name":"foo","restartPolicy":"Never","schedule":"0 0 1 1 *","suspend":false}]` | extraCronJobs allows you to define additional cron jobs besides 'cronJob' itself. |
+| extraCronJobs | list | `[]` | extraCronJobs allows you to define additional cron jobs besides 'cronJob' itself. |
 | extraEnvCM | list | `[]` |  |
 | extraEnvSecrets | list | `[]` |  |
 | extraObjects | list | `[]` | extraObjects allows you to add additional Kubernetes objects to the manifest. It is the responsibility of the user to ensure that the objects are valid, that they do not conflict with the existing objects and that they are not containing any sensitive information |

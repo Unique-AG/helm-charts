@@ -4,7 +4,7 @@ The 'web-app' chart is a "convenience" chart from Unique AG that can generically
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 1.4.1](https://img.shields.io/badge/Version-1.4.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.4.2](https://img.shields.io/badge/Version-1.4.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,11 +12,14 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-web-app unique/web-app --version 1.4.1
+helm install my-web-app unique/web-app --version 1.4.2
 
 # or
-helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 1.4.1
+helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 1.4.2
 ```
+
+### Docker Images
+The chart itself uses `busybox` as its base image. This is due to automation aspects and because there is no specific `appVersion` or service delivered with it.  Using `busybox` Unique can improve the charts quality without dealing with the complexity of private registries during testing. Naturally, when deploying the Unique product, the image will be replaced with the actual Unique image(s).
 
 ### Root Ingress
 The Root Ingress is a convenience ingress that routes all traffic from the root of the domain to the backend service. This functionality works different depending on the Ingress Class used. In order to keep the chart agnostic to the Ingress Class, the chart uses the `.Capabilities.APIVersions` [built-in object](https://helm.sh/docs/chart_template_guide/builtin_objects/). If you want to template charts locally you must supply matching capabilities like so:
@@ -47,9 +50,10 @@ helm template some-app oci://ghcr.io/unique-ag/helm-charts/web-app --api-version
 | httproute.hostnames | list | `[]` |  |
 | httproute.rules[0].matches[0].path.type | string | `"PathPrefix"` |  |
 | httproute.rules[0].matches[0].path.value | string | `"/"` |  |
-| image.pullPolicy | string | `"IfNotPresent"` |  |
-| image.repository | string | `""` |  |
-| image.tag | string | `""` |  |
+| image | object | `{"pullPolicy":"IfNotPresent","repository":"busybox","tag":"1.37"}` | The image to use for this specific deployment and its cron jobs |
+| image.pullPolicy | string | `"IfNotPresent"` | pullPolicy, Unique recommends to never use 'Always' |
+| image.repository | string | `"busybox"` | Repository, where the Unique service image is pulled from - for Unique internal deployments, these is the internal release repository - for client deployments, this will refer to the client's repository where the images have been mirrored too Note that it is bad practice and not advised to directly pull from Uniques release repository Read in the readme on why the helm chart comes bundled with the busybox image |
+| image.tag | string | `"1.37"` | tag, most often will refer one of the latest release of the Unique service Read in the readme on why the helm chart comes bundled with the busybox image |
 | imagePullSecrets | list | `[]` |  |
 | ingress.enabled | bool | `false` |  |
 | ingress.tls.enabled | bool | `false` |  |
