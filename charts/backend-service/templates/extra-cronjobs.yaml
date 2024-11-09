@@ -24,7 +24,7 @@ spec:
   concurrencyPolicy: {{ .concurrencyPolicy | default "Forbid" | quote }}
   successfulJobsHistoryLimit: {{ .successfulJobsHistoryLimit | default 3 }}
   failedJobsHistoryLimit: {{ .failedJobsHistoryLimit | default 3 }}
-  startingDeadlineSeconds: {{ .startingDeadlineSeconds | default 600 }}
+  startingDeadlineSeconds: {{ .startingDeadlineSeconds | default 10 }}
   jobTemplate:
     spec:
       template:
@@ -75,10 +75,16 @@ spec:
                 {{- end }}
                 {{- end }}
               env:
+                - name: VERSION
+                  value: {{ $globalValues.image.tag | quote}}
                 {{- with $globalValues.envVars }}
                   {{- toYaml . | nindent 16 }}
                 {{- end }}
-                {{/* local envVars will take precedence over global envVars as they are specified last */}}
+                {{- range $key, $value := $globalValues.env }}
+                - name: {{ $key }}
+                  value: {{ $value | quote }}
+                {{- end }}
+                {{- /* local envVars will take precedence over global envVars as they are specified last */}}
                 {{- with .envVars }}
                   {{- toYaml . | nindent 16 }}
                 {{- end }}

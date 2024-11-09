@@ -220,6 +220,8 @@ auditVolume:
     storageAccount: my-azure-storage-account
     # containerName: my-azure-container-in-my-azure-storage-account # defaults to release name
 
+# -- cronJob allows you to define a cronJob that mostly bases on the general values.
+# Note that since chart version 1.4.0 it is recommended to use preferably extraCronJobs (see readme for more information)
 cronJob:
   enabled: false
   name: ""
@@ -242,11 +244,11 @@ extraCronJobs: []
   #   suspend: false
   #   schedule: "0 0 1 1 *"
   #   timeZone: "Europe/Zurich"
-  #   concurrencyPolicy: Allow
+  #   concurrencyPolicy: Forbid
   #   restartPolicy: Never
   #   successfulJobsHistoryLimit: 3
   #   failedJobsHistoryLimit: 3
-  #   startingDeadlineSeconds: 600
+  #   startingDeadlineSeconds: 10
   #   envVars:
   #     - name: RUNNING_MODE
   #       value: "bar"

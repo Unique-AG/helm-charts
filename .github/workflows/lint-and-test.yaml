@@ -60,7 +60,9 @@ jobs:
           fi
 
       - name: Run chart-testing (lint)
-        run: ct lint --debug --config ./.github/configs/ct-lint.yaml --lint-conf ./.github/configs/lintconf.yaml
+        run: |
+          helm plugin install https://github.com/helm-unittest/helm-unittest.git 
+          ct lint --debug --config ./.github/configs/ct-lint.yaml --lint-conf ./.github/configs/lintconf.yaml
 
       - name: Run docs-testing (helm-docs)
         id: helm-docs
@@ -74,7 +76,6 @@ jobs:
             echo -e '\033[0;32mDocumentation up to date\033[0m ✔'
           fi
 
-      - run: helm plugin install https://github.com/helm-unittest/helm-unittest.git 
 
       - name: Create kind cluster
         uses: helm/kind-action@0025e74a8c7512023d06dc019c617aa3cf561fde # v1.10.0

@@ -1,0 +1,83 @@
+cronJob:
+  concurrencyPolicy: Forbid
+  enabled: true
+  env:
+    RUNNING_MODE: user-sync
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    containers:
+      name: node-ecj-user-sync
+    restartPolicy: Never
+  name: user-sync
+  schedule: '*/5 * * * *'
+  startingDeadlineSeconds: 10
+  successfulJobsHistoryLimit: 1
+  suspend: false
+  timeZone: Europe/Zurich
+env:
+  CHAT_API_URL: http://node-chat.finance-gpt.svc.cluster.local:8092
+  CORS_ALLOWED_ORIGINS: https://next.qa.unique.app
+  ENABLE_CLIENT_INSIGHT_SHIPPER: 'true'
+  INGESTION_API_URL: http://node-ingestion.finance-gpt.svc.cluster.local:8091
+  LOG_LEVEL: info
+  MAX_HEAP_MB: 200
+  UNIQUE_INSTALLATION_ID: qa.unique.app
+  ZITADEL_HOST: https://id.qa.unique.app
+  ZITADEL_INTERNAL_HOST: http://zitadel.system.svc.cluster.local:8080
+  ZITADEL_PROJECT_ID: '225317577440629855'
+extraCronJobs:
+  - concurrencyPolicy: Forbid
+    envVars:
+      - name: RUNNING_MODE
+        value: bar
+    failedJobsHistoryLimit: 3
+    name: foo
+    restartPolicy: Never
+    schedule: 0 0 1 1 *
+    startingDeadlineSeconds: 600
+    successfulJobsHistoryLimit: 3
+    suspend: false
+    timeZone: Europe/Zurich
+hooks:
+  migration:
+    command: |
+      cd /node/dist/apps/node-ecj; npx prisma migrate deploy
+    enabled: true
+image:
+  repository: uniquecr.azurecr.io/backend-service-ecj
+  tag: '2024.40'
+podSecurityContext: {}
+prometheus:
+  enabled: true
+  rules:
+    NodeScopeManagementUserSyncFailed:
+      expression: kube_job_status_failed{job_name=~"node-ecj-user-sync-.+"} > 0
+      for: 0m
+      labels:
+        job_name: job_name
+      severity: critical
+  team: horizon
+resources:
+  limits:
+    cpu: 100m
+    memory: 350Mi
+  requests:
+    cpu: 100m
+    memory: 300Mi
+secretProvider:
+  tenantId: 16f4983c-5f9c-4004-a229-175cc3xampl4
+  useVMManagedIdentity: 'true'
+  userAssignedIdentityID: 16f4983c-5f9c-4004-a229-175cc3xampl4
+  vaults:
+    ut-ecj-service:
+      DATABASE_URL: DATABASE-URL
+      ZITADEL_PAT: ZITADEL-PAT
+securityContext:
+  allowPrivilegeEscalation: false
+  seccompProfile:
+    type: RuntimeDefault
+service:
+  port: 8094
+tyk:
+  jwtSource: https://id.qa.unique.app/oauth/v2/keys
+  listenPath: /ecj
