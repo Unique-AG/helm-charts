@@ -18,7 +18,7 @@ helm install my-{{ template "chart.name" . }} oci://ghcr.io/unique-ag/helm-chart
 ```
 
 ### Docker Images
-The chart itself uses `busybox` as its base image. This is due to automation aspects and because there is no specific `appVersion` or service delivered with it.  Using `busybox` Unique can improve the charts quality without dealing with the complexity of private registries during testing. Naturally, when deploying the Unique product, the image will be replaced with the actual Unique image(s).
+The chart itself uses `ghcr.io/unique-ag/chart-testing-service` as its base image. This is due to automation aspects and because there is no specific `appVersion` or service delivered with it.  Using `chart-testing-service` Unique can improve the charts quality without dealing with the complexity of private registries during testing. Naturally, when deploying the Unique product, the image will be replaced with the actual Unique image(s).
 
 ### Artifacts Cache
 The artifacts cache provides a mechanism to pre-download and persist files (like ML models) that your service needs. It creates a shared PersistentVolumeClaim that can be accessed by multiple pods, making the files available without needing to download them for each pod.

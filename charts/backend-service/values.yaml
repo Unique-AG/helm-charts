@@ -17,11 +17,11 @@ image:
   # - for Unique internal deployments, these is the internal release repository
   # - for client deployments, this will refer to the client's repository where the images have been mirrored too
   # Note that it is bad practice and not advised to directly pull from Uniques release repository
-  # Read in the readme on why the helm chart comes bundled with the busybox image
-  repository: "httpd"
+  # Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image
+  repository: "ghcr.io/unique-ag/chart-testing-service"
   # -- tag, most often will refer one of the latest release of the Unique service
-  # Read in the readme on why the helm chart comes bundled with the busybox image
-  tag: "2.4.62"
+  # Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image
+  tag: "1.0.0"
   # -- pullPolicy, Unique recommends to never use 'Always'
   pullPolicy: IfNotPresent
 
