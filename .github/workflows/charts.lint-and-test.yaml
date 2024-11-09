@@ -4,8 +4,12 @@
 # SPDX-SnippetCopyrightText: 2024 © Unique AG
 # SPDX-SnippetEnd
 ## Reference: https://github.com/helm/chart-testing-action
-name: Linting and Testing
+name: "[charts] Lint & Test"
 on: pull_request
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
