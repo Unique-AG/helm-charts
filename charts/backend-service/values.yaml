@@ -237,14 +237,19 @@ cronJob:
   env: {}
 
 # -- extraCronJobs allows you to define additional cron jobs besides 'cronJob' itself.
-extraCronJobs:
-  - name: foo
-    suspend: false
-    schedule: "0 0 1 1 *"
-    restartPolicy: Never
-    envVars:
-      - name: NAME
-        value: "Kubernetes"
+extraCronJobs: []
+  # - name: foo
+  #   suspend: false
+  #   schedule: "0 0 1 1 *"
+  #   timeZone: "Europe/Zurich"
+  #   concurrencyPolicy: Allow
+  #   restartPolicy: Never
+  #   successfulJobsHistoryLimit: 3
+  #   failedJobsHistoryLimit: 3
+  #   startingDeadlineSeconds: 600
+  #   envVars:
+  #     - name: RUNNING_MODE
+  #       value: "bar"
 
 # !!! usePodIdentity will be deprecated in the future please use useVMManagedIdentity with the clientID
 # .Values.secretProvider lets you mount secrets from Azure Key Vault into the pod
