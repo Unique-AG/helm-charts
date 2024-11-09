@@ -1,3 +1,6 @@
+nameOverride: ""
+fullnameOverride: ""
+
 # clusterInternalServiceSuffix allows to override the default ".svc.cluster.local" service address suffix which is used to reach internal services in the cluster.
 # Note: It must start with a dot.
 # clusterInternalServiceSuffix: .domain.local
@@ -8,15 +11,21 @@ rollingUpdate:
   maxSurge: 1
   maxUnavailable: 0
 
+# -- The image to use for this specific deployment and its cron jobs
 image:
-  repository: ""
+  # -- Repository, where the Unique service image is pulled from
+  # - for Unique internal deployments, these is the internal release repository
+  # - for client deployments, this will refer to the client's repository where the images have been mirrored too
+  # Note that it is bad practice and not advised to directly pull from Uniques release repository
+  # Read in the readme on why the helm chart comes bundled with the busybox image
+  repository: "busybox"
+  # -- tag, most often will refer one of the latest release of the Unique service
+  # Read in the readme on why the helm chart comes bundled with the busybox image
+  tag: "1.37"
+  # -- pullPolicy, Unique recommends to never use 'Always'
   pullPolicy: IfNotPresent
-  tag: ""
 
 imagePullSecrets: []
-
-nameOverride: ""
-fullnameOverride: ""
 
 serviceAccount:
   enabled: false
@@ -226,16 +235,16 @@ cronJob:
     containers:
       name: ""
   env: {}
-  # initContainers:
-  #   - command:
-  #       - sh
-  #       - -c
-  #       - export MY_VARIABLE="some_value" && sleep 1
-  #     volumeMounts:
-  #       - name: data
-  #         mountPath: /opt
-  #         mountPathCronjob: /opt/folder
-  #         readOnly: true
+
+# -- extraCronJobs allows you to define additional cron jobs besides 'cronJob' itself.
+extraCronJobs:
+  - name: foo
+    suspend: false
+    schedule: "0 0 1 1 *"
+    restartPolicy: Never
+    envVars:
+      - name: NAME
+        value: "Kubernetes"
 
 # !!! usePodIdentity will be deprecated in the future please use useVMManagedIdentity with the clientID
 # .Values.secretProvider lets you mount secrets from Azure Key Vault into the pod

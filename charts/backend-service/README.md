@@ -4,7 +4,7 @@ The 'backend-service' chart is a "convenience" chart from Unique AG that can gen
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 1.3.4](https://img.shields.io/badge/Version-1.3.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.4.0](https://img.shields.io/badge/Version-1.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,11 +12,19 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 1.3.4
+helm install my-backend-service unique/backend-service --version 1.4.0
 
 # or
-helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 1.3.4
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 1.4.0
 ```
+
+### Docker Images
+The chart itself uses `busybox` as its base image. This is due to automation aspects and because there is no specific `appVersion` or service delivered with it.  Using `busybox` Unique can improve the charts quality without dealing with the complexity of private registries during testing. Naturally, when deploying the Unique product, the image will be replaced with the actual Unique image(s).
+
+### CronJobs
+`cronJob` as well as `extraCronJobs` can be used to create cron jobs. These convenience fields are easing the effort to deploy Unique as package. Technically one can also deploy this same chart multiple times but this increases the management complexity on the user side. `cronJob` and `extraCronJobs` allow to deploy multiple cron jobs in a single chart deployment. Note, that they all share the same environment settings for now and that they base on the same image. You should not use this feature if you want to deploy arbitrary or other CronJobs not related to Unique or the current workload/deployment.
+
+⚠️ The syntax between `cronJob` and `extraCronJobs` is different. This is due to the continuous improvement process of Unique where unnecessary complexity has been abstracted for the user. You might still define every property as before, but the chart will default or auto-generate many of the properties that were mandatory in `cronJob`. Unique leaves is open to deprecate `cronJob` in an upcoming major release and generally advises, to directly use `extraCronJobs` for new deployments.
 
 ## Values
 
@@ -61,6 +69,7 @@ helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-serv
 | eventBasedAutoscaling.rabbitmq.protocol | string | `"auto"` |  |
 | eventBasedAutoscaling.rabbitmq.value | string | `"1"` |  |
 | externalSecrets | list | `[]` |  |
+| extraCronJobs | list | `[{"envVars":[{"name":"NAME","value":"Kubernetes"}],"name":"foo","restartPolicy":"Never","schedule":"0 0 1 1 *","suspend":false}]` | extraCronJobs allows you to define additional cron jobs besides 'cronJob' itself. |
 | extraEnvCM | list | `[]` |  |
 | extraEnvSecrets | list | `[]` |  |
 | extraObjects | list | `[]` | extraObjects allows you to add additional Kubernetes objects to the manifest. It is the responsibility of the user to ensure that the objects are valid, that they do not conflict with the existing objects and that they are not containing any sensitive information |
@@ -75,9 +84,10 @@ helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-serv
 | httproute.hostnames | list | `[]` |  |
 | httproute.rules[0].matches[0].path.type | string | `"PathPrefix"` |  |
 | httproute.rules[0].matches[0].path.value | string | `"/"` |  |
-| image.pullPolicy | string | `"IfNotPresent"` |  |
-| image.repository | string | `""` |  |
-| image.tag | string | `""` |  |
+| image | object | `{"pullPolicy":"IfNotPresent","repository":"busybox","tag":"1.37"}` | The image to use for this specific deployment and its cron jobs |
+| image.pullPolicy | string | `"IfNotPresent"` | pullPolicy, Unique recommends to never use 'Always' |
+| image.repository | string | `"busybox"` | Repository, where the Unique service image is pulled from - for Unique internal deployments, these is the internal release repository - for client deployments, this will refer to the client's repository where the images have been mirrored too Note that it is bad practice and not advised to directly pull from Uniques release repository Read in the readme on why the helm chart comes bundled with the busybox image |
+| image.tag | string | `"1.37"` | tag, most often will refer one of the latest release of the Unique service Read in the readme on why the helm chart comes bundled with the busybox image |
 | imagePullSecrets | list | `[]` |  |
 | ingress.enabled | bool | `false` |  |
 | ingress.tls.enabled | bool | `false` |  |

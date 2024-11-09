@@ -1,0 +1,122 @@
+{{- $fullName := include "backendService.fullname" . -}}
+{{- $labelsCronJob := include "backendService.mutableLabels" . -}}
+{{- $globalValues := .Values -}}
+{{- range .Values.extraCronJobs -}}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  {{- if .name }}
+  name: {{ $fullName }}-{{ .name }}
+  {{- else }}
+  {{- fail "At least 1 extraCronJobs name is not defined" }}
+  {{- end }}
+  labels:
+    {{- $labelsCronJob | nindent 4 }}
+    app.kubernetes.io/component: cron-job-extra-{{ .name }}
+spec:
+  {{- if .schedule }}
+  schedule: {{ .schedule | quote }}
+  {{- else }}
+  {{- fail (printf "extraCronJob '%s' 'schedule' is not defined" .name) }}
+  {{- end }}
+  suspend: {{ .suspend | default false }}
+  timeZone: {{ .timeZone | default "Europe/Zurich" | quote }}
+  concurrencyPolicy: {{ .concurrencyPolicy | default "Forbid" | quote }}
+  successfulJobsHistoryLimit: {{ .successfulJobsHistoryLimit | default 3 }}
+  failedJobsHistoryLimit: {{ .failedJobsHistoryLimit | default 3 }}
+  startingDeadlineSeconds: {{ .startingDeadlineSeconds | default 600 }}
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- $labelsCronJob | nindent 12 }}
+            app.kubernetes.io/component: cron-job-extra-{{ .name }}
+          annotations:
+            {{- if $globalValues.envSecrets }}
+            checksum/secrets: {{ include (print $.Chart.Name "/templates/secrets.yaml") . | sha256sum | trunc 8 | quote }}
+            {{- end }}
+        spec:
+          {{- with $globalValues.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          restartPolicy: {{ .restartPolicy | default "Never" | quote }}
+          containers:
+            - name: {{ .name }}
+              image: "{{ $globalValues.image.repository }}:{{ $globalValues.image.tag }}"
+              imagePullPolicy: {{ $globalValues.image.pullPolicy }}
+              securityContext: {{- toYaml $globalValues.securityContext | nindent 16 }}
+              resources:
+                {{- toYaml $globalValues.resources | nindent 16 }}
+              volumeMounts:
+              {{- if $globalValues.secretProvider }}
+              {{- range $k, $v := $globalValues.secretProvider.vaults }}
+                - name: {{ $fullName }}-{{ $k }}
+                  mountPath: "/mnt/{{ $fullName }}-{{ $k }}"
+                  readOnly: true
+              {{- end }}
+              {{- end }}
+              envFrom:
+                {{- if $globalValues.envSecrets }}
+                - secretRef:
+                    name: {{ $fullName }}-secrets
+                {{- end }}
+                {{- if $globalValues.extraEnvSecrets }}
+                {{- range $v := $globalValues.extraEnvSecrets }}
+                - secretRef:
+                    name: {{ $v }}
+                {{- end }}
+                {{- end }}
+                {{- if $globalValues.extraEnvCM }}
+                {{- range $v := $globalValues.extraEnvCM }}
+                - configMapRef:
+                    name: {{ $v }}
+                {{- end }}
+                {{- end }}
+              env:
+                {{- with $globalValues.envVars }}
+                  {{- toYaml . | nindent 16 }}
+                {{- end }}
+                {{/* local envVars will take precedence over global envVars as they are specified last */}}
+                {{- with .envVars }}
+                  {{- toYaml . | nindent 16 }}
+                {{- end }}
+                {{- if $globalValues.secretProvider }}
+                {{- range $k, $v := $globalValues.secretProvider.vaults }}
+                {{- range $key, $value := $v }}
+                - name: {{ $key }}
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $fullName }}-{{ $k }}
+                      key: {{ $value }}
+                {{- end }}
+                {{- end }}
+                {{- end }}
+          {{- with $globalValues.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $globalValues.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $globalValues.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumes:
+          {{- with $globalValues.volumes }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if $globalValues.secretProvider }}
+          {{- range $k, $v := $globalValues.secretProvider.vaults }}
+            - name: {{ $fullName }}-{{ $k }}
+              csi:
+                driver: secrets-store.csi.k8s.io
+                readOnly: true
+                volumeAttributes:
+                  secretProviderClass: {{ $fullName }}-{{ $k }}
+          {{- end }}
+          {{- end }}
+{{- end }}
