@@ -15,6 +15,6 @@ sources:
 annotations:
   artifacthub.io/changes: |
     - kind: changed
-      description: "Chart now ships with `busybox` as default image in order to allow test automation"
+      description: "Chart now ships with `unique-ag/chart-testing-service` as default image in order to allow test automation"
     - kind: changed
       description: helmignore tests and readme templates
