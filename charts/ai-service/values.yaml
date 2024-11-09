@@ -11,10 +11,10 @@ image:
   # - for client deployments, this will refer to the client's repository where the images have been mirrored too
   # Note that it is bad practice and not advised to directly pull from Uniques release repository
   # Read in the readme on why the helm chart comes bundled with the busybox image
-  repository: "busybox"
+  repository: "httpd"
   # -- tag, most often will refer one of the latest release of the Unique service
   # Read in the readme on why the helm chart comes bundled with the busybox image
-  tag: "1.37"
+  tag: "2.4.62"
   # -- pullPolicy, Unique recommends to never use 'Always'
   pullPolicy: IfNotPresent
 imagePullSecrets: []

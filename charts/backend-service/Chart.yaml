@@ -18,3 +18,8 @@ annotations:
       description: "'extraCronJobs' now allows to define additional cron jobs besides 'cronJob' itself. They all follow the same syntax."
     - kind: changed
       description: helmignore tests and readme templates
+    - kind: fixed
+      description: "Missing 'data' key in tyk.blockList"
+      links:
+        - name: Using the Block List middleware
+          url: https://tyk.io/docs/product-stack/tyk-gateway/middleware/block-list-tyk-classic/
