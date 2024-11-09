@@ -74,15 +74,6 @@ jobs:
             echo -e '\033[0;32mDocumentation up to date\033[0m ✔'
           fi
 
-      - run: helm plugin install https://github.com/helm-unittest/helm-unittest.git 
-
-      - name: Run Unit Tests
-        run: |
-          for chart in ${{steps.list-changed.outputs.changed_charts}}; do
-            echo "Unit testing chart: $chart"
-            helm unittest $chart
-          done
-
       - name: Create kind cluster
         uses: helm/kind-action@0025e74a8c7512023d06dc019c617aa3cf561fde # v1.10.0
         if: steps.list-changed.outputs.changed == 'true'
@@ -98,20 +89,6 @@ jobs:
       # helm repo add csi-secrets-store-provider-azure https://azure.github.io/secrets-store-csi-driver-provider-azure/charts
       # helm install csi csi-secrets-store-provider-azure/csi-secrets-store-provider-azure
 
-      # - name: Skip HPA tests of ArgoCD
-      #   if: contains(steps.list-changed.outputs.changed_charts, 'argo-cd')
-      #   run: |
-      #     ## Metrics API not available in kind cluster
-      #     rm charts/argo-cd/ci/ha-autoscaling-values.yaml
-
-      # - name: Create an external redis for ArgoCD externalRedis feature
-      #   if: contains(steps.list-changed.outputs.changed_charts, 'argo-cd')
-      #   run: |
-      #     kubectl create namespace redis
-      #     helm repo add bitnami https://charts.bitnami.com/bitnami
-      #     helm install redis bitnami/redis --wait --namespace redis --set auth.password=argocd --set architecture=standalone
-
-      #! fixme: for now we can not install our charts, because actually, they would need to pull the images, which are private
-      # - name: Run chart-testing (install)
-      #   run: ct install --config ./.github/configs/ct-install.yaml
-      #   if: steps.list-changed.outputs.changed == 'true'
+      - name: Run chart-testing (install)
+        run: ct install --config ./.github/configs/ct-install.yaml
+        if: steps.list-changed.outputs.changed == 'true'
