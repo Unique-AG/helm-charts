@@ -26,6 +26,8 @@ The chart itself uses `ghcr.io/unique-ag/chart-testing-service` as its base imag
 
 ⚠️ The syntax between `cronJob` and `extraCronJobs` is different. This is due to the continuous improvement process of Unique where unnecessary complexity has been abstracted for the user. You might still define every property as before, but the chart will default or auto-generate many of the properties that were mandatory in `cronJob`. Unique leaves is open to deprecate `cronJob` in an upcoming major release and generally advises, to directly use `extraCronJobs` for new deployments.
 
+You can find a `extraCronJobs` example in the [`example-values/extra-cronjobs.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/example-values/extra-cronjobs.yaml) file.
+
 ## Values
 
 | Key | Type | Default | Description |
@@ -109,7 +111,7 @@ The chart itself uses `ghcr.io/unique-ag/chart-testing-service` as its base imag
 | secretProvider | object | `{}` |  |
 | securityContext | object | `{}` |  |
 | service.enabled | bool | `true` |  |
-| service.port | int | `80` |  |
+| service.port | int | `8080` |  |
 | service.type | string | `"ClusterIP"` |  |
 | serviceAccount.annotations | object | `{}` |  |
 | serviceAccount.enabled | bool | `false` |  |

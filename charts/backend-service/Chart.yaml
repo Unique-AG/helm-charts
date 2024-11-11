@@ -18,6 +18,8 @@ annotations:
       description: "'extraCronJobs' now allows to define additional cron jobs besides 'cronJob' itself. They all follow the same syntax."
     - kind: changed
       description: helmignore tests and readme templates
+    - kind: changed
+      description: "Default values use port 8080, using 80 interferes with using a 'runAsNonRoot' which will be introduced with the next major version"
     - kind: fixed
       description: "Missing 'data' key in tyk.blockList"
       links:

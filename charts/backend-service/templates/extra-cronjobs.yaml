@@ -1,37 +1,33 @@
 {{- $fullName := include "backendService.fullname" . -}}
 {{- $labelsCronJob := include "backendService.mutableLabels" . -}}
 {{- $globalValues := .Values -}}
-{{- range .Values.extraCronJobs -}}
+{{- range $key, $value := .Values.extraCronJobs -}}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  {{- if .name }}
-  name: {{ $fullName }}-{{ .name }}
-  {{- else }}
-  {{- fail "At least 1 extraCronJobs name is not defined" }}
-  {{- end }}
+  name: {{ $fullName }}-{{ $key }}
   labels:
     {{- $labelsCronJob | nindent 4 }}
-    app.kubernetes.io/component: cron-job-extra-{{ .name }}
+    app.kubernetes.io/component: cron-job-extra-{{ $key }}
 spec:
-  {{- if .schedule }}
-  schedule: {{ .schedule | quote }}
+  {{- if $value.schedule }}
+  schedule: {{ $value.schedule | quote }}
   {{- else }}
   {{- fail (printf "extraCronJob '%s' 'schedule' is not defined" .name) }}
   {{- end }}
-  suspend: {{ .suspend | default false }}
-  timeZone: {{ .timeZone | default "Europe/Zurich" | quote }}
-  concurrencyPolicy: {{ .concurrencyPolicy | default "Forbid" | quote }}
-  successfulJobsHistoryLimit: {{ .successfulJobsHistoryLimit | default 3 }}
-  failedJobsHistoryLimit: {{ .failedJobsHistoryLimit | default 3 }}
-  startingDeadlineSeconds: {{ .startingDeadlineSeconds | default 10 }}
+  suspend: {{ $value.suspend | default false }}
+  timeZone: {{ $value.timeZone | default "Europe/Zurich" | quote }}
+  concurrencyPolicy: {{ $value.concurrencyPolicy | default "Forbid" | quote }}
+  successfulJobsHistoryLimit: {{ $value.successfulJobsHistoryLimit | default 3 }}
+  failedJobsHistoryLimit: {{ $value.failedJobsHistoryLimit | default 3 }}
+  startingDeadlineSeconds: {{ $value.startingDeadlineSeconds | default 10 }}
   jobTemplate:
     spec:
       template:
         metadata:
           labels:
             {{- $labelsCronJob | nindent 12 }}
-            app.kubernetes.io/component: cron-job-extra-{{ .name }}
+            app.kubernetes.io/component: cron-job-extra-{{ $key }}
           annotations:
             {{- if $globalValues.envSecrets }}
             checksum/secrets: {{ include (print $.Chart.Name "/templates/secrets.yaml") . | sha256sum | trunc 8 | quote }}
@@ -41,9 +37,9 @@ spec:
           imagePullSecrets:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          restartPolicy: {{ .restartPolicy | default "Never" | quote }}
+          restartPolicy: {{ $value.restartPolicy | default "Never" | quote }}
           containers:
-            - name: {{ .name }}
+            - name: {{ $key }}
               image: "{{ $globalValues.image.repository }}:{{ $globalValues.image.tag }}"
               imagePullPolicy: {{ $globalValues.image.pullPolicy }}
               securityContext: {{- toYaml $globalValues.securityContext | nindent 16 }}
@@ -87,6 +83,13 @@ spec:
                 {{- /* local envVars will take precedence over global envVars as they are specified last */}}
                 {{- with .envVars }}
                   {{- toYaml . | nindent 16 }}
+                {{- end }}
+                {{- with .envVars }}
+                  {{- toYaml . | nindent 16 }}
+                {{- end }}
+                {{- range $key, $value := .env }}
+                - name: {{ $key }}
+                  value: {{ $value | quote }}
                 {{- end }}
                 {{- if $globalValues.secretProvider }}
                 {{- range $k, $v := $globalValues.secretProvider.vaults }}

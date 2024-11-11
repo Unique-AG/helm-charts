@@ -60,7 +60,7 @@ deployment:
 service:
   enabled: true
   type: ClusterIP
-  port: 80
+  port: 8080
 
 # -- Settings for Tyk API Gateway respectively its APIDefinition, note that for now, you need the CRDs installed should you enable this
 tyk:
