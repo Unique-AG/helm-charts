@@ -4,7 +4,7 @@ const hostname = '0.0.0.0';
 const servers = [
   {
     mimicking: 'backend-service',
-    port: 80,
+    port: 8080,
     handler: 
     (req, res) => {
       if (req.url === '/probe' && req.method === 'GET') {
