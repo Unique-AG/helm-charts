@@ -1,0 +1,20 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v5.0.0
+      hooks:
+          - id: trailing-whitespace
+          - id: end-of-file-fixer
+    - repo: local
+      hooks:
+          - id: helm-docs
+            name: helm-docs
+            entry: scripts/helm-docs.sh
+            language: script
+            pass_filenames: false
+          - id: helm-lint
+            name: helm-lint
+            entry: scripts/lint.sh
+            language: script
+            pass_filenames: false
