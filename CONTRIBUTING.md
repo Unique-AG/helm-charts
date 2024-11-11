@@ -109,7 +109,7 @@ The linting can be invoked manually with the following command:
 ```shell
 ./scripts/lint.sh
 ```
-<!-- 
+
 ## Publishing Changes
 
-Changes are automatically publish whenever a commit is merged to the `main` branch by the CI job (see `./.github/workflows/publish.yml`). -->
+Changes are automatically publish whenever a commit is merged to the `main` branch by the CI job (see `./.github/workflows/publish.yml`).
