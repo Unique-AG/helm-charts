@@ -5,7 +5,12 @@
 # SPDX-SnippetEnd
 ## Reference: https://github.com/helm/chart-testing-action
 name: "[charts] Lint & Test"
-on: pull_request
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "charts/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -85,7 +90,7 @@ jobs:
         if: steps.list-changed.outputs.changed == 'true'
         with:
           config: .github/configs/kind-config.yaml
-      
+
       - name: Deploy CRDs needed for charts to be able to install
         run: ./scripts/install-crds.sh
 
