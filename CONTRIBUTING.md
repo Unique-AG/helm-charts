@@ -6,6 +6,16 @@ We rely on you to test your changes sufficiently (GitHub Actions will ensure you
 
 All submissions, including submissions by project members, require review. We use GitHub pull requests for this purpose. Consult [GitHub Help](https://help.github.com/articles/about-pull-requests/) for more information on using pull requests.
 
+## `pre-commit` hooks
+Installing them is optional but recommended. They will ensure that your changes are formatted correctly and that the documentation is up to date.
+
+1. Install [`pre-commit`](https://pre-commit.com).
+2. Run `pre-commit install` in the repository root.
+
+This will perform all tasks from [`.pre-commit-config.yaml`](./.pre-commit-config.yaml) on every commit.
+
+⚠️ If you ever wish to not run the hooks on a commit, you can use the `--no-verify` flag or `pre-commit` uninstall (the GitHub Actions will ensure the quality of the code anyway).
+
 ## Documentation
 
 The documentation for each chart is generated with [helm-docs](https://github.com/norwoodj/helm-docs). This way we can ensure that values are consistent with the chart documentation.
