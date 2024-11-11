@@ -4,7 +4,7 @@ The 'backend-service' chart is a "convenience" chart from Unique AG that can gen
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 1.3.4](https://img.shields.io/badge/Version-1.3.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.4.0](https://img.shields.io/badge/Version-1.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,11 +12,21 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 1.3.4
+helm install my-backend-service unique/backend-service --version 1.4.0
 
 # or
-helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 1.3.4
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 1.4.0
 ```
+
+### Docker Images
+The chart itself uses `ghcr.io/unique-ag/chart-testing-service` as its base image. This is due to automation aspects and because there is no specific `appVersion` or service delivered with it. Using `chart-testing-service` Unique can improve the charts quality without dealing with the complexity of private registries during testing. Naturally, when deploying the Unique product, the image will be replaced with the actual Unique image(s). You can inspect the image [here](https://github.com/Unique-AG/helm-charts/tree/main/docker) and it is served from [`ghcr.io/unique-ag/chart-testing-service`](https://github.com/Unique-AG/helm-charts/pkgs/container/chart-testing-service).
+
+### CronJobs
+`cronJob` as well as `extraCronJobs` can be used to create cron jobs. These convenience fields are easing the effort to deploy Unique as package. Technically one can also deploy this same chart multiple times but this increases the management complexity on the user side. `cronJob` and `extraCronJobs` allow to deploy multiple cron jobs in a single chart deployment. Note, that they all share the same environment settings for now and that they base on the same image. You should not use this feature if you want to deploy arbitrary or other CronJobs not related to Unique or the current workload/deployment.
+
+⚠️ The syntax between `cronJob` and `extraCronJobs` is different. This is due to the continuous improvement process of Unique where unnecessary complexity has been abstracted for the user. You might still define every property as before, but the chart will default or auto-generate many of the properties that were mandatory in `cronJob`. Unique leaves is open to deprecate `cronJob` in an upcoming major release and generally advises, to directly use `extraCronJobs` for new deployments.
+
+You can find a `extraCronJobs` example in the [`example-values/extra-cronjobs.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/example-values/extra-cronjobs.yaml) file.
 
 ## Values
 
@@ -32,18 +42,7 @@ helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-serv
 | autoscaling.maxReplicas | int | `100` |  |
 | autoscaling.minReplicas | int | `1` |  |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
-| cronJob.concurrencyPolicy | string | `"Allow"` |  |
-| cronJob.enabled | bool | `false` |  |
-| cronJob.env | object | `{}` |  |
-| cronJob.failedJobsHistoryLimit | int | `1` |  |
-| cronJob.jobTemplate.containers.name | string | `""` |  |
-| cronJob.jobTemplate.restartPolicy | string | `"OnFailure"` |  |
-| cronJob.name | string | `""` |  |
-| cronJob.schedule | string | `""` |  |
-| cronJob.startingDeadlineSeconds | int | `60` |  |
-| cronJob.successfulJobsHistoryLimit | int | `1` |  |
-| cronJob.suspend | bool | `false` |  |
-| cronJob.timeZone | string | `"Europe/Zurich"` |  |
+| cronJob | object | `{"concurrencyPolicy":"Allow","enabled":false,"env":{},"failedJobsHistoryLimit":1,"jobTemplate":{"containers":{"name":""},"restartPolicy":"OnFailure"},"name":"","schedule":"","startingDeadlineSeconds":60,"successfulJobsHistoryLimit":1,"suspend":false,"timeZone":"Europe/Zurich"}` | cronJob allows you to define a cronJob that mostly bases on the general values. Note that since chart version 1.4.0 it is recommended to use preferably extraCronJobs (see readme for more information) |
 | deployment.enabled | bool | `true` |  |
 | env | object | `{}` |  |
 | envSecrets | object | `{}` |  |
@@ -61,6 +60,7 @@ helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-serv
 | eventBasedAutoscaling.rabbitmq.protocol | string | `"auto"` |  |
 | eventBasedAutoscaling.rabbitmq.value | string | `"1"` |  |
 | externalSecrets | list | `[]` |  |
+| extraCronJobs | list | `[]` | extraCronJobs allows you to define additional cron jobs besides 'cronJob' itself. |
 | extraEnvCM | list | `[]` |  |
 | extraEnvSecrets | list | `[]` |  |
 | extraObjects | list | `[]` | extraObjects allows you to add additional Kubernetes objects to the manifest. It is the responsibility of the user to ensure that the objects are valid, that they do not conflict with the existing objects and that they are not containing any sensitive information |
@@ -75,9 +75,10 @@ helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-serv
 | httproute.hostnames | list | `[]` |  |
 | httproute.rules[0].matches[0].path.type | string | `"PathPrefix"` |  |
 | httproute.rules[0].matches[0].path.value | string | `"/"` |  |
-| image.pullPolicy | string | `"IfNotPresent"` |  |
-| image.repository | string | `""` |  |
-| image.tag | string | `""` |  |
+| image | object | `{"pullPolicy":"IfNotPresent","repository":"ghcr.io/unique-ag/chart-testing-service","tag":"1.0.2"}` | The image to use for this specific deployment and its cron jobs |
+| image.pullPolicy | string | `"IfNotPresent"` | pullPolicy, Unique recommends to never use 'Always' |
+| image.repository | string | `"ghcr.io/unique-ag/chart-testing-service"` | Repository, where the Unique service image is pulled from - for Unique internal deployments, these is the internal release repository - for client deployments, this will refer to the client's repository where the images have been mirrored too Note that it is bad practice and not advised to directly pull from Uniques release repository Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image |
+| image.tag | string | `"1.0.2"` | tag, most often will refer one of the latest release of the Unique service Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image |
 | imagePullSecrets | list | `[]` |  |
 | ingress.enabled | bool | `false` |  |
 | ingress.tls.enabled | bool | `false` |  |
@@ -110,7 +111,7 @@ helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-serv
 | secretProvider | object | `{}` |  |
 | securityContext | object | `{}` |  |
 | service.enabled | bool | `true` |  |
-| service.port | int | `80` |  |
+| service.port | int | `8080` |  |
 | service.type | string | `"ClusterIP"` |  |
 | serviceAccount.annotations | object | `{}` |  |
 | serviceAccount.enabled | bool | `false` |  |

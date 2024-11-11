@@ -110,6 +110,10 @@ The linting can be invoked manually with the following command:
 ./scripts/lint.sh
 ```
 
+### Locally installing charts
+
+Refer to [LOCAL.md](./LOCAL.md) for instructions on how to test charts locally as this is not mandatory for a Contribution. The CI will take care that the charts in their default version are always installable.
+
 ## Publishing Changes
 
 Changes are automatically publish whenever a commit is merged to the `main` branch by the CI job (see `./.github/workflows/publish.yml`).

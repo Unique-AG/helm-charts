@@ -7,7 +7,7 @@ maintainers:
 name: sscsid-keeper
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/sscsid-keeper
-version: 1.1.0
+version: 1.1.1
 description: |
   The SSCSID ([Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/)) Keeper (`sscsid-keeper`) is a chart that combines the often used `SecretProviderClass`, which is part of the SSCSID with a running deployment that mounts the matching secrets making them available to others within the same namespace.
 
@@ -18,15 +18,5 @@ description: |
   Note that if you need more sophisticated features, or a officially maintained chart or option that supports reloading, ClusterSecrets etc, seek matching alternatives on your own behalf (e.g. [External Secrets Operator](https://external-secrets.io/latest/)).
 annotations:
   artifacthub.io/changes: |
-    - kind: fixed
-      description: spc.secrets[*].k8sSecretDataKey no longer hardcoded
-    - kind: fixed
-      description: Create and mount volumes correctly to the pod(s)
-    - kind: added
-      description: PodDisruptionBudget, enabled by default, can be disabled
-    - kind: added
-      description: Can specify the type of the secret object, defaults to Opaque
     - kind: changed
-      description: Secrets in spc are required and can not be empty, templating now fails if there are no secrets
-    - kind: changed
-      description: Chart is now officially supported by Unique AG
+      description: helmignore tests and readme templates
