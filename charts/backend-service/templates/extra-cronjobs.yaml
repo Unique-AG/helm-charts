@@ -13,7 +13,7 @@ spec:
   {{- if $value.schedule }}
   schedule: {{ $value.schedule | quote }}
   {{- else }}
-  {{- fail (printf "extraCronJob '%s' 'schedule' is not defined" .name) }}
+  {{- fail (printf "extraCronJob '%s' 'schedule' is not defined" $key) }}
   {{- end }}
   suspend: {{ $value.suspend | default false }}
   timeZone: {{ $value.timeZone | default "Europe/Zurich" | quote }}

@@ -13,7 +13,6 @@ extraCronJobs:
       - name: BAZ
         value: qux
     failedJobsHistoryLimit: 3
-    name: foo
     restartPolicy: Never
     schedule: 0 0 1 1 *
     startingDeadlineSeconds: 600
