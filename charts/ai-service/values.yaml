@@ -4,11 +4,19 @@ rollingUpdate:
   maxSurge: 1
   maxUnavailable: 0
 
+# -- The image to use for this specific deployment and its cron jobs
 image:
-  repository: ""
+  # -- Repository, where the Unique service image is pulled from
+  # - for Unique internal deployments, these is the internal release repository
+  # - for client deployments, this will refer to the client's repository where the images have been mirrored too
+  # Note that it is bad practice and not advised to directly pull from Uniques release repository
+  # Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image
+  repository: "ghcr.io/unique-ag/chart-testing-service"
+  # -- tag, most often will refer one of the latest release of the Unique service
+  # Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image
+  tag: "1.0.2"
+  # -- pullPolicy, Unique recommends to never use 'Always'
   pullPolicy: IfNotPresent
-  tag: ""
-
 imagePullSecrets: []
 
 nameOverride: ""
@@ -167,23 +175,23 @@ secretProvider: {}
 
 deployment: {}
 # deployment:
-  # initContainers:
-  # - name: model-downloader
-  #   image: python:3.9
-  #   command:
-  #     - sh
-  #     - -c
-  #     - |
-  #       pip install huggingface-hub transformers;
-  #       huggingface-cli download bert-base-uncased --cache-dir /models/bert;
-  #       if [ -f /models/bert/pytorch_model.bin ]; then
-  #         echo "Model downloaded successfully";
-  #       else
-  #         echo "Model download failed";
-  #         exit 1;
-  #       fi;
-  #   volumeMounts:
-  #     - name: models-storage
-  #       mountPath: /models
-  #       readOnly: false
-  #       emptyDir: false
+# initContainers:
+# - name: model-downloader
+#   image: python:3.9
+#   command:
+#     - sh
+#     - -c
+#     - |
+#       pip install huggingface-hub transformers;
+#       huggingface-cli download bert-base-uncased --cache-dir /models/bert;
+#       if [ -f /models/bert/pytorch_model.bin ]; then
+#         echo "Model downloaded successfully";
+#       else
+#         echo "Model download failed";
+#         exit 1;
+#       fi;
+#   volumeMounts:
+#     - name: models-storage
+#       mountPath: /models
+#       readOnly: false
+#       emptyDir: false

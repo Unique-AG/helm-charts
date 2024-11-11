@@ -1,3 +1,6 @@
+nameOverride: ""
+fullnameOverride: ""
+
 # clusterInternalServiceSuffix allows to override the default ".svc.cluster.local" service address suffix which is used to reach internal services in the cluster.
 # Note: It must start with a dot.
 # clusterInternalServiceSuffix: .domain.local
@@ -8,15 +11,21 @@ rollingUpdate:
   maxSurge: 1
   maxUnavailable: 0
 
+# -- The image to use for this specific deployment and its cron jobs
 image:
-  repository: ""
+  # -- Repository, where the Unique service image is pulled from
+  # - for Unique internal deployments, these is the internal release repository
+  # - for client deployments, this will refer to the client's repository where the images have been mirrored too
+  # Note that it is bad practice and not advised to directly pull from Uniques release repository
+  # Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image
+  repository: "ghcr.io/unique-ag/chart-testing-service"
+  # -- tag, most often will refer one of the latest release of the Unique service
+  # Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image
+  tag: "1.0.2"
+  # -- pullPolicy, Unique recommends to never use 'Always'
   pullPolicy: IfNotPresent
-  tag: ""
 
 imagePullSecrets: []
-
-nameOverride: ""
-fullnameOverride: ""
 
 serviceAccount:
   enabled: false
@@ -51,7 +60,7 @@ deployment:
 service:
   enabled: true
   type: ClusterIP
-  port: 80
+  port: 8080
 
 # -- Settings for Tyk API Gateway respectively its APIDefinition, note that for now, you need the CRDs installed should you enable this
 tyk:
@@ -211,6 +220,8 @@ auditVolume:
     storageAccount: my-azure-storage-account
     # containerName: my-azure-container-in-my-azure-storage-account # defaults to release name
 
+# -- cronJob allows you to define a cronJob that mostly bases on the general values.
+# Note that since chart version 1.4.0 it is recommended to use preferably extraCronJobs (see readme for more information)
 cronJob:
   enabled: false
   name: ""
@@ -226,16 +237,21 @@ cronJob:
     containers:
       name: ""
   env: {}
-  # initContainers:
-  #   - command:
-  #       - sh
-  #       - -c
-  #       - export MY_VARIABLE="some_value" && sleep 1
-  #     volumeMounts:
-  #       - name: data
-  #         mountPath: /opt
-  #         mountPathCronjob: /opt/folder
-  #         readOnly: true
+
+# -- extraCronJobs allows you to define additional cron jobs besides 'cronJob' itself.
+extraCronJobs: []
+  # - name: foo
+  #   suspend: false
+  #   schedule: "0 0 1 1 *"
+  #   timeZone: "Europe/Zurich"
+  #   concurrencyPolicy: Forbid
+  #   restartPolicy: Never
+  #   successfulJobsHistoryLimit: 3
+  #   failedJobsHistoryLimit: 3
+  #   startingDeadlineSeconds: 10
+  #   envVars:
+  #     - name: RUNNING_MODE
+  #       value: "bar"
 
 # !!! usePodIdentity will be deprecated in the future please use useVMManagedIdentity with the clientID
 # .Values.secretProvider lets you mount secrets from Azure Key Vault into the pod

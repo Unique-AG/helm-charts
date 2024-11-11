@@ -5,7 +5,7 @@ maintainers:
   - name: unique-ag
     url: https://unique.ch/
 name: web-app
-version: 1.4.1
+version: 1.4.2
 description: |
   The 'web-app' chart is a "convenience" chart from Unique AG that can generically be used to deploy web-content serving workloads to Kubernetes.
 
@@ -14,12 +14,7 @@ sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/web-app
 annotations:
   artifacthub.io/changes: |
-    - kind: fixed
-      description: Indentation mistake in the responseHeaderConfiguration of the Root Ingress
-      links:
-        - name: Rewrite Rule Set Custom Resource
-          url: https://azure.github.io/application-gateway-kubernetes-ingress/features/rewrite-rule-set-custom-resource/
-        - name: Rewrite HTTP headers and URL with Application Gateway
-          url: https://learn.microsoft.com/en-us/azure/application-gateway/rewrite-http-headers-url#server-variables
     - kind: changed
-      description: Removed chart version from common.labels to reduce noise when inspecting diffs
+      description: "Chart now ships with `unique-ag/chart-testing-service` as default image in order to allow test automation"
+    - kind: changed
+      description: helmignore tests and readme templates

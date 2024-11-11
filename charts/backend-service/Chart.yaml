@@ -7,14 +7,21 @@ maintainers:
 name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
-version: 1.3.4
+version: 1.4.0
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
 
   Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 annotations:
   artifacthub.io/changes: |
+    - kind: added
+      description: "'extraCronJobs' now allows to define additional cron jobs besides 'cronJob' itself. They all follow the same syntax."
+    - kind: changed
+      description: helmignore tests and readme templates
+    - kind: changed
+      description: "Default values use port 8080, using 80 interferes with using a 'runAsNonRoot' which will be introduced with the next major version"
     - kind: fixed
-      description: "'secretProvider.userAssignedIdentityID' will only be added when not null or not an empty string"
-    - kind: fixed
-      description: "'tyk.listenPath' not defaults to 'unset_default_path' so that chart can render by default"
+      description: "Missing 'data' key in tyk.blockList"
+      links:
+        - name: Using the Block List middleware
+          url: https://tyk.io/docs/product-stack/tyk-gateway/middleware/block-list-tyk-classic/
