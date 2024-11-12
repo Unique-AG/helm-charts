@@ -18,7 +18,5 @@ description: |
   Note that if you need more sophisticated features, or a officially maintained chart or option that supports reloading, ClusterSecrets etc, seek matching alternatives on your own behalf (e.g. [External Secrets Operator](https://external-secrets.io/latest/)).
 annotations:
   artifacthub.io/changes: |
-    - kind: changed
-      description: helmignore tests and readme templates
     - kind: fixed
       description: Adjusted container command to prevent restarts
