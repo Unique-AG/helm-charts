@@ -7,7 +7,7 @@ maintainers:
 name: sscsid-keeper
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/sscsid-keeper
-version: 1.1.1
+version: 1.1.2
 description: |
   The SSCSID ([Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/)) Keeper (`sscsid-keeper`) is a chart that combines the often used `SecretProviderClass`, which is part of the SSCSID with a running deployment that mounts the matching secrets making them available to others within the same namespace.
 
@@ -20,3 +20,5 @@ annotations:
   artifacthub.io/changes: |
     - kind: changed
       description: helmignore tests and readme templates
+    - kind: fixed
+      description: Adjusted container command to prevent restarts
