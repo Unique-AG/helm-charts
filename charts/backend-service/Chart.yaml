@@ -7,21 +7,37 @@ maintainers:
 name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
-version: 1.4.0
+version: 2.0.0
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
 
   Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 annotations:
+  artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
-    - kind: added
-      description: "'extraCronJobs' now allows to define additional cron jobs besides 'cronJob' itself. They all follow the same syntax."
     - kind: changed
-      description: helmignore tests and readme templates
+      description: "`tyk` is disabled by default. If you want to enable it, set `tyk.enabled` to `true`"
     - kind: changed
-      description: "Default values use port 8080, using 80 interferes with using a 'runAsNonRoot' which will be introduced with the next major version"
-    - kind: fixed
-      description: "Missing 'data' key in tyk.blockList"
+      description: "`securityContext` and `podSecurityContext` come with securer defaults. If you want to fallback to the older setups, empty them using `{}`"
       links:
-        - name: Using the Block List middleware
-          url: https://tyk.io/docs/product-stack/tyk-gateway/middleware/block-list-tyk-classic/
+        - name: Configure a Security Context for a Pod or Container
+          url: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+    - kind: changed
+      description: "`httproute` syntax and converted into dictionary as `extraRoutes`"
+      links:
+        - name: Gateway API
+          url: https://gateway-api.sigs.k8s.io
+        - name: Route Resources
+          url: https://gateway-api.sigs.k8s.io/concepts/api-overview/#route-resources
+        - name: Install CRDs
+          url: https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api
+    - kind: added
+      description: "`routes` encapsulates the defaults routes that Unique services use or require"
+      links:
+        - name: Gateway API
+          url: https://gateway-api.sigs.k8s.io
+        - name: Route Resources
+          url: https://gateway-api.sigs.k8s.io/concepts/api-overview/#route-resources
+        - name: Install CRDs
+          url: https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api
+  artifacthub.io/containsSecurityUpdates: "true"

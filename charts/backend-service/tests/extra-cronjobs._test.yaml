@@ -7,7 +7,7 @@ release:
 tests:
   - it: When given an extra CronJob, renders the CronJob with the correct values
     values:
-      - ../example-values/extra-cronjobs.yaml
+      - ../ci/extra-cronjobs-values.yaml
     template: extra-cronjobs.yaml
     documentSelector:
       path: metadata.name

@@ -35,9 +35,21 @@ serviceAccount:
 
 podAnnotations: {}
 
-podSecurityContext: {}
+# -- PodSecurityContext for the pod(s)
+podSecurityContext:
+  # -- seccompProfile, controls the seccomp profile for the container, defaults to 'RuntimeDefault'
+  seccompProfile:
+    ## -- type, the type of seccomp profile to use, defaults to 'RuntimeDefault'
+    type: RuntimeDefault
 
-securityContext: {}
+# -- SecurityContext for the container(s)
+securityContext:
+  # -- AllowPrivilegeEscalation, controls if the container can gain more privileges than its parent process, defaults to 'false'
+  allowPrivilegeEscalation: false
+  # -- readOnlyRootFilesystem, controls if the container has a read-only root filesystem, defaults to 'true'
+  readOnlyRootFilesystem: true
+  # -- runAsNonRoot, controls if the container must run as a non-root user, defaults to 'true'
+  runAsNonRoot: true
 
 deployment:
   enabled: true
@@ -63,8 +75,9 @@ service:
   port: 8080
 
 # -- Settings for Tyk API Gateway respectively its APIDefinition, note that for now, you need the CRDs installed should you enable this
+# ⚠️ Since `2.0.0` this is no longer enabled by default. Unique will slowly migrate away from Tyk API Gateway and into `routes` and `extraRoutes`, refer to the readme.
 tyk:
-  enabled: true
+  enabled: false
   # -- ⚠️ When using Tyk API Gateway, you must set a valid listenPath
   listenPath: "/unsert_default_path"
   jwtSource: https://id.unique.app/oauth/v2/keys
@@ -362,3 +375,37 @@ externalSecrets:
 
 # -- extraObjects allows you to add additional Kubernetes objects to the manifest. It is the responsibility of the user to ensure that the objects are valid, that they do not conflict with the existing objects and that they are not containing any sensitive information
 extraObjects: []
+
+# -- BETA: Configure additional gateway routes for the chart here.
+# More routes can be added by adding a dictionary key like the 'extra-route-1' route.
+# In order for this to install, the Gateway [API CRDs](https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api) must be installed in the cluster.
+extraRoutes:
+  extra-route-1:
+    # -- Enables or disables the route
+    enabled: false
+    # -- Set the route apiVersion, e.g. gateway.networking.k8s.io/v1 or gateway.networking.k8s.io/v1alpha2
+    apiVersion: gateway.networking.k8s.io/v1
+    # -- Set the route kind
+    # Valid options are GRPCRoute, HTTPRoute, TCPRoute, TLSRoute, UDPRoute
+    kind: HTTPRoute
+    # -- Set the route annotations
+    annotations: {}
+    # -- Set the route labels
+    labels: {}
+    # -- Add hostnames to the route
+    hostnames: []
+    # -- parentRefs define the parent gateway(s) that the route will be associated with
+    parentRefs:
+      - name: kong
+        namespace: kong-system
+        group: gateway.networking.k8s.io
+        kind: Gateway
+    # -- which match conditions should be applied to the route
+    matches:
+      - path:
+          type: PathPrefix
+          value: /
+    ## -- Filters define the filters that are applied to requests that match this rule.
+    filters: []
+    ## -- Additional custom rules that can be added to the route
+    additionalRules: []

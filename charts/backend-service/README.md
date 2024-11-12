@@ -4,7 +4,7 @@ The 'backend-service' chart is a "convenience" chart from Unique AG that can gen
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 1.4.0](https://img.shields.io/badge/Version-1.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 2.0.0](https://img.shields.io/badge/Version-2.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 1.4.0
+helm install my-backend-service unique/backend-service --version 2.0.0
 
 # or
-helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 1.4.0
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 2.0.0
 ```
 
 ### Docker Images
@@ -26,7 +26,23 @@ The chart itself uses `ghcr.io/unique-ag/chart-testing-service` as its base imag
 
 ⚠️ The syntax between `cronJob` and `extraCronJobs` is different. This is due to the continuous improvement process of Unique where unnecessary complexity has been abstracted for the user. You might still define every property as before, but the chart will default or auto-generate many of the properties that were mandatory in `cronJob`. Unique leaves is open to deprecate `cronJob` in an upcoming major release and generally advises, to directly use `extraCronJobs` for new deployments.
 
-You can find a `extraCronJobs` example in the [`example-values/extra-cronjobs.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/example-values/extra-cronjobs.yaml) file.
+You can find a `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/extra-cronjobs-values.yaml) file.
+
+### Routes
+With `2.0.0` the chart supports _routes_ (namely all routes from [`gateway.networking.k8s.io`](https://gateway-api.sigs.k8s.io/concepts/api-overview/#route-resources)). While `routes`, not yet enabled by default, abstract certain complexity away from the chart consumer, `extraRoutes` can be used by power-users to configure each route exactly to their needs.
+
+To use _Routes_ per se you need two things:
+
+- Knowledge about them and the Gateway API, you can start from these resources:
+    + [Gateway API](https://gateway-api.sigs.k8s.io)
+    + [Route Resources](https://gateway-api.sigs.k8s.io/concepts/api-overview/#route-resources)
+- CRDs installed
+    + [Install CRDs](https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api)
+
+If you want to locally template your chart, you must enable this via the `.Capabilities.APIVersions` [built-in object](https://helm.sh/docs/chart_template_guide/builtin_objects/)
+```
+helm template some-app oci://ghcr.io/unique-ag/helm-charts/backend-service --api-versions gateway.networking.k8s.io/v1 --values your-own-values.yaml
+```
 
 ## Values
 
@@ -64,6 +80,15 @@ You can find a `extraCronJobs` example in the [`example-values/extra-cronjobs.ya
 | extraEnvCM | list | `[]` |  |
 | extraEnvSecrets | list | `[]` |  |
 | extraObjects | list | `[]` | extraObjects allows you to add additional Kubernetes objects to the manifest. It is the responsibility of the user to ensure that the objects are valid, that they do not conflict with the existing objects and that they are not containing any sensitive information |
+| extraRoutes | object | `{"extra-route-1":{"additionalRules":[],"annotations":{},"apiVersion":"gateway.networking.k8s.io/v1","enabled":false,"filters":[],"hostnames":[],"kind":"HTTPRoute","labels":{},"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"parentRefs":[{"group":"gateway.networking.k8s.io","kind":"Gateway","name":"kong","namespace":"kong-system"}]}}` | BETA: Configure additional gateway routes for the chart here. More routes can be added by adding a dictionary key like the 'extra-route-1' route. In order for this to install, the Gateway [API CRDs](https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api) must be installed in the cluster. |
+| extraRoutes.extra-route-1.annotations | object | `{}` | Set the route annotations |
+| extraRoutes.extra-route-1.apiVersion | string | `"gateway.networking.k8s.io/v1"` | Set the route apiVersion, e.g. gateway.networking.k8s.io/v1 or gateway.networking.k8s.io/v1alpha2 |
+| extraRoutes.extra-route-1.enabled | bool | `false` | Enables or disables the route |
+| extraRoutes.extra-route-1.hostnames | list | `[]` | Add hostnames to the route |
+| extraRoutes.extra-route-1.kind | string | `"HTTPRoute"` | Set the route kind Valid options are GRPCRoute, HTTPRoute, TCPRoute, TLSRoute, UDPRoute |
+| extraRoutes.extra-route-1.labels | object | `{}` | Set the route labels |
+| extraRoutes.extra-route-1.matches | list | `[{"path":{"type":"PathPrefix","value":"/"}}]` | which match conditions should be applied to the route |
+| extraRoutes.extra-route-1.parentRefs | list | `[{"group":"gateway.networking.k8s.io","kind":"Gateway","name":"kong","namespace":"kong-system"}]` | parentRefs define the parent gateway(s) that the route will be associated with |
 | fullnameOverride | string | `""` |  |
 | hooks.migration.command | string | `""` |  |
 | hooks.migration.enabled | bool | `false` |  |
@@ -86,7 +111,8 @@ You can find a `extraCronJobs` example in the [`example-values/extra-cronjobs.ya
 | nodeSelector | object | `{}` |  |
 | pdb.maxUnavailable | string | `"30%"` |  |
 | podAnnotations | object | `{}` |  |
-| podSecurityContext | object | `{}` |  |
+| podSecurityContext | object | `{"seccompProfile":{"type":"RuntimeDefault"}}` | PodSecurityContext for the pod(s) |
+| podSecurityContext.seccompProfile | object | `{"type":"RuntimeDefault"}` | seccompProfile, controls the seccomp profile for the container, defaults to 'RuntimeDefault' |
 | probes.enabled | bool | `true` |  |
 | probes.liveness.failureThreshold | int | `6` |  |
 | probes.liveness.httpGet.path | string | `"/probe"` |  |
@@ -109,7 +135,10 @@ You can find a `extraCronJobs` example in the [`example-values/extra-cronjobs.ya
 | rollingUpdate.maxSurge | int | `1` |  |
 | rollingUpdate.maxUnavailable | int | `0` |  |
 | secretProvider | object | `{}` |  |
-| securityContext | object | `{}` |  |
+| securityContext | object | `{"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"runAsNonRoot":true}` | SecurityContext for the container(s) |
+| securityContext.allowPrivilegeEscalation | bool | `false` | AllowPrivilegeEscalation, controls if the container can gain more privileges than its parent process, defaults to 'false' |
+| securityContext.readOnlyRootFilesystem | bool | `true` | readOnlyRootFilesystem, controls if the container has a read-only root filesystem, defaults to 'true' |
+| securityContext.runAsNonRoot | bool | `true` | runAsNonRoot, controls if the container must run as a non-root user, defaults to 'true' |
 | service.enabled | bool | `true` |  |
 | service.port | int | `8080` |  |
 | service.type | string | `"ClusterIP"` |  |
@@ -117,11 +146,23 @@ You can find a `extraCronJobs` example in the [`example-values/extra-cronjobs.ya
 | serviceAccount.enabled | bool | `false` |  |
 | serviceAccount.workloadIdentity | object | `{}` |  |
 | tolerations | list | `[]` |  |
-| tyk | object | `{"blockList":[{"methods":["GET"],"path":"/metrics"}],"enabled":true,"exposePublicApi":{"enabled":false},"jwtSource":"https://id.unique.app/oauth/v2/keys","listenPath":"/unsert_default_path","rateLimit":{},"scopedApi":{"enabled":false}}` | Settings for Tyk API Gateway respectively its APIDefinition, note that for now, you need the CRDs installed should you enable this |
+| tyk | object | `{"blockList":[{"methods":["GET"],"path":"/metrics"}],"enabled":false,"exposePublicApi":{"enabled":false},"jwtSource":"https://id.unique.app/oauth/v2/keys","listenPath":"/unsert_default_path","rateLimit":{},"scopedApi":{"enabled":false}}` | Settings for Tyk API Gateway respectively its APIDefinition, note that for now, you need the CRDs installed should you enable this ⚠️ Since `2.0.0` this is no longer enabled by default. Unique will slowly migrate away from Tyk API Gateway and into `routes` and `extraRoutes`, refer to the readme. |
 | tyk.blockList | list | `[{"methods":["GET"],"path":"/metrics"}]` | blockList allows you to block specific paths and methods |
 | tyk.listenPath | string | `"/unsert_default_path"` | ⚠️ When using Tyk API Gateway, you must set a valid listenPath |
 | volumeMounts | list | `[]` |  |
 | volumes | list | `[]` |  |
+
+## Upgrade Guides
+
+### ~> 2.0.0
+`2.0.0` introduces three breaking changes:
+
+- `securityContext` and `podSecurityContext` now ship with securer defaults.
+    + You might need to adjust your `securityContext` and `podSecurityContext` settings if you derive a lot from a secure baseline, worst case you need to unset them (`{}`)
+- `tyk` respectively its _APIDefinitions implementations_ are no longer enabled by default.
+    + You need to set `tyk.enabled: true` to enable it back if desired and potentially disable the new `routes` feature.
+- `httproute` is converted into a dictionary and moves into `extraRoutes`
+    + You must adjust your `httproute` configuration to be in the dictionary and move it into `extraRoutes` if you were using it.
 
 ----------------------------------------------
 Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)

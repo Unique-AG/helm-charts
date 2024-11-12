@@ -25,8 +25,36 @@ The chart itself uses `ghcr.io/unique-ag/chart-testing-service` as its base imag
 
 ⚠️ The syntax between `cronJob` and `extraCronJobs` is different. This is due to the continuous improvement process of Unique where unnecessary complexity has been abstracted for the user. You might still define every property as before, but the chart will default or auto-generate many of the properties that were mandatory in `cronJob`. Unique leaves is open to deprecate `cronJob` in an upcoming major release and generally advises, to directly use `extraCronJobs` for new deployments.
 
-You can find a `extraCronJobs` example in the [`example-values/extra-cronjobs.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/example-values/extra-cronjobs.yaml) file.
+You can find a `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/extra-cronjobs-values.yaml) file.
+
+### Routes
+With `2.0.0` the chart supports _routes_ (namely all routes from [`gateway.networking.k8s.io`](https://gateway-api.sigs.k8s.io/concepts/api-overview/#route-resources)). While `routes`, not yet enabled by default, abstract certain complexity away from the chart consumer, `extraRoutes` can be used by power-users to configure each route exactly to their needs.
+
+To use _Routes_ per se you need two things:
+
+- Knowledge about them and the Gateway API, you can start from these resources:
+    + [Gateway API](https://gateway-api.sigs.k8s.io)
+    + [Route Resources](https://gateway-api.sigs.k8s.io/concepts/api-overview/#route-resources)
+- CRDs installed
+    + [Install CRDs](https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api)
+
+If you want to locally template your chart, you must enable this via the `.Capabilities.APIVersions` [built-in object](https://helm.sh/docs/chart_template_guide/builtin_objects/)
+```
+helm template some-app oci://ghcr.io/unique-ag/helm-charts/backend-service --api-versions gateway.networking.k8s.io/v1 --values your-own-values.yaml
+```
 
 {{ template "chart.valuesSection" . }}
+
+## Upgrade Guides
+
+### ~> 2.0.0
+`2.0.0` introduces three breaking changes:
+
+- `securityContext` and `podSecurityContext` now ship with securer defaults.
+    + You might need to adjust your `securityContext` and `podSecurityContext` settings if you derive a lot from a secure baseline, worst case you need to unset them (`{}`)
+- `tyk` respectively its _APIDefinitions implementations_ are no longer enabled by default.
+    + You need to set `tyk.enabled: true` to enable it back if desired and potentially disable the new `routes` feature.
+- `httproute` is converted into a dictionary and moves into `extraRoutes`
+    + You must adjust your `httproute` configuration to be in the dictionary and move it into `extraRoutes` if you were using it.
 
 {{ template "helm-docs.versionFooter" . }}
