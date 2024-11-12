@@ -9,8 +9,6 @@ extraRoutes:
     matches:
       - path:
           type: PathPrefix
-          value: /
+          value: /extra-route-1
     filters: []
     additionalRules: []
-httproute:
-  enabled: true

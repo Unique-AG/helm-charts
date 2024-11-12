@@ -1,0 +1,19 @@
+routes:
+  gateway:
+    name: kong
+    namespace: kong-system
+  hostnames:
+    - chart-testing-service.example.com
+  list:
+    default:
+      enabled: true
+      plugins:
+        - unique-jwt-auth
+    public:
+      enabled: true
+      plugins:
+        - unique-app-repo-auth
+    scoped:
+      enabled: true
+    up:
+      enabled: true

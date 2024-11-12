@@ -84,7 +84,7 @@ helm template some-app oci://ghcr.io/unique-ag/helm-charts/backend-service --api
 | extraRoutes.extra-route-1.annotations | object | `{}` | Set the route annotations |
 | extraRoutes.extra-route-1.apiVersion | string | `"gateway.networking.k8s.io/v1"` | Set the route apiVersion, e.g. gateway.networking.k8s.io/v1 or gateway.networking.k8s.io/v1alpha2 |
 | extraRoutes.extra-route-1.enabled | bool | `false` | Enables or disables the route |
-| extraRoutes.extra-route-1.hostnames | list | `[]` | Add hostnames to the route |
+| extraRoutes.extra-route-1.hostnames | list | `[]` | Add hostnames to the route, will be matched against the host header of the request |
 | extraRoutes.extra-route-1.kind | string | `"HTTPRoute"` | Set the route kind Valid options are GRPCRoute, HTTPRoute, TCPRoute, TLSRoute, UDPRoute |
 | extraRoutes.extra-route-1.labels | object | `{}` | Set the route labels |
 | extraRoutes.extra-route-1.matches | list | `[{"path":{"type":"PathPrefix","value":"/"}}]` | which match conditions should be applied to the route |
@@ -92,18 +92,10 @@ helm template some-app oci://ghcr.io/unique-ag/helm-charts/backend-service --api
 | fullnameOverride | string | `""` |  |
 | hooks.migration.command | string | `""` |  |
 | hooks.migration.enabled | bool | `false` |  |
-| httproute.additionalRoutes | list | `[]` |  |
-| httproute.annotations | object | `{}` |  |
-| httproute.enabled | bool | `false` |  |
-| httproute.gatewayName | string | `"kong"` |  |
-| httproute.gatewayNamespace | string | `"system"` |  |
-| httproute.hostnames | list | `[]` |  |
-| httproute.rules[0].matches[0].path.type | string | `"PathPrefix"` |  |
-| httproute.rules[0].matches[0].path.value | string | `"/"` |  |
-| image | object | `{"pullPolicy":"IfNotPresent","repository":"ghcr.io/unique-ag/chart-testing-service","tag":"1.0.2"}` | The image to use for this specific deployment and its cron jobs |
+| image | object | `{"pullPolicy":"IfNotPresent","repository":"ghcr.io/unique-ag/chart-testing-service","tag":"1.0.3"}` | The image to use for this specific deployment and its cron jobs |
 | image.pullPolicy | string | `"IfNotPresent"` | pullPolicy, Unique recommends to never use 'Always' |
 | image.repository | string | `"ghcr.io/unique-ag/chart-testing-service"` | Repository, where the Unique service image is pulled from - for Unique internal deployments, these is the internal release repository - for client deployments, this will refer to the client's repository where the images have been mirrored too Note that it is bad practice and not advised to directly pull from Uniques release repository Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image |
-| image.tag | string | `"1.0.2"` | tag, most often will refer one of the latest release of the Unique service Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image |
+| image.tag | string | `"1.0.3"` | tag, most often will refer one of the latest release of the Unique service Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image |
 | imagePullSecrets | list | `[]` |  |
 | ingress.enabled | bool | `false` |  |
 | ingress.tls.enabled | bool | `false` |  |
@@ -134,11 +126,21 @@ helm template some-app oci://ghcr.io/unique-ag/helm-charts/backend-service --api
 | resources | object | `{}` |  |
 | rollingUpdate.maxSurge | int | `1` |  |
 | rollingUpdate.maxUnavailable | int | `0` |  |
+| routes.gateway.name | string | `"kong"` |  |
+| routes.gateway.namespace | string | `"kong-system"` |  |
+| routes.hostnames[0] | string | `"chart-testing-service.example.com"` |  |
+| routes.list.default.enabled | bool | `true` |  |
+| routes.list.default.plugins[0] | string | `"unique-jwt-auth"` |  |
+| routes.list.public.enabled | bool | `true` |  |
+| routes.list.public.plugins[0] | string | `"unique-app-repo-auth"` |  |
+| routes.list.scoped.enabled | bool | `true` |  |
+| routes.list.up.enabled | bool | `true` |  |
 | secretProvider | object | `{}` |  |
-| securityContext | object | `{"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"runAsNonRoot":true}` | SecurityContext for the container(s) |
+| securityContext | object | `{"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":1000}` | SecurityContext for the container(s) |
 | securityContext.allowPrivilegeEscalation | bool | `false` | AllowPrivilegeEscalation, controls if the container can gain more privileges than its parent process, defaults to 'false' |
 | securityContext.readOnlyRootFilesystem | bool | `true` | readOnlyRootFilesystem, controls if the container has a read-only root filesystem, defaults to 'true' |
 | securityContext.runAsNonRoot | bool | `true` | runAsNonRoot, controls if the container must run as a non-root user, defaults to 'true' |
+| securityContext.runAsUser | int | `1000` | runAsUser, controls the user ID that runs the container, defaults to '1000' |
 | service.enabled | bool | `true` |  |
 | service.port | int | `8080` |  |
 | service.type | string | `"ClusterIP"` |  |

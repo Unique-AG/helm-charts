@@ -1,63 +1,35 @@
-{{- if .Values.httproute.enabled -}}
-{{- $fullName := include "backendService.fullname" . -}}
-{{- $svcPort := .Values.service.port -}}
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: {{ $fullName }}
-  labels:
-    {{- include "backendService.labels" . | nindent 4 }}
-  {{- with .Values.httproute.annotations }}
-  annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
-spec:
-  parentRefs:
-  - name: {{ .Values.httproute.gatewayName }}
-    namespace: {{ .Values.httproute.gatewayNamespace }}
-    group: gateway.networking.k8s.io
-    kind: Gateway
-  hostnames:
-  {{- range .Values.httproute.hostnames }}
-  - {{ . | quote }}
-  {{- end }}
-  rules:
-  {{- range .Values.httproute.rules }}
-  - {{ toYaml (omit . "backendRefs" "skipBackendRefs") | nindent 4 }}
-    {{- if not .skipBackendRefs }}
-    backendRefs:
-    {{- if .backendRefs }}
-    {{- toYaml .backendRefs | nindent 4 }}
-    {{- else }}
-    - name: {{ $fullName }}
-      port: {{ $svcPort }}
-      kind: Service
-    {{- end }}
-    {{- end }}
-  {{- end }}
+{{- if .Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1" }}
+{{- if .Values.routes.list.default.enabled -}}
 ---
-{{- range .Values.httproute.additionalRoutes }}
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: {{ .name }}
-  labels:
-    {{- include "backendService.labels" . | nindent 4 }}
-  {{- with .annotations }}
+  name: {{ template "backendService.fullname" $ }}-default
   annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    konghq.com/plugins: unique-jwt-auth
+    konghq.com/strip-path: "true"
+  labels:
+    {{- include "backendService.labels" $ | nindent 4 }}
 spec:
   parentRefs:
-  - name: {{ $.Values.httproute.gatewayName }}
-    namespace: {{ $.Values.httproute.gatewayNamespace }}
-    group: gateway.networking.k8s.io
-    kind: Gateway
+    - name: {{ .Values.routes.gateway.name }}
+      namespace: {{ .Values.routes.gateway.namespace }}
+      group: gateway.networking.k8s.io
+      kind: Gateway
+  {{- with .Values.routes.hostnames }}
   hostnames:
-  {{- range .hostnames }}
-  - {{ . | quote }}
+    {{- tpl (toYaml .) $ | nindent 4 }}
   {{- end }}
   rules:
-  {{- toYaml .rules | nindent 2 }}
+    - backendRefs:
+        - name: {{ include "backendService.fullname" $ }}
+          port: {{ $.Values.service.port }}
+          kind: Service
+      matches:
+        - path:
+            type: PathPrefix
+            value: /{{ include "backendService.fullname" $ }}
 {{- end }}
+{{- else }}
+{{- fail "You can't use routes without CRDs installed. Install CRDs first."}}
 {{- end }}
