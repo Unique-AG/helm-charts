@@ -363,10 +363,16 @@ routes:
     # @default -- system
     namespace: system
   paths:
+    # -- prefix_override allows overriding the default prefix (fullname) for all paths
+    # @default -- defaults to the fullname of the service
+    prefix_override: ""
     default:
       enabled: true
       block_list:
         - metrics
+      # extraAnnotations:
+      #   konghq.com/request-buffering: "false"
+      #   konghq.com/read-timeout: "120s"
     versioned:
       enabled: false
       # -- specified version of the API to use
@@ -376,6 +382,8 @@ routes:
       # ⚠️ Customizing this value requires also changing the default url in multiple places including all SDK or integration use cases
       # @default -- the chart will default to 'public' to stay backward compatible
       path_override: public
+      # extraAnnotations:
+      #   konghq.com/request-buffering: "false"
     scoped:
       enabled: false
       # -- users wishing to not call their scoped API 'scoped' can override the path
@@ -386,11 +394,14 @@ routes:
       # will be rendered to: `/{scoped|path_override}/{entry}`
       allow_list:
         - upload
+      # extraAnnotations:
+      #   konghq.com/request-buffering: "false"
     # -- `/up` is unauthorized and its sole purpose is to expose a health check endpoint for availability monitoring
     # Maps to version neutral `/probe` endpoint all Unique services expose
     up:
       enabled: true
-
+      # extraAnnotations:
+      #   konghq.com/strip-path: "true"
 
 # -- BETA: Configure additional gateway routes for the chart here.
 # More routes can be added by adding a dictionary key like the 'extra-route-1' route.
