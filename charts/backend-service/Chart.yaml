@@ -18,7 +18,7 @@ annotations:
     - kind: changed
       description: "`tyk` is disabled by default. If you want to enable it, set `tyk.enabled` to `true`"
     - kind: changed
-      description: "`/public` API is no longer referred to as public as it never was public as in terms of public. Its new chart-internal reference is `versioned` API. For SDK and backward compatibility the endpoint exposed will still be called `/public`" though.
+      description: "`/public` API is no longer referred to as public as it never was public as in terms of public. Its new chart-internal reference is `versioned` API. For SDK and backward compatibility the endpoint exposed will still be called `/public` though."
       links:
         - name: "Example SDK Usage (see 'api_key')"
           url: https://github.com/Unique-AG/ai/blob/b9d4581a488f8f925f7896c20640a9a61c950bfe/unique_sdk/unique_sdk/__init__.py#L12
