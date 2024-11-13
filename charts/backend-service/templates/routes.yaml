@@ -115,7 +115,7 @@ spec:
       matches:
       {{- range .Values.routes.paths.scoped.allow_list }}
         - path:
-            type: Exact
+            type: PathPrefix
             value: /{{ default "scoped" $.Values.routes.paths.scoped.path_override }}/{{ . }}
       {{- end }}
       filters:
