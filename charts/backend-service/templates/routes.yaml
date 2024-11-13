@@ -198,6 +198,12 @@ spec:
             type: Exact
             value: /{{ include "backendService.routePrefix" $ }}/probe
             # TODO: Add https://docs.konghq.com/hub/kong-inc/response-transformer/ to omit the response body
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplaceFullPath
+              replaceFullPath: /probe
 {{- end }}
 
 {{- else }}
