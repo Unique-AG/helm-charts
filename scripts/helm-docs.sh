@@ -11,7 +11,7 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 echo "Repo root: $REPO_ROOT"
 
 echo "Running helm-docs"
-docker run \
+docker run --rm \
     -v "$REPO_ROOT:/helm-docs" \
     -u $(id -u) \
     jnorwood/helm-docs:v$HELM_DOCS_VERSION
