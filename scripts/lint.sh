@@ -11,7 +11,7 @@ set -eux
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 echo -e "\n-- Linting all Helm Charts --\n"
-docker run \
+docker run --rm \
      -v "$REPO_ROOT:/workdir" \
      --entrypoint /bin/sh \
      quay.io/helmpack/chart-testing:v3.11.0 \
