@@ -126,15 +126,7 @@ helm template some-app oci://ghcr.io/unique-ag/helm-charts/backend-service --api
 | resources | object | `{}` |  |
 | rollingUpdate.maxSurge | int | `1` |  |
 | rollingUpdate.maxUnavailable | int | `0` |  |
-| routes.gateway.name | string | `"kong"` |  |
-| routes.gateway.namespace | string | `"kong-system"` |  |
-| routes.hostnames[0] | string | `"chart-testing-service.example.com"` |  |
-| routes.list.default.enabled | bool | `true` |  |
-| routes.list.default.plugins[0] | string | `"unique-jwt-auth"` |  |
-| routes.list.public.enabled | bool | `true` |  |
-| routes.list.public.plugins[0] | string | `"unique-app-repo-auth"` |  |
-| routes.list.scoped.enabled | bool | `true` |  |
-| routes.list.up.enabled | bool | `true` |  |
+| routes | object | `{}` | routes is a special object designed for Unique services. It abstracts a lot of complexity and allows for a simple configuration of routes. ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong. If you are using a different API Gateway, you will need to use `extraRoutes`. Refer to [`ci/routes-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/routes-values.yaml) to see a full example of how to configure routes. Currently, routes must be explicitly enabled until the Unique Kong migration is complete and Tyk faded out from the chart. |
 | secretProvider | object | `{}` |  |
 | securityContext | object | `{"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":1000}` | SecurityContext for the container(s) |
 | securityContext.allowPrivilegeEscalation | bool | `false` | AllowPrivilegeEscalation, controls if the container can gain more privileges than its parent process, defaults to 'false' |

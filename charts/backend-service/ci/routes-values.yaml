@@ -1,19 +1,40 @@
 routes:
+  # - hostname of the route, will be matched against the host header of the request
+  # currently defaults to one, if ever more are needed open an issue, `extraHostNames` will be added, supports templating
+  hostname: chart-testing-service.example.com
+  # -- gateway to use
   gateway:
+    # -- name of the gateway
+    # @default -- kong
     name: kong
-    namespace: kong-system
-  hostnames:
-    - chart-testing-service.example.com
-  list:
+    # -- namespace of the gateway
+    # @default -- system
+    namespace: system
+  paths:
     default:
       enabled: true
-      plugins:
-        - unique-jwt-auth
-    public:
+      block_list:
+        - metrics
+    versioned:
       enabled: true
-      plugins:
-        - unique-app-repo-auth
+      # -- specified version of the API to use
+      # @default -- the chart will default to "2023-12-06"
+      x_api_version: "2023-12-06"
+      # -- users wishing to not call their versioned API 'public' can override the path
+      # ⚠️ Customizing this value requires also changing the default url in multiple places including all SDK or integration use cases
+      # @default -- the chart will default to 'public' to stay backward compatible
+      path_override: public
     scoped:
       enabled: true
+      # -- users wishing to not call their scoped API 'scoped' can override the path
+      # ⚠️ Customizing this value requires also changing the default url in multiple places including all web-apps
+      # @default -- the chart will default to 'scoped' to stay backward compatible
+      path_override: scoped
+      # -- explicitly list of exact path matches
+      # will be rendered to: `/{scoped|path_override}/{entry}`
+      allow_list:
+        - upload
+    # -- `/up` is unauthorized and its sole purpose is to expose a health check endpoint for availability monitoring
+    # Maps to version neutral `/probe` endpoint all Unique services expose
     up:
       enabled: true

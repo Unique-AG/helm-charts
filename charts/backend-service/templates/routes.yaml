@@ -1,25 +1,25 @@
 {{- if .Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1" }}
-{{- if .Values.routes.list.default.enabled -}}
+
+{{/* Default route, protected with Unique Kong JWT Auth */}}
+{{- if .Values.routes.paths.default.enabled -}}
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
   name: {{ template "backendService.fullname" $ }}-default
   annotations:
-    konghq.com/plugins: unique-jwt-auth
+    konghq.com/plugins: unique-jwt-auth{{ if gt (len .Values.routes.paths.default.block_list) 0 }},unique-request-termination{{ end }}
     konghq.com/strip-path: "true"
   labels:
     {{- include "backendService.labels" $ | nindent 4 }}
 spec:
   parentRefs:
-    - name: {{ .Values.routes.gateway.name }}
-      namespace: {{ .Values.routes.gateway.namespace }}
+    - name: {{ default "kong" .Values.routes.gateway.name }}
+      namespace: {{ default "system" .Values.routes.gateway.namespace }}
       group: gateway.networking.k8s.io
       kind: Gateway
-  {{- with .Values.routes.hostnames }}
   hostnames:
-    {{- tpl (toYaml .) $ | nindent 4 }}
-  {{- end }}
+    - {{ tpl (.Values.routes.hostname) $ }}
   rules:
     - backendRefs:
         - name: {{ include "backendService.fullname" $ }}
@@ -29,7 +29,134 @@ spec:
         - path:
             type: PathPrefix
             value: /{{ include "backendService.fullname" $ }}
+  {{- range .Values.routes.paths.default.block_list }}
+    - backendRefs:
+        - name: {{ include "backendService.fullname" $ }}
+          port: {{ $.Values.service.port }}
+          kind: Service
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: configuration.konghq.com
+            kind: KongClusterPlugin
+            name: unique-request-termination
+      matches:
+        - path:
+            type: Exact
+            value: /{{ include "backendService.fullname" $ }}/{{ . }}
+  {{- end }}
 {{- end }}
+
+{{/* 'public', now called 'versioned', route, protected with Unique App Repo Auth */}}
+{{- if .Values.routes.paths.versioned.enabled -}}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ template "backendService.fullname" $ }}-versioned
+  annotations:
+    konghq.com/plugins: unique-app-repo-auth
+  labels:
+    {{- include "backendService.labels" $ | nindent 4 }}
+spec:
+  parentRefs:
+    - name: {{ default "kong" .Values.routes.gateway.name }}
+      namespace: {{ default "system" .Values.routes.gateway.namespace }}
+      group: gateway.networking.k8s.io
+      kind: Gateway
+  hostnames:
+    - {{ tpl (.Values.routes.hostname) $ }}
+  rules:
+    - backendRefs:
+        - name: {{ include "backendService.fullname" $ }}
+          port: {{ $.Values.service.port }}
+          kind: Service
+      matches:
+        - path:
+            type: PathPrefix
+            value: /{{ default "public" .Values.routes.paths.versioned.path_override }}/{{ include "backendService.fullname" $ }}
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /{{ default "public" .Values.routes.paths.versioned.path_override }}
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            add:
+              - name: x-api-version
+                value: {{ default "2023-12-06" .Values.routes.paths.versioned.x_api_version | quote }}
+{{- end }}
+
+{{/* scoped route */}}
+{{- if .Values.routes.paths.scoped.enabled -}}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ template "backendService.fullname" $ }}-scoped
+  annotations:
+    konghq.com/strip-path: "true"
+  labels:
+    {{- include "backendService.labels" $ | nindent 4 }}
+spec:
+  parentRefs:
+    - name: {{ default "kong" .Values.routes.gateway.name }}
+      namespace: {{ default "system" .Values.routes.gateway.namespace }}
+      group: gateway.networking.k8s.io
+      kind: Gateway
+  hostnames:
+    - {{ tpl (.Values.routes.hostname) $ }}
+  rules:
+    - backendRefs:
+        - name: {{ include "backendService.fullname" $ }}
+          port: {{ $.Values.service.port }}
+          kind: Service
+      matches:
+      {{- range .Values.routes.paths.scoped.allow_list }}
+        - path:
+            type: Exact
+            value: /{{ default "scoped" $.Values.routes.paths.scoped.path_override }}/{{ . }}
+      {{- end }}
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /{{ default "scoped" .Values.routes.paths.scoped.path_override }}
+{{- end }}
+
+{{/* up route */}}
+{{- if .Values.routes.paths.up.enabled -}}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ template "backendService.fullname" $ }}-up
+  annotations:
+    konghq.com/strip-path: "true"
+  labels:
+    {{- include "backendService.labels" $ | nindent 4 }}
+spec:
+  parentRefs:
+    - name: {{ default "kong" .Values.routes.gateway.name }}
+      namespace: {{ default "system" .Values.routes.gateway.namespace }}
+      group: gateway.networking.k8s.io
+      kind: Gateway
+  hostnames:
+    - {{ tpl (.Values.routes.hostname) $ }}
+  rules:
+    - backendRefs:
+        - name: {{ include "backendService.fullname" $ }}
+          port: {{ $.Values.service.port }}
+          kind: Service
+      matches:
+        - path:
+            type: Exact
+            value: /{{ include "backendService.fullname" $ }}/probe
+            # TODO: Add https://docs.konghq.com/hub/kong-inc/response-transformer/ to omit the response body
+{{- end }}
+
 {{- else }}
 {{- fail "You can't use routes without CRDs installed. Install CRDs first."}}
 {{- end }}

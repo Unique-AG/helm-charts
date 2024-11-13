@@ -346,25 +346,11 @@ externalSecrets:
 # -- extraObjects allows you to add additional Kubernetes objects to the manifest. It is the responsibility of the user to ensure that the objects are valid, that they do not conflict with the existing objects and that they are not containing any sensitive information
 extraObjects: []
 
-routes:
-  gateway:
-    name: kong
-    namespace: kong-system
-  hostnames:
-    - chart-testing-service.example.com
-  list:
-    default:
-      enabled: true
-      plugins:
-        - unique-jwt-auth
-    public:
-      enabled: true
-      plugins:
-        - unique-app-repo-auth
-    scoped:
-      enabled: true
-    up:
-      enabled: true
+# -- routes is a special object designed for Unique services. It abstracts a lot of complexity and allows for a simple configuration of routes.
+# ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong. If you are using a different API Gateway, you will need to use `extraRoutes`.
+# Refer to [`ci/routes-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/routes-values.yaml) to see a full example of how to configure routes.
+# Currently, routes must be explicitly enabled until the Unique Kong migration is complete and Tyk faded out from the chart.
+routes: {}
 
 # -- BETA: Configure additional gateway routes for the chart here.
 # More routes can be added by adding a dictionary key like the 'extra-route-1' route.
