@@ -47,42 +47,38 @@ service:
   type: ClusterIP
   port: 3000
 
-ingress:
-  enabled: false
-  tls:
-    enabled: false
-
-httproute:
-  enabled: false
-  annotations: {}
-  gatewayName: kong
-  gatewayNamespace: system
-  hostnames: []
-  rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-      # backendRefs can be omitted to use the default service
-      # backendRefs:
-      #   - name: custom-service
-      #     kind: Service
-      #     port: 8080
-    # Example of a more complex rule
-    # - matches:
-    #   - headers:
-    #       - name: "X-Version"
-    #         value: "v3"
-    #     path:
-    #       type: PathPrefix
-    #       value: /test
-    #   backendRefs:
-    #     - name: api-v2
-    #       kind: Service
-    #       port: 8081
-
-  # Additional HTTPRoutes
-  additionalRoutes: []
+# -- routes is a special object designed for Unique web-apps. It abstracts a lot of complexity and allows for a simple configuration of routes.
+# ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong. If you are using a different API Gateway, you will need to use `extraRoutes`.
+routes:
+  # - hostname of the route, will be matched against the host header of the request
+  # currently defaults to one, if ever more are needed open an issue, `extraHostNames` will be added, supports templating
+  hostname: chart-testing-web-app.example.com
+  # -- gateway to use
+  gateway:
+    # -- name of the gateway
+    # @default -- kong
+    name: kong
+    # -- namespace of the gateway
+    # @default -- system
+    namespace: system
+  paths:
+    # -- prefix_override allows overriding the default prefix (fullname) for all paths
+    # @default -- defaults to the fullname of the service
+    prefix_override: ""
+    default:
+      enabled: true
+      block_list:
+        - metrics
+      # extraAnnotations:
+      #   konghq.com/request-buffering: "false"
+      #   konghq.com/read-timeout: "120s"
+    # -- The root route is a convenience route that routes all traffic from the root of the domain to a specific path
+    # ⚠️ The root route should only be activated once when multiple web-apps are deployed to the same cluster
+    root:
+      # -- Whether the root route should be enabled
+      enabled: false
+      # -- The path to which the root should be redirected to
+      redirectPath: /chat
 
 env: {}
 
@@ -139,14 +135,3 @@ secretProvider: {}
 #       MY_ENV_VARIABLE_1: keyvault-secret-name-a
 #     vault-name-2:
 #       MY_ENV_VARIABLE_2: keyvault-secret-name-b
-
-# -- rootIngress is a convenience ingress that routes all traffic from the root of the domain to the backend service. Refer to the readme section "Implementation Details".
-rootIngress:
-  # -- Not all web-apps should act as root. In fact, only one deployed chart per cluster should enable this annotation, namely the one that should act as the root.
-  enabled: false
-  # -- The path to which the root should be redirected to
-  redirectPath: /chat
-  # -- Hostname of the root domain, should match your ingress or httproute settings.
-  host: domain.example.com
-  # -- Debugging redirection issues can be cumbersome, especially on Azure. You can enable the debugHeader to see the actual path that the request is being redirected to and if it was de facto rerouted.
-  debugHeader: false
