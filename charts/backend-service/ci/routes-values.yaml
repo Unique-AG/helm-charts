@@ -21,7 +21,7 @@ routes:
     default:
       enabled: true
       block_list:
-        - metrics
+        - /metrics
       extraAnnotations: []
       #   konghq.com/request-buffering: "false"
       #   konghq.com/read-timeout: "120s"
@@ -33,7 +33,7 @@ routes:
       # -- users wishing to not call their versioned API 'public' can override the path
       # ⚠️ Customizing this value requires also changing the default url in multiple places including all SDK or integration use cases
       # @default -- the chart will default to 'public' to stay backward compatible
-      path_override: public
+      path_override: /public
       extraAnnotations: []
       #   konghq.com/request-buffering: "false"
     scoped:
@@ -41,11 +41,11 @@ routes:
       # -- users wishing to not call their scoped API 'scoped' can override the path
       # ⚠️ Customizing this value requires also changing the default url in multiple places including all web-apps
       # @default -- the chart will default to 'scoped' to stay backward compatible
-      path_override: scoped
+      path_override: /scoped
       # -- explicitly list of exact path matches
       # will be rendered to: `/{scoped|path_override}/{entry}`
       allow_list:
-        - upload
+        - /upload
       extraAnnotations: []
       #   konghq.com/request-buffering: "false"
     # -- `/up` is unauthorized and its sole purpose is to expose a health check endpoint for availability monitoring
