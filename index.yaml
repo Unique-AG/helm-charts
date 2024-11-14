@@ -102,6 +102,29 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: changed
+          description: "Require `/` prefix for all routes paths"
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    created: "2024-11-14T15:57:37.181816076Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: 494ae1a614777b6a5d5e837448979b93e6eed148afd8f94d0e9eaf182109684d
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-2.0.1/backend-service-2.0.1.tgz
+    version: 2.0.1
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: changed
           description: "⚠️ Support for `ingress` has been removed"
         - kind: changed
           description: "⚠️ `tyk` is disabled by default. If you want to enable it, set `tyk.enabled` to `true`"
@@ -651,4 +674,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2024-11-14T15:26:34.661013809Z"
+generated: "2024-11-14T15:57:37.181874585Z"
