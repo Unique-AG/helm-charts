@@ -41,7 +41,6 @@ keeper:
   podSecurityContext:
     {}
     # fsGroup: 2000
-
   # -- Toggle and define security context.
   securityContext:
     allowPrivilegeEscalation: false
