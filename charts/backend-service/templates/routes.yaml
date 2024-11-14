@@ -29,7 +29,7 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: /{{ include "backendService.routePrefix" $ }}
+            value: {{ include "backendService.routePrefix" $ }}
       backendRefs:
         - name: {{ include "backendService.fullname" $ }}
           port: {{ $.Values.service.port }}
@@ -67,7 +67,7 @@ spec:
       matches:
         - path:
             type: Exact
-            value: /{{ include "backendService.routePrefix" $ }}/{{ . }}
+            value: {{ include "backendService.routePrefix" $ }}{{ . }}
 {{- end }}
 {{- end }}
 
@@ -103,7 +103,7 @@ spec:
           urlRewrite:
             path:
               type: ReplacePrefixMatch
-              replacePrefixMatch: /{{ default "public" .Values.routes.paths.versioned.path_override }}
+              replacePrefixMatch: {{ default "/public" .Values.routes.paths.versioned.path_override }}
         - type: RequestHeaderModifier
           requestHeaderModifier:
             add:
@@ -112,7 +112,7 @@ spec:
       matches:
         - path:
             type: PathPrefix
-            value: /{{ default "public" .Values.routes.paths.versioned.path_override }}/{{ include "backendService.routePrefix" $ }}
+            value: {{ default "/public" .Values.routes.paths.versioned.path_override }}{{ include "backendService.routePrefix" $ }}
 {{- end }}
 
 {{/* scoped route */}}
@@ -143,14 +143,14 @@ spec:
       {{- range .Values.routes.paths.scoped.allow_list }}
         - path:
             type: PathPrefix
-            value: /{{ default "scoped" $.Values.routes.paths.scoped.path_override }}/{{ . }}
+            value: {{ default "/scoped" $.Values.routes.paths.scoped.path_override }}{{ . }}
       {{- end }}
       filters:
         - type: URLRewrite
           urlRewrite:
             path:
               type: ReplacePrefixMatch
-              replacePrefixMatch: /{{ default "scoped" .Values.routes.paths.scoped.path_override }}
+              replacePrefixMatch: {{ default "/scoped" .Values.routes.paths.scoped.path_override }}
       backendRefs:
         - name: {{ include "backendService.fullname" $ }}
           port: {{ $.Values.service.port }}
@@ -184,14 +184,14 @@ spec:
     - matches:
         - path:
             type: Exact
-            value: /{{ include "backendService.routePrefix" $ }}/probe
+            value: {{ include "backendService.routePrefix" $ }}{{ default "/probe" .Values.routes.paths.up.probe_path }}
             # TODO: Add https://docs.konghq.com/hub/kong-inc/response-transformer/ to omit the response body
       filters:
         - type: URLRewrite
           urlRewrite:
             path:
               type: ReplaceFullPath
-              replaceFullPath: /probe
+              replaceFullPath: {{ default "/probe" .Values.routes.paths.up.probe_path }}
       backendRefs:
         - name: {{ include "backendService.fullname" $ }}
           port: {{ $.Values.service.port }}
