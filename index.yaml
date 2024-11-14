@@ -101,6 +101,60 @@ entries:
   backend-service:
   - annotations:
       artifacthub.io/changes: |
+        - kind: changed
+          description: "⚠️ Support for `ingress` has been removed"
+        - kind: changed
+          description: "⚠️ `tyk` is disabled by default. If you want to enable it, set `tyk.enabled` to `true`"
+        - kind: changed
+          description: "`/public` API is no longer referred to as public as it never was public as in terms of public. Its new chart-internal reference is `versioned` API. For SDK and backward compatibility the endpoint exposed will still be called `/public` though."
+          links:
+            - name: "Example SDK Usage (see 'api_key')"
+              url: https://github.com/Unique-AG/ai/blob/b9d4581a488f8f925f7896c20640a9a61c950bfe/unique_sdk/unique_sdk/__init__.py#L12
+        - kind: changed
+          description: "⚠️ `securityContext` and `podSecurityContext` come with securer defaults. If you want to fallback to the older setups, empty them using `{}`"
+          links:
+            - name: Configure a Security Context for a Pod or Container
+              url: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+        - kind: changed
+          description: "⚠️ `httproute` syntax and converted into dictionary as `extraRoutes`"
+          links:
+            - name: Gateway API
+              url: https://gateway-api.sigs.k8s.io
+            - name: Route Resources
+              url: https://gateway-api.sigs.k8s.io/concepts/api-overview/#route-resources
+            - name: Install CRDs
+              url: https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api
+        - kind: added
+          description: "`routes` encapsulates the defaults routes that Unique services use or require"
+          links:
+            - name: Gateway API
+              url: https://gateway-api.sigs.k8s.io
+            - name: Route Resources
+              url: https://gateway-api.sigs.k8s.io/concepts/api-overview/#route-resources
+            - name: Install CRDs
+              url: https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api
+      artifacthub.io/containsSecurityUpdates: "true"
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    created: "2024-11-14T10:44:44.612238663Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: e99be17e43809417494231a24bd0781e12d432ea0d045f26524aad930631effa
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-2.0.0/backend-service-2.0.0.tgz
+    version: 2.0.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: added
           description: "'extraCronJobs' now allows to define additional cron jobs besides 'cronJob' itself. They all follow the same syntax."
         - kind: changed
@@ -426,6 +480,46 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: changed
+          description: "⚠️ Support for `ingress` has been removed"
+        - kind: changed
+          description: "⚠️ `httproute` syntax and converted into dictionary as `extraRoutes`"
+          links:
+            - name: Gateway API
+              url: https://gateway-api.sigs.k8s.io
+            - name: Route Resources
+              url: https://gateway-api.sigs.k8s.io/concepts/api-overview/#route-resources
+            - name: Install CRDs
+              url: https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api
+        - kind: added
+          description: "`routes` encapsulates the defaults routes that Unique services use or require"
+          links:
+            - name: Gateway API
+              url: https://gateway-api.sigs.k8s.io
+            - name: Route Resources
+              url: https://gateway-api.sigs.k8s.io/concepts/api-overview/#route-resources
+            - name: Install CRDs
+              url: https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api
+    apiVersion: v2
+    created: "2024-11-14T10:44:44.803289458Z"
+    description: 'The ''web-app'' chart is a "convenience" chart from Unique AG that
+      can generically be used to deploy web-content serving workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: 784bc9a0226ccf071ab5bdaf19b1256a9b78028a5932a7a010d1d6a3f47436cb
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: web-app
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/web-app
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/web-app-2.0.0/web-app-2.0.0.tgz
+    version: 2.0.0
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: changed
           description: "Chart now ships with `unique-ag/chart-testing-service` as default image in order to allow test automation"
         - kind: changed
           description: helmignore tests and readme templates
@@ -535,4 +629,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2024-11-12T13:42:07.595809682Z"
+generated: "2024-11-14T10:44:44.803367865Z"
