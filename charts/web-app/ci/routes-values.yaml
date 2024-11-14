@@ -27,6 +27,6 @@ routes:
       #   konghq.com/read-timeout: "120s"
     root:
       # -- Whether the root route should be enabled
-      enabled: false
+      enabled: true
       # -- The path to which the root should be redirected to
       redirect_path: chat
