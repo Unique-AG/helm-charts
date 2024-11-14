@@ -76,8 +76,9 @@ service:
   type: ClusterIP
   port: 8080
 
-# -- Settings for Tyk API Gateway respectively its APIDefinition, note that for now, you need the CRDs installed should you enable this
+# -- Settings for Tyk API Gateway respectively its APIDefinition, in order to use Tyk API Gateway, you must install its Operators respective CRDs.
 # ⚠️ Since `2.0.0` this is no longer enabled by default. Unique will slowly migrate away from Tyk API Gateway and into `routes` and `extraRoutes`, refer to the readme.
+# ␡ `tyk` will be removed from the chart latest with the next major release (`3.0.0`).
 tyk:
   enabled: false
   # -- ⚠️ When using Tyk API Gateway, you must set a valid listenPath
@@ -125,11 +126,6 @@ tyk:
     - methods:
         - GET
       path: /metrics
-
-ingress:
-  enabled: false
-  tls:
-    enabled: false
 
 # env is a flat map of ENV_NAME: $VALUE which will get encapsulated into a ConfigMap and loaded using the envFrom syntax
 # It only supports the flat object syntax with key value pairs
@@ -347,9 +343,9 @@ externalSecrets:
 extraObjects: []
 
 # -- routes is a special object designed for Unique services. It abstracts a lot of complexity and allows for a simple configuration of routes.
-# ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong. If you are using a different API Gateway, you will need to use `extraRoutes`.
+# ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong (but might work with other implementations as well). If you are using a different API Gateway, you will need to change the `gateway details` or use `extraRoutes`.
 # Refer to [`ci/routes-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/routes-values.yaml) to see a full example of how to configure routes.
-# Currently, routes must be explicitly enabled until the Unique Kong migration is complete and Tyk faded out from the chart.
+# Currently, routes must be explicitly enabled until the Unique Kong migration is complete.
 routes:
   # - hostname of the route, will be matched against the host header of the request
   # currently defaults to one, if ever more are needed open an issue, `extraHostNames` will be added, supports templating
@@ -362,17 +358,17 @@ routes:
     # -- namespace of the gateway
     # @default -- system
     namespace: system
+  # -- path_prefix allows setting the default prefix (fullname) for all paths
+  # @default -- defaults to the fullname of the service
+  path_prefix: ""
   paths:
-    # -- prefix_override allows overriding the default prefix (fullname) for all paths
-    # @default -- defaults to the fullname of the service
-    prefix_override: ""
     default:
-      enabled: true
+      enabled: false
       block_list:
         - metrics
-      # extraAnnotations:
-      #   konghq.com/request-buffering: "false"
-      #   konghq.com/read-timeout: "120s"
+      extraAnnotations: []
+        # konghq.com/request-buffering: "false"
+        # konghq.com/read-timeout: "120s"
     versioned:
       enabled: false
       # -- specified version of the API to use
@@ -382,8 +378,8 @@ routes:
       # ⚠️ Customizing this value requires also changing the default url in multiple places including all SDK or integration use cases
       # @default -- the chart will default to 'public' to stay backward compatible
       path_override: public
-      # extraAnnotations:
-      #   konghq.com/request-buffering: "false"
+      extraAnnotations: []
+        # konghq.com/request-buffering: "false"
     scoped:
       enabled: false
       # -- users wishing to not call their scoped API 'scoped' can override the path
@@ -394,14 +390,14 @@ routes:
       # will be rendered to: `/{scoped|path_override}/{entry}`
       allow_list:
         - upload
-      # extraAnnotations:
+      extraAnnotations: []
       #   konghq.com/request-buffering: "false"
     # -- `/up` is unauthorized and its sole purpose is to expose a health check endpoint for availability monitoring
     # Maps to version neutral `/probe` endpoint all Unique services expose
     up:
-      enabled: true
-      # extraAnnotations:
-      #   konghq.com/strip-path: "true"
+      enabled: false
+      extraAnnotations: []
+        # konghq.com/strip-path: "true"
 
 # -- BETA: Configure additional gateway routes for the chart here.
 # More routes can be added by adding a dictionary key like the 'extra-route-1' route.

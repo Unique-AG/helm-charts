@@ -70,3 +70,11 @@ app.kubernetes.io/component: cron-job
 app.kubernetes.io/component: hooks-db-migration
 {{- end }}
 
+{{/* Helper to get the prefix */}}
+{{- define "backendService.routePrefix" -}}
+{{- if .Values.routes.path_prefix -}}
+{{- .Values.routes.path_prefix -}}
+{{- else -}}
+{{- include "backendService.fullname" . -}}
+{{- end -}}
+{{- end -}}

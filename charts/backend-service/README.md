@@ -21,14 +21,15 @@ helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-serv
 ### Docker Images
 The chart itself uses `ghcr.io/unique-ag/chart-testing-service` as its base image. This is due to automation aspects and because there is no specific `appVersion` or service delivered with it. Using `chart-testing-service` Unique can improve the charts quality without dealing with the complexity of private registries during testing. Naturally, when deploying the Unique product, the image will be replaced with the actual Unique image(s). You can inspect the image [here](https://github.com/Unique-AG/helm-charts/tree/main/docker) and it is served from [`ghcr.io/unique-ag/chart-testing-service`](https://github.com/Unique-AG/helm-charts/pkgs/container/chart-testing-service).
 
-### CronJobs
-`cronJob` as well as `extraCronJobs` can be used to create cron jobs. These convenience fields are easing the effort to deploy Unique as package. Technically one can also deploy this same chart multiple times but this increases the management complexity on the user side. `cronJob` and `extraCronJobs` allow to deploy multiple cron jobs in a single chart deployment. Note, that they all share the same environment settings for now and that they base on the same image. You should not use this feature if you want to deploy arbitrary or other CronJobs not related to Unique or the current workload/deployment.
+### Networking
+The chart supports two ways of networking in different stages:
 
-⚠️ The syntax between `cronJob` and `extraCronJobs` is different. This is due to the continuous improvement process of Unique where unnecessary complexity has been abstracted for the user. You might still define every property as before, but the chart will default or auto-generate many of the properties that were mandatory in `cronJob`. Unique leaves is open to deprecate `cronJob` in an upcoming major release and generally advises, to directly use `extraCronJobs` for new deployments.
+- _Tyk_ - Tyk has been source-closed in late 2024 and thus Unique has decided to move away from it. The chart still supports Tyk but it is not enabled by default anymore since `2.0.0`. If you want to use Tyk, you need to set `tyk.enabled: true` in your values file, see [Upgrade ~> 2.0.0](#-200).
+    + Support fot Tyk will be removed in the next major release (`3.0.0`).
+- _Gateway API_ - The chart supports the Gateway API and its resources. This is the recommended way to go forward. The Gateway API is a Kubernetes-native way to manage your networking resources and is part of the [Gateway API](https://gateway-api.sigs.k8s.io) project.
+    + The Gateway API is not enabled by default yet, you need to selectively `enable` different `routes` or use `extraRoutes` to configure them. See [Routes](#routes) for more information.
 
-You can find a `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/extra-cronjobs-values.yaml) file.
-
-### Routes
+#### Routes
 With `2.0.0` the chart supports _routes_ (namely all routes from [`gateway.networking.k8s.io`](https://gateway-api.sigs.k8s.io/concepts/api-overview/#route-resources)). While `routes`, not yet enabled by default, abstract certain complexity away from the chart consumer, `extraRoutes` can be used by power-users to configure each route exactly to their needs.
 
 To use _Routes_ per se you need two things:
@@ -39,10 +40,12 @@ To use _Routes_ per se you need two things:
 - CRDs installed
     + [Install CRDs](https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api)
 
-If you want to locally template your chart, you must enable this via the `.Capabilities.APIVersions` [built-in object](https://helm.sh/docs/chart_template_guide/builtin_objects/)
-```
-helm template some-app oci://ghcr.io/unique-ag/helm-charts/backend-service --api-versions gateway.networking.k8s.io/v1 --values your-own-values.yaml
-```
+### CronJobs
+`cronJob` as well as `extraCronJobs` can be used to create cron jobs. These convenience fields are easing the effort to deploy Unique as package. Technically one can also deploy this same chart multiple times but this increases the management complexity on the user side. `cronJob` and `extraCronJobs` allow to deploy multiple cron jobs in a single chart deployment. Note, that they all share the same environment settings for now and that they base on the same image. You should not use this feature if you want to deploy arbitrary or other CronJobs not related to Unique or the current workload/deployment.
+
+⚠️ The syntax between `cronJob` and `extraCronJobs` is different. This is due to the continuous improvement process of Unique where unnecessary complexity has been abstracted for the user. You might still define every property as before, but the chart will default or auto-generate many of the properties that were mandatory in `cronJob`. Unique leaves is open to deprecate `cronJob` in an upcoming major release and generally advises, to directly use `extraCronJobs` for new deployments.
+
+You can find a `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/extra-cronjobs-values.yaml) file.
 
 ## Values
 
@@ -97,8 +100,6 @@ helm template some-app oci://ghcr.io/unique-ag/helm-charts/backend-service --api
 | image.repository | string | `"ghcr.io/unique-ag/chart-testing-service"` | Repository, where the Unique service image is pulled from - for Unique internal deployments, these is the internal release repository - for client deployments, this will refer to the client's repository where the images have been mirrored too Note that it is bad practice and not advised to directly pull from Uniques release repository Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image |
 | image.tag | string | `"1.0.3"` | tag, most often will refer one of the latest release of the Unique service Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image |
 | imagePullSecrets | list | `[]` |  |
-| ingress.enabled | bool | `false` |  |
-| ingress.tls.enabled | bool | `false` |  |
 | nameOverride | string | `""` |  |
 | nodeSelector | object | `{}` |  |
 | pdb.maxUnavailable | string | `"30%"` |  |
@@ -126,13 +127,14 @@ helm template some-app oci://ghcr.io/unique-ag/helm-charts/backend-service --api
 | resources | object | `{}` |  |
 | rollingUpdate.maxSurge | int | `1` |  |
 | rollingUpdate.maxUnavailable | int | `0` |  |
-| routes | object | `{"gateway":{"name":"kong","namespace":"system"},"hostname":"chart-testing-service.example.com","paths":{"default":{"block_list":["metrics"],"enabled":true},"scoped":{"allow_list":["upload"],"enabled":false,"path_override":"scoped"},"up":{"enabled":true},"versioned":{"enabled":false,"path_override":"public","x_api_version":"2023-12-06"}}}` | routes is a special object designed for Unique services. It abstracts a lot of complexity and allows for a simple configuration of routes. ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong. If you are using a different API Gateway, you will need to use `extraRoutes`. Refer to [`ci/routes-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/routes-values.yaml) to see a full example of how to configure routes. Currently, routes must be explicitly enabled until the Unique Kong migration is complete and Tyk faded out from the chart. |
+| routes | object | `{"gateway":{"name":"kong","namespace":"system"},"hostname":"chart-testing-service.example.com","path_prefix":"","paths":{"default":{"block_list":["metrics"],"enabled":false,"extraAnnotations":[]},"scoped":{"allow_list":["upload"],"enabled":false,"extraAnnotations":[],"path_override":"scoped"},"up":{"enabled":false,"extraAnnotations":[]},"versioned":{"enabled":false,"extraAnnotations":[],"path_override":"public","x_api_version":"2023-12-06"}}}` | routes is a special object designed for Unique services. It abstracts a lot of complexity and allows for a simple configuration of routes. ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong (but might work with other implementations as well). If you are using a different API Gateway, you will need to change the `gateway details` or use `extraRoutes`. Refer to [`ci/routes-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/routes-values.yaml) to see a full example of how to configure routes. Currently, routes must be explicitly enabled until the Unique Kong migration is complete. |
 | routes.gateway | object | `{"name":"kong","namespace":"system"}` | gateway to use |
 | routes.gateway.name | string | kong | name of the gateway |
 | routes.gateway.namespace | string | system | namespace of the gateway |
+| routes.path_prefix | string | defaults to the fullname of the service | path_prefix allows setting the default prefix (fullname) for all paths |
 | routes.paths.scoped.allow_list | list | `["upload"]` | explicitly list of exact path matches will be rendered to: `/{scoped|path_override}/{entry}` |
 | routes.paths.scoped.path_override | string | the chart will default to 'scoped' to stay backward compatible | users wishing to not call their scoped API 'scoped' can override the path ⚠️ Customizing this value requires also changing the default url in multiple places including all web-apps |
-| routes.paths.up | object | `{"enabled":true}` | `/up` is unauthorized and its sole purpose is to expose a health check endpoint for availability monitoring Maps to version neutral `/probe` endpoint all Unique services expose |
+| routes.paths.up | object | `{"enabled":false,"extraAnnotations":[]}` | `/up` is unauthorized and its sole purpose is to expose a health check endpoint for availability monitoring Maps to version neutral `/probe` endpoint all Unique services expose |
 | routes.paths.versioned.path_override | string | the chart will default to 'public' to stay backward compatible | users wishing to not call their versioned API 'public' can override the path ⚠️ Customizing this value requires also changing the default url in multiple places including all SDK or integration use cases |
 | routes.paths.versioned.x_api_version | string | the chart will default to "2023-12-06" | specified version of the API to use |
 | secretProvider | object | `{}` |  |
@@ -148,7 +150,7 @@ helm template some-app oci://ghcr.io/unique-ag/helm-charts/backend-service --api
 | serviceAccount.enabled | bool | `false` |  |
 | serviceAccount.workloadIdentity | object | `{}` |  |
 | tolerations | list | `[]` |  |
-| tyk | object | `{"blockList":[{"methods":["GET"],"path":"/metrics"}],"enabled":false,"exposePublicApi":{"enabled":false},"jwtSource":"https://id.unique.app/oauth/v2/keys","listenPath":"/unsert_default_path","rateLimit":{},"scopedApi":{"enabled":false}}` | Settings for Tyk API Gateway respectively its APIDefinition, note that for now, you need the CRDs installed should you enable this ⚠️ Since `2.0.0` this is no longer enabled by default. Unique will slowly migrate away from Tyk API Gateway and into `routes` and `extraRoutes`, refer to the readme. |
+| tyk | object | `{"blockList":[{"methods":["GET"],"path":"/metrics"}],"enabled":false,"exposePublicApi":{"enabled":false},"jwtSource":"https://id.unique.app/oauth/v2/keys","listenPath":"/unsert_default_path","rateLimit":{},"scopedApi":{"enabled":false}}` | Settings for Tyk API Gateway respectively its APIDefinition, in order to use Tyk API Gateway, you must install its Operators respective CRDs. ⚠️ Since `2.0.0` this is no longer enabled by default. Unique will slowly migrate away from Tyk API Gateway and into `routes` and `extraRoutes`, refer to the readme. ␡ `tyk` will be removed from the chart latest with the next major release (`3.0.0`). |
 | tyk.blockList | list | `[{"methods":["GET"],"path":"/metrics"}]` | blockList allows you to block specific paths and methods |
 | tyk.listenPath | string | `"/unsert_default_path"` | ⚠️ When using Tyk API Gateway, you must set a valid listenPath |
 | volumeMounts | list | `[]` |  |
@@ -157,14 +159,20 @@ helm template some-app oci://ghcr.io/unique-ag/helm-charts/backend-service --api
 ## Upgrade Guides
 
 ### ~> 2.0.0
-`2.0.0` introduces three breaking changes:
 
 - `securityContext` and `podSecurityContext` now ship with securer defaults.
     + You might need to adjust your `securityContext` and `podSecurityContext` settings if you derive a lot from a secure baseline, worst case you need to unset them (`{}`)
 - `tyk` respectively its _APIDefinitions implementations_ are no longer enabled by default.
     + You need to set `tyk.enabled: true` to enable it back if desired and potentially disable the new `routes` feature.
 - `httproute` is converted into a dictionary and moves into `extraRoutes`
-    + You must adjust your `httproute` configuration to be in the dictionary and move it into `extraRoutes` if you were using it.
+- `ingress` has been removed. Unique Services require an upstream gateway that authenticates requests and populates the headers with matching information from the JWT token.
 
 ----------------------------------------------
 Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)
+
+## Development
+
+If you want to locally template your chart, you must enable this via the `.Capabilities.APIVersions` [built-in object](https://helm.sh/docs/chart_template_guide/builtin_objects/)
+```
+helm template some-app oci://ghcr.io/unique-ag/helm-charts/backend-service --api-versions gateway.networking.k8s.io/v1 --values your-own-values.yaml
+```
