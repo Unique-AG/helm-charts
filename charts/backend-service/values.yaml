@@ -21,7 +21,7 @@ image:
   repository: "ghcr.io/unique-ag/chart-testing-service"
   # -- tag, most often will refer one of the latest release of the Unique service
   # Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image
-  tag: "1.0.2"
+  tag: "1.0.3"
   # -- pullPolicy, Unique recommends to never use 'Always'
   pullPolicy: IfNotPresent
 
@@ -35,9 +35,23 @@ serviceAccount:
 
 podAnnotations: {}
 
-podSecurityContext: {}
+# -- PodSecurityContext for the pod(s)
+podSecurityContext:
+  # -- seccompProfile, controls the seccomp profile for the container, defaults to 'RuntimeDefault'
+  seccompProfile:
+    ## -- type, the type of seccomp profile to use, defaults to 'RuntimeDefault'
+    type: RuntimeDefault
 
-securityContext: {}
+# -- SecurityContext for the container(s)
+securityContext:
+  # -- AllowPrivilegeEscalation, controls if the container can gain more privileges than its parent process, defaults to 'false'
+  allowPrivilegeEscalation: false
+  # -- readOnlyRootFilesystem, controls if the container has a read-only root filesystem, defaults to 'true'
+  readOnlyRootFilesystem: true
+  # -- runAsNonRoot, controls if the container must run as a non-root user, defaults to 'true'
+  runAsNonRoot: true
+  # -- runAsUser, controls the user ID that runs the container, defaults to '1000'
+  runAsUser: 1000
 
 deployment:
   enabled: true
@@ -62,9 +76,11 @@ service:
   type: ClusterIP
   port: 8080
 
-# -- Settings for Tyk API Gateway respectively its APIDefinition, note that for now, you need the CRDs installed should you enable this
+# -- Settings for Tyk API Gateway respectively its APIDefinition, in order to use Tyk API Gateway, you must install its Operators respective CRDs.
+# ⚠️ Since `2.0.0` this is no longer enabled by default. Unique will slowly migrate away from Tyk API Gateway and into `routes` and `extraRoutes`, refer to the readme.
+# ␡ `tyk` will be removed from the chart latest with the next major release (`3.0.0`).
 tyk:
-  enabled: true
+  enabled: false
   # -- ⚠️ When using Tyk API Gateway, you must set a valid listenPath
   listenPath: "/unsert_default_path"
   jwtSource: https://id.unique.app/oauth/v2/keys
@@ -110,43 +126,6 @@ tyk:
     - methods:
         - GET
       path: /metrics
-
-ingress:
-  enabled: false
-  tls:
-    enabled: false
-
-httproute:
-  enabled: false
-  annotations: {}
-  gatewayName: kong
-  gatewayNamespace: system
-  hostnames: []
-  rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-      # backendRefs can be omitted to use the default service
-      # backendRefs:
-      #   - name: custom-service
-      #     kind: Service
-      #     port: 8080
-    # Example of a more complex rule
-    # - matches:
-    #   - headers:
-    #       - name: "X-Version"
-    #         value: "v3"
-    #     path:
-    #       type: PathPrefix
-    #       value: /test
-    #   backendRefs:
-    #     - name: api-v2
-    #       kind: Service
-    #       port: 8081
-
-  # Additional HTTPRoutes
-  additionalRoutes: []
 
 # env is a flat map of ENV_NAME: $VALUE which will get encapsulated into a ConfigMap and loaded using the envFrom syntax
 # It only supports the flat object syntax with key value pairs
@@ -362,3 +341,94 @@ externalSecrets:
 
 # -- extraObjects allows you to add additional Kubernetes objects to the manifest. It is the responsibility of the user to ensure that the objects are valid, that they do not conflict with the existing objects and that they are not containing any sensitive information
 extraObjects: []
+
+# -- routes is a special object designed for Unique services. It abstracts a lot of complexity and allows for a simple configuration of routes.
+# ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong (but might work with other implementations as well). If you are using a different API Gateway, you will need to change the `gateway details` or use `extraRoutes`.
+# Refer to [`ci/routes-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/routes-values.yaml) to see a full example of how to configure routes.
+# Currently, routes must be explicitly enabled until the Unique Kong migration is complete.
+routes:
+  # - hostname of the route, will be matched against the host header of the request
+  # currently defaults to one, if ever more are needed open an issue, `extraHostNames` will be added, supports templating
+  hostname: chart-testing-service.example.com
+  # -- gateway to use
+  gateway:
+    # -- name of the gateway
+    # @default -- kong
+    name: kong
+    # -- namespace of the gateway
+    # @default -- system
+    namespace: system
+  # -- path_prefix allows setting the default prefix (fullname) for all paths
+  # @default -- defaults to the fullname of the service
+  path_prefix: ""
+  paths:
+    default:
+      enabled: false
+      block_list:
+        - metrics
+      extraAnnotations: []
+        # konghq.com/request-buffering: "false"
+        # konghq.com/read-timeout: "120s"
+    versioned:
+      enabled: false
+      # -- specified version of the API to use
+      # @default -- the chart will default to "2023-12-06"
+      x_api_version: "2023-12-06"
+      # -- users wishing to not call their versioned API 'public' can override the path
+      # ⚠️ Customizing this value requires also changing the default url in multiple places including all SDK or integration use cases
+      # @default -- the chart will default to 'public' to stay backward compatible
+      path_override: public
+      extraAnnotations: []
+        # konghq.com/request-buffering: "false"
+    scoped:
+      enabled: false
+      # -- users wishing to not call their scoped API 'scoped' can override the path
+      # ⚠️ Customizing this value requires also changing the default url in multiple places including all web-apps
+      # @default -- the chart will default to 'scoped' to stay backward compatible
+      path_override: scoped
+      # -- explicitly list of exact path matches
+      # will be rendered to: `/{scoped|path_override}/{entry}`
+      allow_list:
+        - upload
+      extraAnnotations: []
+      #   konghq.com/request-buffering: "false"
+    # -- `/up` is unauthorized and its sole purpose is to expose a health check endpoint for availability monitoring
+    # Maps to version neutral `/probe` endpoint all Unique services expose
+    up:
+      enabled: false
+      extraAnnotations: []
+        # konghq.com/strip-path: "true"
+
+# -- BETA: Configure additional gateway routes for the chart here.
+# More routes can be added by adding a dictionary key like the 'extra-route-1' route.
+# In order for this to install, the Gateway [API CRDs](https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api) must be installed in the cluster.
+extraRoutes:
+  extra-route-1:
+    # -- Enables or disables the route
+    enabled: false
+    # -- Set the route apiVersion, e.g. gateway.networking.k8s.io/v1 or gateway.networking.k8s.io/v1alpha2
+    apiVersion: gateway.networking.k8s.io/v1
+    # -- Set the route kind
+    # Valid options are GRPCRoute, HTTPRoute, TCPRoute, TLSRoute, UDPRoute
+    kind: HTTPRoute
+    # -- Set the route annotations
+    annotations: {}
+    # -- Set the route labels
+    labels: {}
+    # -- Add hostnames to the route, will be matched against the host header of the request
+    hostnames: []
+    # -- parentRefs define the parent gateway(s) that the route will be associated with
+    parentRefs:
+      - name: kong
+        namespace: kong-system
+        group: gateway.networking.k8s.io
+        kind: Gateway
+    # -- which match conditions should be applied to the route
+    matches:
+      - path:
+          type: PathPrefix
+          value: /
+    ## -- Filters define the filters that are applied to requests that match this rule.
+    filters: []
+    ## -- Additional custom rules that can be added to the route
+    additionalRules: []

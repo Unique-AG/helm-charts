@@ -7,7 +7,7 @@ release:
 tests:
   - it: When given an extra CronJob, renders the CronJob with the correct values
     values:
-      - ../example-values/extra-cronjobs.yaml
+      - ../ci/extra-cronjobs-values.yaml
     template: extra-cronjobs.yaml
     documentSelector:
       path: metadata.name
@@ -23,13 +23,6 @@ tests:
           value: Never
       - exists:
           path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "foo")]
-      - exists:
-          path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "foo")].env[?(@.name == "DATABASE_URL")]
       - equal:
           path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "foo")].env[?(@.name == "BAZ")].value
           value: qux
-      - exists:
-          path: spec.jobTemplate.spec.template.spec.volumes[?(@.name == "ecj-ut-ecj-service")]
-      - equal:
-          path: spec.jobTemplate.spec.template.spec.volumes[?(@.name == "ecj-ut-ecj-service")].csi.driver
-          value: secrets-store.csi.k8s.io

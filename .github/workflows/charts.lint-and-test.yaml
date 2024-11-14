@@ -70,7 +70,7 @@ jobs:
 
       - name: Run chart-testing (lint)
         run: |
-          helm plugin install https://github.com/helm-unittest/helm-unittest.git 
+          helm plugin install https://github.com/helm-unittest/helm-unittest.git
           ct lint --debug --config ./.github/configs/ct-lint.yaml --lint-conf ./.github/configs/lintconf.yaml
 
       - name: Run docs-testing (helm-docs)
@@ -92,6 +92,7 @@ jobs:
           config: .github/configs/kind-config.yaml
 
       - name: Deploy CRDs needed for charts to be able to install
+        if: steps.list-changed.outputs.changed == 'true'
         run: ./scripts/install-crds.sh
 
       - name: Run chart-testing (install)

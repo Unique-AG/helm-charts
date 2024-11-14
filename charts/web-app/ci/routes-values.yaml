@@ -1,0 +1,32 @@
+# -- routes is a special object designed for Unique services. It abstracts a lot of complexity and allows for a simple configuration of routes.
+# ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong. If you are using a different API Gateway, you will need to use `extraRoutes`.
+# Refer to [`ci/routes-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/routes-values.yaml) to see a full example of how to configure routes.
+# Currently, routes must be explicitly enabled until the Unique Kong migration is complete and Tyk faded out from the chart.
+routes:
+  # - hostname of the route, will be matched against the host header of the request
+  # currently defaults to one, if ever more are needed open an issue, `extraHostNames` will be added, supports templating
+  hostname: chart-testing-service.example.com
+  # -- gateway to use
+  gateway:
+    # -- name of the gateway
+    # @default -- kong
+    name: kong
+    # -- namespace of the gateway
+    # @default -- system
+    namespace: system
+  # -- path_prefix allows setting the default prefix (fullname) for all paths
+  # @default -- defaults to the fullname of the service
+  path_prefix: ""
+  paths:
+    default:
+      enabled: true
+      block_list:
+        - metrics
+      extraAnnotations: []
+      #   konghq.com/request-buffering: "false"
+      #   konghq.com/read-timeout: "120s"
+    root:
+      # -- Whether the root route should be enabled
+      enabled: true
+      # -- The path to which the root should be redirected to
+      redirect_path: chat

@@ -1,7 +1,7 @@
 #
 # EXAMPLE VALUES FOR EXTRA CRONJOBS
 # Uses cronJob and extraCronJobs to define a CronJob and an extra CronJob
-# 
+#
 env:
   FOO: quux
 extraCronJobs:
@@ -20,17 +20,8 @@ extraCronJobs:
     suspend: false
     timeZone: Europe/Zurich
 image:
-  repository: uniquecr.azurecr.io/backend-service-ecj
-  tag: '2024.40'
-podSecurityContext: {}
-secretProvider:
-  tenantId: 16f4983c-5f9c-4004-a229-175cc3xampl4
-  useVMManagedIdentity: 'true'
-  userAssignedIdentityID: 16f4983c-5f9c-4004-a229-175cc3xampl4
-  vaults:
-    ut-ecj-service:
-      DATABASE_URL: DATABASE-URL
-      ZITADEL_PAT: ZITADEL-PAT
+  repository: "ghcr.io/unique-ag/chart-testing-service"
+  tag: "1.0.3"
 securityContext:
   allowPrivilegeEscalation: false
   seccompProfile:
