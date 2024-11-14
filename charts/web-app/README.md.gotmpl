@@ -20,12 +20,40 @@ helm install my-{{ template "chart.name" . }} oci://ghcr.io/unique-ag/helm-chart
 ### Docker Images
 The chart itself uses `ghcr.io/unique-ag/chart-testing-service` as its base image. This is due to automation aspects and because there is no specific `appVersion` or service delivered with it. Using `chart-testing-service` Unique can improve the charts quality without dealing with the complexity of private registries during testing. Naturally, when deploying the Unique product, the image will be replaced with the actual Unique image(s). You can inspect the image [here](https://github.com/Unique-AG/helm-charts/tree/main/docker) and it is served from [`ghcr.io/unique-ag/chart-testing-service`](https://github.com/Unique-AG/helm-charts/pkgs/container/chart-testing-service).
 
-### Root Ingress
-The Root Ingress is a convenience ingress that routes all traffic from the root of the domain to the backend service. This functionality works different depending on the Ingress Class used. In order to keep the chart agnostic to the Ingress Class, the chart uses the `.Capabilities.APIVersions` [built-in object](https://helm.sh/docs/chart_template_guide/builtin_objects/). If you want to template charts locally you must supply matching capabilities like so:
-```
-helm template some-app oci://ghcr.io/unique-ag/helm-charts/web-app --api-versions appgw.ingress.azure.io/v1beta1 --values your-own-values.yaml
-```
+### Networking
+The chart supports the Gateway API and its resources. This is the recommended way to go forward. The Gateway API is a Kubernetes-native way to manage your networking resources and is part of the [Gateway API](https://gateway-api.sigs.k8s.io) project.
+
+The Gateway API is enabled by default, you need to selectively `enable` different `routes` or use `extraRoutes` to configure them. See [Routes](#routes) for more information.
+
+#### Routes
+With `2.0.0` the chart supports _routes_ (namely all routes from [`gateway.networking.k8s.io`](https://gateway-api.sigs.k8s.io/concepts/api-overview/#route-resources)). While `routes`, not yet enabled by default, abstract certain complexity away from the chart consumer, `extraRoutes` can be used by power-users to configure each route exactly to their needs.
+
+To use _Routes_ per se you need two things:
+
+- Knowledge about them and the Gateway API, you can start from these resources:
+    + [Gateway API](https://gateway-api.sigs.k8s.io)
+    + [Route Resources](https://gateway-api.sigs.k8s.io/concepts/api-overview/#route-resources)
+- CRDs installed
+    + [Install CRDs](https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api)
+
+#### Root Ingress
+The Root Ingress is a convenience ingress that routes all traffic from the root of the domain to the backend service. This functionality works different depending on the Ingress/Gateway Class used. In order to keep the chart agnostic to the Ingress Class, the chart uses the `.Capabilities.APIVersions` [built-in object](https://helm.sh/docs/chart_template_guide/builtin_objects/).
 
 {{ template "chart.valuesSection" . }}
+
+## Upgrade Guides
+
+### ~> 2.0.0
+
+- `httproute` is converted into a dictionary and moves into `extraRoutes`
+- `ingress` has been removed. If you need `Ingress` back as routing option please open an issue on the repository explaining why.
+
+## Development
+
+If you want to locally template your chart, you must enable this via the `.Capabilities.APIVersions` [built-in object](https://helm.sh/docs/chart_template_guide/builtin_objects/)
+```
+helm template some-app oci://ghcr.io/unique-ag/helm-charts/web-app --api-versions appgw.ingress.azure.io/v1beta1 --values your-own-values.yaml
+helm template some-app oci://ghcr.io/unique-ag/helm-charts/backend-service --api-versions gateway.networking.k8s.io/v1 --values your-own-values.yaml
+```
 
 {{ template "helm-docs.versionFooter" . }}
