@@ -7,7 +7,6 @@ nameOverride: ""
 
 # -- This is to override the full name.
 fullnameOverride: ""
-
 # -- Set options for the deployed keeper, its deployment and pods respectively.
 keeper:
   # -- This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
