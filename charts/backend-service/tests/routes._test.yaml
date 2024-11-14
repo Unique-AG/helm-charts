@@ -6,13 +6,11 @@ release:
   name: ut
 tests:
   - it: When given a httpRoute, should render some properties
+    values:
+      - ../ci/routes-values.yaml
     capabilities:
       apiVersions:
         - gateway.networking.k8s.io/v1
-    set:
-      httproute.enabled: true
-      httpRoute.gatewayName: ut
-
     template: routes.yaml
     asserts:
       - isKind:
