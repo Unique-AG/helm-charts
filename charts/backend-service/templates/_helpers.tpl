@@ -75,6 +75,6 @@ app.kubernetes.io/component: hooks-db-migration
 {{- if .Values.routes.path_prefix -}}
 {{- .Values.routes.path_prefix -}}
 {{- else -}}
-{{- include "backendService.fullname" . -}}
+/{{- include "backendService.fullname" . -}}
 {{- end -}}
 {{- end -}}
