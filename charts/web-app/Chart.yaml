@@ -15,4 +15,4 @@ sources:
 annotations:
   artifacthub.io/changes: |
     - kind: changed
-      description: "Removed `konghq.com/strip-path: "true"` from routes"
+      description: "Removed `konghq.com/strip-path: true` from routes"
