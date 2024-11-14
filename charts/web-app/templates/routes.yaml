@@ -9,7 +9,6 @@ metadata:
   name: {{ $fullName }}-default
   annotations:
     konghq.com/plugins: unique-route-metrics
-    konghq.com/strip-path: "true"
     konghq.com/protocols: https
     konghq.com/https-redirect-status-code: "301"
     {{- if .Values.routes.paths.default.extraAnnotations }}

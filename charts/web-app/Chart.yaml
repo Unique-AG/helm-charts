@@ -5,7 +5,7 @@ maintainers:
   - name: unique-ag
     url: https://unique.ch/
 name: web-app
-version: 2.0.0
+version: 2.0.1
 description: |
   The 'web-app' chart is a "convenience" chart from Unique AG that can generically be used to deploy web-content serving workloads to Kubernetes.
 
@@ -15,22 +15,4 @@ sources:
 annotations:
   artifacthub.io/changes: |
     - kind: changed
-      description: "⚠️ Support for `ingress` has been removed"
-    - kind: changed
-      description: "⚠️ `httproute` syntax and converted into dictionary as `extraRoutes`"
-      links:
-        - name: Gateway API
-          url: https://gateway-api.sigs.k8s.io
-        - name: Route Resources
-          url: https://gateway-api.sigs.k8s.io/concepts/api-overview/#route-resources
-        - name: Install CRDs
-          url: https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api
-    - kind: added
-      description: "`routes` encapsulates the defaults routes that Unique services use or require"
-      links:
-        - name: Gateway API
-          url: https://gateway-api.sigs.k8s.io
-        - name: Route Resources
-          url: https://gateway-api.sigs.k8s.io/concepts/api-overview/#route-resources
-        - name: Install CRDs
-          url: https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api
+      description: "Removed `konghq.com/strip-path: true` from routes"
