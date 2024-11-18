@@ -160,6 +160,11 @@ You can find a `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](
 
 ## Upgrade Guides
 
+### ~> 3.0.0
+
+- `routes` uses `camelCase` for its keys, replace all `lower_snake_case` keys with `camelCase`
+- `routes.paths.up` is renamed to `routes.paths.probe`, update your `routes` accordingly
+
 ### ~> 2.0.0
 
 - `httproute` is converted into a dictionary and moves into `extraRoutes`
