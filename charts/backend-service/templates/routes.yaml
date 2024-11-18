@@ -38,8 +38,8 @@ spec:
 
 {{/* Block list routes */}}
 {{/* Currently, the 'request-termination' plugin does not yet work well with 'extensionRefs' so we fall back to two paths for now */}}
-{{- if and .Values.routes.paths.default.enabled .Values.routes.paths.default.block_list }}
-{{- range .Values.routes.paths.default.block_list }}
+{{- if and .Values.routes.paths.default.enabled .Values.routes.paths.default.blockList }}
+{{- range .Values.routes.paths.default.blockList }}
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -103,16 +103,16 @@ spec:
           urlRewrite:
             path:
               type: ReplacePrefixMatch
-              replacePrefixMatch: {{ default "/public" .Values.routes.paths.versioned.path_override }}
+              replacePrefixMatch: {{ default "/public" .Values.routes.paths.versioned.pathOverride }}
         - type: RequestHeaderModifier
           requestHeaderModifier:
             add:
               - name: x-api-version
-                value: {{ default "2023-12-06" .Values.routes.paths.versioned.x_api_version | quote }}
+                value: {{ default "2023-12-06" .Values.routes.paths.versioned.xApiVersion | quote }}
       matches:
         - path:
             type: PathPrefix
-            value: {{ default "/public" .Values.routes.paths.versioned.path_override }}{{ include "backendService.routePrefix" $ }}
+            value: {{ default "/public" .Values.routes.paths.versioned.pathOverride }}{{ include "backendService.routePrefix" $ }}
 {{- end }}
 
 {{/* scoped route */}}
@@ -140,35 +140,35 @@ spec:
     - {{ tpl (.Values.routes.hostname) $ }}
   rules:
     - matches:
-      {{- range .Values.routes.paths.scoped.allow_list }}
+      {{- range .Values.routes.paths.scoped.allowList }}
         - path:
             type: PathPrefix
-            value: {{ default "/scoped" $.Values.routes.paths.scoped.path_override }}{{ . }}
+            value: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ . }}
       {{- end }}
       filters:
         - type: URLRewrite
           urlRewrite:
             path:
               type: ReplacePrefixMatch
-              replacePrefixMatch: {{ default "/scoped" .Values.routes.paths.scoped.path_override }}
+              replacePrefixMatch: {{ default "/scoped" .Values.routes.paths.scoped.pathOverride }}
       backendRefs:
         - name: {{ include "backendService.fullname" $ }}
           port: {{ $.Values.service.port }}
           kind: Service
 {{- end }}
 
-{{/* up route */}}
-{{- if .Values.routes.paths.up.enabled -}}
+{{/* probe route */}}
+{{- if .Values.routes.paths.probe.enabled -}}
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: {{ template "backendService.fullname" $ }}-up
+  name: {{ template "backendService.fullname" $ }}-probe
   annotations:
     konghq.com/strip-path: "true"
     konghq.com/plugins: unique-route-metrics
-    {{- if .Values.routes.paths.up.extraAnnotations }}
-    {{- toYaml .Values.routes.paths.up.extraAnnotations | nindent 4 }}
+    {{- if .Values.routes.paths.probe.extraAnnotations }}
+    {{- toYaml .Values.routes.paths.probe.extraAnnotations | nindent 4 }}
     {{- end }}
   labels:
     {{- include "backendService.labels" $ | nindent 4 }}
@@ -184,14 +184,14 @@ spec:
     - matches:
         - path:
             type: Exact
-            value: {{ include "backendService.routePrefix" $ }}{{ default "/probe" .Values.routes.paths.up.probe_path }}
+            value: {{ include "backendService.routePrefix" $ }}{{ default "/probe" .Values.routes.paths.probe.probePath }}
             # TODO: Add https://docs.konghq.com/hub/kong-inc/response-transformer/ to omit the response body
       filters:
         - type: URLRewrite
           urlRewrite:
             path:
               type: ReplaceFullPath
-              replaceFullPath: {{ default "/probe" .Values.routes.paths.up.probe_path }}
+              replaceFullPath: {{ default "/probe" .Values.routes.paths.probe.probePath }}
       backendRefs:
         - name: {{ include "backendService.fullname" $ }}
           port: {{ $.Values.service.port }}
@@ -199,5 +199,5 @@ spec:
 {{- end }}
 
 {{- else }}
-{{- fail "You can't use routes without CRDs installed. Install CRDs first."}}
+{{- fail "You can't use routes without gateway.networking.k8s.io CRDs installed. Install CRDs first."}}
 {{- end }}

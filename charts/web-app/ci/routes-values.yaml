@@ -14,14 +14,14 @@ routes:
     # -- namespace of the gateway
     # @default -- system
     namespace: system
-  # -- path_prefix allows setting the default prefix (fullname) for all paths
+  # -- pathPrefix allows setting the default prefix (fullname) for all paths
   # @default -- defaults to the fullname of the service
-  path_prefix: ""
+  pathPrefix: /my-service-ci
   paths:
     default:
       enabled: true
-      block_list:
-        - metrics
+      blockList:
+        - /metrics
       extraAnnotations: []
       #   konghq.com/request-buffering: "false"
       #   konghq.com/read-timeout: "120s"
@@ -29,4 +29,4 @@ routes:
       # -- Whether the root route should be enabled
       enabled: true
       # -- The path to which the root should be redirected to
-      redirect_path: chat
+      redirectPath: /my-service-ci
