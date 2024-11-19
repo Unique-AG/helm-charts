@@ -7,7 +7,7 @@ maintainers:
 name: sscsid-keeper
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/sscsid-keeper
-version: 1.1.3
+version: 1.1.4
 description: |
   The SSCSID ([Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/)) Keeper (`sscsid-keeper`) is a chart that combines the often used `SecretProviderClass`, which is part of the SSCSID with a running deployment that mounts the matching secrets making them available to others within the same namespace.
 
@@ -18,5 +18,5 @@ description: |
   Note that if you need more sophisticated features, or a officially maintained chart or option that supports reloading, ClusterSecrets etc, seek matching alternatives on your own behalf (e.g. [External Secrets Operator](https://external-secrets.io/latest/)).
 annotations:
   artifacthub.io/changes: |
-    - kind: fixed
-      description: Invalid restartPolicy
+    - kind: changed
+      description: "Deployment now uses `runAsUser: 1000` by default"
