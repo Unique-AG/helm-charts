@@ -27,7 +27,7 @@ spec:
       {{- end }}
       securityContext:
         {{- toYaml .Values.keeper.podSecurityContext | nindent 8 }}
-      restartPolicy: OnFailure
+      restartPolicy: Always
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -37,7 +37,7 @@ spec:
           {{- if .Values.keeper.command }}
           command: {{- toYaml .Values.keeper.command | nindent 12 }}
           {{- else }}
-          command: 
+          command:
             - "/bin/sh"
             - "-c"
             - "while true; do sleep 1000; done"
