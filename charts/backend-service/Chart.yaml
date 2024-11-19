@@ -7,7 +7,7 @@ maintainers:
 name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
-version: 2.0.1
+version: 3.0.0
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
 
@@ -15,5 +15,7 @@ description: |
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
+    - kind: fixed
+      description: "⚠️ Changes inconsistent naming where some used `lower_snake_case` and others `camelCase`. All values now use `camelCase`."
     - kind: changed
-      description: "Require `/` prefix for all routes paths"
+      description: "⚠️ The `routes.paths.up` path was changed to `routes.paths.probe` to align with the rest of the naming."

@@ -4,7 +4,7 @@ The 'web-app' chart is a "convenience" chart from Unique AG that can generically
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 2.0.1](https://img.shields.io/badge/Version-2.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 3.0.0](https://img.shields.io/badge/Version-3.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-web-app unique/web-app --version 2.0.1
+helm install my-web-app unique/web-app --version 3.0.0
 
 # or
-helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 2.0.1
+helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 3.0.0
 ```
 
 ### Docker Images
@@ -85,15 +85,15 @@ The Root Ingress is a convenience ingress that routes all traffic from the root 
 | resources | object | `{}` |  |
 | rollingUpdate.maxSurge | int | `1` |  |
 | rollingUpdate.maxUnavailable | int | `0` |  |
-| routes | object | `{"gateway":{"name":"kong","namespace":"system"},"hostname":"chart-testing-web-app.example.com","path_prefix":"","paths":{"default":{"block_list":["metrics"],"enabled":true},"root":{"enabled":false,"redirect_path":"chat"}}}` | routes is a special object designed for Unique web-apps. It abstracts a lot of complexity and allows for a simple configuration of routes. ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong. If you are using a different API Gateway, you will need to use `extraRoutes`. |
+| routes | object | `{"gateway":{"name":"kong","namespace":"system"},"hostname":"chart-testing-web-app.example.com","pathPrefix":"","paths":{"default":{"blockList":["/metrics"],"enabled":true,"extraAnnotations":[]},"root":{"enabled":false,"redirectPath":"/chart-testing"}}}` | routes is a special object designed for Unique web-apps. It abstracts a lot of complexity and allows for a simple configuration of routes. ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong. If you are using a different API Gateway, you will need to use `extraRoutes`. |
 | routes.gateway | object | `{"name":"kong","namespace":"system"}` | gateway to use |
 | routes.gateway.name | string | kong | name of the gateway |
 | routes.gateway.namespace | string | system | namespace of the gateway |
-| routes.path_prefix | string | defaults to the fullname of the service | path_prefix allows setting the default prefix (fullname) for all paths |
-| routes.paths.default | object | defaults to the fullname of the service | path_prefix allows overriding the default prefix (fullname) for all paths |
-| routes.paths.root | object | `{"enabled":false,"redirect_path":"chat"}` | The root route is a convenience route that routes all traffic from the root of the domain to a specific path ⚠️ The root route should only be activated once when multiple web-apps are deployed to the same cluster |
+| routes.pathPrefix | string | defaults to the /fullname of the service | pathPrefix allows setting the default prefix (fullname) for all paths |
+| routes.paths.default.blockList | list | `["/metrics"]` | explicitly list paths to block |
+| routes.paths.root | object | `{"enabled":false,"redirectPath":"/chart-testing"}` | The root route is a convenience route that routes all traffic from the root of the domain to a specific path ⚠️ The root route should only be activated once when multiple web-apps are deployed to the same cluster |
 | routes.paths.root.enabled | bool | `false` | Whether the root route should be enabled |
-| routes.paths.root.redirect_path | string | `"chat"` | The path to which the root should be redirected to |
+| routes.paths.root.redirectPath | string | defaults to the `pathPrefix` if enabled and omitted | The path to which the root should be redirected to ⚠️ This value must be a valid full path, not only the sub-path. A 302 redirect will be issued to this path (using full path replacement). |
 | secretProvider | object | `{}` |  |
 | securityContext.allowPrivilegeEscalation | bool | `false` |  |
 | securityContext.runAsNonRoot | bool | `true` |  |
@@ -108,6 +108,11 @@ The Root Ingress is a convenience ingress that routes all traffic from the root 
 | tolerations | list | `[]` |  |
 
 ## Upgrade Guides
+
+### ~> 3.0.0
+
+- `routes` uses `camelCase` for its keys, replace all `lower_snake_case` keys with `camelCase`
+- `routes.paths` and their sub-paths no longer use `/` as a prefix by default, add it to your `routes`
 
 ### ~> 2.0.0
 

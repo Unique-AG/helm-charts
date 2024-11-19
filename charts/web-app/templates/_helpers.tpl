@@ -58,11 +58,10 @@ Create the name of the service account to use
 {{- end }}
 
 {{/* Helper to get the prefix */}}
-{{- $fullName := include "common.fullname" . -}}
 {{- define "webApp.routePrefix" -}}
-{{- if .Values.routes.prefix_override -}}
-{{- .Values.routes.prefix_override -}}
+{{- if .Values.routes.pathPrefix -}}
+{{- .Values.routes.pathPrefix -}}
 {{- else -}}
-{{- include "common.fullname" . -}}
+/{{- include "common.fullname" . -}}
 {{- end -}}
 {{- end -}}

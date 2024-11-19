@@ -72,8 +72,8 @@ app.kubernetes.io/component: hooks-db-migration
 
 {{/* Helper to get the prefix */}}
 {{- define "backendService.routePrefix" -}}
-{{- if .Values.routes.path_prefix -}}
-{{- .Values.routes.path_prefix -}}
+{{- if .Values.routes.pathPrefix -}}
+{{- .Values.routes.pathPrefix -}}
 {{- else -}}
 /{{- include "backendService.fullname" . -}}
 {{- end -}}

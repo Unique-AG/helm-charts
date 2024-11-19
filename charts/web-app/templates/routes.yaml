@@ -32,7 +32,7 @@ spec:
       matches:
         - path:
             type: PathPrefix
-            value: /{{ include "webApp.routePrefix" $ }}
+            value: {{ include "webApp.routePrefix" $ }}
 {{- end }}
 
 {{/* Root route */}}
@@ -67,11 +67,11 @@ spec:
             hostname: {{ tpl ($.Values.routes.hostname) $ }}
             path:
               type: ReplaceFullPath
-              replaceFullPath: /{{ .Values.routes.paths.root.redirect_path }}
+              replaceFullPath: {{ default (include "webApp.routePrefix" $) .Values.routes.paths.root.redirectPath }}
             statusCode: 302 # Temporary Redirect, as we might change the root path in the future
             port: 443
 {{- end }}
 
 {{- else }}
-{{- fail "You can't use routes without CRDs installed. Install CRDs first."}}
+{{- fail "You can't use routes without gateway.networking.k8s.io CRDs installed. Install CRDs first."}}
 {{- end }}

@@ -14,13 +14,13 @@ routes:
     # -- namespace of the gateway
     # @default -- system
     namespace: system
-  # -- path_prefix allows setting the default prefix (fullname) for all paths
+  # -- pathPrefix allows setting the default prefix (fullname) for all paths
   # @default -- defaults to the fullname of the service
-  path_prefix: ""
+  pathPrefix: ""
   paths:
     default:
       enabled: true
-      block_list:
+      blockList:
         - /metrics
       extraAnnotations: []
       #   konghq.com/request-buffering: "false"
@@ -29,11 +29,11 @@ routes:
       enabled: true
       # -- specified version of the API to use
       # @default -- the chart will default to "2023-12-06"
-      x_api_version: "2023-12-06"
+      xApiVersion: "2023-12-06"
       # -- users wishing to not call their versioned API 'public' can override the path
       # ⚠️ Customizing this value requires also changing the default url in multiple places including all SDK or integration use cases
       # @default -- the chart will default to 'public' to stay backward compatible
-      path_override: /public
+      pathOverride: /public
       extraAnnotations: []
       #   konghq.com/request-buffering: "false"
     scoped:
@@ -41,16 +41,16 @@ routes:
       # -- users wishing to not call their scoped API 'scoped' can override the path
       # ⚠️ Customizing this value requires also changing the default url in multiple places including all web-apps
       # @default -- the chart will default to 'scoped' to stay backward compatible
-      path_override: /scoped
+      pathOverride: /scoped
       # -- explicitly list of exact path matches
-      # will be rendered to: `/{scoped|path_override}/{entry}`
-      allow_list:
+      # will be rendered to: `/{scoped|pathOverride}/{entry}`
+      allowList:
         - /upload
       extraAnnotations: []
       #   konghq.com/request-buffering: "false"
-    # -- `/up` is unauthorized and its sole purpose is to expose a health check endpoint for availability monitoring
+    # -- `/probe` is unauthorized and its sole purpose is to expose a health check endpoint for availability monitoring
     # Maps to version neutral `/probe` endpoint all Unique services expose
-    up:
+    probe:
       enabled: true
       extraAnnotations: []
       #   konghq.com/strip-path: "true"

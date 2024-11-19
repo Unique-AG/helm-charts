@@ -43,6 +43,11 @@ The Root Ingress is a convenience ingress that routes all traffic from the root 
 
 ## Upgrade Guides
 
+### ~> 3.0.0
+
+- `routes` uses `camelCase` for its keys, replace all `lower_snake_case` keys with `camelCase`
+- `routes.paths` and their sub-paths no longer use `/` as a prefix by default, add it to your `routes`
+
 ### ~> 2.0.0
 
 - `httproute` is converted into a dictionary and moves into `extraRoutes`
