@@ -401,6 +401,36 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: fixed
+          description: Invalid restartPolicy
+    apiVersion: v2
+    created: "2024-11-19T10:32:34.793984993Z"
+    description: 'The SSCSID ([Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/))
+      Keeper (`sscsid-keeper`) is a chart that combines the often used `SecretProviderClass`,
+      which is part of the SSCSID with a running deployment that mounts the matching
+      secrets making them available to others within the same namespace.  This chart
+      is a pet project of Unique to code more _DRY_ and not officially supported by
+      the maintainers of the `Secrets Store CSI Driver`. Unique also prototypes new
+      features, processes or ideas with this chart (e.g. chart signing).  Since Unique
+      is at the time of writing Azure focused, leveraging the Azure managed AKS CSI
+      Extension is sometimes simpler than manually installing other Secret _solutions_.  Note
+      that if you need more sophisticated features, or a officially maintained chart
+      or option that supports reloading, ClusterSecrets etc, seek matching alternatives
+      on your own behalf (e.g. [External Secrets Operator](https://external-secrets.io/latest/)). '
+    digest: 0a4add147018fb963f3eca67788e5bcfe9769663adcf3cd5c109622c6fa75156
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: sscsid-keeper
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/sscsid-keeper
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/sscsid-keeper-1.1.3/sscsid-keeper-1.1.3.tgz
+    version: 1.1.3
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: fixed
           description: Adjusted container command to prevent restarts
     apiVersion: v2
     created: "2024-11-12T13:42:07.595724803Z"
@@ -723,4 +753,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2024-11-19T08:34:35.211874206Z"
+generated: "2024-11-19T10:32:34.794083686Z"
