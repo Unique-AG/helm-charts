@@ -10,8 +10,6 @@ metadata:
   annotations:
     konghq.com/plugins: unique-jwt-auth,unique-route-metrics
     konghq.com/strip-path: "true"
-    konghq.com/protocols: https
-    konghq.com/https-redirect-status-code: "301"
     {{- if .Values.routes.paths.default.extraAnnotations }}
     {{- toYaml .Values.routes.paths.default.extraAnnotations | nindent 4 }}
     {{- end }}
@@ -47,8 +45,6 @@ metadata:
   name: {{ template "backendService.fullname" $ }}-block-{{ . | replace "/" "-" }}
   annotations:
     konghq.com/plugins: unique-block-route,unique-route-metrics
-    konghq.com/protocols: https
-    konghq.com/https-redirect-status-code: "301"
   labels:
     {{- include "backendService.labels" $ | nindent 4 }}
 spec:

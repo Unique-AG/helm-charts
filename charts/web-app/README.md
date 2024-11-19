@@ -4,7 +4,7 @@ The 'web-app' chart is a "convenience" chart from Unique AG that can generically
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 3.0.0](https://img.shields.io/badge/Version-3.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 3.0.1](https://img.shields.io/badge/Version-3.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-web-app unique/web-app --version 3.0.0
+helm install my-web-app unique/web-app --version 3.0.1
 
 # or
-helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 3.0.0
+helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 3.0.1
 ```
 
 ### Docker Images
@@ -37,8 +37,13 @@ To use _Routes_ per se you need two things:
 - CRDs installed
     + [Install CRDs](https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api)
 
-#### Root Ingress
-The Root Ingress is a convenience ingress that routes all traffic from the root of the domain to the backend service. This functionality works different depending on the Ingress/Gateway Class used. In order to keep the chart agnostic to the Ingress Class, the chart uses the `.Capabilities.APIVersions` [built-in object](https://helm.sh/docs/chart_template_guide/builtin_objects/).
+##### HTTPS Redirects
+Routes do not redirect to HTTPS by default. This redirect must be handled in the upstream services or extended via `extraAnnotations`. This is not due to a lack of security but the fact that the chart is agnostic to the upstream service and its configuration so enforcing a redirect can lead to unexpected behavior and indefinite redirects. Also, most modern browsers prefix all requests with `https` as a secure practice.
+
+##### Root Route
+The Root Route is a convenience Ingress/Gateway that routes all traffic from the root of the domain to the applied service. This functionality works different depending on the Ingress/Gateway Class used. In order to keep the chart agnostic to the Ingress Class, the chart uses the `.Capabilities.APIVersions` [built-in object](https://helm.sh/docs/chart_template_guide/builtin_objects/).
+
+Only one root route per cluster (technically per hostname) should be deployed to avoid conflicts or race conditions respectively.
 
 ## Values
 

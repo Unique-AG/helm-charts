@@ -8,7 +8,7 @@ Since Unique is at the time of writing Azure focused, leveraging the Azure manag
 
 Note that if you need more sophisticated features, or a officially maintained chart or option that supports reloading, ClusterSecrets etc, seek matching alternatives on your own behalf (e.g. [External Secrets Operator](https://external-secrets.io/latest/)).
 
-![Version: 1.1.3](https://img.shields.io/badge/Version-1.1.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.1.4](https://img.shields.io/badge/Version-1.1.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -16,10 +16,10 @@ Note that if you need more sophisticated features, or a officially maintained ch
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-sscsid-keeper unique/sscsid-keeper --version 1.1.3
+helm install my-sscsid-keeper unique/sscsid-keeper --version 1.1.4
 
 # or
-helm install my-sscsid-keeper oci://ghcr.io/unique-ag/helm-charts/sscsid-keeper --version 1.1.3
+helm install my-sscsid-keeper oci://ghcr.io/unique-ag/helm-charts/sscsid-keeper --version 1.1.4
 ```
 
 ## Values
@@ -27,7 +27,7 @@ helm install my-sscsid-keeper oci://ghcr.io/unique-ag/helm-charts/sscsid-keeper 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | fullnameOverride | string | `""` | This is to override the full name. |
-| keeper | object | `{"affinity":{},"image":{"pullPolicy":"IfNotPresent","repository":"busybox","tag":"1.37.0"},"imagePullSecrets":[],"pdb":{"enabled":true,"minAvailable":1},"podAnnotations":{},"podLabels":{},"podSecurityContext":{},"replicaCount":2,"resourcesPreset":"yocto","securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true},"tolerations":[]}` | Set options for the deployed keeper, its deployment and pods respectively. |
+| keeper | object | `{"affinity":{},"image":{"pullPolicy":"IfNotPresent","repository":"busybox","tag":"1.37.0"},"imagePullSecrets":[],"pdb":{"enabled":true,"minAvailable":1},"podAnnotations":{},"podLabels":{},"podSecurityContext":{},"replicaCount":2,"resourcesPreset":"yocto","securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":1000},"tolerations":[]}` | Set options for the deployed keeper, its deployment and pods respectively. |
 | keeper.affinity | object | `{}` | Default affinity preset for the keeper |
 | keeper.image | object | `{"pullPolicy":"IfNotPresent","repository":"busybox","tag":"1.37.0"}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | keeper.image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
@@ -42,7 +42,7 @@ helm install my-sscsid-keeper oci://ghcr.io/unique-ag/helm-charts/sscsid-keeper 
 | keeper.podSecurityContext | object | `{}` | Toggle and define pod-level security context. |
 | keeper.replicaCount | int | `2` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
 | keeper.resourcesPreset | string | `"yocto"` | Set container resources according to one common preset (allowed values: none, yocto, zepto, atto). |
-| keeper.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true}` | Toggle and define security context. |
+| keeper.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":1000}` | Toggle and define security context. |
 | keeper.tolerations | list | `[]` | Tolerations for the keeper |
 | nameOverride | string | `""` | This is to override the release name. |
 | spc | object | `{"identityId":"00000000-0000-0000-0000-000000000000","k8sSecretType":"Opaque","kvName":"keyvault-name","secrets":[{"k8sSecretDataKey":"apiKeyExample","kvObjectName":"my-special-example-key"}],"tenantId":"00000000-0000-0000-0000-000000000000"}` | Set options for the Secret Provider Class |

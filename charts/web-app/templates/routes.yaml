@@ -9,8 +9,6 @@ metadata:
   name: {{ $fullName }}-default
   annotations:
     konghq.com/plugins: unique-route-metrics
-    konghq.com/protocols: https
-    konghq.com/https-redirect-status-code: "301"
     {{- if .Values.routes.paths.default.extraAnnotations }}
     {{- toYaml .Values.routes.paths.default.extraAnnotations | nindent 4 }}
     {{- end }}
@@ -42,9 +40,6 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
   name: {{ $fullName }}-root
-  annotations:
-    konghq.com/protocols: https
-    konghq.com/https-redirect-status-code: "301"
   labels:
     {{- include "common.labels" $ | nindent 4 }}
 spec:

@@ -5,7 +5,7 @@ maintainers:
   - name: unique-ag
     url: https://unique.ch/
 name: web-app
-version: 3.0.0
+version: 3.0.1
 description: |
   The 'web-app' chart is a "convenience" chart from Unique AG that can generically be used to deploy web-content serving workloads to Kubernetes.
 
@@ -14,7 +14,5 @@ sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/web-app
 annotations:
   artifacthub.io/changes: |
-    - kind: fixed
-      description: "⚠️ Changes inconsistent naming where some used `lower_snake_case` and others `camelCase`. All values now use `camelCase`."
     - kind: changed
-      description: "⚠️ `routes.paths` and their sub-paths now use `/` as a prefix by default to increase consistency and understanding."
+      description: "Routes no longer redirect to HTTPS by default. This redirect must be handled in the upstream services or extended via extraAnnotations."
