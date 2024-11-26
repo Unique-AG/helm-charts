@@ -101,6 +101,29 @@ entries:
   backend-service:
   - annotations:
       artifacthub.io/changes: |
+        - kind: fixed
+          description: "Fixed an issue where blockList HTTPRoutes metadata name falsely included double dashes."
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    created: "2024-11-26T17:09:57.059429256Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: 01e181b6c75f10e0e824dfd0eec41ecc50a2348cfc4cf5d34a521a014b558b18
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-3.0.2/backend-service-3.0.2.tgz
+    version: 3.0.2
+  - annotations:
+      artifacthub.io/changes: |
         - kind: changed
           description: "Routes no longer redirect to HTTPS by default. This redirect must be handled in the upstream services or extended via extraAnnotations."
       artifacthub.io/license: Apache-2.0
@@ -828,4 +851,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2024-11-19T15:46:10.955821102Z"
+generated: "2024-11-26T17:09:57.059503857Z"
