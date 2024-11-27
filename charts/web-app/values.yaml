@@ -137,7 +137,7 @@ routes:
       # -- The path to which the root should be redirected to
       # ⚠️ This value must be a valid full path, not only the sub-path. A 302 redirect will be issued to this path (using full path replacement).
       # @default -- defaults to the `pathPrefix` if enabled and omitted
-      redirectPath: /chart-testing #! fixme: does not work when emitted
+      redirectPath: /chart-testing
 
 # -- BETA: Configure additional gateway routes for the chart here.
 # More routes can be added by adding a dictionary key like the 'extra-route-1' route.
