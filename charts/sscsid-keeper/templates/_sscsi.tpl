@@ -8,7 +8,6 @@ array:
 {{- end -}}
 
 {{- define "renderData" -}}
-data:
   {{- range . }}
   - key: {{ .k8sSecretDataKey }}
     objectName: {{ .kvObjectName }}
