@@ -102,6 +102,29 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: fixed
+          description: "x-api-version header on the versioned route must be explicitly set. The change is not breaking as the route unused except for Uniques internal testing."
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    created: "2024-11-28T14:13:33.980234817Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: c0d8af01b40586115112cfb9e85d5163e41614c59e7cdd8ef36264e21d7d1aea
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-3.0.3/backend-service-3.0.3.tgz
+    version: 3.0.3
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: fixed
           description: "Fixed an issue where blockList HTTPRoutes metadata name falsely included double dashes."
       artifacthub.io/license: Apache-2.0
     apiVersion: v2
@@ -881,4 +904,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2024-11-27T13:46:35.440171393Z"
+generated: "2024-11-28T14:13:33.980372044Z"
