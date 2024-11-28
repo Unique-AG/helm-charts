@@ -4,7 +4,7 @@ The 'backend-service' chart is a "convenience" chart from Unique AG that can gen
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 3.0.2](https://img.shields.io/badge/Version-3.0.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 3.0.3](https://img.shields.io/badge/Version-3.0.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 3.0.2
+helm install my-backend-service unique/backend-service --version 3.0.3
 
 # or
-helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 3.0.2
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 3.0.3
 ```
 
 ### Docker Images
@@ -130,7 +130,7 @@ You can find a `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](
 | resources | object | `{}` |  |
 | rollingUpdate.maxSurge | int | `1` |  |
 | rollingUpdate.maxUnavailable | int | `0` |  |
-| routes | object | `{"gateway":{"name":"kong","namespace":"system"},"hostname":"chart-testing-service.example.com","pathPrefix":"","paths":{"default":{"blockList":["/metrics"],"enabled":false,"extraAnnotations":[]},"probe":{"enabled":false,"extraAnnotations":[],"probePath":"/probe"},"scoped":{"allowList":["/upload"],"enabled":false,"extraAnnotations":[],"pathOverride":"/scoped"},"versioned":{"enabled":false,"extraAnnotations":[],"pathOverride":"/public","xApiVersion":"2023-12-06"}}}` | routes is a special object designed for Unique services. It abstracts a lot of complexity and allows for a simple configuration of routes. ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong (but might work with other implementations as well). If you are using a different API Gateway, you will need to change the `gateway details` or use `extraRoutes`. Refer to [`ci/routes-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/routes-values.yaml) to see a full example of how to configure routes. Currently, routes must be explicitly enabled until the Unique Kong migration is complete. |
+| routes | object | `{"gateway":{"name":"kong","namespace":"system"},"hostname":"chart-testing-service.example.com","pathPrefix":"","paths":{"default":{"blockList":["/metrics"],"enabled":false,"extraAnnotations":[]},"probe":{"enabled":false,"extraAnnotations":[],"probePath":"/probe"},"scoped":{"allowList":["/upload"],"enabled":false,"extraAnnotations":[],"pathOverride":"/scoped"},"versioned":{"enabled":false,"extraAnnotations":[],"pathOverride":"/public"}}}` | routes is a special object designed for Unique services. It abstracts a lot of complexity and allows for a simple configuration of routes. ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong (but might work with other implementations as well). If you are using a different API Gateway, you will need to change the `gateway details` or use `extraRoutes`. Refer to [`ci/routes-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/routes-values.yaml) to see a full example of how to configure routes. Currently, routes must be explicitly enabled until the Unique Kong migration is complete. |
 | routes.gateway | object | `{"name":"kong","namespace":"system"}` | gateway to use |
 | routes.gateway.name | string | kong | name of the gateway |
 | routes.gateway.namespace | string | system | namespace of the gateway |
@@ -141,7 +141,6 @@ You can find a `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](
 | routes.paths.scoped.allowList | list | `["/upload"]` | explicitly list of exact path matches will be rendered to: `/{scoped|pathOverride}/{entry}` |
 | routes.paths.scoped.pathOverride | string | the chart will default to 'scoped' to stay backward compatible | users wishing to not call their scoped API 'scoped' can override the path ⚠️ Customizing this value requires also changing the default url in multiple places including all web-apps |
 | routes.paths.versioned.pathOverride | string | the chart will default to 'public' to stay backward compatible | users wishing to not call their versioned API 'public' can override the path ⚠️ Customizing this value requires also changing the default url in multiple places including all SDK or integration use cases |
-| routes.paths.versioned.xApiVersion | string | the chart will default to "2023-12-06" | specified version of the API to use |
 | secretProvider | object | `{}` |  |
 | securityContext | object | `{"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":1000}` | SecurityContext for the container(s) |
 | securityContext.allowPrivilegeEscalation | bool | `false` | AllowPrivilegeEscalation, controls if the container can gain more privileges than its parent process, defaults to 'false' |

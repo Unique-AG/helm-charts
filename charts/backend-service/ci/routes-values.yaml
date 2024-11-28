@@ -27,9 +27,6 @@ routes:
       #   konghq.com/read-timeout: "120s"
     versioned:
       enabled: true
-      # -- specified version of the API to use
-      # @default -- the chart will default to "2023-12-06"
-      xApiVersion: "2023-12-06"
       # -- users wishing to not call their versioned API 'public' can override the path
       # ⚠️ Customizing this value requires also changing the default url in multiple places including all SDK or integration use cases
       # @default -- the chart will default to 'public' to stay backward compatible
