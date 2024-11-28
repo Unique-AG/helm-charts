@@ -7,7 +7,7 @@ maintainers:
 name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
-version: 3.0.2
+version: 3.0.3
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
 
@@ -16,4 +16,4 @@ annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
     - kind: fixed
-      description: "Fixed an issue where blockList HTTPRoutes metadata name falsely included double dashes."
+      description: "x-api-version header on the versioned route must be explicitly set. The change is not breaking as the route unused except for Uniques internal testing."

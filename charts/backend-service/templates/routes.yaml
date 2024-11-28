@@ -100,11 +100,6 @@ spec:
             path:
               type: ReplacePrefixMatch
               replacePrefixMatch: {{ default "/public" .Values.routes.paths.versioned.pathOverride }}
-        - type: RequestHeaderModifier
-          requestHeaderModifier:
-            add:
-              - name: x-api-version
-                value: {{ default "2023-12-06" .Values.routes.paths.versioned.xApiVersion | quote }}
       matches:
         - path:
             type: PathPrefix
