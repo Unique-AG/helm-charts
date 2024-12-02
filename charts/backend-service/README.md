@@ -4,7 +4,7 @@ The 'backend-service' chart is a "convenience" chart from Unique AG that can gen
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 3.0.3](https://img.shields.io/badge/Version-3.0.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 3.0.4](https://img.shields.io/badge/Version-3.0.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 3.0.3
+helm install my-backend-service unique/backend-service --version 3.0.4
 
 # or
-helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 3.0.3
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 3.0.4
 ```
 
 ### Docker Images
@@ -138,7 +138,7 @@ You can find a `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](
 | routes.paths.default.blockList | list | `["/metrics"]` | explicitly list paths to block |
 | routes.paths.probe | object | `{"enabled":false,"extraAnnotations":[],"probePath":"/probe"}` | `/probe` is unauthorized and its sole purpose is to expose a health check endpoint for availability monitoring Maps to version neutral `/probe` endpoint all Unique services expose |
 | routes.paths.probe.probePath | string | `"/probe"` | path to the probe endpoint |
-| routes.paths.scoped.allowList | list | `["/upload"]` | explicitly list of exact path matches will be rendered to: `/{scoped|pathOverride}/{entry}` |
+| routes.paths.scoped.allowList | list | `["/upload"]` | explicitly list of exact path matches Only exact path matches are supported to ensure strict security will be rendered to: `/{scoped|pathOverride}/{entry}` |
 | routes.paths.scoped.pathOverride | string | the chart will default to 'scoped' to stay backward compatible | users wishing to not call their scoped API 'scoped' can override the path ⚠️ Customizing this value requires also changing the default url in multiple places including all web-apps |
 | routes.paths.versioned.pathOverride | string | the chart will default to 'public' to stay backward compatible | users wishing to not call their versioned API 'public' can override the path ⚠️ Customizing this value requires also changing the default url in multiple places including all SDK or integration use cases |
 | secretProvider | object | `{}` |  |

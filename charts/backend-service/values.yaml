@@ -385,6 +385,7 @@ routes:
       # @default -- the chart will default to 'scoped' to stay backward compatible
       pathOverride: /scoped
       # -- explicitly list of exact path matches
+      # Only exact path matches are supported to ensure strict security
       # will be rendered to: `/{scoped|pathOverride}/{entry}`
       allowList:
         - /upload

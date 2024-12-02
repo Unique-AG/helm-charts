@@ -130,22 +130,22 @@ spec:
   hostnames:
     - {{ tpl (.Values.routes.hostname) $ }}
   rules:
+    {{- range .Values.routes.paths.scoped.allowList }}
     - matches:
-      {{- range .Values.routes.paths.scoped.allowList }}
         - path:
-            type: PathPrefix
-            value: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ . }}
-      {{- end }}
+            type: Exact
+            value: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ include "backendService.routePrefix" $ }}{{ . }}
       filters:
         - type: URLRewrite
           urlRewrite:
             path:
-              type: ReplacePrefixMatch
-              replacePrefixMatch: {{ default "/scoped" .Values.routes.paths.scoped.pathOverride }}
+              type: ReplaceFullPath
+              replaceFullPath: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ . }}
       backendRefs:
         - name: {{ include "backendService.fullname" $ }}
           port: {{ $.Values.service.port }}
           kind: Service
+    {{- end }}
 {{- end }}
 
 {{/* probe route */}}

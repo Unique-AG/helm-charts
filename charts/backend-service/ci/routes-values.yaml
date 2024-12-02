@@ -43,6 +43,7 @@ routes:
       # will be rendered to: `/{scoped|pathOverride}/{entry}`
       allowList:
         - /upload
+        - /download
       extraAnnotations: []
       #   konghq.com/request-buffering: "false"
     # -- `/probe` is unauthorized and its sole purpose is to expose a health check endpoint for availability monitoring
