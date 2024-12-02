@@ -138,7 +138,7 @@ You can find a `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](
 | routes.paths.default.blockList | list | `["/metrics"]` | explicitly list paths to block |
 | routes.paths.probe | object | `{"enabled":false,"extraAnnotations":[],"probePath":"/probe"}` | `/probe` is unauthorized and its sole purpose is to expose a health check endpoint for availability monitoring Maps to version neutral `/probe` endpoint all Unique services expose |
 | routes.paths.probe.probePath | string | `"/probe"` | path to the probe endpoint |
-| routes.paths.scoped.allowList | list | `["/upload"]` | explicitly list of exact path matches will be rendered to: `/{scoped|pathOverride}/{entry}` |
+| routes.paths.scoped.allowList | list | `["/upload"]` | explicitly list of exact path matches Only exact path matches are supported to ensure strict security will be rendered to: `/{scoped|pathOverride}/{entry}` |
 | routes.paths.scoped.pathOverride | string | the chart will default to 'scoped' to stay backward compatible | users wishing to not call their scoped API 'scoped' can override the path ⚠️ Customizing this value requires also changing the default url in multiple places including all web-apps |
 | routes.paths.versioned.pathOverride | string | the chart will default to 'public' to stay backward compatible | users wishing to not call their versioned API 'public' can override the path ⚠️ Customizing this value requires also changing the default url in multiple places including all SDK or integration use cases |
 | secretProvider | object | `{}` |  |

@@ -58,17 +58,28 @@ tests:
           value:
             - matches:
                 - path:
-                    type: PathPrefix
+                    type: Exact
                     value: /scoped/ecj/upload
+              filters:
+                - type: URLRewrite
+                  urlRewrite:
+                    path:
+                      type: ReplaceFullPath
+                      replaceFullPath: /scoped/upload
+              backendRefs:
+                - name: ecj
+                  port: 8080
+                  kind: Service
+            - matches:
                 - path:
-                    type: PathPrefix
+                    type: Exact
                     value: /scoped/ecj/download
               filters:
                 - type: URLRewrite
                   urlRewrite:
                     path:
-                      type: ReplacePrefixMatch
-                      replacePrefixMatch: /scoped
+                      type: ReplaceFullPath
+                      replaceFullPath: /scoped/download
               backendRefs:
                 - name: ecj
                   port: 8080
@@ -119,17 +130,28 @@ tests:
           value:
             - matches:
                 - path:
-                    type: PathPrefix
+                    type: Exact
                     value: /newScopedPathOverride/newPathPrefix/upload
+              filters:
+                - type: URLRewrite
+                  urlRewrite:
+                    path:
+                      type: ReplaceFullPath
+                      replaceFullPath: /newScopedPathOverride/upload
+              backendRefs:
+                - name: ecj
+                  port: 8080
+                  kind: Service
+            - matches:
                 - path:
-                    type: PathPrefix
+                    type: Exact
                     value: /newScopedPathOverride/newPathPrefix/download
               filters:
                 - type: URLRewrite
                   urlRewrite:
                     path:
-                      type: ReplacePrefixMatch
-                      replacePrefixMatch: /newScopedPathOverride
+                      type: ReplaceFullPath
+                      replaceFullPath: /newScopedPathOverride/download
               backendRefs:
                 - name: ecj
                   port: 8080
