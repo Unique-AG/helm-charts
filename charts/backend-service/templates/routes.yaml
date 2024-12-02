@@ -134,7 +134,7 @@ spec:
       {{- range .Values.routes.paths.scoped.allowList }}
         - path:
             type: PathPrefix
-            value: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ . }}
+            value: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ include "backendService.routePrefix" $ }}{{ . }}
       {{- end }}
       filters:
         - type: URLRewrite
