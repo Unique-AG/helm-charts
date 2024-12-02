@@ -35,14 +35,13 @@ spec:
 {{- end }}
 
 {{/* Block list routes */}}
-{{/* Currently, the 'request-termination' plugin does not yet work well with 'extensionRefs' so we fall back to two paths for now */}}
+{{/* Currently, the 'request-termination' plugin does not yet work well with 'extensionRefs' so we fall back to two routes for now */}}
 {{- if and .Values.routes.paths.default.enabled .Values.routes.paths.default.blockList }}
-{{- range .Values.routes.paths.default.blockList }}
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: {{ template "backendService.fullname" $ }}-block{{ . | replace "/" "-" }}
+  name: {{ template "backendService.fullname" $ }}-block
   annotations:
     konghq.com/plugins: unique-block-route,unique-route-metrics
   labels:
@@ -56,15 +55,16 @@ spec:
   hostnames:
     - {{ tpl ($.Values.routes.hostname) $ }}
   rules:
-    - backendRefs:
+  {{- range .Values.routes.paths.default.blockList }}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: {{ if eq (include "backendService.routePrefix" $) "/" -}}{{ . }}{{- else -}}{{ include "backendService.routePrefix" $ }}{{ . }}{{- end }}
+      backendRefs:
         - name: {{ include "backendService.fullname" $ }}
           port: {{ $.Values.service.port }}
           kind: Service
-      matches:
-        - path:
-            type: Exact
-            value: {{ include "backendService.routePrefix" $ }}{{ . }}
-{{- end }}
+  {{- end }}
 {{- end }}
 
 {{/* 'public', now called 'versioned', route, protected with Unique App Repo Auth */}}
