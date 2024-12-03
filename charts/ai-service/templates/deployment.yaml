@@ -144,7 +144,7 @@ spec:
               mountPath: {{ .mountPathDeployment | default .mountPath }}
               readOnly: {{ .readOnly | default false }}
           {{- end }}
-          {{- end }}   
+          {{- end }}
           {{- end }}
           {{- end }}
           {{- with .Values.volumeMounts }}
@@ -201,11 +201,8 @@ spec:
           emptyDir: {}
        {{- end }}
       {{- end }}
-      {{- end }}   
       {{- end }}
       {{- end }}
-      {{- with .Values.volumes }}
-        {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- if .Values.secretProvider }}
       {{- range $k, $v := .Values.secretProvider.vaults }}

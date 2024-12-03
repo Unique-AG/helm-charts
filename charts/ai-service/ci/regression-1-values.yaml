@@ -1,0 +1,12 @@
+volumeMounts:
+  - name: cache-dir
+    mountPath: "/home/worker/.cache"
+volumes:
+  - name: cache-dir
+    persistentVolumeClaim:
+      claimName: example-claim
+pvc:
+  enabled: true
+  name: example-claim
+  storage: 100Mi
+  storageClassName: standard
