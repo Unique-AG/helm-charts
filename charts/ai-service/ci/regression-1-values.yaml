@@ -10,3 +10,4 @@ pvc:
   name: example-claim
   storage: 100Mi
   storageClassName: standard
+  accessMode: ReadWriteOnce
