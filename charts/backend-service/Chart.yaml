@@ -7,7 +7,7 @@ maintainers:
 name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
-version: 3.0.5
+version: 3.0.6
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
 
@@ -16,4 +16,4 @@ annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
     - kind: fixed
-      description: "Bug in routes.paths.default where when using / as pathPrefix would render invalid block list items with //."
+      description: "Bug where extraRoutes would be rendered invalid when given two or more routes (--- collapsed onto previous line)."

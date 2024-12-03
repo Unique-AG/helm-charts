@@ -22,6 +22,7 @@ routes:
       enabled: true
       blockList:
         - /metrics
+        - /sensitive
       extraAnnotations: []
       #   konghq.com/request-buffering: "false"
       #   konghq.com/read-timeout: "120s"
