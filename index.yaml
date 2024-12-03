@@ -102,6 +102,29 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: fixed
+          description: "Bug where extraRoutes would be rendered invalid when given two or more routes (--- collapsed onto previous line)."
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    created: "2024-12-03T15:27:14.242416757Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: e3cb0b94add2c07573a791db976266b2f128b28239db920028084e4e7f9e85c5
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-3.0.6/backend-service-3.0.6.tgz
+    version: 3.0.6
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: fixed
           description: "Bug in routes.paths.default where when using / as pathPrefix would render invalid block list items with //."
       artifacthub.io/license: Apache-2.0
     apiVersion: v2
@@ -950,4 +973,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2024-12-02T16:47:34.511815975Z"
+generated: "2024-12-03T15:27:14.242565316Z"
