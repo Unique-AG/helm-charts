@@ -82,7 +82,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ include "backendService.portApplication" $ }}
+              containerPort: {{ include "backendService.applicationPort" $ }}
               protocol: TCP
           {{- if .Values.probes.enabled }}
           {{- if .Values.probes.liveness }}

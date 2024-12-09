@@ -80,7 +80,7 @@ app.kubernetes.io/component: hooks-db-migration
 {{- end -}}
 
 {{/* Helper to get the service port */}}
-{{- define "backendService.portService" -}}
+{{- define "backendService.servicePort" -}}
 {{- if .Values.service.port -}}
 {{- .Values.service.port -}}
 {{- else if .Values.ports.service -}}
@@ -91,7 +91,7 @@ app.kubernetes.io/component: hooks-db-migration
 {{- end -}}
 
 {{/* Helper to get the application port */}}
-{{- define "backendService.portApplication" -}}
+{{- define "backendService.applicationPort" -}}
 {{- if .Values.ports.application -}}
 {{- .Values.ports.application -}}
 {{- else -}}
