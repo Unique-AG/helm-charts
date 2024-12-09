@@ -24,9 +24,33 @@ The chart itself uses `ghcr.io/unique-ag/chart-testing-service` as its base imag
 The chart supports two ways of networking in different stages:
 
 - _Tyk_ - Tyk has been source-closed in late 2024 and thus Unique has decided to move away from it. The chart still supports Tyk but it is not enabled by default anymore since `2.0.0`. If you want to use Tyk, you need to set `tyk.enabled: true` in your values file, see [Upgrade ~> 2.0.0](#-200).
-    + Support fot Tyk will be removed in the next major release (`3.0.0`).
+    + Support fot Tyk will be removed with an upcoming major release.
 - _Gateway API_ - The chart supports the Gateway API and its resources. This is the recommended way to go forward. The Gateway API is a Kubernetes-native way to manage your networking resources and is part of the [Gateway API](https://gateway-api.sigs.k8s.io) project.
     + The Gateway API is not enabled by default yet, you need to selectively `enable` different `routes` or use `extraRoutes` to configure them. See [Routes](#routes) for more information.
+
+### Ports
+<small>added in `3.1.0`</small>
+
+Unique services communicate with each other extensively. Grown organically from local development, each service used to have its own port. This has grown into kubernetes over time. While technically not a problem, it is a nightmare to set up and manage for Application teams. Since `3.1.0` the chart supports a `ports` object that allows to specify ports for the service and deployment/application.
+
+```yaml
+ports:
+  application: 8080
+  service: 80
+```
+The port is called `application` because it is the port that the Unique application (that gets deployed using this chart) listens on. The object is nested to allow for future expansion in case another port for a container would be needed. It is not called `containerPort` because there are or can be more than one port for a container and more than one container in a pod.
+
+This change allows Application teams to now use Kubernetes internal networking to communicate with each other way more easily without researching and guessing the correct port.
+```yaml
+# before
+ANOTHER_SERVICE_URL: http://backend-service.namespace.svc:8080
+
+# after
+ANOTHER_SERVICE_URL: http://backend-service.namespace.svc
+```
+
+The new object `ports` allows also to specify a service port for consistency, but a `service.port` will take precedence over the `ports.service` value.
+ to keep non-breaking backward compatibility.
 
 #### Routes
 With `2.0.0` the chart supports _routes_ (namely all routes from [`gateway.networking.k8s.io`](https://gateway-api.sigs.k8s.io/concepts/api-overview/#route-resources)). While `routes`, not yet enabled by default, abstract certain complexity away from the chart consumer, `extraRoutes` can be used by power-users to configure each route exactly to their needs.

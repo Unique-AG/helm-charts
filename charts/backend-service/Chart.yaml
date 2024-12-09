@@ -7,7 +7,7 @@ maintainers:
 name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
-version: 3.0.6
+version: 3.1.0
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
 
@@ -15,5 +15,9 @@ description: |
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
-    - kind: fixed
-      description: "Bug where extraRoutes would be rendered invalid when given two or more routes (--- collapsed onto previous line)."
+    - kind: changed
+      description: "values.yaml is now sorted alphabetically for readability, flat above nested."
+    - kind: changed
+      description: "service.port defaults back to 80 as now the application port is used instead for the Unique service. This change is non-breaking because users had to already set a specific port for the service in order to run as non-root using the RuntimeDefault securityContext."
+    - kind: added
+      description: "ports object, allows specifying ports for the service and deployment/application."

@@ -68,7 +68,7 @@ tests:
                       replaceFullPath: /scoped/upload
               backendRefs:
                 - name: ecj
-                  port: 8080
+                  port: 80
                   kind: Service
             - matches:
                 - path:
@@ -82,7 +82,7 @@ tests:
                       replaceFullPath: /scoped/download
               backendRefs:
                 - name: ecj
-                  port: 8080
+                  port: 80
                   kind: Service
 
   - it: When given a scoped httpRoute and a pathPrefix, should render the matches correctly including both path and prefix overrides (regression)
@@ -140,7 +140,7 @@ tests:
                       replaceFullPath: /newScopedPathOverride/upload
               backendRefs:
                 - name: ecj
-                  port: 8080
+                  port: 80
                   kind: Service
             - matches:
                 - path:
@@ -154,7 +154,7 @@ tests:
                       replaceFullPath: /newScopedPathOverride/download
               backendRefs:
                 - name: ecj
-                  port: 8080
+                  port: 80
                   kind: Service
 
   - it: When given a blocked httpRoute and a pathPrefix, should not render two slashes (regression)
@@ -181,7 +181,7 @@ tests:
                     value: /metrics
               backendRefs:
                 - name: ecj
-                  port: 8080
+                  port: 80
                   kind: Service
             - matches:
                 - path:
@@ -189,5 +189,5 @@ tests:
                     value: /sensitive
               backendRefs:
                 - name: ecj
-                  port: 8080
+                  port: 80
                   kind: Service

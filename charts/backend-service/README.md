@@ -4,7 +4,7 @@ The 'backend-service' chart is a "convenience" chart from Unique AG that can gen
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 3.0.6](https://img.shields.io/badge/Version-3.0.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 3.1.0](https://img.shields.io/badge/Version-3.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 3.0.6
+helm install my-backend-service unique/backend-service --version 3.1.0
 
 # or
-helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 3.0.6
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 3.1.0
 ```
 
 ### Docker Images
@@ -25,9 +25,33 @@ The chart itself uses `ghcr.io/unique-ag/chart-testing-service` as its base imag
 The chart supports two ways of networking in different stages:
 
 - _Tyk_ - Tyk has been source-closed in late 2024 and thus Unique has decided to move away from it. The chart still supports Tyk but it is not enabled by default anymore since `2.0.0`. If you want to use Tyk, you need to set `tyk.enabled: true` in your values file, see [Upgrade ~> 2.0.0](#-200).
-    + Support fot Tyk will be removed in the next major release (`3.0.0`).
+    + Support fot Tyk will be removed with an upcoming major release.
 - _Gateway API_ - The chart supports the Gateway API and its resources. This is the recommended way to go forward. The Gateway API is a Kubernetes-native way to manage your networking resources and is part of the [Gateway API](https://gateway-api.sigs.k8s.io) project.
     + The Gateway API is not enabled by default yet, you need to selectively `enable` different `routes` or use `extraRoutes` to configure them. See [Routes](#routes) for more information.
+
+### Ports
+<small>added in `3.1.0`</small>
+
+Unique services communicate with each other extensively. Grown organically from local development, each service used to have its own port. This has grown into kubernetes over time. While technically not a problem, it is a nightmare to set up and manage for Application teams. Since `3.1.0` the chart supports a `ports` object that allows to specify ports for the service and deployment/application.
+
+```yaml
+ports:
+  application: 8080
+  service: 80
+```
+The port is called `application` because it is the port that the Unique application (that gets deployed using this chart) listens on. The object is nested to allow for future expansion in case another port for a container would be needed. It is not called `containerPort` because there are or can be more than one port for a container and more than one container in a pod.
+
+This change allows Application teams to now use Kubernetes internal networking to communicate with each other way more easily without researching and guessing the correct port.
+```yaml
+# before
+ANOTHER_SERVICE_URL: http://backend-service.namespace.svc:8080
+
+# after
+ANOTHER_SERVICE_URL: http://backend-service.namespace.svc
+```
+
+The new object `ports` allows also to specify a service port for consistency, but a `service.port` will take precedence over the `ports.service` value.
+ to keep non-breaking backward compatibility.
 
 #### Routes
 With `2.0.0` the chart supports _routes_ (namely all routes from [`gateway.networking.k8s.io`](https://gateway-api.sigs.k8s.io/concepts/api-overview/#route-resources)). While `routes`, not yet enabled by default, abstract certain complexity away from the chart consumer, `extraRoutes` can be used by power-users to configure each route exactly to their needs.
@@ -65,22 +89,11 @@ You can find a `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](
 | autoscaling.minReplicas | int | `1` |  |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
 | cronJob | object | `{"concurrencyPolicy":"Allow","enabled":false,"env":{},"failedJobsHistoryLimit":1,"jobTemplate":{"containers":{"name":""},"restartPolicy":"OnFailure"},"name":"","schedule":"","startingDeadlineSeconds":60,"successfulJobsHistoryLimit":1,"suspend":false,"timeZone":"Europe/Zurich"}` | cronJob allows you to define a cronJob that mostly bases on the general values. Note that since chart version 1.4.0 it is recommended to use preferably extraCronJobs (see readme for more information) |
-| deployment.enabled | bool | `true` |  |
+| deployment | object | `{"enabled":true}` | deployment is the deployed application since this chart allows to also deploy as a CronJob or both, all deployment related values are in this section |
 | env | object | `{}` |  |
 | envSecrets | object | `{}` |  |
 | envVars | list | `[]` |  |
-| eventBasedAutoscaling.cron.desiredReplicas | string | `"1"` |  |
-| eventBasedAutoscaling.cron.end | string | `"0 19 * * 1-5"` |  |
-| eventBasedAutoscaling.cron.start | string | `"0 8 * * 1-5"` |  |
-| eventBasedAutoscaling.cron.timezone | string | `"Europe/Zurich"` |  |
-| eventBasedAutoscaling.customTriggers | list | `[]` |  |
-| eventBasedAutoscaling.enabled | bool | `false` |  |
-| eventBasedAutoscaling.maxReplicaCount | int | `2` |  |
-| eventBasedAutoscaling.minReplicaCount | int | `0` |  |
-| eventBasedAutoscaling.rabbitmq.hostFromEnv | string | `"AMQP_URL"` |  |
-| eventBasedAutoscaling.rabbitmq.mode | string | `"QueueLength"` |  |
-| eventBasedAutoscaling.rabbitmq.protocol | string | `"auto"` |  |
-| eventBasedAutoscaling.rabbitmq.value | string | `"1"` |  |
+| eventBasedAutoscaling | object | `{"cron":{"desiredReplicas":"1","end":"0 19 * * 1-5","start":"0 8 * * 1-5","timezone":"Europe/Zurich"},"customTriggers":[],"enabled":false,"maxReplicaCount":2,"minReplicaCount":0,"rabbitmq":{"hostFromEnv":"AMQP_URL","mode":"QueueLength","protocol":"auto","value":"1"}}` | eventBasedAutoscaling allows you to define a event based autoscaling policy for the chart KEDA must be installed in the cluster |
 | externalSecrets | list | `[]` |  |
 | extraCronJobs | list | `[]` | extraCronJobs allows you to define additional cron jobs besides 'cronJob' itself. |
 | extraEnvCM | list | `[]` |  |
@@ -109,6 +122,9 @@ You can find a `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](
 | podAnnotations | object | `{}` |  |
 | podSecurityContext | object | `{"seccompProfile":{"type":"RuntimeDefault"}}` | PodSecurityContext for the pod(s) |
 | podSecurityContext.seccompProfile | object | `{"type":"RuntimeDefault"}` | seccompProfile, controls the seccomp profile for the container, defaults to 'RuntimeDefault' |
+| ports | object | `{"application":8080,"service":80}` | the ports section allows specify ports used for different purposes |
+| ports.application | int | `8080` | application port, this is the port that the deployed Unique application listens on ℹ You may not be able to use ports below 1024 as non-root user which is the default securityContext of this chart If you need to use a port below 1024, you can override the securityContext of the deployment (discouraged) or get the `NET_BIND_SERVICE` capability added to the container (also discouraged but preferred if absolutely needed, at your own risk/liability) |
+| ports.service | int | `80` | service port, this is the port that the service will be exposed on ⚠️ This is not applied to `tyk` objects as tyk is getting sunset, for Tyk, always service.port|80 is used |
 | probes.enabled | bool | `true` |  |
 | probes.liveness.failureThreshold | int | `6` |  |
 | probes.liveness.httpGet.path | string | `"/probe"` |  |
@@ -142,19 +158,19 @@ You can find a `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](
 | routes.paths.scoped.pathOverride | string | the chart will default to 'scoped' to stay backward compatible | users wishing to not call their scoped API 'scoped' can override the path ⚠️ Customizing this value requires also changing the default url in multiple places including all web-apps |
 | routes.paths.versioned.pathOverride | string | the chart will default to 'public' to stay backward compatible | users wishing to not call their versioned API 'public' can override the path ⚠️ Customizing this value requires also changing the default url in multiple places including all SDK or integration use cases |
 | secretProvider | object | `{}` |  |
-| securityContext | object | `{"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":1000}` | SecurityContext for the container(s) |
+| securityContext | object | `{"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":1000}` | securityContext for the container(s) |
 | securityContext.allowPrivilegeEscalation | bool | `false` | AllowPrivilegeEscalation, controls if the container can gain more privileges than its parent process, defaults to 'false' |
 | securityContext.readOnlyRootFilesystem | bool | `true` | readOnlyRootFilesystem, controls if the container has a read-only root filesystem, defaults to 'true' |
 | securityContext.runAsNonRoot | bool | `true` | runAsNonRoot, controls if the container must run as a non-root user, defaults to 'true' |
 | securityContext.runAsUser | int | `1000` | runAsUser, controls the user ID that runs the container, defaults to '1000' |
 | service.enabled | bool | `true` |  |
-| service.port | int | `8080` |  |
+| service.port | int | `80` |  |
 | service.type | string | `"ClusterIP"` |  |
 | serviceAccount.annotations | object | `{}` |  |
 | serviceAccount.enabled | bool | `false` |  |
 | serviceAccount.workloadIdentity | object | `{}` |  |
 | tolerations | list | `[]` |  |
-| tyk | object | `{"blockList":[{"methods":["GET"],"path":"/metrics"}],"enabled":false,"exposePublicApi":{"enabled":false},"jwtSource":"https://id.unique.app/oauth/v2/keys","listenPath":"/unsert_default_path","rateLimit":{},"scopedApi":{"enabled":false}}` | Settings for Tyk API Gateway respectively its APIDefinition, in order to use Tyk API Gateway, you must install its Operators respective CRDs. ⚠️ Since `2.0.0` this is no longer enabled by default. Unique will slowly migrate away from Tyk API Gateway and into `routes` and `extraRoutes`, refer to the readme. ␡ `tyk` will be removed from the chart latest with the next major release (`3.0.0`). |
+| tyk | object | `{"blockList":[{"methods":["GET"],"path":"/metrics"}],"enabled":false,"exposePublicApi":{"enabled":false},"jwtSource":"https://id.unique.app/oauth/v2/keys","listenPath":"/unsert_default_path","rateLimit":{},"scopedApi":{"enabled":false}}` | Settings for Tyk API Gateway respectively its APIDefinition, in order to use Tyk API Gateway, you must install its Operators respective CRDs. ⚠️ Since `2.0.0` this is no longer enabled by default. Unique will slowly migrate away from Tyk API Gateway and into `routes` and `extraRoutes`, refer to the readme. ␡ `tyk` will be removed from the chart latest with an upcoming major release. |
 | tyk.blockList | list | `[{"methods":["GET"],"path":"/metrics"}]` | blockList allows you to block specific paths and methods |
 | tyk.listenPath | string | `"/unsert_default_path"` | ⚠️ When using Tyk API Gateway, you must set a valid listenPath |
 | volumeMounts | list | `[]` |  |
