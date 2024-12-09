@@ -8,7 +8,7 @@ metadata:
 data:
   VERSION: "{{ .Values.image.tag }}"
   {{- if .Values.service.enabled }}
-  PORT: "{{ .Values.service.port }}"
+  PORT: {{ include "backendService.portApplication" $ | quote }}
   {{- end }}
   {{- range $key, $value := .Values.env }}
   {{ $key }}: {{ $value | quote }}

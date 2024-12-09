@@ -58,7 +58,7 @@ spec:
       serviceAccountName: {{ include "backendService.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-        
+
       {{- if .Values.deployment.initContainers }}
       initContainers:
       {{- range .Values.deployment.initContainers }}
@@ -82,7 +82,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.service.port }}
+              containerPort: {{ include "backendService.portApplication" $ }}
               protocol: TCP
           {{- if .Values.probes.enabled }}
           {{- if .Values.probes.liveness }}
@@ -165,7 +165,7 @@ spec:
               mountPath: {{ .mountPathDeployment | default .mountPath }}
               readOnly: {{ .readOnly | default false }}
           {{- end }}
-          {{- end }}   
+          {{- end }}
           {{- end }}
           {{- end }}
           {{- if .Values.secretProvider }}
@@ -206,7 +206,7 @@ spec:
         - name: {{ .name }}
           emptyDir: {}
       {{- end }}
-      {{- end }}   
+      {{- end }}
       {{- end }}
       {{- end }}
       {{- if .Values.secretProvider }}

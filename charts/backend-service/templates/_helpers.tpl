@@ -78,3 +78,23 @@ app.kubernetes.io/component: hooks-db-migration
 /{{- include "backendService.fullname" . -}}
 {{- end -}}
 {{- end -}}
+
+{{/* Helper to get the service port */}}
+{{- define "backendService.portService" -}}
+{{- if .Values.service.port -}}
+{{- .Values.service.port -}}
+{{- else if .Values.ports.service -}}
+{{- .Values.ports.service -}}
+{{- else -}}
+80
+{{- end -}}
+{{- end -}}
+
+{{/* Helper to get the application port */}}
+{{- define "backendService.portApplication" -}}
+{{- if .Values.ports.application -}}
+{{- .Values.ports.application -}}
+{{- else -}}
+8080
+{{- end -}}
+{{- end -}}

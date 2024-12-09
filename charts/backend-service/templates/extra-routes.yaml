@@ -35,7 +35,7 @@ spec:
     {{- end }}
     - backendRefs:
         - name: {{ include "backendService.fullname" $ }}
-          port: {{ $.Values.service.port }}
+          port: {{ include "backendService.portService" $ }}
           kind: Service
       {{- with $route.filters }}
       filters:

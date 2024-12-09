@@ -30,7 +30,7 @@ spec:
             value: {{ include "backendService.routePrefix" $ }}
       backendRefs:
         - name: {{ include "backendService.fullname" $ }}
-          port: {{ $.Values.service.port }}
+          port: {{ include "backendService.portService" $ }}
           kind: Service
 {{- end }}
 
@@ -62,7 +62,7 @@ spec:
             value: {{ if eq (include "backendService.routePrefix" $) "/" -}}{{ . }}{{- else -}}{{ include "backendService.routePrefix" $ }}{{ . }}{{- end }}
       backendRefs:
         - name: {{ include "backendService.fullname" $ }}
-          port: {{ $.Values.service.port }}
+          port: {{ include "backendService.portService" $ }}
           kind: Service
   {{- end }}
 {{- end }}
@@ -92,7 +92,7 @@ spec:
   rules:
     - backendRefs:
         - name: {{ include "backendService.fullname" $ }}
-          port: {{ $.Values.service.port }}
+          port: {{ include "backendService.portService" $ }}
           kind: Service
       filters:
         - type: URLRewrite
@@ -143,7 +143,7 @@ spec:
               replaceFullPath: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ . }}
       backendRefs:
         - name: {{ include "backendService.fullname" $ }}
-          port: {{ $.Values.service.port }}
+          port: {{ include "backendService.portService" $ }}
           kind: Service
     {{- end }}
 {{- end }}
@@ -185,7 +185,7 @@ spec:
               replaceFullPath: {{ default "/probe" .Values.routes.paths.probe.probePath }}
       backendRefs:
         - name: {{ include "backendService.fullname" $ }}
-          port: {{ $.Values.service.port }}
+          port: {{ include "backendService.portService" $ }}
           kind: Service
 {{- end }}
 

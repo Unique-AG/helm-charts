@@ -1,0 +1,6 @@
+ports:
+  application: 12345
+  service: 9006
+
+service:
+  port: null
