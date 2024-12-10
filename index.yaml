@@ -123,6 +123,29 @@ entries:
   backend-service:
   - annotations:
       artifacthub.io/changes: |
+        - kind: fixed
+          description: "env.PORT is now correctly set to the application port in any case even when a manual env.PORT was declared."
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    created: "2024-12-10T08:31:19.067856092Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: e7e19408749d76a2d7bd3c08e73e00f08a2b593c13f3f67ae9304fb94f381f9e
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-3.1.1/backend-service-3.1.1.tgz
+    version: 3.1.1
+  - annotations:
+      artifacthub.io/changes: |
         - kind: changed
           description: "values.yaml is now sorted alphabetically for readability, flat above nested."
         - kind: changed
@@ -1022,4 +1045,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2024-12-09T10:31:51.564134916Z"
+generated: "2024-12-10T08:31:19.068055113Z"
