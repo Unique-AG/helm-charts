@@ -4,7 +4,7 @@ The 'web-app' chart is a "convenience" chart from Unique AG that can generically
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 3.0.1](https://img.shields.io/badge/Version-3.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 3.1.0](https://img.shields.io/badge/Version-3.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-web-app unique/web-app --version 3.0.1
+helm install my-web-app unique/web-app --version 3.1.0
 
 # or
-helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 3.0.1
+helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 3.1.0
 ```
 
 ### Docker Images
@@ -59,6 +59,7 @@ Only one root route per cluster (technically per hostname) should be deployed to
 | envSecrets | object | `{}` |  |
 | extraEnvCM | list | `[]` |  |
 | extraEnvSecrets | list | `[]` |  |
+| extraObjects | list | `[]` | extraObjects allows you to add additional Kubernetes objects to the manifest. It is the responsibility of the user to ensure that the objects are valid, that they do not conflict with the existing objects and that they are not containing any sensitive information |
 | extraRoutes | object | `{"extra-route-1":{"additionalRules":[],"annotations":{},"apiVersion":"gateway.networking.k8s.io/v1","enabled":false,"filters":[],"hostnames":[],"kind":"HTTPRoute","labels":{},"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"parentRefs":[{"group":"gateway.networking.k8s.io","kind":"Gateway","name":"kong","namespace":"kong-system"}]}}` | BETA: Configure additional gateway routes for the chart here. More routes can be added by adding a dictionary key like the 'extra-route-1' route. In order for this to install, the Gateway [API CRDs](https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api) must be installed in the cluster. |
 | extraRoutes.extra-route-1.annotations | object | `{}` | Set the route annotations |
 | extraRoutes.extra-route-1.apiVersion | string | `"gateway.networking.k8s.io/v1"` | Set the route apiVersion, e.g. gateway.networking.k8s.io/v1 or gateway.networking.k8s.io/v1alpha2 |
@@ -96,7 +97,7 @@ Only one root route per cluster (technically per hostname) should be deployed to
 | routes.gateway.namespace | string | system | namespace of the gateway |
 | routes.pathPrefix | string | defaults to the /fullname of the service | pathPrefix allows setting the default prefix (fullname) for all paths |
 | routes.paths.default.blockList | list | `["/metrics"]` | explicitly list paths to block |
-| routes.paths.root | object | `{"enabled":false,"redirectPath":"/chart-testing"}` | The root route is a convenience route that routes all traffic from the root of the domain to a specific path ⚠️ The root route should only be activated once when multiple web-apps are deployed to the same cluster |
+| routes.paths.root | object | `{"enabled":false,"redirectPath":"/chart-testing"}` | The root route is a convenience route that routes all traffic from the root of the domain to a specific path ⚠️ The root route should only be activated once when multiple web-apps are deployed to the same cluster ⚠️ In order for this to work, the kong-ingress-controller version must be at least `3.4.0` as the `3.3.1` version has a bug that adds a whitespace before the 'location' header (Kong/kubernetes-ingress-controller#6851) |
 | routes.paths.root.enabled | bool | `false` | Whether the root route should be enabled |
 | routes.paths.root.redirectPath | string | defaults to the `pathPrefix` if enabled and omitted | The path to which the root should be redirected to ⚠️ This value must be a valid full path, not only the sub-path. A 302 redirect will be issued to this path (using full path replacement). |
 | secretProvider | object | `{}` |  |

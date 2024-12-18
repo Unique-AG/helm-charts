@@ -1,79 +1,8 @@
-replicaCount: 1
-
-# Experimental `Recreate` update to short-term solve the caching issue, UN-6692
-strategy:
-  type: RollingUpdate # or `Recreate`
-
-rollingUpdate:
-  maxSurge: 1
-  maxUnavailable: 0
-
-# -- The image to use for this specific deployment and its cron jobs
-image:
-  # -- Repository, where the Unique service image is pulled from
-  # - for Unique internal deployments, these is the internal release repository
-  # - for client deployments, this will refer to the client's repository where the images have been mirrored too
-  # Note that it is bad practice and not advised to directly pull from Uniques release repository
-  # Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image
-  repository: "ghcr.io/unique-ag/chart-testing-service"
-  # -- tag, most often will refer one of the latest release of the Unique service
-  # Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image
-  tag: "1.0.2"
-  # -- pullPolicy, Unique recommends to never use 'Always'
-  pullPolicy: IfNotPresent
-
-imagePullSecrets: []
-
 nameOverride: ""
 fullnameOverride: ""
+replicaCount: 1
 
-serviceAccount:
-  enabled: false
-  annotations: {}
-  name: ""
-
-podAnnotations: {}
-
-podSecurityContext: {}
-
-securityContext:
-  allowPrivilegeEscalation: false
-  runAsNonRoot: true
-  runAsUser: 1000
-  seccompProfile:
-    type: RuntimeDefault
-
-service:
-  type: ClusterIP
-  port: 3000
-
-env: {}
-
-# Names of existing config maps to be used as env vars (configMapRef in envFrom)
-extraEnvCM: []
-
-envSecrets: {}
-
-# Names of existing secrets to be used as env vars (secretRef in envFrom)
-extraEnvSecrets: []
-
-probes:
-  enabled: true
-  liveness:
-    httpGet:
-      path: /api/health
-      port: http
-    initialDelaySeconds: 5
-  readiness:
-    httpGet:
-      path: /api/health
-      port: http
-    initialDelaySeconds: 5
-
-pdb:
-  maxUnavailable: 30%
-
-resources: {}
+affinity: {}
 
 autoscaling:
   enabled: false
@@ -82,62 +11,14 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   targetMemoryUtilizationPercentage: 80
 
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
-
-# .Values.secretProvider lets you mount secrets from Azure Key Vault into the pod
-# Note that 'vault-1' is the literal vault name from azure
-# The line format is 'make <ENV>: from <KEY_VAULT_SECRET_NAME>'
-# The conversion from - to _ is done automatically
-secretProvider: {}
-# Example
-# secretProvider:
-#   tenantId: 99330c76-81d2-460e-861e-35af8e2a4266
-#   aadPodIdBinding: binding-21 # optional, defaults to 'keyvault'
-#   vaults:
-#     vault-name-1:
-#       MY_ENV_VARIABLE_1: keyvault-secret-name-a
-#     vault-name-2:
-#       MY_ENV_VARIABLE_2: keyvault-secret-name-b
-
-# -- routes is a special object designed for Unique web-apps. It abstracts a lot of complexity and allows for a simple configuration of routes.
-# ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong. If you are using a different API Gateway, you will need to use `extraRoutes`.
-routes:
-  # - hostname of the route, will be matched against the host header of the request
-  # currently defaults to one, if ever more are needed open an issue, `extraHostNames` will be added, supports templating
-  hostname: chart-testing-web-app.example.com
-  # -- gateway to use
-  gateway:
-    # -- name of the gateway
-    # @default -- kong
-    name: kong
-    # -- namespace of the gateway
-    # @default -- system
-    namespace: system
-  # -- pathPrefix allows setting the default prefix (fullname) for all paths
-  # @default -- defaults to the /fullname of the service
-  pathPrefix: ""
-  paths:
-    default:
-      enabled: true
-      # -- explicitly list paths to block
-      blockList:
-        - /metrics
-      extraAnnotations: []
-      #   konghq.com/request-buffering: "false"
-      #   konghq.com/read-timeout: "120s"
-    # -- The root route is a convenience route that routes all traffic from the root of the domain to a specific path
-    # ⚠️ The root route should only be activated once when multiple web-apps are deployed to the same cluster
-    root:
-      # -- Whether the root route should be enabled
-      enabled: false
-      # -- The path to which the root should be redirected to
-      # ⚠️ This value must be a valid full path, not only the sub-path. A 302 redirect will be issued to this path (using full path replacement).
-      # @default -- defaults to the `pathPrefix` if enabled and omitted
-      redirectPath: /chart-testing
+env: {}
+envSecrets: {}
+# Names of existing config maps to be used as env vars (configMapRef in envFrom)
+extraEnvCM: []
+# Names of existing secrets to be used as env vars (secretRef in envFrom)
+extraEnvSecrets: []
+# -- extraObjects allows you to add additional Kubernetes objects to the manifest. It is the responsibility of the user to ensure that the objects are valid, that they do not conflict with the existing objects and that they are not containing any sensitive information
+extraObjects: []
 
 # -- BETA: Configure additional gateway routes for the chart here.
 # More routes can be added by adding a dictionary key like the 'extra-route-1' route.
@@ -172,3 +53,121 @@ extraRoutes:
     filters: []
     ## -- Additional custom rules that can be added to the route
     additionalRules: []
+
+# -- The image to use for this specific deployment and its cron jobs
+image:
+  # -- Repository, where the Unique service image is pulled from
+  # - for Unique internal deployments, these is the internal release repository
+  # - for client deployments, this will refer to the client's repository where the images have been mirrored too
+  # Note that it is bad practice and not advised to directly pull from Uniques release repository
+  # Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image
+  repository: "ghcr.io/unique-ag/chart-testing-service"
+  # -- tag, most often will refer one of the latest release of the Unique service
+  # Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image
+  tag: "1.0.2"
+  # -- pullPolicy, Unique recommends to never use 'Always'
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+nodeSelector: {}
+
+pdb:
+  maxUnavailable: 30%
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+probes:
+  enabled: true
+  liveness:
+    httpGet:
+      path: /api/health
+      port: http
+    initialDelaySeconds: 5
+  readiness:
+    httpGet:
+      path: /api/health
+      port: http
+    initialDelaySeconds: 5
+
+resources: {}
+
+rollingUpdate:
+  maxSurge: 1
+  maxUnavailable: 0
+
+securityContext:
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  runAsUser: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+service:
+  type: ClusterIP
+  port: 3000
+
+serviceAccount:
+  enabled: false
+  annotations: {}
+  name: ""
+
+# -- routes is a special object designed for Unique web-apps. It abstracts a lot of complexity and allows for a simple configuration of routes.
+# ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong. If you are using a different API Gateway, you will need to use `extraRoutes`.
+routes:
+  # - hostname of the route, will be matched against the host header of the request
+  # currently defaults to one, if ever more are needed open an issue, `extraHostNames` will be added, supports templating
+  hostname: chart-testing-web-app.example.com
+  # -- gateway to use
+  gateway:
+    # -- name of the gateway
+    # @default -- kong
+    name: kong
+    # -- namespace of the gateway
+    # @default -- system
+    namespace: system
+  # -- pathPrefix allows setting the default prefix (fullname) for all paths
+  # @default -- defaults to the /fullname of the service
+  pathPrefix: ""
+  paths:
+    default:
+      enabled: true
+      # -- explicitly list paths to block
+      blockList:
+        - /metrics
+      extraAnnotations: []
+      #   konghq.com/request-buffering: "false"
+      #   konghq.com/read-timeout: "120s"
+    # -- The root route is a convenience route that routes all traffic from the root of the domain to a specific path
+    # ⚠️ The root route should only be activated once when multiple web-apps are deployed to the same cluster
+    # ⚠️ In order for this to work, the kong-ingress-controller version must be at least `3.4.0` as the `3.3.1` version has a bug that adds a whitespace before the 'location' header (Kong/kubernetes-ingress-controller#6851)
+    root:
+      # -- Whether the root route should be enabled
+      enabled: false
+      # -- The path to which the root should be redirected to
+      # ⚠️ This value must be a valid full path, not only the sub-path. A 302 redirect will be issued to this path (using full path replacement).
+      # @default -- defaults to the `pathPrefix` if enabled and omitted
+      redirectPath: /chart-testing
+
+# .Values.secretProvider lets you mount secrets from Azure Key Vault into the pod
+# Note that 'vault-1' is the literal vault name from azure
+# The line format is 'make <ENV>: from <KEY_VAULT_SECRET_NAME>'
+# The conversion from - to _ is done automatically
+secretProvider: {}
+# Example
+# secretProvider:
+#   tenantId: 99330c76-81d2-460e-861e-35af8e2a4266
+#   aadPodIdBinding: binding-21 # optional, defaults to 'keyvault'
+#   vaults:
+#     vault-name-1:
+#       MY_ENV_VARIABLE_1: keyvault-secret-name-a
+#     vault-name-2:
+#       MY_ENV_VARIABLE_2: keyvault-secret-name-b
+
+# Experimental `Recreate` update to short-term solve the caching issue, UN-6692
+strategy:
+  type: RollingUpdate # or `Recreate`
+
+tolerations: []
