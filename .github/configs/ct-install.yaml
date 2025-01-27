@@ -19,3 +19,4 @@ validate-yaml: true
 exclude-deprecated: true
 excluded-charts:
   - sscsid-keeper # Can sadly not be fully tested due to MountVolume.SetUp failed for volume "sscsid-keeper" : rpc error: code = Unknown desc = failed to mount secrets store objects for pod sscsid-keeper-0562g0ya8w/sscsid-keeper-0562g0ya8w-5bbf784b44-wxnzj, err: rpc error: code = Unknown desc = failed to mount objects, error: failed to get objectType:secret, objectName:my-special-example-key, objectVersion:: ManagedIdentityCredential authentication failed. ManagedIdentityCredential authentication failed. the requested identity isn't assigned to this resource
+  - litellm # Can sadly not be fully tested until we manage a postgres connection from KIND.
