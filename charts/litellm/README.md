@@ -8,6 +8,12 @@ It is a refined version of the original [litellm](https://github.com/BerriAI/lit
 
 The chart version is synced with the app version.
 
+## Maintainers
+
+| Name | Email | Url |
+| ---- | ------ | --- |
+| unique-ag |  | <https://unique.ch/> |
+
 ## Values
 
 | Key | Type | Default | Description |
