@@ -607,6 +607,27 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/kong-plugins-1.0.0/kong-plugins-1.0.0.tgz
     version: 1.0.0
+  litellm:
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: added
+          description: initial release
+    apiVersion: v2
+    appVersion: v1.59.7
+    created: "2025-01-27T09:39:07.709521096Z"
+    description: 'The ''litellm'' chart provides a solution for deploying LiteLLM
+      proxy with helm.  It is a refined version of the original [litellm](https://github.com/BerriAI/litellm/tree/main/deploy/charts/litellm-helm)
+      chart.  The chart version is synced with the app version. '
+    digest: d4d914d031a206eb2216af54b3bac61e0d874fbafe3b7f657c81dee46ca2b1e9
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: litellm
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/litellm-1.59.7/litellm-1.59.7.tgz
+    version: 1.59.7
   sscsid-keeper:
   - annotations:
       artifacthub.io/changes: |
@@ -1067,4 +1088,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2024-12-18T09:29:01.790540838Z"
+generated: "2025-01-27T09:39:07.709634617Z"
