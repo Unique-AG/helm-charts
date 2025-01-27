@@ -1,0 +1,4 @@
+env:
+  PROXY_MASTER_KEY: "1234567890"
+  LITELLM_SALT_KEY: "1234567890"
+  DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
