@@ -1,0 +1,137 @@
+# Default values for litellm.
+
+replicaCount: 1
+
+image:
+  # Use "ghcr.io/berriai/litellm-database" for optimized image with database
+  repository: ghcr.io/berriai/litellm-database
+  # This sets the pull policy for images.
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: "litellm"
+fullnameOverride: ""
+
+# LiteLLM does not require access to the Kubernetes API, so we don't need a service account by default
+serviceAccount:
+  create: false
+
+podAnnotations: {}
+podLabels: {}
+
+# At the time of writing, the litellm docker image requires write access to the
+#  filesystem on startup so that prisma can install some dependencies.
+podSecurityContext: {}
+securityContext: {}
+
+# Default environment variables for the proxy. They are put into the environment configMap.
+env:
+  LITELLM_LOG: "ERROR"
+  LITELLM_MODE: "PRODUCTION"
+  # DATABASE_USERNAME:
+  # DATABASE_HOST:
+  # DATABASE_NAME:
+  # REDIS_HOST:
+
+# This is for setting up a secret to be used as environment variables for the proxy
+# Provide this list via secrets:
+#   PROXY_MASTER_KEY:
+#   DATABASE_PASSWORD:
+#   REDIS_PASSWORD:
+#   SLACK_WEBHOOK_URL: # only if you have Slack alerts enabled
+secretFrom: {}
+  # name: ""
+
+service:
+  type: ClusterIP
+  port: 4000
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+livenessProbe:
+  httpGet:
+    path: /health/liveliness
+    port: http
+readinessProbe:
+  httpGet:
+    path: /health/readiness
+    port: http
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+volumes: []
+# - name: foo
+#   secret:
+#     secretName: mysecret
+#     optional: false
+
+volumeMounts: []
+# - name: foo
+#   mountPath: "/etc/foo"
+#   readOnly: true
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# The elements within proxy_config are rendered as config.yaml for the proxy
+#  Examples: https://github.com/BerriAI/litellm/tree/main/litellm/proxy/example_config_yaml
+#  Reference: https://docs.litellm.ai/docs/proxy/configs
+proxy_config:
+  model_list:
+    # At least one model must exist for the proxy to start.
+    - model_name: fake-openai-endpoint
+      litellm_params:
+        model: openai/fake
+        api_key: fake-key
+        api_base: https://exampleopenaiendpoint-production.up.railway.app/
+  general_settings:
+    master_key: os.environ/PROXY_MASTER_KEY # The master key is added as an environment variable via the secretFrom block
+    alerting: []
+    proxy_batch_write_at: 60 # Batch write spend updates every 60s
+    database_connection_pool_limit: 10 # limit the number of database connections to = MAX Number of DB Connections/Number of instances of litellm proxy (Around 10-20 is good number)
+
+    # OPTIONAL Best Practices
+    disable_spend_logs: False # Disable when you use Prometheus metrics
+    disable_error_logs: False # Disable to improve performance
+
+  litellm_settings:
+    request_timeout: 600    # raise Timeout error if call takes longer than 600 seconds. Default value is 6000seconds if not set
+    set_verbose: False      # Switch off Debug Logging, ensure your logs do not have any debugging on
+    json_logs: true         # Get debug logs in json format
+
+hooks:
+  migration:
+    enabled: true
+    command: |
+      python litellm/proxy/prisma_migration.py

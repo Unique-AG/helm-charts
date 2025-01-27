@@ -1,0 +1,15 @@
+apiVersion: v2
+name: litellm
+type: application
+version: 1.59.7
+appVersion: v1.59.7
+description: |
+  The 'litellm' chart provides a solution for deploying LiteLLM proxy with helm.
+
+  It is a refined version of the original [litellm](https://github.com/BerriAI/litellm/tree/main/deploy/charts/litellm-helm) chart.
+
+  The chart version is synced with the app version.
+annotations:
+  artifacthub.io/changes: |
+    - kind: added
+      description: initial release
