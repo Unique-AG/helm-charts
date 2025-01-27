@@ -1,5 +1,9 @@
 apiVersion: v2
 name: litellm
+icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+maintainers:
+  - name: unique-ag
+    url: https://unique.ch/
 type: application
 version: 1.59.7
 appVersion: v1.59.7
