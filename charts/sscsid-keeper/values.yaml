@@ -96,6 +96,9 @@ spc:
   # -- Type of Kubernetes Secret
   k8sSecretType: "Opaque"
 
+  # -- Set the labels for the Secret Provider Class
+  labels: {}
+
   # -- Set the secret objects for the Secret Provider Class
   secrets:
     - # -- defines, which key in the secret object should be used

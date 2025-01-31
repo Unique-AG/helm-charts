@@ -8,7 +8,7 @@ Since Unique is at the time of writing Azure focused, leveraging the Azure manag
 
 Note that if you need more sophisticated features, or a officially maintained chart or option that supports reloading, ClusterSecrets etc, seek matching alternatives on your own behalf (e.g. [External Secrets Operator](https://external-secrets.io/latest/)).
 
-![Version: 1.1.5](https://img.shields.io/badge/Version-1.1.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.1.6](https://img.shields.io/badge/Version-1.1.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -16,10 +16,10 @@ Note that if you need more sophisticated features, or a officially maintained ch
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-sscsid-keeper unique/sscsid-keeper --version 1.1.5
+helm install my-sscsid-keeper unique/sscsid-keeper --version 1.1.6
 
 # or
-helm install my-sscsid-keeper oci://ghcr.io/unique-ag/helm-charts/sscsid-keeper --version 1.1.5
+helm install my-sscsid-keeper oci://ghcr.io/unique-ag/helm-charts/sscsid-keeper --version 1.1.6
 ```
 
 ## Values
@@ -45,10 +45,11 @@ helm install my-sscsid-keeper oci://ghcr.io/unique-ag/helm-charts/sscsid-keeper 
 | keeper.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":1000}` | Toggle and define security context. |
 | keeper.tolerations | list | `[]` | Tolerations for the keeper |
 | nameOverride | string | `""` | This is to override the release name. |
-| spc | object | `{"identityId":"00000000-0000-0000-0000-000000000000","k8sSecretType":"Opaque","kvName":"keyvault-name","secrets":[{"k8sSecretDataKey":"apiKeyExample","kvObjectName":"my-special-example-key"}],"tenantId":"00000000-0000-0000-0000-000000000000"}` | Set options for the Secret Provider Class |
+| spc | object | `{"identityId":"00000000-0000-0000-0000-000000000000","k8sSecretType":"Opaque","kvName":"keyvault-name","labels":{},"secrets":[{"k8sSecretDataKey":"apiKeyExample","kvObjectName":"my-special-example-key"}],"tenantId":"00000000-0000-0000-0000-000000000000"}` | Set options for the Secret Provider Class |
 | spc.identityId | string | `"00000000-0000-0000-0000-000000000000"` | Azure Entra ID Identity Client ID |
 | spc.k8sSecretType | string | `"Opaque"` | Type of Kubernetes Secret |
 | spc.kvName | string | `"keyvault-name"` | Azure KeyVault which stores the secrets, must be available over the network |
+| spc.labels | object | `{}` | Set the labels for the Secret Provider Class |
 | spc.secrets | list | `[{"k8sSecretDataKey":"apiKeyExample","kvObjectName":"my-special-example-key"}]` | Set the secret objects for the Secret Provider Class |
 | spc.secrets[0].k8sSecretDataKey | string | `"apiKeyExample"` | defines, which key in the secret object should be used |
 | spc.secrets[0].kvObjectName | string | `"my-special-example-key"` | defines, which object from the Key Vault should be used |
