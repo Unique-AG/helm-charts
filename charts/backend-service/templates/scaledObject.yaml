@@ -1,3 +1,6 @@
+{{- if and .Values.eventBasedAutoscaling.enabled .Values.keda.enabled }}
+{{- fail "You cannot set both `.Values.eventBasedAutoscaling.enabled` and `.Values.keda.enabled` at the same time." }}
+{{- end }}
 {{- if and .Values.eventBasedAutoscaling.enabled .Values.autoscaling.enabled }}
 {{- fail "You cannot set both `.Values.eventBasedAutoscaling.enabled` and `.Values.autoscaling.enabled` at the same time." }}
 {{- else }}

@@ -4,7 +4,7 @@ The 'backend-service' chart is a "convenience" chart from Unique AG that can gen
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 3.1.1](https://img.shields.io/badge/Version-3.1.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 3.2.0](https://img.shields.io/badge/Version-3.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 3.1.1
+helm install my-backend-service unique/backend-service --version 3.2.0
 
 # or
-helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 3.1.1
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 3.2.0
 ```
 
 ### Docker Images
@@ -93,7 +93,7 @@ You can find a `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](
 | env | object | `{}` |  |
 | envSecrets | object | `{}` |  |
 | envVars | list | `[]` |  |
-| eventBasedAutoscaling | object | `{"cron":{"desiredReplicas":"1","end":"0 19 * * 1-5","start":"0 8 * * 1-5","timezone":"Europe/Zurich"},"customTriggers":[],"enabled":false,"maxReplicaCount":2,"minReplicaCount":0,"rabbitmq":{"hostFromEnv":"AMQP_URL","mode":"QueueLength","protocol":"auto","value":"1"}}` | eventBasedAutoscaling allows you to define a event based autoscaling policy for the chart KEDA must be installed in the cluster |
+| eventBasedAutoscaling | object | `{"cron":{"desiredReplicas":"1","end":"0 19 * * 1-5","start":"0 8 * * 1-5","timezone":"Europe/Zurich"},"customTriggers":[],"enabled":false,"maxReplicaCount":2,"minReplicaCount":0,"rabbitmq":{"hostFromEnv":"AMQP_URL","mode":"QueueLength","protocol":"auto","value":"1"}}` | eventBasedAutoscaling allows you to define a event based autoscaling policy for the chart ⚠️ `eventBasedAutoscaling` is deprecated. Use `keda` instead. |
 | externalSecrets | list | `[]` |  |
 | extraCronJobs | list | `[]` | extraCronJobs allows you to define additional cron jobs besides 'cronJob' itself. |
 | extraEnvCM | list | `[]` |  |
@@ -116,6 +116,21 @@ You can find a `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](
 | image.repository | string | `"ghcr.io/unique-ag/chart-testing-service"` | Repository, where the Unique service image is pulled from - for Unique internal deployments, these is the internal release repository - for client deployments, this will refer to the client's repository where the images have been mirrored too Note that it is bad practice and not advised to directly pull from Uniques release repository Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image |
 | image.tag | string | `"1.0.3"` | tag, most often will refer one of the latest release of the Unique service Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image |
 | imagePullSecrets | list | `[]` |  |
+| keda | object | `{"cooldownPeriod":300,"enabled":false,"extraAnnotations":{},"idleReplicaCount":0,"maxReplicaCount":10,"minReplicaCount":1,"paused":false,"pollingInterval":30,"scalers":[{"authenticationRef":{"name":"keda-trigger-auth-rabbitmq-conn"},"metadata":{"mode":"QueueLength","protocol":"amqp","queueName":"testqueue","value":"20"},"type":"rabbitmq"},{"metadata":{"desiredReplicas":"10","end":"0 20 * * *","start":"0 6 * * *","timezone":"Europe/Zurich"},"type":"cron"}]}` | keda allows you to enable KEDA for the chart `keda` and `eventBasedAutoscaling` are mutually exclusive. |
+| keda.cooldownPeriod | int | `300` | cooldown period for the ScaledObject |
+| keda.enabled | bool | `false` | enable KEDA/ScaledObject for the chart |
+| keda.extraAnnotations | object | `{}` | extra annotations for the ScaledObject |
+| keda.idleReplicaCount | int | `0` | idle replica count for the ScaledObject |
+| keda.maxReplicaCount | int | `10` | max replica count for the ScaledObject |
+| keda.minReplicaCount | int | `1` | min replica count for the ScaledObject |
+| keda.paused | bool | `false` | pause the ScaledObject |
+| keda.pollingInterval | int | `30` | polling interval for the ScaledObject |
+| keda.scalers | list | `[{"authenticationRef":{"name":"keda-trigger-auth-rabbitmq-conn"},"metadata":{"mode":"QueueLength","protocol":"amqp","queueName":"testqueue","value":"20"},"type":"rabbitmq"},{"metadata":{"desiredReplicas":"10","end":"0 20 * * *","start":"0 6 * * *","timezone":"Europe/Zurich"},"type":"cron"}]` | scalers for the ScaledObject You can specify multiple scalers for the ScaledObject as outlined in https://keda.sh/docs/2.14/scalers/ |
+| keda.scalers[0] | object | `{"authenticationRef":{"name":"keda-trigger-auth-rabbitmq-conn"},"metadata":{"mode":"QueueLength","protocol":"amqp","queueName":"testqueue","value":"20"},"type":"rabbitmq"}` | rabbitmq example |
+| keda.scalers[0].authenticationRef | object | `{"name":"keda-trigger-auth-rabbitmq-conn"}` | authenticationRef for the ScaledObject Note that the TriggerAuthentication resource must be created separately |
+| keda.scalers[1] | object | `{"metadata":{"desiredReplicas":"10","end":"0 20 * * *","start":"0 6 * * *","timezone":"Europe/Zurich"},"type":"cron"}` | cron example |
+| keda.scalers[1].metadata.desiredReplicas | string | `"10"` | desired replicas for the ScaledObject |
+| keda.scalers[1].metadata.timezone | string | `"Europe/Zurich"` | The acceptable values would be a value from the IANA Time Zone Database. |
 | nameOverride | string | `""` |  |
 | nodeSelector | object | `{}` |  |
 | pdb.maxUnavailable | string | `"30%"` |  |
@@ -178,12 +193,12 @@ You can find a `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](
 
 ## Upgrade Guides
 
-### ~> 3.0.0
+### ~> `3.0.0`
 
 - `routes` uses `camelCase` for its keys, replace all `lower_snake_case` keys with `camelCase`
 - `routes.paths.up` is renamed to `routes.paths.probe`, update your `routes` accordingly
 
-### ~> 2.0.0
+### ~> `2.0.0`
 
 - `httproute` is converted into a dictionary and moves into `extraRoutes`
 - `ingress` has been removed. Unique Services require an upstream gateway that authenticates requests and populates the headers with matching information from the JWT token.

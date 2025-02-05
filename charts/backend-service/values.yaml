@@ -74,7 +74,7 @@ envSecrets: {}
 envVars: []
 
 # -- eventBasedAutoscaling allows you to define a event based autoscaling policy for the chart
-# KEDA must be installed in the cluster
+# ⚠️ `eventBasedAutoscaling` is deprecated. Use `keda` instead.
 eventBasedAutoscaling:
   enabled: false
   minReplicaCount: 0
@@ -203,6 +203,49 @@ image:
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
+
+# -- keda allows you to enable KEDA for the chart
+# `keda` and `eventBasedAutoscaling` are mutually exclusive.
+keda:
+  # -- enable KEDA/ScaledObject for the chart
+  enabled: false
+  # -- pause the ScaledObject
+  paused: false
+  # -- extra annotations for the ScaledObject
+  extraAnnotations: {}
+  # -- polling interval for the ScaledObject
+  pollingInterval: 30
+  # -- cooldown period for the ScaledObject
+  cooldownPeriod: 300
+  # -- idle replica count for the ScaledObject
+  idleReplicaCount: 0
+  # -- min replica count for the ScaledObject
+  minReplicaCount: 1
+  # -- max replica count for the ScaledObject
+  maxReplicaCount: 10
+  # -- scalers for the ScaledObject
+  # You can specify multiple scalers for the ScaledObject as outlined in https://keda.sh/docs/2.14/scalers/
+  scalers:
+    # -- rabbitmq example
+    - type: rabbitmq
+      metadata:
+        protocol: amqp
+        queueName: testqueue
+        mode: QueueLength
+        value: "20"
+      # -- authenticationRef for the ScaledObject
+      # Note that the TriggerAuthentication resource must be created separately
+      authenticationRef:
+        name: keda-trigger-auth-rabbitmq-conn
+    # -- cron example
+    - type: cron
+      metadata:
+        # -- The acceptable values would be a value from the IANA Time Zone Database.
+        timezone: Europe/Zurich
+        start: 0 6 * * *
+        end: 0 20 * * *
+        # -- desired replicas for the ScaledObject
+        desiredReplicas: "10"
 
 pdb:
   maxUnavailable: 30%

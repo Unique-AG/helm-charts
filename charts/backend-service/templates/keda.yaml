@@ -1,0 +1,39 @@
+{{- if and .Values.eventBasedAutoscaling.enabled .Values.keda.enabled }}
+{{- fail "You cannot set both `.Values.eventBasedAutoscaling.enabled` and `.Values.keda.enabled` at the same time." }}
+{{- end }}
+{{- if and .Values.keda.enabled .Values.autoscaling.enabled }}
+{{- fail "You cannot set both `.Values.eventBasedAutoscaling.enabled` and `.Values.keda.enabled` at the same time." }}
+{{- end }}
+{{- if .Capabilities.APIVersions.Has "keda.sh/v1alpha1" }}
+{{- if .Values.keda.enabled }}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ include "backendService.fullname" . }}
+  labels:
+    {{- include "backendService.labels" . | nindent 4 }}
+  annotations:
+    autoscaling.keda.sh/paused: {{ .Values.keda.paused | default "false" | quote }}
+    {{- with .Values.keda.extraAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  scaleTargetRef:
+    name: {{ include "backendService.fullname" . }}
+  pollingInterval: {{ .Values.keda.pollingInterval | default 30 }}
+  cooldownPeriod: {{ .Values.keda.cooldownPeriod | default 300 }}
+  idleReplicaCount: {{ .Values.keda.idleReplicaCount | default 0 }}
+  minReplicaCount: {{ .Values.keda.minReplicaCount | default 1 }}
+  maxReplicaCount: {{ .Values.keda.maxReplicaCount | default 10 }}
+  # fallback and advanced are for now defaulting/omitted
+  triggers:
+  {{- if not .Values.keda.scalers }}
+  {{- fail "You must specify at least one scaler in .Values.keda.scalers" }}
+  {{- end }}
+  {{- with .Values.keda.scalers }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+{{- end }}
+{{- else }}
+{{- fail "You can't use keda without CRDs installed. Install CRDs first."}}
+{{- end }}
