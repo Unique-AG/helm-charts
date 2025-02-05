@@ -25,6 +25,8 @@ The chart version is synced with the app version.
 | autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
 | env.LITELLM_LOG | string | `"ERROR"` |  |
 | env.LITELLM_MODE | string | `"PRODUCTION"` |  |
+| envFromSecretRefs | list | `[]` | List of secrets to be used as environment variables for the proxy |
+| extraObjects | list | `[]` | List of extra objects to be created, will be templated |
 | fullnameOverride | string | `""` |  |
 | hooks.migration.command | string | `"python litellm/proxy/prisma_migration.py\n"` |  |
 | hooks.migration.enabled | bool | `true` |  |
