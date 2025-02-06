@@ -41,8 +41,15 @@ env:
 #   DATABASE_PASSWORD:
 #   REDIS_PASSWORD:
 #   SLACK_WEBHOOK_URL: # only if you have Slack alerts enabled
+# When needing more than one secret, use the envFromSecretRefs list below
 secretFrom: {}
   # name: ""
+
+# -- List of secrets to be used as environment variables for the proxy
+envFromSecretRefs: []
+
+# -- List of extra objects to be created, will be templated
+extraObjects: []
 
 service:
   type: ClusterIP
