@@ -7,7 +7,7 @@ maintainers:
 name: ai-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/ai-service
-version: 1.1.2
+version: 1.1.3
 description: |
   The 'ai-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy simple AI workloads to Kubernetes.
 
@@ -15,4 +15,4 @@ description: |
 annotations:
   artifacthub.io/changes: |
     - kind: fixed
-      description: "Remove double volume block from pod spec"
+      description: "Replace the python based artifact download script with a bash script"
