@@ -1,6 +1,6 @@
 # litellm
 
-![Version: 1.59.7](https://img.shields.io/badge/Version-1.59.7-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v1.59.7](https://img.shields.io/badge/AppVersion-v1.59.7-informational?style=flat-square)
+![Version: 1.59.10](https://img.shields.io/badge/Version-1.59.10-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v1.59.10](https://img.shields.io/badge/AppVersion-v1.59.10-informational?style=flat-square)
 
 The 'litellm' chart provides a solution for deploying LiteLLM proxy with helm.
 
@@ -25,6 +25,8 @@ The chart version is synced with the app version.
 | autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
 | env.LITELLM_LOG | string | `"ERROR"` |  |
 | env.LITELLM_MODE | string | `"PRODUCTION"` |  |
+| envFromSecretRefs | list | `[]` | List of secrets to be used as environment variables for the proxy |
+| extraObjects | list | `[]` | List of extra objects to be created, will be templated |
 | fullnameOverride | string | `""` |  |
 | hooks.migration.command | string | `"python litellm/proxy/prisma_migration.py\n"` |  |
 | hooks.migration.enabled | bool | `true` |  |
