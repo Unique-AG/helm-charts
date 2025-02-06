@@ -1,0 +1,7 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your release is named {{ .Release.Name }}.
+
+{{ if .Values.eventBasedAutoscaling.enabled }}
+⚠️ Please note that `eventBasedAutoscaling` is deprecated. Use `keda` instead. `eventBasedAutoscaling` will be removed in an upcoming major release.
+{{ end }}
