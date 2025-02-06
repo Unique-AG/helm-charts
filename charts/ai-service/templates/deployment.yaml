@@ -97,6 +97,7 @@ spec:
               {{- range $index, $artifact := .Values.artifactsCache.artifacts }}
               download_if_missing "{{ $artifact.path }}" "{{ $artifact.blobUrl }}" {{- if ne $index (sub (len $.Values.artifactsCache.artifacts) 1) }} && \{{- end }}
               {{- end }}
+              echo "Downloaded all artifacts to $PWD".
           volumeMounts:
             - name: artifacts-cache-volume
               mountPath: /artifacts
