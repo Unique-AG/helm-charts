@@ -54,6 +54,8 @@ spec:
           {{- if .args }}
           args: {{ .args | toYaml | nindent 10 }}
           {{- end }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
           {{- if .volumeMounts }}
           volumeMounts:
           {{- range .volumeMounts }}
@@ -81,7 +83,7 @@ spec:
                 if [ ! -f "$file" ]; then
                   echo "Downloading $file..."
                   for i in 1 2 3; do
-                    if curl -f --create-dirs -o "$file" "$url"; then
+                    if curl -f {{- if .Values.artifactsCache.downloader.insecure }} -k{{- end }} --create-dirs -o "$file" "$url"; then
                       echo "$file downloaded successfully"
                       return 0
                     fi
@@ -98,6 +100,8 @@ spec:
               download_if_missing "{{ $artifact.path }}" "{{ $artifact.blobUrl }}" {{- if ne $index (sub (len $.Values.artifactsCache.artifacts) 1) }} && \{{- end }}
               {{- end }}
               echo "Downloaded all artifacts to $PWD".
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
           volumeMounts:
             - name: artifacts-cache-volume
               mountPath: /artifacts
