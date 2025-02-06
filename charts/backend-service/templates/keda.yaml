@@ -2,7 +2,7 @@
 {{- fail "You cannot set both `.Values.eventBasedAutoscaling.enabled` and `.Values.keda.enabled` at the same time." }}
 {{- end }}
 {{- if and .Values.keda.enabled .Values.autoscaling.enabled }}
-{{- fail "You cannot set both `.Values.eventBasedAutoscaling.enabled` and `.Values.keda.enabled` at the same time." }}
+{{- fail "You cannot set both `.Values.keda.enabled` and `.Values.autoscaling.enabled` at the same time." }}
 {{- end }}
 {{- if .Capabilities.APIVersions.Has "keda.sh/v1alpha1" }}
 {{- if .Values.keda.enabled }}
