@@ -3,7 +3,7 @@ artifactsCache:
   storage: 32Gi
   storageClassName: standard
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   artifacts:
     - blobUrl: https://huggingface.co/ds4sd/docling-models/resolve/main/config.json
       path: docling-models/config.json
