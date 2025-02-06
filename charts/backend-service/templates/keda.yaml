@@ -1,11 +1,11 @@
-{{- if and .Values.eventBasedAutoscaling.enabled .Values.keda.enabled }}
+{{- if .Values.keda.enabled }}
+{{- if and .Values.keda.enabled .Values.eventBasedAutoscaling.enabled }}
 {{- fail "You cannot set both `.Values.eventBasedAutoscaling.enabled` and `.Values.keda.enabled` at the same time." }}
 {{- end }}
 {{- if and .Values.keda.enabled .Values.autoscaling.enabled }}
 {{- fail "You cannot set both `.Values.keda.enabled` and `.Values.autoscaling.enabled` at the same time." }}
 {{- end }}
 {{- if .Capabilities.APIVersions.Has "keda.sh/v1alpha1" }}
-{{- if .Values.keda.enabled }}
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
@@ -33,7 +33,7 @@ spec:
   {{- with .Values.keda.scalers }}
   {{- toYaml . | nindent 2 }}
   {{- end }}
-{{- end }}
 {{- else }}
 {{- fail "You can't use keda without CRDs installed. Install CRDs first."}}
+{{- end }}
 {{- end }}
