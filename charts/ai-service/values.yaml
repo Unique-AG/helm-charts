@@ -111,6 +111,8 @@ artifactsCache:
   downloader:
     # -- Image to use for the artifacts downloader init container
     image: "curlimages/curl:8.12.0"
+    # -- This option explicitly allows curl to perform "insecure" SSL connections and transfers, equals curl -k or --insecure
+    insecure: false
 
 resources: {}
 
