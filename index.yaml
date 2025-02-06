@@ -3,6 +3,28 @@ entries:
   ai-service:
   - annotations:
       artifacthub.io/changes: |
+        - kind: changed
+          description: "artifactsCache uses non-python init container to download artifacts"
+    apiVersion: v2
+    created: "2025-02-06T20:53:55.029786847Z"
+    description: 'The ''ai-service'' chart is a "convenience" chart from Unique AG
+      that can generically be used to deploy simple AI workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: a5fa0955c7f7e2215ab86862fa2c28c86b8cf0173a391457bf5422e995d88727
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: ai-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/ai-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/ai-service-1.2.0/ai-service-1.2.0.tgz
+    version: 1.2.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: fixed
           description: "Remove double volume block from pod spec"
     apiVersion: v2
@@ -1195,4 +1217,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-02-06T19:56:39.228317643Z"
+generated: "2025-02-06T20:53:55.029907423Z"
