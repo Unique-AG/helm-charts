@@ -4,7 +4,7 @@ The 'ai-service' chart is a "convenience" chart from Unique AG that can generica
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 1.1.2](https://img.shields.io/badge/Version-1.1.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.2.0](https://img.shields.io/badge/Version-1.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-ai-service unique/ai-service --version 1.1.2
+helm install my-ai-service unique/ai-service --version 1.2.0
 
 # or
-helm install my-ai-service oci://ghcr.io/unique-ag/helm-charts/ai-service --version 1.1.2
+helm install my-ai-service oci://ghcr.io/unique-ag/helm-charts/ai-service --version 1.2.0
 ```
 
 ### Docker Images
@@ -35,15 +35,16 @@ artifactsCache:
   accessModes:
     - ReadWriteMany  # Allows multiple pods to read the cache
   artifacts: # specify the urls from which the artifacts are to be downloaded and the paths where they are to be saved
-    - blobUrl: "https://example.com/model1.bin"
-      path: "/models/model1"
-    - blobUrl: "https://example.com/model2.bin"
-      path: "/models/model2"
+    - blobUrl: https://example.com/model1.bin
+      path: /models/model1
+    - blobUrl: https://example.com/model2.bin
+      path: /models/model2
 ```
 
 #### How it works
 When enabled, the chart will:
 1. Create a PersistentVolumeClaim for storing the artifacts
+    + If you want to use an existing PVC, use the `pvc` section instead and disable the `artifactsCache` option
 2. Add an init container that downloads the specified files before your application starts
 3. Mount the cache volume at `/artifacts` in your application container
 
@@ -63,11 +64,11 @@ Common uses include:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| artifactsCache | object | `{"accessModes":["ReadWriteMany"],"artifacts":[],"downloader":{"image":"python:3.9-slim"},"enabled":false,"storage":"32Gi","storageClassName":"azurefile"}` | Configuration for artifacts cache, see the readme above for examples and details. |
+| artifactsCache | object | `{"accessModes":["ReadWriteMany"],"artifacts":[],"downloader":{"image":"curlimages/curl:8.12.0"},"enabled":false,"storage":"32Gi","storageClassName":"azurefile"}` | Configuration for artifacts cache, see the readme above for examples and details. Only use the cache if you want to actively download artifacts. Else use the `pvc` section. |
 | artifactsCache.accessModes | list | `["ReadWriteMany"]` | Access modes for artifacts cache. Possible values: ReadWriteOnce, ReadOnlyMany, ReadWriteMany |
 | artifactsCache.artifacts | list | `[]` | artifactsCache.artifacts[].path Path where to store the downloaded artifact |
-| artifactsCache.downloader | object | `{"image":"python:3.9-slim"}` | Configuration for the artifacts downloader init container |
-| artifactsCache.downloader.image | string | `"python:3.9-slim"` | Image to use for the artifacts downloader init container |
+| artifactsCache.downloader | object | `{"image":"curlimages/curl:8.12.0"}` | Configuration for the artifacts downloader init container |
+| artifactsCache.downloader.image | string | `"curlimages/curl:8.12.0"` | Image to use for the artifacts downloader init container |
 | artifactsCache.enabled | bool | `false` | Enable artifacts cache PVC |
 | artifactsCache.storage | string | `"32Gi"` | Storage size for artifacts cache |
 | artifactsCache.storageClassName | string | `"azurefile"` | Storage class name for artifacts cache |

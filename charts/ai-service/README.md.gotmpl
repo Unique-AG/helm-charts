@@ -34,15 +34,16 @@ artifactsCache:
   accessModes:
     - ReadWriteMany  # Allows multiple pods to read the cache
   artifacts: # specify the urls from which the artifacts are to be downloaded and the paths where they are to be saved
-    - blobUrl: "https://example.com/model1.bin"
-      path: "/models/model1"
-    - blobUrl: "https://example.com/model2.bin"
-      path: "/models/model2"
+    - blobUrl: https://example.com/model1.bin
+      path: /models/model1
+    - blobUrl: https://example.com/model2.bin
+      path: /models/model2
 ```
 
 #### How it works
 When enabled, the chart will:
 1. Create a PersistentVolumeClaim for storing the artifacts
+    + If you want to use an existing PVC, use the `pvc` section instead and disable the `artifactsCache` option
 2. Add an init container that downloads the specified files before your application starts
 3. Mount the cache volume at `/artifacts` in your application container
 
