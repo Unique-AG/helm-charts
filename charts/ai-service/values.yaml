@@ -92,6 +92,7 @@ pvc:
   accessMode: ReadWriteMany
 
 # -- Configuration for artifacts cache, see the readme above for examples and details.
+# Only use the cache if you want to actively download artifacts. Else use the `pvc` section.
 artifactsCache:
   # -- Enable artifacts cache PVC
   enabled: false
@@ -109,7 +110,7 @@ artifactsCache:
   # -- Configuration for the artifacts downloader init container
   downloader:
     # -- Image to use for the artifacts downloader init container
-    image: "python:3.9-slim"
+    image: "curlimages/curl:8.12.0"
 
 resources: {}
 

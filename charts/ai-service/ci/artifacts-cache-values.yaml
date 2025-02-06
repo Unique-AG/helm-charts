@@ -1,0 +1,13 @@
+artifactsCache:
+  enabled: true
+  storage: 32Gi
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  artifacts:
+    - blobUrl: https://huggingface.co/ds4sd/docling-models/resolve/main/config.json
+      path: docling-models/config.json
+    - blobUrl: https://huggingface.co/ds4sd/docling-models/resolve/main/model_artifacts/tableformer/accurate/tableformer_accurate.safetensors
+      path: docling-models/model_artifacts/tableformer/accurate/tableformer_accurate.safetensors
+  downloader:
+    image: "curlimages/curl:8.12.0"
