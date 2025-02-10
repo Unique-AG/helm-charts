@@ -70,9 +70,16 @@ spec:
         - name: download-artifacts
           image: {{ .Values.artifactsCache.downloader.image }}
           command:
+          {{- if and .Values.artifactsCache.enabled .Values.artifactsCache.command }}
+            {{- toYaml .Values.artifactsCache.command | nindent 12 }}
+          {{ - else }}
             - /bin/sh
             - -c
+          {{- end }}
           args:
+          {{- if and .Values.artifactsCache.enabled .Values.artifactsCache.args }}
+            {{- toYaml .Values.artifactsCache.args | nindent 12 }}
+          {{ - else }}
             - |
               echo "Checking and downloading artifact files if needed..."
               cd /artifacts
@@ -100,6 +107,7 @@ spec:
               download_if_missing "{{ $artifact.path }}" "{{ $artifact.blobUrl }}" {{- if ne $index (sub (len $.Values.artifactsCache.artifacts) 1) }} && \{{- end }}
               {{- end }}
               echo "Downloaded all artifacts to $PWD".
+          {{- end }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           volumeMounts:
@@ -183,7 +191,7 @@ spec:
           {{- if and .Values.artifactsCache.enabled .Values.artifactsCache.artifacts }}
             - name: artifacts-cache-volume
               mountPath: /artifacts
-              readOnly: true
+              readOnly: {{ .Values.artifactsCache.readOnlyVolume | default true }}
           {{- end }}
           {{- if .Values.secretProvider }}
           {{- range $k, $v := .Values.secretProvider.vaults }}
