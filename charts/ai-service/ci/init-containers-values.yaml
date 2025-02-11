@@ -1,0 +1,53 @@
+env:
+  AWS_ACCESS_KEY_ID: example-key-id
+  AWS_SECRET_ACCESS_KEY: abcdefghijklmnopqrstuvwxyz1234567890
+  AWS_DEFAULT_REGION: eu-west-2
+  AWS_ENDPOINT_URL: https://s3.eu-west-2.amazonaws.com
+deployment:
+  initContainers:
+    - name: download-artifacts-custom
+      image: amazon/aws-cli:2.24.1
+      command:
+        - /usr/bin/env
+      args:
+        - sh
+        - -ce
+        - |
+          echo "Checking and downloading artifact files if needed..."
+          cd /artifacts
+
+          download_if_missing() {
+            local file=$1
+            local url=$2
+            if [ ! -f "$file" ]; then
+              echo "Downloading $file..."
+              for i in 1 2 3; do
+                if curl --create-dirs -f -o "$file" "$url"; then
+                  echo "$file downloaded successfully"
+                  return 0
+                fi
+                echo "Attempt $i failed, retrying..."
+                sleep 5
+              done
+              echo "Failed to download $file after 3 attempts"
+              return 1
+            else
+              echo "$file already exists, skipping download"
+            fi
+          }
+
+          download_if_missing "docling-models/config.json" "https://huggingface.co/ds4sd/docling-models/resolve/main/config.json" && \
+          download_if_missing "docling-models/tm_config.json" "https://huggingface.co/ds4sd/docling-models/resolve/main/model_artifacts/tableformer/fast/tm_config.json"
+          echo "Download finished"
+      securityContext: {}
+      volumeMounts:
+        - name: artifacts-cache
+          mountPath: /artifacts
+          readOnly: false
+pvc:
+  enabled: true
+  name: artifacts-cache
+  finalizers: [] # tests on purpose omit any finalizer
+  storage: 1Gi
+  storageClassName: standard
+  accessMode: ReadWriteOnce

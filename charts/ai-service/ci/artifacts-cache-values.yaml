@@ -2,6 +2,8 @@ artifactsCache:
   enabled: true
   storage: 32Gi
   storageClassName: standard
+  readOnly: false
+  finalizers: [] # tests on purpose omit any finalizer
   accessModes:
     - ReadWriteOnce
   artifacts:

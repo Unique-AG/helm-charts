@@ -5,6 +5,9 @@ metadata:
   name: {{ include "common.artifactsCacheName" . }}
   labels:
     {{- include "common.labels" . | nindent 4 }}
+  {{- if .Values.artifactsCache.finalizers }}
+  finalizers: {{ .Values.artifactsCache.finalizers | toYaml | nindent 4 }} # Finalizers are not documented on purpose as they should be kept normally
+  {{- end }}
 spec:
   accessModes:
     {{- toYaml .Values.artifactsCache.accessModes | nindent 4 }}

@@ -12,7 +12,7 @@ chart-dirs:
   - charts
 chart-repos:
   # - dandydeveloper=https://dandydeveloper.github.io/charts/
-helm-extra-args: "--timeout 120s"  
+helm-extra-args: "--timeout 120s"
 validate-chart-schema: false
 validate-maintainers: true
 validate-yaml: true

@@ -4,7 +4,7 @@ The 'ai-service' chart is a "convenience" chart from Unique AG that can generica
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 1.2.1](https://img.shields.io/badge/Version-1.2.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.2.2](https://img.shields.io/badge/Version-1.2.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-ai-service unique/ai-service --version 1.2.1
+helm install my-ai-service unique/ai-service --version 1.2.2
 
 # or
-helm install my-ai-service oci://ghcr.io/unique-ag/helm-charts/ai-service --version 1.2.1
+helm install my-ai-service oci://ghcr.io/unique-ag/helm-charts/ai-service --version 1.2.2
 ```
 
 ### Docker Images
@@ -64,12 +64,13 @@ Common uses include:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| artifactsCache | object | `{"accessModes":["ReadWriteMany"],"artifacts":[],"downloader":{"image":"curlimages/curl:8.12.0","insecure":false},"enabled":false,"storage":"32Gi","storageClassName":"azurefile"}` | Configuration for artifacts cache, see the readme above for examples and details. Only use the cache if you want to actively download artifacts. Else use the `pvc` section. |
+| artifactsCache | object | `{"accessModes":["ReadWriteMany"],"artifacts":[],"downloader":{"image":"curlimages/curl:8.12.0","insecure":false},"enabled":false,"readOnly":true,"storage":"32Gi","storageClassName":"azurefile"}` | Configuration for artifacts cache, see the readme above for examples and details. Only use the cache if you want to actively download artifacts. Else use the `pvc` section. |
 | artifactsCache.accessModes | list | `["ReadWriteMany"]` | Access modes for artifacts cache. Possible values: ReadWriteOnce, ReadOnlyMany, ReadWriteMany |
 | artifactsCache.artifacts | list | `[]` | artifactsCache.artifacts[].path Path where to store the downloaded artifact |
 | artifactsCache.downloader | object | `{"image":"curlimages/curl:8.12.0","insecure":false}` | Configuration for the artifacts downloader init container |
 | artifactsCache.downloader.image | string | `"curlimages/curl:8.12.0"` | Image to use for the artifacts downloader init container |
 | artifactsCache.enabled | bool | `false` | Enable artifacts cache PVC |
+| artifactsCache.readOnly | bool | `true` | By secure default, the artifacts cache is read only, allows writes if needed |
 | artifactsCache.storage | string | `"32Gi"` | Storage size for artifacts cache |
 | artifactsCache.storageClassName | string | `"azurefile"` | Storage class name for artifacts cache |
 | autoscaling.enabled | bool | `false` |  |

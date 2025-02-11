@@ -5,6 +5,9 @@ metadata:
   name: {{ .Values.pvc.name | default (include "common.fullname" .) }}
   labels:
     {{- include "common.labels" . | nindent 4 }}
+  {{- if .Values.pvc.finalizers }}
+  finalizers: {{ .Values.pvc.finalizers | toYaml | nindent 4 }} # Finalizers are not documented on purpose as they should be kept normally
+  {{- end }}
 spec:
   accessModes:
     - {{ .Values.pvc.accessMode }}

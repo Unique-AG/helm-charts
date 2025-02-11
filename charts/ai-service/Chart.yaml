@@ -7,7 +7,7 @@ maintainers:
 name: ai-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/ai-service
-version: 1.2.1
+version: 1.2.2
 description: |
   The 'ai-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy simple AI workloads to Kubernetes.
 
@@ -15,4 +15,6 @@ description: |
 annotations:
   artifacthub.io/changes: |
     - kind: changed
-      description: "artifactsCache.downloader.insecure allows skipping SSL certificate verification"
+      description: "artifactsCache.readOnly allows to set the readWrite mode for the created volume"
+    - kind: changed
+      description: "initContainers test and ci templates added"
