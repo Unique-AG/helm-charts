@@ -64,12 +64,13 @@ Common uses include:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| artifactsCache | object | `{"accessModes":["ReadWriteMany"],"artifacts":[],"downloader":{"image":"curlimages/curl:8.12.0","insecure":false},"enabled":false,"storage":"32Gi","storageClassName":"azurefile"}` | Configuration for artifacts cache, see the readme above for examples and details. Only use the cache if you want to actively download artifacts. Else use the `pvc` section. |
+| artifactsCache | object | `{"accessModes":["ReadWriteMany"],"artifacts":[],"downloader":{"image":"curlimages/curl:8.12.0","insecure":false},"enabled":false,"readOnly":true,"storage":"32Gi","storageClassName":"azurefile"}` | Configuration for artifacts cache, see the readme above for examples and details. Only use the cache if you want to actively download artifacts. Else use the `pvc` section. |
 | artifactsCache.accessModes | list | `["ReadWriteMany"]` | Access modes for artifacts cache. Possible values: ReadWriteOnce, ReadOnlyMany, ReadWriteMany |
 | artifactsCache.artifacts | list | `[]` | artifactsCache.artifacts[].path Path where to store the downloaded artifact |
 | artifactsCache.downloader | object | `{"image":"curlimages/curl:8.12.0","insecure":false}` | Configuration for the artifacts downloader init container |
 | artifactsCache.downloader.image | string | `"curlimages/curl:8.12.0"` | Image to use for the artifacts downloader init container |
 | artifactsCache.enabled | bool | `false` | Enable artifacts cache PVC |
+| artifactsCache.readOnly | bool | `true` | By secure default, the artifacts cache is read only, allows writes if needed |
 | artifactsCache.storage | string | `"32Gi"` | Storage size for artifacts cache |
 | artifactsCache.storageClassName | string | `"azurefile"` | Storage class name for artifacts cache |
 | autoscaling.enabled | bool | `false` |  |

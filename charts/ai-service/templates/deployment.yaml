@@ -49,7 +49,6 @@ spec:
       {{- range . }}
         - name: {{ .name | default (printf "init-%s" $fullName) }}
           image: "{{ .image | default "busybox:1.28" }}"
-          restartPolicy: "{{ .restartPolicy | default "Always" }}"
           command: {{ .command | toYaml | nindent 10 }}
           {{- if .args }}
           args: {{ .args | toYaml | nindent 10 }}
@@ -70,16 +69,9 @@ spec:
         - name: download-artifacts
           image: {{ .Values.artifactsCache.downloader.image }}
           command:
-          {{- if and .Values.artifactsCache.enabled .Values.artifactsCache.command }}
-            {{- toYaml .Values.artifactsCache.command | nindent 12 }}
-          {{ - else }}
             - /bin/sh
             - -c
-          {{- end }}
           args:
-          {{- if and .Values.artifactsCache.enabled .Values.artifactsCache.args }}
-            {{- toYaml .Values.artifactsCache.args | nindent 12 }}
-          {{ - else }}
             - |
               echo "Checking and downloading artifact files if needed..."
               cd /artifacts
@@ -106,8 +98,7 @@ spec:
               {{- range $index, $artifact := .Values.artifactsCache.artifacts }}
               download_if_missing "{{ $artifact.path }}" "{{ $artifact.blobUrl }}" {{- if ne $index (sub (len $.Values.artifactsCache.artifacts) 1) }} && \{{- end }}
               {{- end }}
-              echo "Downloaded all artifacts to $PWD".
-          {{- end }}
+              echo "Downloaded all artifacts to $PWD"
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           volumeMounts:
@@ -191,7 +182,7 @@ spec:
           {{- if and .Values.artifactsCache.enabled .Values.artifactsCache.artifacts }}
             - name: artifacts-cache-volume
               mountPath: /artifacts
-              readOnly: {{ .Values.artifactsCache.readOnlyVolume | default true }}
+              readOnly: {{ .Values.artifactsCache.readOnly }}
           {{- end }}
           {{- if .Values.secretProvider }}
           {{- range $k, $v := .Values.secretProvider.vaults }}

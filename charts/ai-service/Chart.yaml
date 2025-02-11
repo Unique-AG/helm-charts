@@ -15,4 +15,6 @@ description: |
 annotations:
   artifacthub.io/changes: |
     - kind: changed
-      description: "artifactsCache.args & artifactsCache.command allows to override initContainers command and args"
+      description: "artifactsCache.readOnly allows to set the readWrite mode for the created volume"
+    - kind: changed
+      description: "initContainers test and ci templates added"
