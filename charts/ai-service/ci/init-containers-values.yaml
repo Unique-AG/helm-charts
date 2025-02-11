@@ -50,3 +50,4 @@ pvc:
   finalizers: [] # tests on purpose omit any finalizer
   storage: 1Gi
   storageClassName: standard
+  accessMode: ReadWriteOnce
