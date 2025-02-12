@@ -7,7 +7,7 @@ maintainers:
 name: ai-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/ai-service
-version: 1.2.3
+version: 1.2.4
 description: |
   The 'ai-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy simple AI workloads to Kubernetes.
 
@@ -15,4 +15,4 @@ description: |
 annotations:
   artifacthub.io/changes: |
     - kind: changed
-      description: "adding pvc.storageClassCreationEnabled to be able to disable storage class creation for PVCs"
+      description: "initContainers.volumeMounts now are specified out, using toYaml"
