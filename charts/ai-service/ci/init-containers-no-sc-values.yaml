@@ -44,6 +44,7 @@ deployment:
         - name: artifacts-cache
           mountPath: /artifacts
           readOnly: false
+          subPath: "file.pem"
 pvc:
   enabled: true
   name: artifacts-cache

@@ -55,13 +55,9 @@ spec:
           {{- end }}
           securityContext:
             {{- toYaml (default .securityContext $.Values.securityContext) | nindent 12 }}
-          {{- if .volumeMounts }}
           volumeMounts:
-          {{- range .volumeMounts }}
-            - name: {{ .name}}
-              mountPath: {{ .mountPath}}
-              readOnly: {{ .readOnly | default false }}
-          {{- end }}
+          {{- with .volumeMounts }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
       {{- end }}
       {{- end }}
