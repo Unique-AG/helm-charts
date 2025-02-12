@@ -4,7 +4,7 @@ The 'ai-service' chart is a "convenience" chart from Unique AG that can generica
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 1.2.2](https://img.shields.io/badge/Version-1.2.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.2.3](https://img.shields.io/badge/Version-1.2.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-ai-service unique/ai-service --version 1.2.2
+helm install my-ai-service unique/ai-service --version 1.2.3
 
 # or
-helm install my-ai-service oci://ghcr.io/unique-ag/helm-charts/ai-service --version 1.2.2
+helm install my-ai-service oci://ghcr.io/unique-ag/helm-charts/ai-service --version 1.2.3
 ```
 
 ### Docker Images
@@ -127,10 +127,11 @@ Common uses include:
 | probes.startup.httpGet.port | string | `"http"` |  |
 | probes.startup.initialDelaySeconds | int | `10` |  |
 | probes.startup.periodSeconds | int | `10` |  |
-| pvc | object | `{"accessMode":"ReadWriteMany","enabled":false,"storage":"32Gi","storageClassName":"azurefile"}` | Configuration for Persistent Volume Claim |
+| pvc | object | `{"accessMode":"ReadWriteMany","enabled":false,"storage":"32Gi","storageClassCreationEnabled":true,"storageClassName":"azurefile"}` | Configuration for Persistent Volume Claim |
 | pvc.accessMode | string | `"ReadWriteMany"` | Access mode for PVC. Possible values: ReadWriteOnce, ReadOnlyMany, ReadWriteMany |
 | pvc.enabled | bool | `false` | Enable persistent volume claim |
 | pvc.storage | string | `"32Gi"` | Storage size for PVC |
+| pvc.storageClassCreationEnabled | bool | `true` | Creating a new storage class for the PVC - defaults to true for backwards compatibility |
 | pvc.storageClassName | string | `"azurefile"` | Storage class name for PVC |
 | replicaCount | int | `1` |  |
 | resources | object | `{}` |  |
