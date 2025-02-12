@@ -90,6 +90,8 @@ pvc:
   # name: my-volume
   # -- Storage class name for PVC
   storageClassName: azurefile
+  # -- Creating a new storage class for the PVC - defaults to true for backwards compatibility
+  storageClassCreationEnabled: true
   # -- Access mode for PVC. Possible values: ReadWriteOnce, ReadOnlyMany, ReadWriteMany
   accessMode: ReadWriteMany
 
