@@ -4,6 +4,28 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: changed
+          description: "adding pvc.storageClassCreationEnabled to be able to disable storage class creation for PVCs"
+    apiVersion: v2
+    created: "2025-02-12T15:43:50.567145875Z"
+    description: 'The ''ai-service'' chart is a "convenience" chart from Unique AG
+      that can generically be used to deploy simple AI workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: e937d3981c1f0229fb556af356cf5741aa6cb3f0a8894b1a4553276bc4a0f223
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: ai-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/ai-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/ai-service-1.2.3/ai-service-1.2.3.tgz
+    version: 1.2.3
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: changed
           description: "artifactsCache.readOnly allows to set the readWrite mode for the created volume"
         - kind: changed
           description: "initContainers test and ci templates added"
@@ -1263,4 +1285,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-02-11T10:43:06.65327453Z"
+generated: "2025-02-12T15:43:50.567260919Z"
