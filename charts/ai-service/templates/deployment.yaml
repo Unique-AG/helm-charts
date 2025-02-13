@@ -59,6 +59,25 @@ spec:
           {{- with .volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ $fullName }}-env
+            {{- if $.Values.envSecrets }}
+            - secretRef:
+                name: {{ $fullName }}-secrets
+            {{- end }}
+            {{- if $.Values.extraEnvCM }}
+            {{- range $v := $.Values.extraEnvCM }}
+            - configMapRef:
+                name: {{ $v }}
+            {{- end }}
+            {{- end }}
+            {{- if $.Values.extraEnvSecrets }}
+            {{- range $v := $.Values.extraEnvSecrets }}
+            - secretRef:
+                name: {{ $v }}
+            {{- end }}
+            {{- end }}
       {{- end }}
       {{- end }}
       {{- if and .Values.artifactsCache.enabled .Values.artifactsCache.artifacts }}
@@ -100,6 +119,25 @@ spec:
           volumeMounts:
             - name: artifacts-cache-volume
               mountPath: /artifacts
+          envFrom:
+            - configMapRef:
+                name: {{ $fullName }}-env
+            {{- if .Values.envSecrets }}
+            - secretRef:
+                name: {{ $fullName }}-secrets
+            {{- end }}
+            {{- if .Values.extraEnvCM }}
+            {{- range $v := .Values.extraEnvCM }}
+            - configMapRef:
+                name: {{ $v }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.extraEnvSecrets }}
+            {{- range $v := .Values.extraEnvSecrets }}
+            - secretRef:
+                name: {{ $v }}
+            {{- end }}
+            {{- end }}
       {{- end }}
       containers:
         - name: {{ include "common.fullname" . }}
