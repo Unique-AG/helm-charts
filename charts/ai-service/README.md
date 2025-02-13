@@ -39,7 +39,7 @@ For these reasons, we follow industry good practices by loading immutable models
 
 There is two ways to pre-load/cache models or larger artifacts:
 
-1. Custom `initContainer`
+1. [Custom `initContainer`](#custom-initcontainer)
     + It has shown the most self-hosting clients have such a custom setup, that this method is to be preferred, especially when there is no internet access.
 1. [Convenience Cache `artifactsCache`](#convenience-cache-artifactscache)
 
@@ -63,6 +63,13 @@ This example:
     …
     MODEL_PATH: "/artifacts/docling-models"
     EASYOCR_MODULE_PATH: "/artifacts/docling-models/"
+    AWS_CA_BUNDLE: "/opt/ca-certs.crt"
+
+  envSecrets:
+    AWS_ACCESS_KEY_ID: ${filled_by_ci}
+    AWS_SECRET_ACCESS_KEY: ${filled_by_ci}
+    AWS_DEFAULT_REGION: ${filled_by_ci}
+    AWS_ENDPOINT_URL: ${filled_by_ci}
 
   volumes:
   - name: ca-certs
@@ -84,13 +91,6 @@ This example:
           - -ce
           - |
             echo "Checking and downloading artifact files if needed..."
-
-            # This is raw example where the CI interpolates the secrets, set environment variables from the values for a more secure or dynamic approach
-            # export AWS_ACCESS_KEY_ID=${filled_by_ci}
-            # export AWS_SECRET_ACCESS_KEY=${filled_by_ci}
-            # export AWS_DEFAULT_REGION=${filled_by_ci}
-            # export AWS_ENDPOINT_URL=${filled_by_ci}
-            # export AWS_CA_BUNDLE=/opt/ca-certs.crt
 
             cd /artifacts
 
