@@ -4,7 +4,7 @@ The 'ai-service' chart is a "convenience" chart from Unique AG that can generica
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 1.2.4](https://img.shields.io/badge/Version-1.2.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.2.5](https://img.shields.io/badge/Version-1.2.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,19 +12,134 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-ai-service unique/ai-service --version 1.2.4
+helm install my-ai-service unique/ai-service --version 1.2.5
 
 # or
-helm install my-ai-service oci://ghcr.io/unique-ag/helm-charts/ai-service --version 1.2.4
+helm install my-ai-service oci://ghcr.io/unique-ag/helm-charts/ai-service --version 1.2.5
 ```
 
 ### Docker Images
 The chart itself uses `ghcr.io/unique-ag/chart-testing-service` as its base image. This is due to automation aspects and because there is no specific `appVersion` or service delivered with it. Using `chart-testing-service` Unique can improve the charts quality without dealing with the complexity of private registries during testing. Naturally, when deploying the Unique product, the image will be replaced with the actual Unique image(s). You can inspect the image [here](https://github.com/Unique-AG/helm-charts/tree/main/docker) and it is served from [`ghcr.io/unique-ag/chart-testing-service`](https://github.com/Unique-AG/helm-charts/pkgs/container/chart-testing-service).
 
-### Artifacts Cache
+### Artifacts Caching
+Packing large language models (LLMs) directly into Docker images is not a scalable or efficient practice for several reasons, including potential security risks:
+
+**Image Size and Deployment**: Including large models in Docker images drastically increases their size, leading to slower build, transfer, and deployment times. This delays updates and consumes unnecessary storage resources across environments.
+
+**Resource Wastage**: Each time the model is updated, the entire image must be rebuilt and redeployed, even if the application code hasn't changed. This is inefficient and unnecessarily resource-intensive.
+
+**Security Risks**
+* **Exposure of Sensitive Data**: Embedding models directly in images increases the risk of accidental exposure, especially if the image is pushed to a public or insecure registry. Sensitive proprietary or licensed models may be leaked.
+* **Limited Model Access Control**: Using a centralized storage system for model loading allows granular access controls (e.g., authentication, encryption, audit trails). When packed into an image, these controls are harder to enforce.
+* **Immutable Images**: * Good practices for container security recommend keeping images immutable and limiting their contents to the application code and necessary dependencies. Packing models violates this principle, making images larger and harder to secure.
+**Flexibility and Maintainability**: By externalising models and loading them via a volume or centralized storage, we can independently manage, update, or replace them without impacting the application container. This approach also allows us to apply versioning, secure storage, and controlled access to the models.
+**Scalability**: Externalizing models supports shared storage and caching, reducing duplication across containers and enabling efficient scaling without bloating the infrastructure.
+
+For these reasons, we follow industry good practices by loading immutable models from a volume or secure storage. This approach ensures better security, resource efficiency, and operational flexibility.
+
+There is two ways to pre-load/cache models or larger artifacts:
+
+1. [Custom `initContainer`](#custom-initcontainer)
+    + It has shown the most self-hosting clients have such a custom setup, that this method is to be preferred, especially when there is no internet access.
+1. [Convenience Cache `artifactsCache`](#convenience-cache-artifactscache)
+
+#### Custom `initContainer`
+The custom `initContainer` is a bit more tricky to initally bootstrap but allows for the most flexibility.
+
+This example:
+
+1. Bootstraps a custom `initContainer`
+2. Creates a PVC to cache the artifacts using an **existing** StorageClass
+3. Authenticates with AWS S3 using a secret
+4. Uses a customer CA bundle to authenticate with the S3 bucket
+5. Downloads the specified files into the PVC or skips if already present
+
+<details>
+  <summary><code>values.yaml</code></summary>
+ 
+  ```yaml
+  …
+  env:
+    …
+    MODEL_PATH: "/artifacts/docling-models"
+    EASYOCR_MODULE_PATH: "/artifacts/docling-models/"
+    AWS_CA_BUNDLE: "/opt/ca-certs.crt"
+
+  envSecrets:
+    AWS_ACCESS_KEY_ID: ${filled_by_ci}
+    AWS_SECRET_ACCESS_KEY: ${filled_by_ci}
+    AWS_DEFAULT_REGION: ${filled_by_ci}
+    AWS_ENDPOINT_URL: ${filled_by_ci}
+
+  volumes:
+  - name: ca-certs
+    secret:
+      secretName: ca-trustbundle
+  volumeMounts:
+  - name: ca-certs
+    mountPath: "/opt/ca-certs.crt"
+    subPath: ca.crt
+
+  deployment:
+    initContainers:
+      - name: download-artifacts-custom
+        image: amazon/aws-cli:2.24.1
+        command:
+          - /usr/bin/env
+        args:
+          - sh
+          - -ce
+          - |
+            echo "Checking and downloading artifact files if needed..."
+
+            cd /artifacts
+
+            download_if_missing() {
+              local file=$1
+              local url=$2
+              if [ ! -f "$file" ]; then
+                echo "Downloading $file..."
+                for i in 1 2 3; do
+                  aws s3 cp "$url" "$file"
+                  if [ -f "$file" ]; then
+                    echo "$file downloaded successfully"
+                    return 0
+                  fi
+                  echo "Attempt $i failed, retrying..."
+                  sleep 5
+                done
+                echo "Failed to download $file after 3 attempts"
+                return 1
+              else
+                echo "$file already exists, skipping download"
+              fi
+            }
+
+            download_if_missing "docling-models/config.json" "s3://BUCKET_NAME/models/docling-models/config.json" && \
+            download_if_missing "docling-models/model_artifacts/layout/config.json" "s3://BUCKET_NAME/models/docling-models/model_artifacts/layout/config.json" && \
+            download_if_missing "docling-models/model_artifacts/layout/preprocessor_config.json" "s3://BUCKET_NAME/models/docling-models/model_artifacts/layout/preprocessor_config.json"
+            …
+            echo "Download finished"
+        volumeMounts:
+          - name: artifacts-cache
+            mountPath: /artifacts
+            readOnly: false
+          - name: ca-certs
+            mountPath: "/opt/ca-certs.crt"
+            subPath: ca.crt
+  pvc:
+    enabled: true
+    name: artifacts-cache
+    storage: 30Gi
+    storageClassCreationEnabled: false # the SA already exists
+    storageClassName: ${filled_by_ci}
+  ```
+</details>
+
+#### Convenience Cache `artifactsCache`
 The artifacts cache provides a mechanism to pre-download and persist files (like ML models) that your service needs. It creates a shared PersistentVolumeClaim that can be accessed by multiple pods, making the files available without needing to download them for each pod.
 
-#### Configuration
+##### Configuration
 Enable the artifacts cache and specify the files to download in your values.yaml:
 
 ```yaml
@@ -41,7 +156,7 @@ artifactsCache:
       path: /models/model2
 ```
 
-#### How it works
+##### How it works
 When enabled, the chart will:
 1. Create a PersistentVolumeClaim for storing the artifacts
     + If you want to use an existing PVC, use the `pvc` section instead and disable the `artifactsCache` option
@@ -53,7 +168,7 @@ The downloader supports:
 - Skip downloading if file already exists
 - Custom destination paths within the cache
 
-#### Example Use Cases
+##### Example Use Cases
 Common uses include:
 - Pre-downloading ML models
 - Caching large data files

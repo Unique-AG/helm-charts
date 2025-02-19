@@ -7,12 +7,14 @@ maintainers:
 name: ai-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/ai-service
-version: 1.2.4
+version: 1.2.5
 description: |
   The 'ai-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy simple AI workloads to Kubernetes.
 
   Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 annotations:
   artifacthub.io/changes: |
-    - kind: changed
-      description: "initContainers.volumeMounts now are specified out, using toYaml"
+    - kind: added
+      description: "Extensive example on how to run highly custom artifacts downloader"
+    - kind: added
+      description: "All initContainers now allow setting environment variables via the same values as the deployment itself"

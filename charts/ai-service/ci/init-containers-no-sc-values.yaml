@@ -1,4 +1,4 @@
-env:
+envSecrets:
   AWS_ACCESS_KEY_ID: example-key-id
   AWS_SECRET_ACCESS_KEY: abcdefghijklmnopqrstuvwxyz1234567890
   AWS_DEFAULT_REGION: eu-west-2
