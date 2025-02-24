@@ -7,7 +7,7 @@ release:
 tests:
   - it: When given extra labels, it should add them to the service
     values:
-      - ../ci/service-extra-labels.yaml
+      - ../ci/service-extra-labels-values.yaml
     template: service.yaml
     asserts:
       - isKind:
