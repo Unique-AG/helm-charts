@@ -2,6 +2,7 @@
 suite: Test HTTPRoute
 templates:
   - service-extra-labels.yaml
+  - service.yaml
 release:
   name: ecj
 tests:
