@@ -179,6 +179,7 @@ You can find a `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](
 | securityContext.runAsNonRoot | bool | `true` | runAsNonRoot, controls if the container must run as a non-root user, defaults to 'true' |
 | securityContext.runAsUser | int | `1000` | runAsUser, controls the user ID that runs the container, defaults to '1000' |
 | service.enabled | bool | `true` |  |
+| service.extraLabels | object | `{}` |  |
 | service.port | int | `80` |  |
 | service.type | string | `"ClusterIP"` |  |
 | serviceAccount.annotations | object | `{}` |  |
