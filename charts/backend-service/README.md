@@ -4,7 +4,7 @@ The 'backend-service' chart is a "convenience" chart from Unique AG that can gen
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 3.2.0](https://img.shields.io/badge/Version-3.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 3.3.0](https://img.shields.io/badge/Version-3.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 3.2.0
+helm install my-backend-service unique/backend-service --version 3.3.0
 
 # or
-helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 3.2.0
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 3.3.0
 ```
 
 ### Docker Images
@@ -179,6 +179,7 @@ You can find a `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](
 | securityContext.runAsNonRoot | bool | `true` | runAsNonRoot, controls if the container must run as a non-root user, defaults to 'true' |
 | securityContext.runAsUser | int | `1000` | runAsUser, controls the user ID that runs the container, defaults to '1000' |
 | service.enabled | bool | `true` |  |
+| service.extraLabels | object | `{}` | extraLabels allows you to add additional labels to the service e.g. {"foo": "bar"} |
 | service.port | int | `80` |  |
 | service.type | string | `"ClusterIP"` |  |
 | serviceAccount.annotations | object | `{}` |  |

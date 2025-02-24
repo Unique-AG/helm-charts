@@ -426,6 +426,8 @@ service:
   enabled: true
   type: ClusterIP
   port: 80
+  # -- extraLabels allows you to add additional labels to the service e.g. {"foo": "bar"}
+  extraLabels: {}
 
 serviceAccount:
   enabled: false
