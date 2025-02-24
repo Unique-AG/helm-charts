@@ -282,6 +282,29 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: added
+          description: "`extraLabels` to allow adding additional labels to the service."
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    created: "2025-02-24T14:54:33.577910702Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: 7af353b9e4928a0b8f0e02d8ccf42a43ad72392baf4ded8913a7677092840286
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-3.3.0/backend-service-3.3.0.tgz
+    version: 3.3.0
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: added
           description: "`keda` values to configure ScaledObject more dynamically."
       artifacthub.io/license: Apache-2.0
     apiVersion: v2
@@ -1353,4 +1376,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-02-20T10:29:51.846744651Z"
+generated: "2025-02-24T14:54:33.578139687Z"
