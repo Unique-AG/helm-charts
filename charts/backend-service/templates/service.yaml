@@ -5,10 +5,8 @@ metadata:
   name: {{ include "backendService.fullname" . }}
   labels:
     {{- include "backendService.labels" . | nindent 4 }}
-    {{- if .Values.service.extraLabels }}
-      {{- range $key, $value := .Values.service.extraLabels }}
-        {{ $key }}: {{ $value }}
-      {{- end }}
+    {{- with .Values.service.extraLabels }}
+    {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
   type: {{ .Values.service.type }}
