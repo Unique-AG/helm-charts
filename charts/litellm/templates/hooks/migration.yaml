@@ -65,7 +65,7 @@ spec:
               value: "false" #  always run the migration from the Helm PreSync hook, override the value set
           envFrom:
             - configMapRef:
-                name: {{ $fullName }}-environment
+                name: {{ $fullName }}-migration-env
             {{- if .Values.secretFrom }}
             - secretRef:
                 name: {{ .Values.secretFrom.name }}
