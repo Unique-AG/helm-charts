@@ -47,7 +47,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ default "db-migration" .Values.hooks.migration.name | quote }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default (printf "main-%s" .Chart.AppVersion) }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default (printf "litellm_stable_release_branch-%s" .Chart.AppVersion) }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - /bin/sh

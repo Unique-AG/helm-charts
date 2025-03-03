@@ -5,8 +5,8 @@ maintainers:
   - name: unique-ag
     url: https://unique.ch/
 type: application
-version: 1.61.20
-appVersion: litellm_stable_release_branch-v1.61.20-stable
+version: 1.61.21
+appVersion: v1.61.20-stable
 description: |
   The 'litellm' chart provides a solution for deploying LiteLLM proxy with helm.
 
@@ -16,6 +16,4 @@ description: |
 annotations:
   artifacthub.io/changes: |
     - kind: changed
-      description: bumped litellm version to 1.61.20
-    - kind: changed
-      description: added extra config for migration
+      description: fixed image tag prefix
