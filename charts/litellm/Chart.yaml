@@ -5,8 +5,8 @@ maintainers:
   - name: unique-ag
     url: https://unique.ch/
 type: application
-version: 1.63.2
-appVersion: v1.63.2-stable
+version: 1.63.11
+appVersion: v1.63.11-stable
 description: |
   The 'litellm' chart provides a solution for deploying LiteLLM proxy with helm.
 
@@ -16,4 +16,4 @@ description: |
 annotations:
   artifacthub.io/changes: |
     - kind: changed
-      description: bump to 1.63.2
+      description: bump to 1.63.11
