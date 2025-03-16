@@ -815,6 +815,26 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: changed
+          description: bump to 1.63.11
+    apiVersion: v2
+    appVersion: v1.63.11-stable
+    created: "2025-03-16T17:36:31.850926682Z"
+    description: 'The ''litellm'' chart provides a solution for deploying LiteLLM
+      proxy with helm.  It is a refined version of the original [litellm](https://github.com/BerriAI/litellm/tree/main/deploy/charts/litellm-helm)
+      chart.  The chart version is synced with the app version. '
+    digest: da4d7eafff05569504399e7fd77ecfc3afad7f74039996fce92481efdc06283b
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: litellm
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/litellm-1.63.11/litellm-1.63.11.tgz
+    version: 1.63.11
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: changed
           description: bump to 1.63.2
     apiVersion: v2
     appVersion: v1.63.2-stable
@@ -1438,4 +1458,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-03-10T18:24:42.251523149Z"
+generated: "2025-03-16T17:36:31.851045464Z"
