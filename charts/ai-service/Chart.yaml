@@ -7,7 +7,7 @@ maintainers:
 name: ai-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/ai-service
-version: 1.2.6
+version: 1.2.7
 description: |
   The 'ai-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy simple AI workloads to Kubernetes.
 
@@ -15,4 +15,4 @@ description: |
 annotations:
   artifacthub.io/changes: |
     - kind: fixed
-      description: "Removed initContainer volumeMounts from the containers"
+      description: "userAssignedIdentityID no longer renders to null/empty but is omitted when not given."
