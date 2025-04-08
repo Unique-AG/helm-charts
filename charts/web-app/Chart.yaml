@@ -5,7 +5,7 @@ maintainers:
   - name: unique-ag
     url: https://unique.ch/
 name: web-app
-version: 3.1.0
+version: 4.0.0
 description: |
   The 'web-app' chart is a "convenience" chart from Unique AG that can generically be used to deploy web-content serving workloads to Kubernetes.
 
@@ -14,5 +14,7 @@ sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/web-app
 annotations:
   artifacthub.io/changes: |
-    - kind: added
-      description: "'extraObjects' allows you to add additional Kubernetes objects to the manifests. It is the responsibility of the user to ensure that the objects are valid, that they do not conflict with the existing objects and that they are not containing any sensitive information."
+    - kind: changed
+      description: "⚠️ Default deployment strategy is now 'Recreate' instead of 'RollingUpdate'. Refer to the readmes upgrade section for more information."
+    - kind: changed
+      description: "⚠️ Matching the deployment strategy PDBs are now disabled by default. Refer to the readmes upgrade section for more information."

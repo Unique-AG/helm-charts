@@ -4,7 +4,7 @@ The 'web-app' chart is a "convenience" chart from Unique AG that can generically
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 3.1.0](https://img.shields.io/badge/Version-3.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 4.0.0](https://img.shields.io/badge/Version-4.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-web-app unique/web-app --version 3.1.0
+helm install my-web-app unique/web-app --version 4.0.0
 
 # or
-helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 3.1.0
+helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 4.0.0
 ```
 
 ### Docker Images
@@ -77,7 +77,7 @@ Only one root route per cluster (technically per hostname) should be deployed to
 | imagePullSecrets | list | `[]` |  |
 | nameOverride | string | `""` |  |
 | nodeSelector | object | `{}` |  |
-| pdb.maxUnavailable | string | `"30%"` |  |
+| pdb | object | `{}` | Pod Disruption Budget The default deployment strategy is `Recreate` which is not compatible with PDBs (keep _x_ replicas). Refer to the readmes upgrade guide ~> 4.0.0 to learn why the charts defaults to pod disruptions. |
 | podAnnotations | object | `{}` |  |
 | podSecurityContext | object | `{}` |  |
 | probes.enabled | bool | `true` |  |
@@ -110,7 +110,7 @@ Only one root route per cluster (technically per hostname) should be deployed to
 | serviceAccount.annotations | object | `{}` |  |
 | serviceAccount.enabled | bool | `false` |  |
 | serviceAccount.name | string | `""` |  |
-| strategy.type | string | `"RollingUpdate"` |  |
+| strategy | object | `{"type":"Recreate"}` | Refer to the readmes upgrade guide ~> 4.0.0 to learn why the charts defaults to `Recreate`. |
 | tolerations | list | `[]` |  |
 
 ## Upgrade Guides

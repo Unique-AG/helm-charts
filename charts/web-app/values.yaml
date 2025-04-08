@@ -72,8 +72,9 @@ imagePullSecrets: []
 
 nodeSelector: {}
 
-pdb:
-  maxUnavailable: 30%
+# -- Pod Disruption Budget
+# The default deployment strategy is `Recreate` which is not compatible with PDBs (keep _x_ replicas). Refer to the readmes upgrade guide ~> 4.0.0 to learn why the charts defaults to pod disruptions.
+pdb: {}
 
 podAnnotations: {}
 
@@ -166,8 +167,8 @@ secretProvider: {}
 #     vault-name-2:
 #       MY_ENV_VARIABLE_2: keyvault-secret-name-b
 
-# Experimental `Recreate` update to short-term solve the caching issue, UN-6692
+# -- Refer to the readmes upgrade guide ~> 4.0.0 to learn why the charts defaults to `Recreate`.
 strategy:
-  type: RollingUpdate # or `Recreate`
+  type: Recreate
 
 tolerations: []
