@@ -115,6 +115,11 @@ Only one root route per cluster (technically per hostname) should be deployed to
 
 ## Upgrade Guides
 
+### ~> 4.0.0
+
+- Default deployment strategy is now `Recreate` instead of `RollingUpdate`. Most of Unique current web-apps use NextJS under the hood, where the statically served HTML serves a static StyleSheet. During `RollingUpdate` deployments this will lead to visually broken apps as the browser requests a style-sheet that only exists on partial pods. To mitigate this issue Unique since long switched to a `Recreate` strategy. This change to the chart now defalts this.
+- Pod Disruption Budgets are now disabled by default. `Recreate` (replace all replicas at once) are not compatible with PDBs (keep _x_ replicas). While Unique is aware that this is not a zero-downtime approach client surveys for the time being show that short interruptions are preferred over a breaking application especially since most production deployments are made outside business hours or in maintenance windows.
+
 ### ~> 3.0.0
 
 - `routes` uses `camelCase` for its keys, replace all `lower_snake_case` keys with `camelCase`
