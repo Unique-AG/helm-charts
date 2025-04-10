@@ -73,7 +73,7 @@ imagePullSecrets: []
 nodeSelector: {}
 
 pdb:
-  maxUnavailable: 30%
+  maxUnavailable: 1
 
 podAnnotations: {}
 
