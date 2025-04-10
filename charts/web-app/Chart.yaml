@@ -15,4 +15,6 @@ sources:
 annotations:
   artifacthub.io/changes: |
     - kind: changed
-      description: "Set the default amount of maximum unavailable pods to 1 explictly, instead of relying on percentage."
+      description: "Default replica count to 2, fostering a more resilient deployment."
+    - kind: changed
+      description: "Improve simple pod disruption budget and adapt it to current deployment strategy and replica count."
