@@ -1,6 +1,5 @@
 nameOverride: ""
 fullnameOverride: ""
-replicaCount: 1
 
 affinity: {}
 
@@ -72,8 +71,11 @@ imagePullSecrets: []
 
 nodeSelector: {}
 
+# -- Define the pod disruption budget for this deployment
+# Is templated as YAML so all kuberentes native types are supported
 pdb:
-  maxUnavailable: 30%
+  # -- This setting matches the charts default replica count, make sure to adapt your PDB if you chose a different sizing of your deployment
+  minAvailable: 1
 
 podAnnotations: {}
 
@@ -113,6 +115,10 @@ serviceAccount:
   enabled: false
   annotations: {}
   name: ""
+
+# -- Basic replica count of the deployment
+# make sure to adapt all sizing related values if you change this (e.g. the Pod Disruption Budget `pdb`)
+replicaCount: 2
 
 # -- routes is a special object designed for Unique web-apps. It abstracts a lot of complexity and allows for a simple configuration of routes.
 # ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong. If you are using a different API Gateway, you will need to use `extraRoutes`.

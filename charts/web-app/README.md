@@ -4,7 +4,7 @@ The 'web-app' chart is a "convenience" chart from Unique AG that can generically
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 3.1.0](https://img.shields.io/badge/Version-3.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 3.2.0](https://img.shields.io/badge/Version-3.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-web-app unique/web-app --version 3.1.0
+helm install my-web-app unique/web-app --version 3.2.0
 
 # or
-helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 3.1.0
+helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 3.2.0
 ```
 
 ### Docker Images
@@ -77,7 +77,8 @@ Only one root route per cluster (technically per hostname) should be deployed to
 | imagePullSecrets | list | `[]` |  |
 | nameOverride | string | `""` |  |
 | nodeSelector | object | `{}` |  |
-| pdb.maxUnavailable | string | `"30%"` |  |
+| pdb | object | `{"minAvailable":1}` | Define the pod disruption budget for this deployment Is templated as YAML so all kuberentes native types are supported |
+| pdb.minAvailable | int | `1` | This setting matches the charts default replica count, make sure to adapt your PDB if you chose a different sizing of your deployment |
 | podAnnotations | object | `{}` |  |
 | podSecurityContext | object | `{}` |  |
 | probes.enabled | bool | `true` |  |
@@ -87,7 +88,7 @@ Only one root route per cluster (technically per hostname) should be deployed to
 | probes.readiness.httpGet.path | string | `"/api/health"` |  |
 | probes.readiness.httpGet.port | string | `"http"` |  |
 | probes.readiness.initialDelaySeconds | int | `5` |  |
-| replicaCount | int | `1` |  |
+| replicaCount | int | `2` | Basic replica count of the deployment make sure to adapt all sizing related values if you change this (e.g. the Pod Disruption Budget `pdb`) |
 | resources | object | `{}` |  |
 | rollingUpdate.maxSurge | int | `1` |  |
 | rollingUpdate.maxUnavailable | int | `0` |  |
