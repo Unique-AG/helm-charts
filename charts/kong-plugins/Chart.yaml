@@ -17,4 +17,4 @@ description: |
 annotations:
   artifacthub.io/changes: |
     - kind: changed
-      description: pass the user_id if present to the validate endpoint to allow for user scoped API tokens to harden security
+      description: "the app repo middleware/plugin now optionally accepts a user_id as header forwarded by Kong to scope an app to a specific user"
