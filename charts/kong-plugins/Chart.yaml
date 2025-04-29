@@ -17,6 +17,4 @@ description: |
 annotations:
   artifacthub.io/changes: |
     - kind: changed
-      description: helmignore tests and readme templates
-    - kind: changed
-      description: pass the user_id if present to the validate endpoint
+      description: pass the user_id if present to the validate endpoint to allow for user scoped API tokens to harden security
