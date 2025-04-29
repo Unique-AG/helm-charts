@@ -154,11 +154,17 @@ local function set_anonymous_consumer(anonymous)
     set_consumer(consumer)
 end
 
-local function validate_api_key(app_repository_url, app_id, company_id, token)
+local function validate_api_key(app_repository_url, app_id, company_id, token, user_id)
     local httpc = http.new()
 
-    local path = string.format("/api-keys/validate?company-id=%s&app-id=%s&api-key=%s", ngx.escape_uri(company_id),
-        ngx.escape_uri(app_id), ngx.escape_uri(token))
+    local path
+    if user_id then
+        path = string.format("/api-keys/validate?company-id=%s&app-id=%s&user-id=%s&api-key=%s",
+            ngx.escape_uri(company_id), ngx.escape_uri(app_id), ngx.escape_uri(user_id), ngx.escape_uri(token))
+    else
+        path = string.format("/api-keys/validate?company-id=%s&app-id=%s&api-key=%s",
+            ngx.escape_uri(company_id), ngx.escape_uri(app_id), ngx.escape_uri(token))
+    end
 
     local res, err = httpc:request_uri(app_repository_url .. path, {
         method = "GET"
@@ -209,6 +215,8 @@ local function do_authentication(conf)
     local request_headers = kong.request.get_headers()
     local app_id = request_headers["x-app-id"]
     local company_id = request_headers["x-company-id"]
+    local user_id = request_headers["x-user-id"]
+
     if not app_id or not company_id then
         return false, {
             status = 401,
@@ -216,9 +224,9 @@ local function do_authentication(conf)
         }
     end
 
-    kong.log.info("app_repository_url: " .. conf.app_repository_url .. " app_id: " .. app_id .. " company_id: " .. company_id)
+    kong.log.info("app_repository_url: " .. conf.app_repository_url .. " app_id: " .. app_id .. " company_id: " .. company_id .. " user_id: " .. user_id)
 
-    if validate_api_key(conf.app_repository_url, app_id, company_id, token) then
+    if validate_api_key(conf.app_repository_url, app_id, company_id, token, user_id) then
         return true
     end
 
