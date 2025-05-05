@@ -799,6 +799,30 @@ entries:
   kong-plugins:
   - annotations:
       artifacthub.io/changes: |
+        - kind: added
+          description: "jwks_uri can now be specified as config.jwks_uri option which will implicitly disable the well-known endpoint lookup for the JWKS endpoint"
+        - kind: added
+          description: "Key request to jwks_uri can now be decorated using additional headers passed in config.jwks_extra_headers"
+        - kind: added
+          description: "Well-known request can now be decorated using additional headers passed in config.well_known_extra_headers"
+    apiVersion: v2
+    created: "2025-05-05T12:16:12.853750536Z"
+    description: 'The ''kong-plugins'' chart provides a streamlined solution for deploying
+      Kong plugins via ConfigMaps to be used with the Unique Software.  Refer to each
+      plugins readme section to learn more about them.  Please report any security
+      concerns with the plugins via the [Security Policy](https://github.com/Unique-AG/helm-charts/tree/main?tab=security-ov-file). '
+    digest: 516ff9db0fdb2ffbcc3766e11bedaa3832a3b1bdc84fa9a841084f16c643f9f5
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: kong-plugins
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/kong-plugins-1.2.0/kong-plugins-1.2.0.tgz
+    version: 1.2.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: changed
           description: "the app repo middleware/plugin now optionally accepts a user_id as header forwarded by Kong to scope an app to a specific user"
     apiVersion: v2
@@ -1589,4 +1613,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-04-29T13:21:27.371557795Z"
+generated: "2025-05-05T12:16:12.85389692Z"
