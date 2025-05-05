@@ -59,7 +59,7 @@ local schema = {
                 }
             }, {
                 anonymous = {
-                    -- description = "An optional string (consumer UUID or username) value to use as an �anonymous� consumer if authentication fails.",
+                    -- description = "An optional string (consumer UUID or username) value to use as an anonymous consumer if authentication fails.",
                     type = "string"
                 }
             }, {
@@ -93,6 +93,27 @@ local schema = {
                 well_known_template = {
                     type = "string",
                     default = "%s/.well-known/openid-configuration"
+                }
+            }, {
+                jwks_uri = {
+                    -- description = "Directly configure the JWKS URI, bypassing the well-known endpoint discovery.",
+                    type = "string"
+                }
+            }, {
+                well_known_extra_headers = {
+                    -- description = "Extra headers to send for the .well-known request.",
+                    type = "map",
+                    keys = { type = "string" },
+                    values = { type = "string" },
+                    default = {}
+                }
+            }, {
+                jwks_extra_headers = {
+                    -- description = "Extra headers to send for the jwks_uri request.",
+                    type = "map",
+                    keys = { type = "string" },
+                    values = { type = "string" },
+                    default = {}
                 }
             }, {
                 zitadel_project_id = {

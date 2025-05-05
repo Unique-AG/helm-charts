@@ -62,9 +62,9 @@ end
 -- custom helper function of the extended plugin "unique-jwt-auth"
 -- --> this is not contained in the official "jwt" pluging
 -------------------------------------------------------------------------------
-local function custom_helper_issuer_get_keys(well_known_endpoint)
+local function custom_helper_issuer_get_keys(well_known_endpoint, conf)
     kong.log.debug('Getting public keys from token issuer')
-    local keys, err = zitadel_keys.get_issuer_keys(well_known_endpoint)
+    local keys, err = zitadel_keys.get_issuer_keys(well_known_endpoint, conf)
     if err then
         return nil, err
     end
@@ -90,7 +90,7 @@ local function custom_validate_token_signature(conf, jwt, second_call)
 
     local well_known_endpoint = zitadel_keys.get_wellknown_endpoint(conf.well_known_template, jwt.claims.iss)
     -- Retrieve public keys
-    local public_keys, err = kong.cache:get(issuer_cache_key, nil, custom_helper_issuer_get_keys, well_known_endpoint)
+    local public_keys, err = kong.cache:get(issuer_cache_key, nil, custom_helper_issuer_get_keys, well_known_endpoint, conf)
 
     if not public_keys then
         if err then
@@ -117,7 +117,7 @@ local function custom_validate_token_signature(conf, jwt, second_call)
         -- can it be that the signature key of the issuer has changed ... ?
         -- invalidate the old keys in kong cache and do a current lookup to the signature keys
         -- of the token issuer
-        kong.cache:invalidate_local(issuer_cache_key)
+        kong.cache:invalidate(issuer_cache_key)
         return custom_validate_token_signature(conf, jwt, true)
     end
 

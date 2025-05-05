@@ -6,23 +6,30 @@ local function get_wellknown_endpoint(well_known_template, issuer)
     return string.format(well_known_template, issuer)
 end
 
-local function get_issuer_keys(well_known_endpoint)
+local function get_issuer_keys(well_known_endpoint, conf)
     local httpc = http.new()
+    local jwks_uri = conf.jwks_uri
 
-    local res, err = httpc:request_uri(well_known_endpoint, {
-        method = "GET"
-    })
-    if err then
-        return nil, err
+    if not jwks_uri then
+        local res, err = httpc:request_uri(well_known_endpoint, {
+            method = "GET",
+            headers = conf.well_known_extra_headers or {}
+        })
+        if err then
+            return nil, err
+        end
+    
+        local body_table, err = cjson.decode(res.body)
+        if err then
+            return nil, err
+        end
+
+        jwks_uri = body_table['jwks_uri']
     end
 
-    local body_table, err = cjson.decode(res.body)
-    if err then
-        return nil, err
-    end
-
-    local res, err = httpc:request_uri(body_table['jwks_uri'], {
-        method = "GET"
+    local res, err = httpc:request_uri(jwks_uri, {
+        method = "GET",
+        headers = conf.jwks_extra_headers or {}
     })
     if err then
         return nil, err
