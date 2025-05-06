@@ -304,6 +304,29 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: fixed
+          description: "Deployment.replicas is not set if keda is enabled."
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    created: "2025-05-06T12:13:06.183414739Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: cb2617550a64d8d434857682578708e2cf5b05dbb9ac9b42da16a3cd3f112a2b
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-3.3.2/backend-service-3.3.2.tgz
+    version: 3.3.2
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: fixed
           description: "userAssignedIdentityID no longer renders to null/empty but is omitted when not given."
       artifacthub.io/license: Apache-2.0
     apiVersion: v2
@@ -1613,4 +1636,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-05-05T12:16:12.85389692Z"
+generated: "2025-05-06T12:13:06.183704903Z"
