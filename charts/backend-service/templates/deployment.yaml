@@ -19,7 +19,7 @@ metadata:
   {{- end }}
 
 spec:
-  {{- if not (or .Values.autoscaling.enabled .Values.eventBasedAutoscaling.enabled) }}
+  {{- if not (or .Values.autoscaling.enabled .Values.eventBasedAutoscaling.enabled .Values.keda.enabled) }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
