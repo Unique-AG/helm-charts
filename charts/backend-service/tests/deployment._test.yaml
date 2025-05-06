@@ -12,7 +12,7 @@ tests:
       image.tag: pinned-version
       secretProvider.tenantId: 99330c76-81d2-460e-861e-35af8e2a4266
       secretProvider.vaults.qa-app-common.AMQP_URL: RABBITMQ-ORANGE-WOLF-URL
-        
+
     template: deployment.yaml
     asserts:
       - isKind:
@@ -68,7 +68,6 @@ tests:
           count: 1
           any: true
 
-
   - it: When given metadata in deployment
     set:
       tyk.listenPath: /unit-test
@@ -107,7 +106,7 @@ tests:
           - "-e"
           - "echo"
           - "helloWorld"
-        
+
     template: deployment.yaml
     asserts:
       - isKind:
@@ -124,3 +123,24 @@ tests:
           path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.mountPath == "/opt/folder")]
       - isNotNullOrEmpty:
           path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.readOnly == false)]
+
+  - it: When given a keda block, should not set replicas
+    set:
+      keda:
+        enabled: true
+        minReplicaCount: 0
+        maxReplicaCount: 4
+        scalers:
+          - type: rabbitmq
+            metadata:
+              protocol: amqp
+              queueName: example.queue
+              mode: QueueLength
+              value: "1"
+
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - notExists:
+          path: spec.replicas
