@@ -5,7 +5,7 @@ maintainers:
   - name: unique-ag
     url: https://unique.ch/
 name: kong-plugins
-version: 1.2.0
+version: 1.2.1
 description: |
   The 'kong-plugins' chart provides a streamlined solution for deploying Kong plugins via ConfigMaps to be used with the Unique Software.
 
@@ -14,9 +14,5 @@ description: |
   Please report any security concerns with the plugins via the [Security Policy](https://github.com/Unique-AG/helm-charts/tree/main?tab=security-ov-file).
 annotations:
   artifacthub.io/changes: |
-    - kind: added
-      description: "jwks_uri can now be specified as config.jwks_uri option which will implicitly disable the well-known endpoint lookup for the JWKS endpoint"
-    - kind: added
-      description: "Key request to jwks_uri can now be decorated using additional headers passed in config.jwks_extra_headers"
-    - kind: added
-      description: "Well-known request can now be decorated using additional headers passed in config.well_known_extra_headers"
+    - kind: fixed
+      description: "Set correct headers in the docs example for Cluster-internal JWT validation."
