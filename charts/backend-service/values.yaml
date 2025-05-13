@@ -220,8 +220,8 @@ keda:
   # -- idle replica count for the ScaledObject
   # Due to limitations in HPA controller, the only supported value is 0.
   # See: https://keda.sh/docs/2.14/concepts/scaling-deployments/#idlereplicacount
-  # When disabled, maintains at least minReplicaCount replicas even when idle.
-  idleScaleToZeroEnabled: false
+  # When not set, maintains at least minReplicaCount replicas even when idle.
+  # idleReplicaCount: 0
   # -- min replica count for the ScaledObject
   minReplicaCount: 1
   # -- max replica count for the ScaledObject
