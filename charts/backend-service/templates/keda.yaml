@@ -22,7 +22,9 @@ spec:
     name: {{ include "backendService.fullname" . }}
   pollingInterval: {{ .Values.keda.pollingInterval | default 30 }}
   cooldownPeriod: {{ .Values.keda.cooldownPeriod | default 300 }}
-  idleReplicaCount: {{ .Values.keda.idleReplicaCount | default 0 }}
+  {{- if .Values.keda.idleReplicaCount }}
+  idleReplicaCount: {{ .Values.keda.idleReplicaCount }}
+  {{- end }}
   minReplicaCount: {{ .Values.keda.minReplicaCount | default 1 }}
   maxReplicaCount: {{ .Values.keda.maxReplicaCount | default 10 }}
   # fallback and advanced are for now defaulting/omitted
