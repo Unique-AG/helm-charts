@@ -15,5 +15,5 @@ description: |
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
-    - kind: changed
-      description: "KEDA idleReplicaCount is now only set when explicitly configured, otherwise omitted."
+    - kind: fixed
+      description: "KEDA idleReplicaCount not allowing to have at least n pods running. It is now only set when explicitly configured, otherwise omitted. See https://keda.sh/docs/2.14/concepts/scaling-deployments/#idlereplicacount"
