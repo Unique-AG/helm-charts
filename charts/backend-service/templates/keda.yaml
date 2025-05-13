@@ -22,8 +22,8 @@ spec:
     name: {{ include "backendService.fullname" . }}
   pollingInterval: {{ .Values.keda.pollingInterval | default 30 }}
   cooldownPeriod: {{ .Values.keda.cooldownPeriod | default 300 }}
-  {{- if and (hasKey .Values.keda "idleReplicaCount") (ne .Values.keda.idleReplicaCount nil) }}
-  idleReplicaCount: {{ .Values.keda.idleReplicaCount }}
+  {{- if .Values.keda.idleScaleToZeroEnabled }}
+  idleReplicaCount: 0
   {{- end }}
   minReplicaCount: {{ .Values.keda.minReplicaCount | default 1 }}
   maxReplicaCount: {{ .Values.keda.maxReplicaCount | default 10 }}

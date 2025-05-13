@@ -219,9 +219,9 @@ keda:
   cooldownPeriod: 300
   # -- idle replica count for the ScaledObject
   # Due to limitations in HPA controller, the only supported value is 0.
-  # If you need to have at least n pods running, omit this value (by setting it to null).
   # See: https://keda.sh/docs/2.14/concepts/scaling-deployments/#idlereplicacount
-  idleReplicaCount: null
+  # When disabled, maintains at least minReplicaCount replicas even when idle.
+  idleScaleToZeroEnabled: false
   # -- min replica count for the ScaledObject
   minReplicaCount: 1
   # -- max replica count for the ScaledObject

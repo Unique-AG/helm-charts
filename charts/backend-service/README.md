@@ -4,7 +4,7 @@ The 'backend-service' chart is a "convenience" chart from Unique AG that can gen
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 3.4.0](https://img.shields.io/badge/Version-3.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 3.3.3](https://img.shields.io/badge/Version-3.3.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 3.4.0
+helm install my-backend-service unique/backend-service --version 3.3.3
 
 # or
-helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 3.4.0
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 3.3.3
 ```
 
 ### Docker Images
@@ -116,11 +116,11 @@ You can find a `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](
 | image.repository | string | `"ghcr.io/unique-ag/chart-testing-service"` | Repository, where the Unique service image is pulled from - for Unique internal deployments, these is the internal release repository - for client deployments, this will refer to the client's repository where the images have been mirrored too Note that it is bad practice and not advised to directly pull from Uniques release repository Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image |
 | image.tag | string | `"1.0.3"` | tag, most often will refer one of the latest release of the Unique service Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image |
 | imagePullSecrets | list | `[]` |  |
-| keda | object | `{"cooldownPeriod":300,"enabled":false,"extraAnnotations":{},"idleReplicaCount":null,"maxReplicaCount":10,"minReplicaCount":1,"paused":false,"pollingInterval":30,"scalers":[{"authenticationRef":{"name":"keda-trigger-auth-rabbitmq-conn"},"metadata":{"mode":"QueueLength","protocol":"amqp","queueName":"testqueue","value":"20"},"type":"rabbitmq"},{"metadata":{"desiredReplicas":"10","end":"0 20 * * *","start":"0 6 * * *","timezone":"Europe/Zurich"},"type":"cron"}]}` | keda allows you to enable KEDA for the chart `keda` and `eventBasedAutoscaling` are mutually exclusive. |
+| keda | object | `{"cooldownPeriod":300,"enabled":false,"extraAnnotations":{},"idleScaleToZeroEnabled":false,"maxReplicaCount":10,"minReplicaCount":1,"paused":false,"pollingInterval":30,"scalers":[{"authenticationRef":{"name":"keda-trigger-auth-rabbitmq-conn"},"metadata":{"mode":"QueueLength","protocol":"amqp","queueName":"testqueue","value":"20"},"type":"rabbitmq"},{"metadata":{"desiredReplicas":"10","end":"0 20 * * *","start":"0 6 * * *","timezone":"Europe/Zurich"},"type":"cron"}]}` | keda allows you to enable KEDA for the chart `keda` and `eventBasedAutoscaling` are mutually exclusive. |
 | keda.cooldownPeriod | int | `300` | cooldown period for the ScaledObject |
 | keda.enabled | bool | `false` | enable KEDA/ScaledObject for the chart |
 | keda.extraAnnotations | object | `{}` | extra annotations for the ScaledObject |
-| keda.idleReplicaCount | string | `nil` | idle replica count for the ScaledObject Due to limitations in HPA controller, the only supported value is 0. If you need to have at least n pods running, omit this value (by setting it to null). See: https://keda.sh/docs/2.14/concepts/scaling-deployments/#idlereplicacount |
+| keda.idleScaleToZeroEnabled | bool | `false` | idle replica count for the ScaledObject Due to limitations in HPA controller, the only supported value is 0. See: https://keda.sh/docs/2.14/concepts/scaling-deployments/#idlereplicacount When disabled, maintains at least minReplicaCount replicas even when idle. |
 | keda.maxReplicaCount | int | `10` | max replica count for the ScaledObject |
 | keda.minReplicaCount | int | `1` | min replica count for the ScaledObject |
 | keda.paused | bool | `false` | pause the ScaledObject |
