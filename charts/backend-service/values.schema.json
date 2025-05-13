@@ -1,0 +1,918 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "Backend Service Helm Chart Values",
+  "description": "Schema for the backend-service Helm chart values.yaml",
+  "type": "object",
+  "properties": {
+    "nameOverride": {
+      "type": "string",
+      "description": "Override the name of the chart"
+    },
+    "fullnameOverride": {
+      "type": "string",
+      "description": "Override the full name of the chart"
+    },
+    "replicaCount": {
+      "type": "integer",
+      "description": "Number of replicas",
+      "minimum": 0,
+      "examples": [1]
+    },
+    "affinity": {
+      "type": "object",
+      "description": "Kubernetes affinity rules"
+    },
+    "auditVolume": {
+      "type": "object",
+      "description": "Configuration for audit volume",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable audit volume",
+          "examples": [false]
+        },
+        "mountPath": {
+          "type": "string",
+          "description": "Mount path for audit volume",
+          "default": "/audit",
+          "examples": ["/audit"]
+        },
+        "capacity": {
+          "type": "string",
+          "description": "Capacity for audit volume",
+          "default": "1Ti",
+          "examples": ["1Ti"]
+        },
+        "attributes": {
+          "type": "object",
+          "description": "Additional attributes for audit volume",
+          "properties": {
+            "resourceGroup": {
+              "type": "string",
+              "description": "Azure resource group",
+              "examples": ["my-azure-resource-group"]
+            },
+            "storageAccount": {
+              "type": "string",
+              "description": "Azure storage account",
+              "examples": ["my-azure-storage-account"]
+            },
+            "containerName": {
+              "type": "string",
+              "description": "Azure container name"
+            }
+          },
+          "required": ["resourceGroup", "storageAccount"]
+        }
+      }
+    },
+    "autoscaling": {
+      "type": "object",
+      "description": "Horizontal pod autoscaling configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable autoscaling",
+          "examples": [false]
+        },
+        "minReplicas": {
+          "type": "integer",
+          "description": "Minimum number of replicas",
+          "minimum": 0,
+          "examples": [1]
+        },
+        "maxReplicas": {
+          "type": "integer",
+          "description": "Maximum number of replicas",
+          "minimum": 1,
+          "examples": [100]
+        },
+        "targetCPUUtilizationPercentage": {
+          "type": "integer",
+          "description": "Target CPU utilization percentage",
+          "minimum": 1,
+          "maximum": 100,
+          "examples": [80]
+        },
+        "targetMemoryUtilizationPercentage": {
+          "type": "integer",
+          "description": "Target Memory utilization percentage",
+          "minimum": 1,
+          "maximum": 100
+        }
+      }
+    },
+    "clusterInternalServiceSuffix": {
+      "type": "string",
+      "description": "Override the default '.svc.cluster.local' service address suffix"
+    },
+    "cronJob": {
+      "type": "object",
+      "description": "CronJob configuration",
+      "properties": {
+        "concurrencyPolicy": {
+          "type": "string",
+          "enum": ["Allow", "Forbid", "Replace"],
+          "description": "Concurrency policy for the cron job",
+          "examples": ["Allow"]
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable cron job",
+          "examples": [false]
+        },
+        "env": {
+          "type": "object",
+          "description": "Environment variables for the cron job"
+        },
+        "failedJobsHistoryLimit": {
+          "type": "integer",
+          "description": "Number of failed jobs to keep in history",
+          "minimum": 0,
+          "examples": [1]
+        },
+        "jobTemplate": {
+          "type": "object",
+          "description": "Job template configuration",
+          "examples": [{
+            "containers": {
+              "name": ""
+            },
+            "restartPolicy": "OnFailure"
+          }]
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the cron job"
+        },
+        "schedule": {
+          "type": "string",
+          "description": "Cron schedule expression"
+        },
+        "startingDeadlineSeconds": {
+          "type": "integer",
+          "description": "Starting deadline in seconds",
+          "minimum": 0,
+          "examples": [60]
+        },
+        "successfulJobsHistoryLimit": {
+          "type": "integer",
+          "description": "Number of successful jobs to keep in history",
+          "minimum": 0,
+          "examples": [1]
+        },
+        "suspend": {
+          "type": "boolean",
+          "description": "Suspend the cron job",
+          "examples": [false]
+        },
+        "timeZone": {
+          "type": "string",
+          "description": "Timezone for the cron job",
+          "examples": ["Europe/Zurich"]
+        }
+      }
+    },
+    "deployment": {
+      "type": "object",
+      "description": "Deployment configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable deployment",
+          "examples": [true]
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Metadata for the deployment"
+        }
+      }
+    },
+    "env": {
+      "type": "object",
+      "description": "Environment variables as a flat map"
+    },
+    "envSecrets": {
+      "type": "object",
+      "description": "Environment variables from secrets as a flat map"
+    },
+    "envVars": {
+      "type": "array",
+      "description": "Environment variables with Kubernetes native syntax"
+    },
+    "eventBasedAutoscaling": {
+      "type": "object",
+      "description": "Event-based autoscaling configuration (deprecated, use keda instead)",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable event-based autoscaling",
+          "examples": [false]
+        },
+        "minReplicaCount": {
+          "type": "integer",
+          "description": "Minimum number of replicas",
+          "minimum": 0,
+          "examples": [0]
+        },
+        "maxReplicaCount": {
+          "type": "integer",
+          "description": "Maximum number of replicas",
+          "minimum": 1,
+          "examples": [2]
+        },
+        "cron": {
+          "type": "object",
+          "description": "Cron-based autoscaling configuration",
+          "properties": {
+            "timezone": {
+              "type": "string",
+              "description": "Timezone for the cron schedule",
+              "examples": ["Europe/Zurich"]
+            },
+            "start": {
+              "type": "string",
+              "description": "Cron schedule for scaling up",
+              "examples": ["0 8 * * 1-5"]
+            },
+            "end": {
+              "type": "string",
+              "description": "Cron schedule for scaling down",
+              "examples": ["0 19 * * 1-5"]
+            },
+            "desiredReplicas": {
+              "type": "string",
+              "description": "Desired number of replicas during schedule",
+              "examples": ["1"]
+            }
+          }
+        },
+        "rabbitmq": {
+          "type": "object",
+          "description": "RabbitMQ-based autoscaling configuration",
+          "properties": {
+            "protocol": {
+              "type": "string",
+              "description": "Protocol for RabbitMQ connection",
+              "examples": ["auto"]
+            },
+            "mode": {
+              "type": "string",
+              "description": "Mode for RabbitMQ scaling",
+              "examples": ["QueueLength"]
+            },
+            "value": {
+              "type": "string",
+              "description": "Threshold value for scaling",
+              "examples": ["1"]
+            },
+            "hostFromEnv": {
+              "type": "string",
+              "description": "Environment variable containing the RabbitMQ host",
+              "examples": ["AMQP_URL"]
+            }
+          }
+        },
+        "customTriggers": {
+          "type": "array",
+          "description": "Custom scaling triggers"
+        }
+      }
+    },
+    "keda": {
+      "type": "object",
+      "description": "KEDA configuration for event-based scaling",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable KEDA",
+          "examples": [false]
+        },
+        "paused": {
+          "type": "boolean",
+          "description": "Pause the ScaledObject",
+          "examples": [false]
+        },
+        "extraAnnotations": {
+          "type": "object",
+          "description": "Extra annotations for ScaledObject"
+        },
+        "pollingInterval": {
+          "type": "integer",
+          "description": "Polling interval for the ScaledObject",
+          "minimum": 0,
+          "examples": [30]
+        },
+        "cooldownPeriod": {
+          "type": "integer",
+          "description": "Cooldown period for the ScaledObject",
+          "minimum": 1,
+          "examples": [300]
+        },
+        "idleReplicaCount": {
+          "type": "integer",
+          "description": "Idle replica count for the ScaledObject",
+          "minimum": 0
+        },
+        "minReplicaCount": {
+          "type": "integer",
+          "description": "Min replica count for the ScaledObject",
+          "minimum": 0,
+          "examples": [1]
+        },
+        "maxReplicaCount": {
+          "type": "integer",
+          "description": "Max replica count for the ScaledObject",
+          "minimum": 1,
+          "examples": [10]
+        },
+        "scalers": {
+          "type": "array",
+          "description": "Scalers for the ScaledObject",
+          "examples": [[
+            {
+              "type": "rabbitmq",
+              "metadata": {
+                "protocol": "amqp",
+                "queueName": "testqueue",
+                "mode": "QueueLength",
+                "value": "20"
+              },
+              "authenticationRef": {
+                "name": "keda-trigger-auth-rabbitmq-conn"
+              }
+            },
+            {
+              "type": "cron",
+              "metadata": {
+                "timezone": "Europe/Zurich",
+                "start": "0 6 * * *",
+                "end": "0 20 * * *",
+                "desiredReplicas": "10"
+              }
+            }
+          ]]
+        }
+      }
+    },
+    "externalSecrets": {
+      "type": "array",
+      "description": "External secrets configuration"
+    },
+    "extraEnvCM": {
+      "type": "array",
+      "description": "List of existing ConfigMaps to be loaded"
+    },
+    "extraEnvSecrets": {
+      "type": "array",
+      "description": "List of existing Secrets to be loaded"
+    },
+    "extraObjects": {
+      "type": "array",
+      "description": "Additional Kubernetes objects to add to the manifest"
+    },
+    "extraRoutes": {
+      "type": "object",
+      "description": "Additional gateway routes for the chart",
+      "examples": [{
+        "extra-route-1": {
+          "enabled": false,
+          "apiVersion": "gateway.networking.k8s.io/v1",
+          "kind": "HTTPRoute",
+          "annotations": {},
+          "labels": {},
+          "hostnames": [],
+          "parentRefs": [
+            {
+              "name": "kong",
+              "namespace": "kong-system",
+              "group": "gateway.networking.k8s.io",
+              "kind": "Gateway"
+            }
+          ],
+          "matches": [
+            {
+              "path": {
+                "type": "PathPrefix",
+                "value": "/"
+              }
+            }
+          ],
+          "filters": [],
+          "additionalRules": []
+        }
+      }]
+    },
+    "extraCronJobs": {
+      "type": "object",
+      "description": "Additional cron jobs beside 'cronJob' itself",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "concurrencyPolicy": {
+            "type": "string",
+            "enum": ["Allow", "Forbid", "Replace"],
+            "description": "Concurrency policy for the cron job",
+            "examples": ["Forbid"]
+          },
+          "env": {
+            "type": "object",
+            "description": "Environment variables specific to this cron job",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "examples": [{ "FOO": "BAR" }]
+          },
+          "envVars": {
+            "type": "array",
+            "description": "Environment variables with Kubernetes native syntax",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the environment variable"
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Value of the environment variable"
+                }
+              },
+              "required": ["name"]
+            },
+            "examples": [[
+              {
+                "name": "BAZ",
+                "value": "qux"
+              }
+            ]]
+          },
+          "failedJobsHistoryLimit": {
+            "type": "integer",
+            "description": "Number of failed jobs to keep in history",
+            "minimum": 0,
+            "examples": [3]
+          },
+          "restartPolicy": {
+            "type": "string",
+            "enum": ["Never", "OnFailure"],
+            "description": "Restart policy for the job",
+            "examples": ["Never"]
+          },
+          "schedule": {
+            "type": "string",
+            "description": "Cron schedule expression",
+            "examples": ["0 0 1 1 *"]
+          },
+          "startingDeadlineSeconds": {
+            "type": "integer",
+            "description": "Starting deadline in seconds",
+            "minimum": 0,
+            "examples": [600]
+          },
+          "successfulJobsHistoryLimit": {
+            "type": "integer",
+            "description": "Number of successful jobs to keep in history",
+            "minimum": 0,
+            "examples": [3]
+          },
+          "suspend": {
+            "type": "boolean",
+            "description": "Suspend the cron job",
+            "examples": [false]
+          },
+          "timeZone": {
+            "type": "string",
+            "description": "Timezone for the cron job",
+            "examples": ["Europe/Zurich"]
+          }
+        }
+      },
+      "examples": [{
+        "foo": {
+          "concurrencyPolicy": "Forbid",
+          "env": {
+            "FOO": "BAR"
+          },
+          "envVars": [
+            {
+              "name": "BAZ",
+              "value": "qux"
+            }
+          ],
+          "failedJobsHistoryLimit": 3,
+          "restartPolicy": "Never",
+          "schedule": "0 0 1 1 *",
+          "startingDeadlineSeconds": 600,
+          "successfulJobsHistoryLimit": 3,
+          "suspend": false,
+          "timeZone": "Europe/Zurich"
+        }
+      }]
+    },
+    "hooks": {
+      "type": "object",
+      "description": "Hooks configuration",
+      "properties": {
+        "migration": {
+          "type": "object",
+          "description": "Migration hook configuration",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable migration hook",
+              "examples": [false]
+            },
+            "command": {
+              "type": "string",
+              "description": "Command to run for migration"
+            }
+          }
+        }
+      }
+    },
+    "image": {
+      "type": "object",
+      "description": "Container image configuration",
+      "properties": {
+        "repository": {
+          "type": "string",
+          "description": "Repository for the image",
+          "examples": ["ghcr.io/unique-ag/chart-testing-service"]
+        },
+        "tag": {
+          "type": "string",
+          "description": "Tag for the image",
+          "examples": ["1.0.3"]
+        },
+        "pullPolicy": {
+          "type": "string",
+          "enum": ["Always", "IfNotPresent", "Never"],
+          "description": "Image pull policy",
+          "examples": ["IfNotPresent"]
+        }
+      },
+      "required": ["repository", "tag"]
+    },
+    "imagePullSecrets": {
+      "type": "array",
+      "description": "Image pull secrets"
+    },
+    "pdb": {
+      "type": "object",
+      "description": "Pod Disruption Budget configuration",
+      "properties": {
+        "maxUnavailable": {
+          "description": "Maximum number of unavailable pods",
+          "oneOf": [
+            { "type": "string" },
+            { "type": "integer", "minimum": 0 }
+          ],
+          "examples": ["30%"]
+        }
+      }
+    },
+    "podAnnotations": {
+      "type": "object",
+      "description": "Pod annotations"
+    },
+    "podSecurityContext": {
+      "type": "object",
+      "description": "Pod security context",
+      "examples": [{
+        "seccompProfile": {
+          "type": "RuntimeDefault"
+        }
+      }]
+    },
+    "ports": {
+      "type": "object",
+      "description": "Port configuration",
+      "properties": {
+        "application": {
+          "type": "integer",
+          "description": "Application port",
+          "minimum": 1,
+          "maximum": 65535,
+          "examples": [8080]
+        },
+        "service": {
+          "type": "integer",
+          "description": "Service port",
+          "minimum": 1,
+          "maximum": 65535,
+          "examples": [80]
+        }
+      }
+    },
+    "probes": {
+      "type": "object",
+      "description": "Kubernetes probe configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable probes",
+          "examples": [true]
+        },
+        "liveness": {
+          "type": "object",
+          "description": "Liveness probe configuration",
+          "examples": [{
+            "httpGet": {
+              "path": "/probe",
+              "port": "http"
+            },
+            "initialDelaySeconds": 10,
+            "periodSeconds": 5,
+            "failureThreshold": 6
+          }]
+        },
+        "readiness": {
+          "type": "object",
+          "description": "Readiness probe configuration",
+          "examples": [{
+            "httpGet": {
+              "path": "/probe",
+              "port": "http"
+            },
+            "initialDelaySeconds": 10,
+            "periodSeconds": 5,
+            "failureThreshold": 6
+          }]
+        },
+        "startup": {
+          "type": "object",
+          "description": "Startup probe configuration",
+          "examples": [{
+            "httpGet": {
+              "path": "/probe",
+              "port": "http"
+            },
+            "initialDelaySeconds": 10,
+            "failureThreshold": 30,
+            "periodSeconds": 10
+          }]
+        }
+      }
+    },
+    "nodeSelector": {
+      "type": "object",
+      "description": "Node selector for pod placement"
+    },
+    "prometheus": {
+      "type": "object",
+      "description": "Prometheus configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable Prometheus",
+          "examples": [false]
+        },
+        "team": {
+          "type": "string",
+          "description": "Team for alert routing"
+        },
+        "rules": {
+          "type": "object",
+          "description": "Prometheus rules"
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "description": "CPU/Memory resource requests/limits"
+    },
+    "rollingUpdate": {
+      "type": "object",
+      "description": "Rolling update configuration",
+      "properties": {
+        "maxSurge": {
+          "description": "Maximum number of pods that can be created over the desired number",
+          "oneOf": [
+            { "type": "string" },
+            { "type": "integer", "minimum": 0 }
+          ],
+          "examples": [1]
+        },
+        "maxUnavailable": {
+          "description": "Maximum number of pods that can be unavailable during the update",
+          "oneOf": [
+            { "type": "string" },
+            { "type": "integer", "minimum": 0 }
+          ],
+          "examples": [0]
+        }
+      }
+    },
+    "routes": {
+      "type": "object",
+      "description": "Routes configuration for Unique services",
+      "properties": {
+        "hostname": {
+          "type": "string",
+          "description": "Hostname for the route",
+          "examples": ["chart-testing-service.example.com"]
+        },
+        "gateway": {
+          "type": "object",
+          "description": "Gateway configuration",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Name of the gateway",
+              "examples": ["kong"]
+            },
+            "namespace": {
+              "type": "string",
+              "description": "Namespace of the gateway",
+              "examples": ["system"]
+            }
+          }
+        },
+        "pathPrefix": {
+          "type": "string",
+          "description": "Default prefix for all paths",
+          "examples": [""]
+        },
+        "paths": {
+          "type": "object",
+          "description": "Path configurations",
+          "examples": [{
+            "default": {
+              "enabled": false,
+              "blockList": ["/metrics"],
+              "extraAnnotations": []
+            },
+            "versioned": {
+              "enabled": false,
+              "pathOverride": "/public",
+              "extraAnnotations": []
+            },
+            "scoped": {
+              "enabled": false,
+              "pathOverride": "/scoped",
+              "allowList": ["/upload"],
+              "extraAnnotations": []
+            },
+            "probe": {
+              "enabled": false,
+              "probePath": "/probe",
+              "extraAnnotations": []
+            }
+          }]
+        }
+      }
+    },
+    "secretProvider": {
+      "type": "object",
+      "description": "Secret provider configuration for Azure Key Vault"
+    },
+    "securityContext": {
+      "type": "object",
+      "description": "Container security context",
+      "properties": {
+        "allowPrivilegeEscalation": {
+          "type": "boolean",
+          "description": "Allow privilege escalation",
+          "examples": [false]
+        },
+        "readOnlyRootFilesystem": {
+          "type": "boolean",
+          "description": "Read-only root filesystem",
+          "examples": [true]
+        },
+        "runAsNonRoot": {
+          "type": "boolean",
+          "description": "Run as non-root user",
+          "examples": [true]
+        },
+        "runAsUser": {
+          "type": "integer",
+          "description": "User ID to run as",
+          "minimum": 0,
+          "examples": [1000]
+        }
+      }
+    },
+    "service": {
+      "type": "object",
+      "description": "Kubernetes service configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable service",
+          "examples": [true]
+        },
+        "type": {
+          "type": "string",
+          "enum": ["ClusterIP", "NodePort", "LoadBalancer", "ExternalName"],
+          "description": "Service type",
+          "examples": ["ClusterIP"]
+        },
+        "port": {
+          "type": "integer",
+          "description": "Service port",
+          "minimum": 1,
+          "maximum": 65535,
+          "examples": [80]
+        },
+        "extraLabels": {
+          "type": "object",
+          "description": "Extra labels for the service"
+        }
+      }
+    },
+    "serviceAccount": {
+      "type": "object",
+      "description": "Service account configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable service account",
+          "examples": [false]
+        },
+        "annotations": {
+          "type": "object",
+          "description": "Service account annotations"
+        },
+        "name": {
+          "type": "string",
+          "description": "Service account name"
+        },
+        "workloadIdentity": {
+          "type": "object",
+          "description": "Workload identity configuration"
+        }
+      }
+    },
+    "tolerations": {
+      "type": "array",
+      "description": "Tolerations for pod placement"
+    },
+    "tyk": {
+      "type": "object",
+      "description": "Tyk API Gateway configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable Tyk API Gateway",
+          "examples": [false]
+        },
+        "listenPath": {
+          "type": "string",
+          "description": "Listen path for Tyk API Gateway",
+          "examples": ["/unsert_default_path"]
+        },
+        "jwtSource": {
+          "type": "string",
+          "description": "JWT source URL",
+          "examples": ["https://id.unique.app/oauth/v2/keys"]
+        },
+        "rateLimit": {
+          "type": "object",
+          "description": "Rate limit configuration"
+        },
+        "exposePublicApi": {
+          "type": "object",
+          "description": "Public API exposure configuration",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable public API exposure",
+              "examples": [false]
+            }
+          }
+        },
+        "scopedApi": {
+          "type": "object",
+          "description": "Scoped API configuration",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable scoped API",
+              "examples": [false]
+            }
+          }
+        },
+        "blockList": {
+          "type": "array",
+          "description": "Block list of paths and methods",
+          "examples": [[
+            {
+              "methods": ["GET"],
+              "path": "/metrics"
+            }
+          ]]
+        }
+      }
+    },
+    "volumeMounts": {
+      "type": "array",
+      "description": "Volume mounts"
+    },
+    "volumes": {
+      "type": "array",
+      "description": "Volumes"
+    }
+  }
+} 

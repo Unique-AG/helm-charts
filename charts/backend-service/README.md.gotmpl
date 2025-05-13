@@ -73,7 +73,14 @@ Routes do not redirect to HTTPS by default. This redirect must be handled in the
 
 You can find a `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/extra-cronjobs-values.yaml) file.
 
-{{ template "chart.valuesSection" . }}
+## JSON Schema
+
+The chart provides a JSON schema for validating values.yaml files. This schema helps with:
+- Validating values against the expected structure
+- Providing IDE hints and autocompletion when editing values.yaml files
+- Documenting the accepted values and their types
+
+The schema is available in the `values.schema.json` file in the chart.
 
 ## Upgrade Guides
 

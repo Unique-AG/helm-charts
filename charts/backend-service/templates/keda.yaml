@@ -20,13 +20,26 @@ metadata:
 spec:
   scaleTargetRef:
     name: {{ include "backendService.fullname" . }}
-  pollingInterval: {{ .Values.keda.pollingInterval | default 30 }}
-  cooldownPeriod: {{ .Values.keda.cooldownPeriod | default 300 }}
+  {{- if hasKey .Values.keda "pollingInterval" }}
+  pollingInterval: {{ .Values.keda.pollingInterval }}
+  {{- end }}
+  {{- if hasKey .Values.keda "cooldownPeriod" }}
+  cooldownPeriod: {{ .Values.keda.cooldownPeriod }}
+  {{- end }}
   {{- if hasKey .Values.keda "idleReplicaCount" }}
   idleReplicaCount: {{ .Values.keda.idleReplicaCount }}
   {{- end }}
-  minReplicaCount: {{ .Values.keda.minReplicaCount | default 1 }}
-  maxReplicaCount: {{ .Values.keda.maxReplicaCount | default 10 }}
+  {{- if hasKey .Values.keda "minReplicaCount" }}
+  minReplicaCount: {{ .Values.keda.minReplicaCount }}
+  {{- else }}
+  minReplicaCount: 1
+  {{- end }}
+  {{- if hasKey .Values.keda "maxReplicaCount" }}
+  maxReplicaCount: {{ .Values.keda.maxReplicaCount }}
+  {{- else }}
+  maxReplicaCount: 10
+  {{- end }}
+
   # fallback and advanced are for now defaulting/omitted
   triggers:
   {{- if not .Values.keda.scalers }}
