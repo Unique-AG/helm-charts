@@ -16,8 +16,6 @@ annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
     - kind: fixed
-      description: "KEDA idleReplicaCount not allowing to have at least n pods running. It is now only set when explicitly configured, otherwise omitted. See https://keda.sh/docs/2.14/concepts/scaling-deployments/#idlereplicacount"
-    - kind: fixed
       description: "KEDA minReplicaCount, cooldownPeriod, maxReplicaCount, idleReplicaCount, pollingInterval can be set to 0"
     - kind: fixed
       description: "Make tests configuration compliant with newer KEDA versions"
