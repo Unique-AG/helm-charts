@@ -225,7 +225,7 @@ keda:
   # -- min replica count for the ScaledObject
   minReplicaCount: 1
   # -- max replica count for the ScaledObject
-  maxReplicaCount: 10
+  maxReplicaCount: 4
   # -- scalers for the ScaledObject
   # You can specify multiple scalers for the ScaledObject as outlined in https://keda.sh/docs/2.14/scalers/
   scalers: []
