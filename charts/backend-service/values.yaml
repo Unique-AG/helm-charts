@@ -158,8 +158,8 @@ extraRoutes:
     additionalRules: []
 
 # -- extraCronJobs allows you to define additional cron jobs besides 'cronJob' itself.
-extraCronJobs: []
-  # - name: foo
+extraCronJobs: {}
+  #   - foo
   #   suspend: false
   #   schedule: "0 0 1 1 *"
   #   timeZone: "Europe/Zurich"
@@ -218,34 +218,37 @@ keda:
   # -- cooldown period for the ScaledObject
   cooldownPeriod: 300
   # -- idle replica count for the ScaledObject
-  idleReplicaCount: 0
+  # Due to limitations in HPA controller, the only supported value is 0.
+  # See: https://keda.sh/docs/2.14/concepts/scaling-deployments/#idlereplicacount
+  # When not set, maintains at least minReplicaCount replicas even when idle.
+  # idleReplicaCount: 0
   # -- min replica count for the ScaledObject
   minReplicaCount: 1
   # -- max replica count for the ScaledObject
-  maxReplicaCount: 10
+  maxReplicaCount: 4
   # -- scalers for the ScaledObject
   # You can specify multiple scalers for the ScaledObject as outlined in https://keda.sh/docs/2.14/scalers/
-  scalers:
-    # -- rabbitmq example
-    - type: rabbitmq
-      metadata:
-        protocol: amqp
-        queueName: testqueue
-        mode: QueueLength
-        value: "20"
-      # -- authenticationRef for the ScaledObject
-      # Note that the TriggerAuthentication resource must be created separately
-      authenticationRef:
-        name: keda-trigger-auth-rabbitmq-conn
-    # -- cron example
-    - type: cron
-      metadata:
-        # -- The acceptable values would be a value from the IANA Time Zone Database.
-        timezone: Europe/Zurich
-        start: 0 6 * * *
-        end: 0 20 * * *
-        # -- desired replicas for the ScaledObject
-        desiredReplicas: "10"
+  scalers: []
+    # # -- rabbitmq example
+    # - type: rabbitmq
+    #   metadata:
+    #     protocol: amqp
+    #     queueName: testqueue
+    #     mode: QueueLength
+    #     value: "20"
+    #   # -- authenticationRef for the ScaledObject
+    #   # Note that the TriggerAuthentication resource must be created separately
+    #   authenticationRef:
+    #     name: keda-trigger-auth-rabbitmq-conn
+    # # -- cron example
+    # - type: cron
+    #   metadata:
+    #     # -- The acceptable values would be a value from the IANA Time Zone Database.
+    #     timezone: Europe/Zurich
+    #     start: 0 6 * * *
+    #     end: 0 20 * * *
+    #     # -- desired replicas for the ScaledObject
+    #     desiredReplicas: "10"
 
 pdb:
   maxUnavailable: 30%

@@ -1,6 +1,6 @@
 eventBasedAutoscaling:
   enabled: true
-  minReplicaCount: 0
+  minReplicaCount: 1
   maxReplicaCount: 2
   cron:
     timezone: Europe/Zurich
@@ -18,3 +18,6 @@ eventBasedAutoscaling:
       metricType: Utilization
       metadata:
         value: "60"
+resources:
+  requests:
+    cpu: "100m"

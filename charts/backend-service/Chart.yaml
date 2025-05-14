@@ -7,7 +7,7 @@ maintainers:
 name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
-version: 3.3.2
+version: 3.4.0
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
 
@@ -16,4 +16,8 @@ annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
     - kind: fixed
-      description: "Deployment.replicas is not set if keda is enabled."
+      description: "KEDA minReplicaCount, cooldownPeriod, maxReplicaCount, idleReplicaCount, pollingInterval can be set to 0"
+    - kind: fixed
+      description: "Make tests configuration compliant with newer KEDA versions"
+    - kind: added
+      description: "Chart values are now validated against a JSON schema"

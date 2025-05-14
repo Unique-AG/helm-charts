@@ -1,4 +1,4 @@
-This `ci` older is a hidden feature very badly documented.
+This `ci` folder is a hidden feature very badly documented.
 
 All `*-values.yaml` files will be once deployed using the `ct install` action automatically.
 
