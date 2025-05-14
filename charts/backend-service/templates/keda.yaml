@@ -37,7 +37,7 @@ spec:
   {{- if hasKey .Values.keda "maxReplicaCount" }}
   maxReplicaCount: {{ .Values.keda.maxReplicaCount }}
   {{- else }}
-  maxReplicaCount: 10
+  maxReplicaCount: 4
   {{- end }}
 
   # fallback and advanced are for now defaulting/omitted
