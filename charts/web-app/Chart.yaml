@@ -5,7 +5,7 @@ maintainers:
   - name: unique-ag
     url: https://unique.ch/
 name: web-app
-version: 3.2.0
+version: 3.2.1
 description: |
   The 'web-app' chart is a "convenience" chart from Unique AG that can generically be used to deploy web-content serving workloads to Kubernetes.
 
@@ -14,7 +14,5 @@ sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/web-app
 annotations:
   artifacthub.io/changes: |
-    - kind: changed
-      description: "Default replica count to 2, fostering a more resilient deployment."
-    - kind: changed
-      description: "Improve simple pod disruption budget and adapt it to current deployment strategy and replica count."
+    - kind: added
+      description: "Define schema for the values file"
