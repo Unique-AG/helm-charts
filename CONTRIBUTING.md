@@ -124,6 +124,16 @@ The linting can be invoked manually with the following command:
 
 Refer to [LOCAL.md](./LOCAL.md) for instructions on how to test charts locally as this is not mandatory for a Contribution. The CI will take care that the charts in their default version are always installable.
 
+### Testing charts in ArgoCD
+If you are running ArgoCD and want to test changes from a particular branch in your running infrastructure, you can point ArgoCD directly to the repository, e.g. for `ai-service` chart
+```
+spec:
+  sources:
+    - repoURL: https://github.com/Unique-AG/helm-charts.git
+      path: charts/ai-service/
+      targetRevision: feat/UN-11292-security-hardening
+```
+
 ## Publishing Changes
 
 Changes are automatically publish whenever a commit is merged to the `main` branch by the CI job (see `./.github/workflows/publish.yml`).
