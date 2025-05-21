@@ -35,7 +35,7 @@ jobs:
     -
       name: Read version file
       id: version
-      uses: juliangruber/read-file-action@v1
+      uses: juliangruber/read-file-action@b549046febe0fe86f8cb4f93c24e284433f9ab58 #v1.1.7
       with:
         path: docker/.version
 
