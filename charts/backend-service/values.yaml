@@ -424,6 +424,10 @@ securityContext:
   runAsNonRoot: true
   # -- runAsUser, controls the user ID that runs the container, defaults to '1000'
   runAsUser: 1000
+  # -- capabilities section controls the Linux capabilities for the container
+  capabilities:
+    drop:
+    - ALL
 
 service:
   enabled: true

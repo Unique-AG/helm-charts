@@ -4,7 +4,7 @@ The 'web-app' chart is a "convenience" chart from Unique AG that can generically
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 3.2.0](https://img.shields.io/badge/Version-3.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 4.0.0](https://img.shields.io/badge/Version-4.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-web-app unique/web-app --version 3.2.0
+helm install my-web-app unique/web-app --version 4.0.0
 
 # or
-helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 3.2.0
+helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 4.0.0
 ```
 
 ### Docker Images
@@ -80,7 +80,8 @@ Only one root route per cluster (technically per hostname) should be deployed to
 | pdb | object | `{"minAvailable":1}` | Define the pod disruption budget for this deployment Is templated as YAML so all kuberentes native types are supported |
 | pdb.minAvailable | int | `1` | This setting matches the charts default replica count, make sure to adapt your PDB if you chose a different sizing of your deployment |
 | podAnnotations | object | `{}` |  |
-| podSecurityContext | object | `{}` |  |
+| podSecurityContext | object | `{"seccompProfile":{"type":"RuntimeDefault"}}` | PodSecurityContext for the pod(s) |
+| podSecurityContext.seccompProfile | object | `{"type":"RuntimeDefault"}` | seccompProfile, controls the seccomp profile for the container, defaults to 'RuntimeDefault' |
 | probes.enabled | bool | `true` |  |
 | probes.liveness.httpGet.path | string | `"/api/health"` |  |
 | probes.liveness.httpGet.port | string | `"http"` |  |
@@ -102,10 +103,12 @@ Only one root route per cluster (technically per hostname) should be deployed to
 | routes.paths.root.enabled | bool | `false` | Whether the root route should be enabled |
 | routes.paths.root.redirectPath | string | defaults to the `pathPrefix` if enabled and omitted | The path to which the root should be redirected to ⚠️ This value must be a valid full path, not only the sub-path. A 302 redirect will be issued to this path (using full path replacement). |
 | secretProvider | object | `{}` |  |
-| securityContext.allowPrivilegeEscalation | bool | `false` |  |
-| securityContext.runAsNonRoot | bool | `true` |  |
-| securityContext.runAsUser | int | `1000` |  |
-| securityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
+| securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":1000}` | securityContext for the container(s) |
+| securityContext.allowPrivilegeEscalation | bool | `false` | AllowPrivilegeEscalation, controls if the container can gain more privileges than its parent process, defaults to 'false' |
+| securityContext.capabilities | object | `{"drop":["ALL"]}` | capabilities section controls the Linux capabilities for the container |
+| securityContext.readOnlyRootFilesystem | bool | `true` | readOnlyRootFilesystem, controls if the container has a read-only root filesystem, defaults to 'true' |
+| securityContext.runAsNonRoot | bool | `true` | runAsNonRoot, controls if the container must run as a non-root user, defaults to 'true' |
+| securityContext.runAsUser | int | `1000` | runAsUser, controls the user ID that runs the container, defaults to '1000' |
 | service.port | int | `3000` |  |
 | service.type | string | `"ClusterIP"` |  |
 | serviceAccount.annotations | object | `{}` |  |

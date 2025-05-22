@@ -79,7 +79,12 @@ pdb:
 
 podAnnotations: {}
 
-podSecurityContext: {}
+# -- PodSecurityContext for the pod(s)
+podSecurityContext:
+  # -- seccompProfile, controls the seccomp profile for the container, defaults to 'RuntimeDefault'
+  seccompProfile:
+    ## -- type, the type of seccomp profile to use, defaults to 'RuntimeDefault'
+    type: RuntimeDefault
 
 probes:
   enabled: true
@@ -100,12 +105,21 @@ rollingUpdate:
   maxSurge: 1
   maxUnavailable: 0
 
+
+# -- securityContext for the container(s)
 securityContext:
+  # -- AllowPrivilegeEscalation, controls if the container can gain more privileges than its parent process, defaults to 'false'
   allowPrivilegeEscalation: false
+  # -- readOnlyRootFilesystem, controls if the container has a read-only root filesystem, defaults to 'true'
+  readOnlyRootFilesystem: true
+  # -- runAsNonRoot, controls if the container must run as a non-root user, defaults to 'true'
   runAsNonRoot: true
+  # -- runAsUser, controls the user ID that runs the container, defaults to '1000'
   runAsUser: 1000
-  seccompProfile:
-    type: RuntimeDefault
+  # -- capabilities section controls the Linux capabilities for the container
+  capabilities:
+    drop:
+    - ALL
 
 service:
   type: ClusterIP

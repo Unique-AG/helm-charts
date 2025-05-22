@@ -1,0 +1,590 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "Web App Helm Chart Values",
+  "description": "Schema for the web-app Helm chart values.yaml",
+  "type": "object",
+  "properties": {
+    "nameOverride": {
+      "type": "string",
+      "description": "Override the name of the chart"
+    },
+    "fullnameOverride": {
+      "type": "string",
+      "description": "Override the full name of the chart"
+    },
+    "affinity": {
+      "type": "object",
+      "description": "Affinity rules for pod placement"
+    },
+    "autoscaling": {
+      "type": "object",
+      "description": "Horizontal Pod Autoscaler configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable autoscaling",
+          "examples": [false]
+        },
+        "minReplicas": {
+          "type": "integer",
+          "description": "Minimum number of replicas",
+          "minimum": 0,
+          "examples": [1]
+        },
+        "maxReplicas": {
+          "type": "integer",
+          "description": "Maximum number of replicas",
+          "minimum": 1,
+          "examples": [100]
+        },
+        "targetCPUUtilizationPercentage": {
+          "type": "integer",
+          "description": "Target CPU utilization percentage",
+          "minimum": 1,
+          "maximum": 100,
+          "examples": [80]
+        },
+        "targetMemoryUtilizationPercentage": {
+          "type": "integer",
+          "description": "Target memory utilization percentage",
+          "minimum": 1,
+          "maximum": 100,
+          "examples": [80]
+        }
+      }
+    },
+    "env": {
+      "type": "object",
+      "description": "Environment variables as key-value pairs"
+    },
+    "envSecrets": {
+      "type": "object",
+      "description": "Environment variables from secrets as key-value pairs"
+    },
+    "extraEnvCM": {
+      "type": "array",
+      "description": "List of existing ConfigMaps to be used as environment variables",
+      "items": {
+        "type": "string"
+      },
+      "examples": [["existing-configmap"]]
+    },
+    "extraEnvSecrets": {
+      "type": "array",
+      "description": "List of existing Secrets to be used as environment variables",
+      "items": {
+        "type": "string"
+      },
+      "examples": [["existing-secret"]]
+    },
+    "extraObjects": {
+      "type": "array",
+      "description": "Additional Kubernetes objects to add to the manifest",
+      "items": {
+        "type": "object"
+      }
+    },
+    "extraRoutes": {
+      "type": "object",
+      "description": "Configure additional gateway routes for the chart",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Enables or disables the route",
+            "examples": [false]
+          },
+          "apiVersion": {
+            "type": "string",
+            "description": "Set the route apiVersion",
+            "examples": ["gateway.networking.k8s.io/v1"]
+          },
+          "kind": {
+            "type": "string",
+            "description": "Set the route kind",
+            "enum": ["GRPCRoute", "HTTPRoute", "TCPRoute", "TLSRoute", "UDPRoute"],
+            "examples": ["HTTPRoute"]
+          },
+          "annotations": {
+            "type": "object",
+            "description": "Set the route annotations"
+          },
+          "labels": {
+            "type": "object",
+            "description": "Set the route labels"
+          },
+          "hostnames": {
+            "type": "array",
+            "description": "Add hostnames to the route, will be matched against the host header of the request",
+            "items": {
+              "type": "string"
+            }
+          },
+          "parentRefs": {
+            "type": "array",
+            "description": "Define the parent gateway(s) that the route will be associated with",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the gateway",
+                  "examples": ["kong"]
+                },
+                "namespace": {
+                  "type": "string",
+                  "description": "Namespace of the gateway",
+                  "examples": ["kong-system"]
+                },
+                "group": {
+                  "type": "string",
+                  "description": "API group of the gateway",
+                  "examples": ["gateway.networking.k8s.io"]
+                },
+                "kind": {
+                  "type": "string",
+                  "description": "Kind of the gateway",
+                  "examples": ["Gateway"]
+                }
+              }
+            }
+          },
+          "matches": {
+            "type": "array",
+            "description": "Match conditions to be applied to the route",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "Path match type",
+                      "enum": ["Exact", "PathPrefix", "RegularExpression"],
+                      "examples": ["PathPrefix"]
+                    },
+                    "value": {
+                      "type": "string",
+                      "description": "Path value to match",
+                      "examples": ["/"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "filters": {
+            "type": "array",
+            "description": "Filters define the filters that are applied to requests that match this rule",
+            "items": {
+              "type": "object"
+            }
+          },
+          "additionalRules": {
+            "type": "array",
+            "description": "Additional custom rules that can be added to the route",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "image": {
+      "type": "object",
+      "description": "Container image configuration",
+      "properties": {
+        "repository": {
+          "type": "string",
+          "description": "Repository for the image",
+          "examples": ["ghcr.io/unique-ag/chart-testing-service"]
+        },
+        "tag": {
+          "type": "string",
+          "description": "Tag for the image",
+          "examples": ["1.0.2"]
+        },
+        "pullPolicy": {
+          "type": "string",
+          "enum": ["Always", "IfNotPresent", "Never"],
+          "description": "Image pull policy",
+          "examples": ["IfNotPresent"]
+        }
+      },
+      "required": ["repository", "tag"]
+    },
+    "imagePullSecrets": {
+      "type": "array",
+      "description": "List of image pull secrets",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the image pull secret"
+          }
+        }
+      }
+    },
+    "nodeSelector": {
+      "type": "object",
+      "description": "Node selector for pod assignment"
+    },
+    "pdb": {
+      "type": "object",
+      "description": "Pod Disruption Budget configuration",
+      "properties": {
+        "minAvailable": {
+          "description": "Minimum number of pods that must be available",
+          "oneOf": [
+            { "type": "string" },
+            { "type": "integer", "minimum": 0 }
+          ],
+          "examples": [1]
+        }
+      }
+    },
+    "podAnnotations": {
+      "type": "object",
+      "description": "Annotations to add to the pod"
+    },
+    "podSecurityContext": {
+      "type": "object",
+      "description": "Pod security context configuration",
+      "properties": {
+        "seccompProfile": {
+          "type": "object",
+          "description": "Seccomp profile configuration",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Type of seccomp profile",
+              "enum": ["RuntimeDefault", "Localhost", "Unconfined"],
+              "examples": ["RuntimeDefault"]
+            }
+          }
+        }
+      },
+      "examples": [{
+        "seccompProfile": {
+          "type": "RuntimeDefault"
+        }
+      }]
+    },
+    "probes": {
+      "type": "object",
+      "description": "Health check probes configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable probes",
+          "examples": [true]
+        },
+        "liveness": {
+          "type": "object",
+          "description": "Liveness probe configuration",
+          "examples": [{
+            "httpGet": {
+              "path": "/api/health",
+              "port": "http"
+            },
+            "initialDelaySeconds": 5
+          }]
+        },
+        "readiness": {
+          "type": "object",
+          "description": "Readiness probe configuration",
+          "examples": [{
+            "httpGet": {
+              "path": "/api/health",
+              "port": "http"
+            },
+            "initialDelaySeconds": 5
+          }]
+        },
+        "startup": {
+          "type": "object",
+          "description": "Startup probe configuration"
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "description": "CPU/Memory resource requests/limits",
+      "properties": {
+        "limits": {
+          "type": "object",
+          "description": "Resource limits",
+          "properties": {
+            "cpu": {
+              "type": "string",
+              "description": "CPU limit",
+              "examples": ["1000m"]
+            },
+            "memory": {
+              "type": "string",
+              "description": "Memory limit",
+              "examples": ["1Gi"]
+            }
+          }
+        },
+        "requests": {
+          "type": "object",
+          "description": "Resource requests",
+          "properties": {
+            "cpu": {
+              "type": "string",
+              "description": "CPU request",
+              "examples": ["100m"]
+            },
+            "memory": {
+              "type": "string",
+              "description": "Memory request",
+              "examples": ["128Mi"]
+            }
+          }
+        }
+      }
+    },
+    "rollingUpdate": {
+      "type": "object",
+      "description": "Rolling update configuration for the deployment",
+      "properties": {
+        "maxSurge": {
+          "description": "Maximum number of pods that can be created over the desired number",
+          "oneOf": [
+            { "type": "string" },
+            { "type": "integer", "minimum": 0 }
+          ],
+          "examples": [1]
+        },
+        "maxUnavailable": {
+          "description": "Maximum number of pods that can be unavailable during the update",
+          "oneOf": [
+            { "type": "string" },
+            { "type": "integer", "minimum": 0 }
+          ],
+          "examples": [0]
+        }
+      }
+    },
+    "securityContext": {
+      "type": "object",
+      "description": "Container security context configuration",
+      "properties": {
+        "allowPrivilegeEscalation": {
+          "type": "boolean",
+          "description": "Allow privilege escalation",
+          "examples": [false]
+        },
+        "readOnlyRootFilesystem": {
+          "type": "boolean",
+          "description": "Read-only root filesystem",
+          "examples": [true]
+        },
+        "runAsNonRoot": {
+          "type": "boolean",
+          "description": "Run as non-root user",
+          "examples": [true]
+        },
+        "runAsUser": {
+          "type": "integer",
+          "description": "User ID to run as",
+          "minimum": 0,
+          "examples": [1000]
+        },
+        "capabilities": {
+          "type": "object",
+          "description": "Container capabilities configuration",
+          "properties": {
+            "drop": {
+              "type": "array",
+              "description": "Capabilities to drop",
+              "items": {
+                "type": "string"
+              },
+              "examples": [["ALL"]]
+            }
+          }
+        }
+      }
+    },
+    "service": {
+      "type": "object",
+      "description": "Kubernetes service configuration",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["ClusterIP", "NodePort", "LoadBalancer", "ExternalName"],
+          "description": "Service type",
+          "examples": ["ClusterIP"]
+        },
+        "port": {
+          "type": "integer",
+          "description": "Service port",
+          "minimum": 1,
+          "maximum": 65535,
+          "examples": [3000]
+        }
+      }
+    },
+    "serviceAccount": {
+      "type": "object",
+      "description": "Service account configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable service account creation",
+          "examples": [false]
+        },
+        "annotations": {
+          "type": "object",
+          "description": "Annotations to add to the service account"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the service account to use"
+        }
+      }
+    },
+    "replicaCount": {
+      "type": "integer",
+      "description": "Basic replica count of the deployment",
+      "minimum": 0,
+      "examples": [2]
+    },
+    "routes": {
+      "type": "object",
+      "description": "Special object designed for Unique web-apps to abstract Kong Gateway routes configuration",
+      "properties": {
+        "hostname": {
+          "type": "string",
+          "description": "Hostname of the route, will be matched against the host header of the request",
+          "examples": ["chart-testing-web-app.example.com"]
+        },
+        "gateway": {
+          "type": "object",
+          "description": "Gateway configuration",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Name of the gateway",
+              "examples": ["kong"]
+            },
+            "namespace": {
+              "type": "string",
+              "description": "Namespace of the gateway",
+              "examples": ["system"]
+            }
+          }
+        },
+        "pathPrefix": {
+          "type": "string",
+          "description": "Default prefix for all paths, defaults to the fullname of the service"
+        },
+        "paths": {
+          "type": "object",
+          "description": "Path configurations for routes",
+          "properties": {
+            "default": {
+              "type": "object",
+              "description": "Default path configuration",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Enable default path",
+                  "examples": [true]
+                },
+                "blockList": {
+                  "type": "array",
+                  "description": "Explicitly list paths to block",
+                  "items": {
+                    "type": "string"
+                  },
+                  "examples": [["/metrics"]]
+                },
+                "extraAnnotations": {
+                  "type": "array",
+                  "description": "Extra annotations for the default path",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "root": {
+              "type": "object",
+              "description": "Root route configuration",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Whether the root route should be enabled",
+                  "examples": [false]
+                },
+                "redirectPath": {
+                  "type": "string",
+                  "description": "The path to which the root should be redirected to"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "secretProvider": {
+      "type": "object",
+      "description": "Secret provider configuration for Azure Key Vault",
+      "properties": {
+        "tenantId": {
+          "type": "string",
+          "description": "Azure tenant ID"
+        },
+        "aadPodIdBinding": {
+          "type": "string",
+          "description": "AAD Pod Identity binding name",
+          "examples": ["keyvault"]
+        },
+        "vaults": {
+          "type": "object",
+          "description": "Azure Key Vault configuration",
+          "additionalProperties": {
+            "type": "object",
+            "description": "Key-value pairs of environment variable name to secret name",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "examples": [{
+            "vault-name-1": {
+              "MY_ENV_VARIABLE_1": "keyvault-secret-name-a"
+            },
+            "vault-name-2": {
+              "MY_ENV_VARIABLE_2": "keyvault-secret-name-b"
+            }
+          }]
+        }
+      }
+    },
+    "strategy": {
+      "type": "object",
+      "description": "Deployment strategy configuration",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["RollingUpdate", "Recreate"],
+          "description": "Type of deployment strategy",
+          "examples": ["RollingUpdate"]
+        }
+      }
+    },
+    "tolerations": {
+      "type": "array",
+      "description": "Tolerations for pod placement",
+      "items": {
+        "type": "object"
+      }
+    }
+  }
+}

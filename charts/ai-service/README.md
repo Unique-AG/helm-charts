@@ -4,7 +4,7 @@ The 'ai-service' chart is a "convenience" chart from Unique AG that can generica
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 1.2.7](https://img.shields.io/badge/Version-1.2.7-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 2.0.0](https://img.shields.io/badge/Version-2.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-ai-service unique/ai-service --version 1.2.7
+helm install my-ai-service unique/ai-service --version 2.0.0
 
 # or
-helm install my-ai-service oci://ghcr.io/unique-ag/helm-charts/ai-service --version 1.2.7
+helm install my-ai-service oci://ghcr.io/unique-ag/helm-charts/ai-service --version 2.0.0
 ```
 
 ### Docker Images
@@ -56,7 +56,7 @@ This example:
 
 <details>
   <summary><code>values.yaml</code></summary>
- 
+
   ```yaml
   …
   env:
@@ -196,19 +196,9 @@ Common uses include:
 | deployment | object | `{}` |  |
 | env | object | `{}` |  |
 | envSecrets | object | `{}` |  |
-| eventBasedAutoscaling.cron.desiredReplicas | string | `"1"` |  |
-| eventBasedAutoscaling.cron.end | string | `"0 19 * * 1-5"` |  |
-| eventBasedAutoscaling.cron.start | string | `"0 8 * * 1-5"` |  |
-| eventBasedAutoscaling.cron.timezone | string | `"Europe/Zurich"` |  |
-| eventBasedAutoscaling.customTriggers | list | `[]` |  |
-| eventBasedAutoscaling.enabled | bool | `true` |  |
+| eventBasedAutoscaling.enabled | bool | `false` |  |
 | eventBasedAutoscaling.maxReplicaCount | int | `8` |  |
 | eventBasedAutoscaling.minReplicaCount | int | `0` |  |
-| eventBasedAutoscaling.rabbitmq.hostFromEnv | string | `"AMQP_URL"` |  |
-| eventBasedAutoscaling.rabbitmq.mode | string | `"QueueLength"` |  |
-| eventBasedAutoscaling.rabbitmq.protocol | string | `"auto"` |  |
-| eventBasedAutoscaling.rabbitmq.queueName | string | `""` |  |
-| eventBasedAutoscaling.rabbitmq.value | string | `"1"` |  |
 | extraEnvCM | list | `[]` |  |
 | extraEnvSecrets | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
@@ -225,7 +215,8 @@ Common uses include:
 | nodeSelector | object | `{}` |  |
 | pdb.maxUnavailable | string | `"30%"` |  |
 | podAnnotations | object | `{}` |  |
-| podSecurityContext | object | `{}` |  |
+| podSecurityContext | object | `{"seccompProfile":{"type":"RuntimeDefault"}}` | PodSecurityContext for the pod(s) |
+| podSecurityContext.seccompProfile | object | `{"type":"RuntimeDefault"}` | seccompProfile, controls the seccomp profile for the container, defaults to 'RuntimeDefault' |
 | probes.enabled | bool | `false` |  |
 | probes.liveness.failureThreshold | int | `6` |  |
 | probes.liveness.httpGet.path | string | `"/probe"` |  |
@@ -253,7 +244,12 @@ Common uses include:
 | rollingUpdate.maxSurge | int | `1` |  |
 | rollingUpdate.maxUnavailable | int | `0` |  |
 | secretProvider | object | `{}` |  |
-| securityContext | object | `{}` |  |
+| securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":1000}` | securityContext for the container(s) |
+| securityContext.allowPrivilegeEscalation | bool | `false` | AllowPrivilegeEscalation, controls if the container can gain more privileges than its parent process, defaults to 'false' |
+| securityContext.capabilities | object | `{"drop":["ALL"]}` | capabilities section controls the Linux capabilities for the container |
+| securityContext.readOnlyRootFilesystem | bool | `true` | readOnlyRootFilesystem, controls if the container has a read-only root filesystem, defaults to 'true' |
+| securityContext.runAsNonRoot | bool | `true` | runAsNonRoot, controls if the container must run as a non-root user, defaults to 'true' |
+| securityContext.runAsUser | int | `1000` | runAsUser, controls the user ID that runs the container, defaults to '1000' |
 | service.port | int | `8081` |  |
 | service.type | string | `"ClusterIP"` |  |
 | serviceAccount.annotations | object | `{}` |  |
