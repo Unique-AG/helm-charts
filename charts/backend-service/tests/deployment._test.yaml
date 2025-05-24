@@ -144,3 +144,23 @@ tests:
           of: Deployment
       - notExists:
           path: spec.replicas
+
+  - it: When given pod labels and annotations
+    set:
+      image.tag: pinned-version
+      podLabels.app: test
+      podAnnotations.test: true
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - isNotNullOrEmpty:
+          path: spec.template.metadata.labels.app
+      - isNotNullOrEmpty:
+          path: spec.template.metadata.annotations.test
+      - equal:
+          path: spec.template.metadata.labels.app
+          value: test
+      - equal:
+          path: spec.template.metadata.annotations.test
+          value: true

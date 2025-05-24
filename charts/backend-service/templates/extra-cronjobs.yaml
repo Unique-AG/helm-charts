@@ -26,9 +26,19 @@ spec:
       template:
         metadata:
           labels:
+            {{- if $.Values.podLabels }}
+              {{- with $.Values.podLabels }}
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+            {{- end }}
             {{- $labelsCronJob | nindent 12 }}
             app.kubernetes.io/component: cron-job-extra-{{ $key }}
           annotations:
+            {{- if $.Values.podAnnotations }}
+              {{- with $.Values.podAnnotations }}
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+            {{- end }}
             {{- if $globalValues.envSecrets }}
             checksum/secrets: {{ include (print $.Chart.Name "/templates/secrets.yaml") . | sha256sum | trunc 8 | quote }}
             {{- end }}

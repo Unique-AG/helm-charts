@@ -27,7 +27,7 @@ tests:
       - isNotNullOrEmpty:
           path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.name == "ut-qa-app-common")]
 
-      
+
 
   - it: When given initContainers in cronjob
     set:
@@ -104,3 +104,25 @@ tests:
           path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.mountPath == "/opt/folder")]
       - isNotNullOrEmpty:
           path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.readOnly == false)]
+
+  - it: When given pod labels and annotations
+    set:
+      cronJob.enabled: true
+      cronJob.jobTemplate.containers.name: ut
+      image.tag: pinned-version
+      podLabels.app: test
+      podAnnotations.test: true
+    template: cronjob.yaml
+    asserts:
+      - isKind:
+          of: CronJob
+      - isNotNullOrEmpty:
+          path: spec.jobTemplate.spec.template.metadata.labels.app
+      - isNotNullOrEmpty:
+          path: spec.jobTemplate.spec.template.metadata.annotations.test
+      - equal:
+          path: spec.jobTemplate.spec.template.metadata.labels.app
+          value: test
+      - equal:
+          path: spec.jobTemplate.spec.template.metadata.annotations.test
+          value: true
