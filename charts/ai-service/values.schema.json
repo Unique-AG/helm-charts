@@ -3,6 +3,7 @@
   "title": "AI Service Helm Chart Values",
   "description": "Schema for the ai-service Helm chart values.yaml",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "replicaCount": {
       "type": "integer",
