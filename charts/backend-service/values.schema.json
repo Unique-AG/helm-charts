@@ -3,6 +3,7 @@
   "title": "Backend Service Helm Chart Values",
   "description": "Schema for the backend-service Helm chart values.yaml",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "nameOverride": {
       "type": "string",
@@ -576,6 +577,10 @@
       "type": "object",
       "description": "Pod annotations"
     },
+    "podLabels": {
+      "type": "object",
+      "description": "Pod labels"
+    },
     "podSecurityContext": {
       "type": "object",
       "description": "Pod security context",
@@ -915,4 +920,4 @@
       "description": "Volumes"
     }
   }
-} 
+}

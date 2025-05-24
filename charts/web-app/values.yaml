@@ -77,7 +77,11 @@ pdb:
   # -- This setting matches the charts default replica count, make sure to adapt your PDB if you chose a different sizing of your deployment
   minAvailable: 1
 
+# -- Define additional pod annotations for all the pods
 podAnnotations: {}
+
+# -- Define additional pod labels for all the pods
+podLabels: {}
 
 # -- PodSecurityContext for the pod(s)
 podSecurityContext:

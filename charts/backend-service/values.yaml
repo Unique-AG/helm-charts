@@ -253,7 +253,11 @@ keda:
 pdb:
   maxUnavailable: 30%
 
+# -- Define additional pod annotations for all the pods
 podAnnotations: {}
+
+# -- Define additional pod labels for all the pods
+podLabels: {}
 
 # -- PodSecurityContext for the pod(s)
 podSecurityContext:

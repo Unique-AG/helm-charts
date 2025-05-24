@@ -4,7 +4,7 @@ The 'web-app' chart is a "convenience" chart from Unique AG that can generically
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 4.0.0](https://img.shields.io/badge/Version-4.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 4.1.0](https://img.shields.io/badge/Version-4.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-web-app unique/web-app --version 4.0.0
+helm install my-web-app unique/web-app --version 4.1.0
 
 # or
-helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 4.0.0
+helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 4.1.0
 ```
 
 ### Docker Images
@@ -79,7 +79,8 @@ Only one root route per cluster (technically per hostname) should be deployed to
 | nodeSelector | object | `{}` |  |
 | pdb | object | `{"minAvailable":1}` | Define the pod disruption budget for this deployment Is templated as YAML so all kuberentes native types are supported |
 | pdb.minAvailable | int | `1` | This setting matches the charts default replica count, make sure to adapt your PDB if you chose a different sizing of your deployment |
-| podAnnotations | object | `{}` |  |
+| podAnnotations | object | `{}` | Define additional pod annotations for all the pods |
+| podLabels | object | `{}` | Define additional pod labels for all the pods |
 | podSecurityContext | object | `{"seccompProfile":{"type":"RuntimeDefault"}}` | PodSecurityContext for the pod(s) |
 | podSecurityContext.seccompProfile | object | `{"type":"RuntimeDefault"}` | seccompProfile, controls the seccomp profile for the container, defaults to 'RuntimeDefault' |
 | probes.enabled | bool | `true` |  |
