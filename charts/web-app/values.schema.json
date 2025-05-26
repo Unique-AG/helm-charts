@@ -520,11 +520,8 @@
                   "examples": [["/metrics"]]
                 },
                 "extraAnnotations": {
-                  "type": "array",
-                  "description": "Extra annotations for the default path",
-                  "items": {
-                    "type": "string"
-                  }
+                  "type": "object",
+                  "description": "Extra annotations for the default path"
                 }
               }
             },

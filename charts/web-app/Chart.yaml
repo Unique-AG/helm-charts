@@ -16,3 +16,5 @@ annotations:
   artifacthub.io/changes: |
     - kind: fixed
       description: "Integer CPU requests/limits are now allowed (again)."
+    - kind: fixed
+      description: "Default path extraAnnotations are now validated correctly as an object."
