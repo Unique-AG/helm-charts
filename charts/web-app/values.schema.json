@@ -104,7 +104,13 @@
           "kind": {
             "type": "string",
             "description": "Set the route kind",
-            "enum": ["GRPCRoute", "HTTPRoute", "TCPRoute", "TLSRoute", "UDPRoute"],
+            "enum": [
+              "GRPCRoute",
+              "HTTPRoute",
+              "TCPRoute",
+              "TLSRoute",
+              "UDPRoute"
+            ],
             "examples": ["HTTPRoute"]
           },
           "annotations": {
@@ -239,10 +245,7 @@
       "properties": {
         "minAvailable": {
           "description": "Minimum number of pods that must be available",
-          "oneOf": [
-            { "type": "string" },
-            { "type": "integer", "minimum": 0 }
-          ],
+          "oneOf": [{ "type": "string" }, { "type": "integer", "minimum": 0 }],
           "examples": [1]
         }
       }
@@ -272,11 +275,13 @@
           }
         }
       },
-      "examples": [{
-        "seccompProfile": {
-          "type": "RuntimeDefault"
+      "examples": [
+        {
+          "seccompProfile": {
+            "type": "RuntimeDefault"
+          }
         }
-      }]
+      ]
     },
     "probes": {
       "type": "object",
@@ -290,24 +295,28 @@
         "liveness": {
           "type": "object",
           "description": "Liveness probe configuration",
-          "examples": [{
-            "httpGet": {
-              "path": "/api/health",
-              "port": "http"
-            },
-            "initialDelaySeconds": 5
-          }]
+          "examples": [
+            {
+              "httpGet": {
+                "path": "/api/health",
+                "port": "http"
+              },
+              "initialDelaySeconds": 5
+            }
+          ]
         },
         "readiness": {
           "type": "object",
           "description": "Readiness probe configuration",
-          "examples": [{
-            "httpGet": {
-              "path": "/api/health",
-              "port": "http"
-            },
-            "initialDelaySeconds": 5
-          }]
+          "examples": [
+            {
+              "httpGet": {
+                "path": "/api/health",
+                "port": "http"
+              },
+              "initialDelaySeconds": 5
+            }
+          ]
         },
         "startup": {
           "type": "object",
@@ -324,9 +333,12 @@
           "description": "Resource limits",
           "properties": {
             "cpu": {
-              "type": "string",
+              "oneOf": [
+                { "type": "string" },
+                { "type": "integer", "minimum": 0 }
+              ],
               "description": "CPU limit",
-              "examples": ["1000m"]
+              "examples": [2, "1000m"]
             },
             "memory": {
               "type": "string",
@@ -340,9 +352,12 @@
           "description": "Resource requests",
           "properties": {
             "cpu": {
-              "type": "string",
+              "oneOf": [
+                { "type": "string" },
+                { "type": "integer", "minimum": 0 }
+              ],
               "description": "CPU request",
-              "examples": ["100m"]
+              "examples": [1, "100m"]
             },
             "memory": {
               "type": "string",
@@ -359,18 +374,12 @@
       "properties": {
         "maxSurge": {
           "description": "Maximum number of pods that can be created over the desired number",
-          "oneOf": [
-            { "type": "string" },
-            { "type": "integer", "minimum": 0 }
-          ],
+          "oneOf": [{ "type": "string" }, { "type": "integer", "minimum": 0 }],
           "examples": [1]
         },
         "maxUnavailable": {
           "description": "Maximum number of pods that can be unavailable during the update",
-          "oneOf": [
-            { "type": "string" },
-            { "type": "integer", "minimum": 0 }
-          ],
+          "oneOf": [{ "type": "string" }, { "type": "integer", "minimum": 0 }],
           "examples": [0]
         }
       }
@@ -561,14 +570,16 @@
               "type": "string"
             }
           },
-          "examples": [{
-            "vault-name-1": {
-              "MY_ENV_VARIABLE_1": "keyvault-secret-name-a"
-            },
-            "vault-name-2": {
-              "MY_ENV_VARIABLE_2": "keyvault-secret-name-b"
+          "examples": [
+            {
+              "vault-name-1": {
+                "MY_ENV_VARIABLE_1": "keyvault-secret-name-a"
+              },
+              "vault-name-2": {
+                "MY_ENV_VARIABLE_2": "keyvault-secret-name-b"
+              }
             }
-          }]
+          ]
         }
       }
     },

@@ -17,18 +17,12 @@
       "properties": {
         "maxSurge": {
           "description": "Maximum number of pods that can be created over the desired number",
-          "oneOf": [
-            { "type": "string" },
-            { "type": "integer", "minimum": 0 }
-          ],
+          "oneOf": [{ "type": "string" }, { "type": "integer", "minimum": 0 }],
           "examples": [1]
         },
         "maxUnavailable": {
           "description": "Maximum number of pods that can be unavailable during the update",
-          "oneOf": [
-            { "type": "string" },
-            { "type": "integer", "minimum": 0 }
-          ],
+          "oneOf": [{ "type": "string" }, { "type": "integer", "minimum": 0 }],
           "examples": [0]
         }
       }
@@ -135,11 +129,13 @@
           }
         }
       },
-      "examples": [{
-        "seccompProfile": {
-          "type": "RuntimeDefault"
+      "examples": [
+        {
+          "seccompProfile": {
+            "type": "RuntimeDefault"
+          }
         }
-      }]
+      ]
     },
     "securityContext": {
       "type": "object",
@@ -259,41 +255,47 @@
         "liveness": {
           "type": "object",
           "description": "Liveness probe configuration",
-          "examples": [{
-            "httpGet": {
-              "path": "/probe",
-              "port": "http"
-            },
-            "initialDelaySeconds": 10,
-            "periodSeconds": 5,
-            "failureThreshold": 6
-          }]
+          "examples": [
+            {
+              "httpGet": {
+                "path": "/probe",
+                "port": "http"
+              },
+              "initialDelaySeconds": 10,
+              "periodSeconds": 5,
+              "failureThreshold": 6
+            }
+          ]
         },
         "readiness": {
           "type": "object",
           "description": "Readiness probe configuration",
-          "examples": [{
-            "httpGet": {
-              "path": "/probe",
-              "port": "http"
-            },
-            "initialDelaySeconds": 10,
-            "periodSeconds": 5,
-            "failureThreshold": 6
-          }]
+          "examples": [
+            {
+              "httpGet": {
+                "path": "/probe",
+                "port": "http"
+              },
+              "initialDelaySeconds": 10,
+              "periodSeconds": 5,
+              "failureThreshold": 6
+            }
+          ]
         },
         "startup": {
           "type": "object",
           "description": "Startup probe configuration",
-          "examples": [{
-            "httpGet": {
-              "path": "/probe",
-              "port": "http"
-            },
-            "initialDelaySeconds": 10,
-            "failureThreshold": 30,
-            "periodSeconds": 10
-          }]
+          "examples": [
+            {
+              "httpGet": {
+                "path": "/probe",
+                "port": "http"
+              },
+              "initialDelaySeconds": 10,
+              "failureThreshold": 30,
+              "periodSeconds": 10
+            }
+          ]
         }
       }
     },
@@ -303,10 +305,7 @@
       "properties": {
         "maxUnavailable": {
           "description": "Maximum number of unavailable pods",
-          "oneOf": [
-            { "type": "string" },
-            { "type": "integer", "minimum": 0 }
-          ],
+          "oneOf": [{ "type": "string" }, { "type": "integer", "minimum": 0 }],
           "examples": ["30%"]
         }
       }
@@ -432,9 +431,12 @@
           "description": "Resource limits",
           "properties": {
             "cpu": {
-              "type": "string",
+              "oneOf": [
+                { "type": "string" },
+                { "type": "integer", "minimum": 0 }
+              ],
               "description": "CPU limit",
-              "examples": ["1000m"]
+              "examples": [2, "1000m"]
             },
             "memory": {
               "type": "string",
@@ -448,9 +450,12 @@
           "description": "Resource requests",
           "properties": {
             "cpu": {
-              "type": "string",
+              "oneOf": [
+                { "type": "string" },
+                { "type": "integer", "minimum": 0 }
+              ],
               "description": "CPU request",
-              "examples": ["100m"]
+              "examples": [1, "100m"]
             },
             "memory": {
               "type": "string",
@@ -641,12 +646,14 @@
         "preStop": {
           "type": "object",
           "description": "Pre-stop hook",
-          "examples": [{
-            "httpGet": {
-              "path": "can_shutdown",
-              "port": 8081
+          "examples": [
+            {
+              "httpGet": {
+                "path": "can_shutdown",
+                "port": 8081
+              }
             }
-          }]
+          ]
         }
       }
     },
@@ -682,14 +689,16 @@
               "type": "string"
             }
           },
-          "examples": [{
-            "vault-name-1": {
-              "MY_ENV_VARIABLE_1": "keyvault-secret-name-a"
-            },
-            "vault-name-2": {
-              "MY_ENV_VARIABLE_2": "keyvault-secret-name-b"
+          "examples": [
+            {
+              "vault-name-1": {
+                "MY_ENV_VARIABLE_1": "keyvault-secret-name-a"
+              },
+              "vault-name-2": {
+                "MY_ENV_VARIABLE_2": "keyvault-secret-name-b"
+              }
             }
-          }]
+          ]
         }
       }
     },
@@ -738,11 +747,19 @@
               }
             }
           },
-          "examples": [[{
-            "name": "model-downloader",
-            "image": "python:3.9",
-            "command": ["sh", "-c", "pip install huggingface-hub transformers; huggingface-cli download bert-base-uncased --cache-dir /models/bert"]
-          }]]
+          "examples": [
+            [
+              {
+                "name": "model-downloader",
+                "image": "python:3.9",
+                "command": [
+                  "sh",
+                  "-c",
+                  "pip install huggingface-hub transformers; huggingface-cli download bert-base-uncased --cache-dir /models/bert"
+                ]
+              }
+            ]
+          ]
         }
       }
     }

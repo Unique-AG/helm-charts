@@ -135,12 +135,14 @@
         "jobTemplate": {
           "type": "object",
           "description": "Job template configuration",
-          "examples": [{
-            "containers": {
-              "name": ""
-            },
-            "restartPolicy": "OnFailure"
-          }]
+          "examples": [
+            {
+              "containers": {
+                "name": ""
+              },
+              "restartPolicy": "OnFailure"
+            }
+          ]
         },
         "name": {
           "type": "string",
@@ -330,29 +332,31 @@
         "scalers": {
           "type": "array",
           "description": "Scalers for the ScaledObject",
-          "examples": [[
-            {
-              "type": "rabbitmq",
-              "metadata": {
-                "protocol": "amqp",
-                "queueName": "testqueue",
-                "mode": "QueueLength",
-                "value": "20"
+          "examples": [
+            [
+              {
+                "type": "rabbitmq",
+                "metadata": {
+                  "protocol": "amqp",
+                  "queueName": "testqueue",
+                  "mode": "QueueLength",
+                  "value": "20"
+                },
+                "authenticationRef": {
+                  "name": "keda-trigger-auth-rabbitmq-conn"
+                }
               },
-              "authenticationRef": {
-                "name": "keda-trigger-auth-rabbitmq-conn"
+              {
+                "type": "cron",
+                "metadata": {
+                  "timezone": "Europe/Zurich",
+                  "start": "0 6 * * *",
+                  "end": "0 20 * * *",
+                  "desiredReplicas": "10"
+                }
               }
-            },
-            {
-              "type": "cron",
-              "metadata": {
-                "timezone": "Europe/Zurich",
-                "start": "0 6 * * *",
-                "end": "0 20 * * *",
-                "desiredReplicas": "10"
-              }
-            }
-          ]]
+            ]
+          ]
         }
       }
     },
@@ -375,34 +379,36 @@
     "extraRoutes": {
       "type": "object",
       "description": "Additional gateway routes for the chart",
-      "examples": [{
-        "extra-route-1": {
-          "enabled": false,
-          "apiVersion": "gateway.networking.k8s.io/v1",
-          "kind": "HTTPRoute",
-          "annotations": {},
-          "labels": {},
-          "hostnames": [],
-          "parentRefs": [
-            {
-              "name": "kong",
-              "namespace": "kong-system",
-              "group": "gateway.networking.k8s.io",
-              "kind": "Gateway"
-            }
-          ],
-          "matches": [
-            {
-              "path": {
-                "type": "PathPrefix",
-                "value": "/"
+      "examples": [
+        {
+          "extra-route-1": {
+            "enabled": false,
+            "apiVersion": "gateway.networking.k8s.io/v1",
+            "kind": "HTTPRoute",
+            "annotations": {},
+            "labels": {},
+            "hostnames": [],
+            "parentRefs": [
+              {
+                "name": "kong",
+                "namespace": "kong-system",
+                "group": "gateway.networking.k8s.io",
+                "kind": "Gateway"
               }
-            }
-          ],
-          "filters": [],
-          "additionalRules": []
+            ],
+            "matches": [
+              {
+                "path": {
+                  "type": "PathPrefix",
+                  "value": "/"
+                }
+              }
+            ],
+            "filters": [],
+            "additionalRules": []
+          }
         }
-      }]
+      ]
     },
     "extraCronJobs": {
       "type": "object",
@@ -441,12 +447,14 @@
               },
               "required": ["name"]
             },
-            "examples": [[
-              {
-                "name": "BAZ",
-                "value": "qux"
-              }
-            ]]
+            "examples": [
+              [
+                {
+                  "name": "BAZ",
+                  "value": "qux"
+                }
+              ]
+            ]
           },
           "failedJobsHistoryLimit": {
             "type": "integer",
@@ -489,27 +497,29 @@
           }
         }
       },
-      "examples": [{
-        "foo": {
-          "concurrencyPolicy": "Forbid",
-          "env": {
-            "FOO": "BAR"
-          },
-          "envVars": [
-            {
-              "name": "BAZ",
-              "value": "qux"
-            }
-          ],
-          "failedJobsHistoryLimit": 3,
-          "restartPolicy": "Never",
-          "schedule": "0 0 1 1 *",
-          "startingDeadlineSeconds": 600,
-          "successfulJobsHistoryLimit": 3,
-          "suspend": false,
-          "timeZone": "Europe/Zurich"
+      "examples": [
+        {
+          "foo": {
+            "concurrencyPolicy": "Forbid",
+            "env": {
+              "FOO": "BAR"
+            },
+            "envVars": [
+              {
+                "name": "BAZ",
+                "value": "qux"
+              }
+            ],
+            "failedJobsHistoryLimit": 3,
+            "restartPolicy": "Never",
+            "schedule": "0 0 1 1 *",
+            "startingDeadlineSeconds": 600,
+            "successfulJobsHistoryLimit": 3,
+            "suspend": false,
+            "timeZone": "Europe/Zurich"
+          }
         }
-      }]
+      ]
     },
     "hooks": {
       "type": "object",
@@ -565,10 +575,7 @@
       "properties": {
         "maxUnavailable": {
           "description": "Maximum number of unavailable pods",
-          "oneOf": [
-            { "type": "string" },
-            { "type": "integer", "minimum": 0 }
-          ],
+          "oneOf": [{ "type": "string" }, { "type": "integer", "minimum": 0 }],
           "examples": ["30%"]
         }
       }
@@ -584,11 +591,13 @@
     "podSecurityContext": {
       "type": "object",
       "description": "Pod security context",
-      "examples": [{
-        "seccompProfile": {
-          "type": "RuntimeDefault"
+      "examples": [
+        {
+          "seccompProfile": {
+            "type": "RuntimeDefault"
+          }
         }
-      }]
+      ]
     },
     "ports": {
       "type": "object",
@@ -622,41 +631,47 @@
         "liveness": {
           "type": "object",
           "description": "Liveness probe configuration",
-          "examples": [{
-            "httpGet": {
-              "path": "/probe",
-              "port": "http"
-            },
-            "initialDelaySeconds": 10,
-            "periodSeconds": 5,
-            "failureThreshold": 6
-          }]
+          "examples": [
+            {
+              "httpGet": {
+                "path": "/probe",
+                "port": "http"
+              },
+              "initialDelaySeconds": 10,
+              "periodSeconds": 5,
+              "failureThreshold": 6
+            }
+          ]
         },
         "readiness": {
           "type": "object",
           "description": "Readiness probe configuration",
-          "examples": [{
-            "httpGet": {
-              "path": "/probe",
-              "port": "http"
-            },
-            "initialDelaySeconds": 10,
-            "periodSeconds": 5,
-            "failureThreshold": 6
-          }]
+          "examples": [
+            {
+              "httpGet": {
+                "path": "/probe",
+                "port": "http"
+              },
+              "initialDelaySeconds": 10,
+              "periodSeconds": 5,
+              "failureThreshold": 6
+            }
+          ]
         },
         "startup": {
           "type": "object",
           "description": "Startup probe configuration",
-          "examples": [{
-            "httpGet": {
-              "path": "/probe",
-              "port": "http"
-            },
-            "initialDelaySeconds": 10,
-            "failureThreshold": 30,
-            "periodSeconds": 10
-          }]
+          "examples": [
+            {
+              "httpGet": {
+                "path": "/probe",
+                "port": "http"
+              },
+              "initialDelaySeconds": 10,
+              "failureThreshold": 30,
+              "periodSeconds": 10
+            }
+          ]
         }
       }
     },
@@ -685,7 +700,47 @@
     },
     "resources": {
       "type": "object",
-      "description": "CPU/Memory resource requests/limits"
+      "description": "CPU/Memory resource requests/limits",
+      "properties": {
+        "limits": {
+          "type": "object",
+          "description": "Resource limits",
+          "properties": {
+            "cpu": {
+              "oneOf": [
+                { "type": "string" },
+                { "type": "integer", "minimum": 0 }
+              ],
+              "description": "CPU limit",
+              "examples": [2, "1000m"]
+            },
+            "memory": {
+              "type": "string",
+              "description": "Memory limit",
+              "examples": ["1Gi"]
+            }
+          }
+        },
+        "requests": {
+          "type": "object",
+          "description": "Resource requests",
+          "properties": {
+            "cpu": {
+              "oneOf": [
+                { "type": "string" },
+                { "type": "integer", "minimum": 0 }
+              ],
+              "description": "CPU request",
+              "examples": [1, "100m"]
+            },
+            "memory": {
+              "type": "string",
+              "description": "Memory request",
+              "examples": ["128Mi"]
+            }
+          }
+        }
+      }
     },
     "rollingUpdate": {
       "type": "object",
@@ -693,18 +748,12 @@
       "properties": {
         "maxSurge": {
           "description": "Maximum number of pods that can be created over the desired number",
-          "oneOf": [
-            { "type": "string" },
-            { "type": "integer", "minimum": 0 }
-          ],
+          "oneOf": [{ "type": "string" }, { "type": "integer", "minimum": 0 }],
           "examples": [1]
         },
         "maxUnavailable": {
           "description": "Maximum number of pods that can be unavailable during the update",
-          "oneOf": [
-            { "type": "string" },
-            { "type": "integer", "minimum": 0 }
-          ],
+          "oneOf": [{ "type": "string" }, { "type": "integer", "minimum": 0 }],
           "examples": [0]
         }
       }
@@ -742,29 +791,31 @@
         "paths": {
           "type": "object",
           "description": "Path configurations",
-          "examples": [{
-            "default": {
-              "enabled": false,
-              "blockList": ["/metrics"],
-              "extraAnnotations": []
-            },
-            "versioned": {
-              "enabled": false,
-              "pathOverride": "/public",
-              "extraAnnotations": []
-            },
-            "scoped": {
-              "enabled": false,
-              "pathOverride": "/scoped",
-              "allowList": ["/upload"],
-              "extraAnnotations": []
-            },
-            "probe": {
-              "enabled": false,
-              "probePath": "/probe",
-              "extraAnnotations": []
+          "examples": [
+            {
+              "default": {
+                "enabled": false,
+                "blockList": ["/metrics"],
+                "extraAnnotations": []
+              },
+              "versioned": {
+                "enabled": false,
+                "pathOverride": "/public",
+                "extraAnnotations": []
+              },
+              "scoped": {
+                "enabled": false,
+                "pathOverride": "/scoped",
+                "allowList": ["/upload"],
+                "extraAnnotations": []
+              },
+              "probe": {
+                "enabled": false,
+                "probePath": "/probe",
+                "extraAnnotations": []
+              }
             }
-          }]
+          ]
         }
       }
     },
@@ -902,12 +953,14 @@
         "blockList": {
           "type": "array",
           "description": "Block list of paths and methods",
-          "examples": [[
-            {
-              "methods": ["GET"],
-              "path": "/metrics"
-            }
-          ]]
+          "examples": [
+            [
+              {
+                "methods": ["GET"],
+                "path": "/metrics"
+              }
+            ]
+          ]
         }
       }
     },
