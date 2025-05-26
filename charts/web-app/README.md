@@ -94,7 +94,7 @@ Only one root route per cluster (technically per hostname) should be deployed to
 | resources | object | `{}` |  |
 | rollingUpdate.maxSurge | int | `1` |  |
 | rollingUpdate.maxUnavailable | int | `0` |  |
-| routes | object | `{"gateway":{"name":"kong","namespace":"system"},"hostname":"chart-testing-web-app.example.com","pathPrefix":"","paths":{"default":{"blockList":["/metrics"],"enabled":true,"extraAnnotations":[]},"root":{"enabled":false,"redirectPath":"/chart-testing"}}}` | routes is a special object designed for Unique web-apps. It abstracts a lot of complexity and allows for a simple configuration of routes. ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong. If you are using a different API Gateway, you will need to use `extraRoutes`. |
+| routes | object | `{"gateway":{"name":"kong","namespace":"system"},"hostname":"chart-testing-web-app.example.com","pathPrefix":"","paths":{"default":{"blockList":["/metrics"],"enabled":true,"extraAnnotations":{}},"root":{"enabled":false,"redirectPath":"/chart-testing"}}}` | routes is a special object designed for Unique web-apps. It abstracts a lot of complexity and allows for a simple configuration of routes. ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong. If you are using a different API Gateway, you will need to use `extraRoutes`. |
 | routes.gateway | object | `{"name":"kong","namespace":"system"}` | gateway to use |
 | routes.gateway.name | string | kong | name of the gateway |
 | routes.gateway.namespace | string | system | namespace of the gateway |
