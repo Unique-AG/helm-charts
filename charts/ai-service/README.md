@@ -1,8 +1,6 @@
 # ai-service
 
-The 'ai-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy simple AI workloads to Kubernetes.
-
-Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
+Version 2.1.1 is the last supported iteration of this chart. Subsequent changes will only be supplied to https://artifacthub.io/packages/helm/unique/backend-service. Refer to End of Life Notice in README.md.
 
 > [!IMPORTANT]
 > Version `2.1.1` is the last supported iteration of this chart. Subsequent changes will only be supplied to [`unique/backend-service`](https://artifacthub.io/packages/helm/unique/backend-service). Refer to [**End of Life Notice**](#End-of-Life-Notice).
