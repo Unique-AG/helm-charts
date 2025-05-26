@@ -23,11 +23,21 @@ spec:
       template:
         metadata:
           labels:
+            {{- if .Values.podLabels }}
+              {{- with .Values.podLabels }}
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+            {{- end }}
             {{- include "backendService.labelsCronJob" . | nindent 12 }}
             {{- if .Values.secretProvider }}
             aadpodidbinding: {{ default "keyvault" (.Values.secretProvider).aadPodIdBinding }}
             {{- end }}
           annotations:
+            {{- if .Values.podAnnotations }}
+              {{- with .Values.podAnnotations }}
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+            {{- end }}
             checksum/cronjob-env: {{ include (print $.Chart.Name "/templates/cronjob-env.yaml") . | sha256sum | trunc 8 | quote }}
             {{- if .Values.envSecrets }}
             checksum/secrets: {{ include (print $.Chart.Name "/templates/secrets.yaml") . | sha256sum | trunc 8 | quote }}
@@ -49,7 +59,7 @@ spec:
               volumeMounts:
               {{- range .volumeMounts }}
                 - name: {{ .name}}
-                  mountPath: {{ .mountPath }}   
+                  mountPath: {{ .mountPath }}
                   readOnly: {{ .readOnly | default false }}
               {{- end }}
               {{- end }}
@@ -70,7 +80,7 @@ spec:
                   mountPath: {{ .mountPathCronjob | default .mountPath }}
                   readOnly: {{ .readOnly | default false }}
               {{- end }}
-              {{- end }}   
+              {{- end }}
               {{- end }}
               {{- end }}
               {{- with .Values.volumeMounts }}
@@ -138,7 +148,7 @@ spec:
             - name: {{ .name }}
               emptyDir: {}
           {{- end }}
-          {{- end }}   
+          {{- end }}
           {{- end }}
           {{- end }}
           {{- with .Values.volumes }}

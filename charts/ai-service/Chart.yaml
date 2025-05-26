@@ -7,7 +7,7 @@ maintainers:
 name: ai-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/ai-service
-version: 2.0.0
+version: 2.1.0
 description: |
   The 'ai-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy simple AI workloads to Kubernetes.
 
@@ -15,8 +15,4 @@ description: |
 annotations:
   artifacthub.io/changes: |
     - kind: added
-      description: "Root file system is now read-only by default."
-    - kind: added
-      description: "SecurityContext is now set by default."
-    - kind: added
-      description: "By default eventBasedAutoscaling is disabled."
+      description: "Schema validation doesn't allow additional properties now."

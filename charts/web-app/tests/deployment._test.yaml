@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: Regression Test Deployment
+templates:
+  - deployment-env.yaml
+  - deployment.yaml
+release:
+  name: ut
+tests:
+  - it: When given pod labels and annotations
+    set:
+      image.tag: pinned-version
+      podLabels.app: test
+      podAnnotations.test: true
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - isNotNullOrEmpty:
+          path: spec.template.metadata.labels.app
+      - isNotNullOrEmpty:
+          path: spec.template.metadata.annotations.test
+      - equal:
+          path: spec.template.metadata.labels.app
+          value: test
+      - equal:
+          path: spec.template.metadata.annotations.test
+          value: true
+
+  - it: When no extra pod labels are given
+    set:
+      image.tag: pinned-version
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - isNotNullOrEmpty:
+          path: spec.template.metadata.labels.app
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/name"]
+          value: ut

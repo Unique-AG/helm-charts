@@ -3,6 +3,7 @@
   "title": "SSCSID Keeper Helm Chart Values",
   "description": "Schema for the sscsid-keeper Helm chart values.yaml",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "nameOverride": {
       "type": "string",
