@@ -1,6 +1,9 @@
 {{ template "chart.header" . }}
 {{ template "chart.description" . }}
 
+> [!IMPORTANT]
+> Version `2.1.1` is the last supported iteration of this chart. Subsequent changes will only be supplied to [`unique/backend-service`](https://artifacthub.io/packages/helm/unique/backend-service). Refer to [**End of Life Notice**](#End-of-Life-Notice).
+
 {{ template "chart.versionBadge" . }}{{ template "chart.typeBadge" . }}{{ template "chart.appVersionBadge" . }}
 
 {{ template "chart.requirementsSection" . }}
@@ -176,5 +179,15 @@ Common uses include:
 - Sharing static assets between pods
 
 {{ template "chart.valuesSection" . }}
+
+## End of Life Notice
+
+Unique has historically maintained two distinct Helm charts for backend services: [`unique/backend-service`](https://artifacthub.io/packages/helm/unique/backend-service) and the current `ai-service` chart. While `backend-service` has been actively maintained and regularly updated, the `ai-service` chart has seen limited maintenance due to its lower adoption rate. Analysis shows that `ai-service` provides minimal additional functionality beyond `backend-service`, with its primary distinguishing feature being the `artifactsCache` component, which has seen minimal utilization in production environments.
+
+⚠️ Version `2.1.1` represents the final supported release of this chart.
+
+### Migration Considerations
+
+The primary migration consideration involves the `artifactsCache` functionality. While it is possible to migrate this feature by analyzing the existing implementation, we recommend against a direct 1:1 migration. Instead, we suggest adapting the caching mechanism to your specific infrastructure requirements, as the original implementation was designed for highly customized environments that rarely aligned with typical deployment scenarios.
 
 {{ template "helm-docs.versionFooter" . }}

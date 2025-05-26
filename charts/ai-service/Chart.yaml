@@ -1,3 +1,4 @@
+deprecated: true
 apiVersion: v2
 type: application
 icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
@@ -7,12 +8,12 @@ maintainers:
 name: ai-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/ai-service
-version: 2.1.0
+version: 2.1.1
 description: |
-  The 'ai-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy simple AI workloads to Kubernetes.
-
-  Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
+  Version 2.1.1 is the last supported iteration of this chart. Subsequent changes will only be supplied to https://artifacthub.io/packages/helm/unique/backend-service. Refer to End of Life Notice in README.md.
 annotations:
   artifacthub.io/changes: |
-    - kind: added
-      description: "Schema validation doesn't allow additional properties now."
+    - kind: fixed
+      description: "Integer CPU requests/limits are now allowed (again)."
+    - kind: changed
+      description: "⚠️ End Of Life Notice."

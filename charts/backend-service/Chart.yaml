@@ -7,7 +7,7 @@ maintainers:
 name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
-version: 4.1.0
+version: 4.1.1
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
 
@@ -15,7 +15,5 @@ description: |
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
-    - kind: added
-      description: "Allow to add pod labels and annotations to all the pods."
-    - kind: added
-      description: "Schema validation doesn't allow additional properties now."
+    - kind: fixed
+      description: "Integer CPU requests/limits are now allowed (again)."

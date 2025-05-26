@@ -4,7 +4,7 @@ The 'web-app' chart is a "convenience" chart from Unique AG that can generically
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 4.1.0](https://img.shields.io/badge/Version-4.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 4.1.1](https://img.shields.io/badge/Version-4.1.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-web-app unique/web-app --version 4.1.0
+helm install my-web-app unique/web-app --version 4.1.1
 
 # or
-helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 4.1.0
+helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 4.1.1
 ```
 
 ### Docker Images
@@ -94,7 +94,7 @@ Only one root route per cluster (technically per hostname) should be deployed to
 | resources | object | `{}` |  |
 | rollingUpdate.maxSurge | int | `1` |  |
 | rollingUpdate.maxUnavailable | int | `0` |  |
-| routes | object | `{"gateway":{"name":"kong","namespace":"system"},"hostname":"chart-testing-web-app.example.com","pathPrefix":"","paths":{"default":{"blockList":["/metrics"],"enabled":true,"extraAnnotations":[]},"root":{"enabled":false,"redirectPath":"/chart-testing"}}}` | routes is a special object designed for Unique web-apps. It abstracts a lot of complexity and allows for a simple configuration of routes. ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong. If you are using a different API Gateway, you will need to use `extraRoutes`. |
+| routes | object | `{"gateway":{"name":"kong","namespace":"system"},"hostname":"chart-testing-web-app.example.com","pathPrefix":"","paths":{"default":{"blockList":["/metrics"],"enabled":true,"extraAnnotations":{}},"root":{"enabled":false,"redirectPath":"/chart-testing"}}}` | routes is a special object designed for Unique web-apps. It abstracts a lot of complexity and allows for a simple configuration of routes. ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong. If you are using a different API Gateway, you will need to use `extraRoutes`. |
 | routes.gateway | object | `{"name":"kong","namespace":"system"}` | gateway to use |
 | routes.gateway.name | string | kong | name of the gateway |
 | routes.gateway.namespace | string | system | namespace of the gateway |

@@ -161,7 +161,7 @@ routes:
       # -- explicitly list paths to block
       blockList:
         - /metrics
-      extraAnnotations: []
+      extraAnnotations: {}
       #   konghq.com/request-buffering: "false"
       #   konghq.com/read-timeout: "120s"
     # -- The root route is a convenience route that routes all traffic from the root of the domain to a specific path

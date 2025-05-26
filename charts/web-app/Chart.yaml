@@ -5,7 +5,7 @@ maintainers:
   - name: unique-ag
     url: https://unique.ch/
 name: web-app
-version: 4.1.0
+version: 4.1.1
 description: |
   The 'web-app' chart is a "convenience" chart from Unique AG that can generically be used to deploy web-content serving workloads to Kubernetes.
 
@@ -14,5 +14,7 @@ sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/web-app
 annotations:
   artifacthub.io/changes: |
-    - kind: added
-      description: "Allow to add pod labels and annotations to all the pods."
+    - kind: fixed
+      description: "Integer CPU requests/limits are now allowed (again)."
+    - kind: fixed
+      description: "Default path extraAnnotations are now validated correctly as an object."
