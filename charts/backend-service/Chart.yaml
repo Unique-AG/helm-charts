@@ -7,7 +7,7 @@ maintainers:
 name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
-version: 4.1.1
+version: 4.1.2
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
 
@@ -16,4 +16,4 @@ annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
     - kind: fixed
-      description: "Integer CPU requests/limits are now allowed (again)."
+      description: "terminationGracePeriodSeconds is now allowed (again)."
