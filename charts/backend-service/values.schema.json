@@ -901,6 +901,11 @@
         }
       }
     },
+    "terminationGracePeriodSeconds": {
+      "type": "integer",
+      "description": "Override the termination grace period seconds.",
+      "examples": [30, 900]
+    },
     "tolerations": {
       "type": "array",
       "description": "Tolerations for pod placement"
