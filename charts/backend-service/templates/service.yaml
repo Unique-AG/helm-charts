@@ -1,20 +1,20 @@
-{{- if .Values.service.enabled -}}
+{{- if .Values.service.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "backendService.fullname" . }}
+  name: {{ include "backend-service.fullname" . }}
   labels:
-    {{- include "backendService.labels" . | nindent 4 }}
+    {{- include "backend-service.labels" . | nindent 4 }}
     {{- with .Values.service.extraLabels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
   type: {{ .Values.service.type }}
   ports:
-    - port: {{ include "backendService.servicePort" . }}
+    - port: {{ include "backend-service.servicePort" . }}
       targetPort: http
       protocol: TCP
       name: http
   selector:
-    {{- include "backendService.selectorLabels" . | nindent 4 }}
+    {{- include "backend-service.selectorLabels" . | nindent 4 }}
 {{- end }}

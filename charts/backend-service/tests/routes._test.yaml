@@ -25,13 +25,13 @@ tests:
     template: routes.yaml
     documentSelector:
       path: metadata.name
-      value: ecj-scoped
+      value: ecj-backend-service-scoped
     asserts:
       - isKind:
           of: HTTPRoute
       - equal:
           path: metadata.name
-          value: ecj-scoped
+          value: ecj-backend-service-scoped
       - equal:
           path: metadata.annotations
           value:
@@ -40,8 +40,10 @@ tests:
       - equal:
           path: metadata.labels
           value:
-            app.kubernetes.io/name: ecj
+            helm.sh/chart: backend-service-5.0.0
+            app.kubernetes.io/name: backend-service
             app.kubernetes.io/instance: ecj
+            app.kubernetes.io/managed-by: Helm
       - equal:
           path: spec.parentRefs
           value:
@@ -59,7 +61,7 @@ tests:
             - matches:
                 - path:
                     type: Exact
-                    value: /scoped/ecj/upload
+                    value: /scoped/ecj-backend-service/upload
               filters:
                 - type: URLRewrite
                   urlRewrite:
@@ -67,13 +69,13 @@ tests:
                       type: ReplaceFullPath
                       replaceFullPath: /scoped/upload
               backendRefs:
-                - name: ecj
+                - name: ecj-backend-service
                   port: 80
                   kind: Service
             - matches:
                 - path:
                     type: Exact
-                    value: /scoped/ecj/download
+                    value: /scoped/ecj-backend-service/download
               filters:
                 - type: URLRewrite
                   urlRewrite:
@@ -81,7 +83,7 @@ tests:
                       type: ReplaceFullPath
                       replaceFullPath: /scoped/download
               backendRefs:
-                - name: ecj
+                - name: ecj-backend-service
                   port: 80
                   kind: Service
 
@@ -97,13 +99,13 @@ tests:
     template: routes.yaml
     documentSelector:
       path: metadata.name
-      value: ecj-scoped
+      value: ecj-backend-service-scoped
     asserts:
       - isKind:
           of: HTTPRoute
       - equal:
           path: metadata.name
-          value: ecj-scoped
+          value: ecj-backend-service-scoped
       - equal:
           path: metadata.annotations
           value:
@@ -112,8 +114,10 @@ tests:
       - equal:
           path: metadata.labels
           value:
-            app.kubernetes.io/name: ecj
+            helm.sh/chart: backend-service-5.0.0
+            app.kubernetes.io/name: backend-service
             app.kubernetes.io/instance: ecj
+            app.kubernetes.io/managed-by: Helm
       - equal:
           path: spec.parentRefs
           value:
@@ -139,7 +143,7 @@ tests:
                       type: ReplaceFullPath
                       replaceFullPath: /newScopedPathOverride/upload
               backendRefs:
-                - name: ecj
+                - name: ecj-backend-service
                   port: 80
                   kind: Service
             - matches:
@@ -153,7 +157,7 @@ tests:
                       type: ReplaceFullPath
                       replaceFullPath: /newScopedPathOverride/download
               backendRefs:
-                - name: ecj
+                - name: ecj-backend-service
                   port: 80
                   kind: Service
 
@@ -168,7 +172,7 @@ tests:
     template: routes.yaml
     documentSelector:
       path: metadata.name
-      value: ecj-block
+      value: ecj-backend-service-block
     asserts:
       - isKind:
           of: HTTPRoute
@@ -180,7 +184,7 @@ tests:
                     type: PathPrefix
                     value: /metrics
               backendRefs:
-                - name: ecj
+                - name: ecj-backend-service
                   port: 80
                   kind: Service
             - matches:
@@ -188,6 +192,6 @@ tests:
                     type: PathPrefix
                     value: /sensitive
               backendRefs:
-                - name: ecj
+                - name: ecj-backend-service
                   port: 80
                   kind: Service

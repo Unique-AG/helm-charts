@@ -1,7 +1,4 @@
 {{- if .Values.keda.enabled }}
-{{- if and .Values.keda.enabled .Values.eventBasedAutoscaling.enabled }}
-{{- fail "You cannot set both `.Values.eventBasedAutoscaling.enabled` and `.Values.keda.enabled` at the same time." }}
-{{- end }}
 {{- if and .Values.keda.enabled .Values.autoscaling.enabled }}
 {{- fail "You cannot set both `.Values.keda.enabled` and `.Values.autoscaling.enabled` at the same time." }}
 {{- end }}
@@ -9,9 +6,9 @@
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
-  name: {{ include "backendService.fullname" . }}
+  name: {{ include "backend-service.fullname" . }}
   labels:
-    {{- include "backendService.labels" . | nindent 4 }}
+    {{- include "backend-service.labels" . | nindent 4 }}
   annotations:
     autoscaling.keda.sh/paused: {{ .Values.keda.paused | default "false" | quote }}
     {{- with .Values.keda.extraAnnotations }}
@@ -19,7 +16,7 @@ metadata:
     {{- end }}
 spec:
   scaleTargetRef:
-    name: {{ include "backendService.fullname" . }}
+    name: {{ include "backend-service.fullname" . }}
   {{- if hasKey .Values.keda "pollingInterval" }}
   pollingInterval: {{ .Values.keda.pollingInterval }}
   {{- end }}

@@ -84,6 +84,22 @@ The schema is available in the `values.schema.json` file in the chart.
 
 ## Upgrade Guides
 
+### ~> `5.0.0` - 🔄 Major Modernization Achievements
+
+- Flattened values structure - Removed nested deployment.*
+- Consistent naming - All kebab-case, modern helper functions
+- Enhanced secretsProvider - Flexible Azure Key Vault support
+- New features - initContainers, sidecars, extraEnvConfigMaps, minReadySeconds
+- Removed deprecated - Tyk, legacy cronJob, eventBasedAutoscaling, pod identity
+- Modern templates - Reusable helpers, better maintainability
+- Complete test coverage - All functionality validated
+
+The chart now features modern patterns, excellent maintainability, and comprehensive test coverage. All CI configurations and unit tests are working perfectly, ensuring the chart will continue to work reliably in all environments.
+
+### ~> `4.0.0`
+
+Chart drops now all `ALL` capabilities by default (`securityContext`). Unique is not aware of any impact but since this can break services theoretically the bump is major.
+
 ### ~> `3.0.0`
 
 - `routes` uses `camelCase` for its keys, replace all `lower_snake_case` keys with `camelCase`

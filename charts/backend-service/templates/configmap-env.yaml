@@ -1,0 +1,10 @@
+{{- if .Values.env }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "backend-service.fullname" . }}-env
+  labels:
+    {{- include "backend-service.labels" . | nindent 4 }}
+data:
+  {{- toYaml .Values.env | nindent 2 }}
+{{- end }} 

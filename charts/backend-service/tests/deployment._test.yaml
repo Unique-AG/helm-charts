@@ -1,37 +1,42 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
 suite: Regression Test Deployment
 templates:
-  - deployment-env.yaml
+  - configmap-env.yaml
+  - secret-env.yaml
   - deployment.yaml
 release:
   name: ut
 tests:
-  - it: When given a secretProvider, should always render volumeMounts and volumes for them
+  - it: When given a secretsProvider, should always render volumeMounts and volumes for them
     set:
-      tyk.listenPath: /unit-test
       image.tag: pinned-version
-      secretProvider.tenantId: 99330c76-81d2-460e-861e-35af8e2a4266
-      secretProvider.vaults.qa-app-common.AMQP_URL: RABBITMQ-ORANGE-WOLF-URL
+      secretsProvider.enabled: true
+      secretsProvider.azure.tenantId: 99330c76-81d2-460e-861e-35af8e2a4266
+      secretsProvider.azure.workloadIdentity.clientId: test-client-id
+      secretsProvider.azure.keyVaults:
+        - name: qa-app-common
+          secrets:
+            - name: AMQP_URL
+              key: RABBITMQ-ORANGE-WOLF-URL
 
     template: deployment.yaml
     asserts:
       - isKind:
           of: Deployment
       - isNotNullOrEmpty:
-          path: spec.template.spec.volumes[?(@.name == "ut-qa-app-common")]
+          path: spec.template.spec.volumes[?(@.name == "secrets-store-qa-app-common")]
       - isNotNullOrEmpty:
-          path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.name == "ut-qa-app-common")]
+          path: spec.template.spec.containers[?(@.name == "ut-backend-service")].volumeMounts[?(@.name == "secrets-store-qa-app-common")]
 
   - it: When given initContainers in deployment
     set:
-      tyk.listenPath: /unit-test
       image.tag: pinned-version
-      deployment.enabled: true
-      deployment.initContainers[0].command:
+      initContainers[0].name: test-init
+      initContainers[0].image: busybox
+      initContainers[0].command:
         - "sh"
-        - "-e"
-        - "echo"
-        - "helloWorld"
+        - "-c"
+        - "echo helloWorld"
     template: deployment.yaml
     asserts:
       - isKind:
@@ -39,11 +44,10 @@ tests:
       - isNotNullOrEmpty:
           path: spec.template.spec.initContainers[0]
       - isNotNullOrEmpty:
-          path: spec.template.spec.initContainers[?(@.name == "init-ut")]
+          path: spec.template.spec.initContainers[?(@.name == "test-init")]
 
   - it: When given envVars, renders them to the PodSpec
     set:
-      tyk.listenPath: /unit-test
       image.tag: pinned-version
       envVars:
         - name: NAME_OF_ENV
@@ -56,9 +60,9 @@ tests:
       - isKind:
           of: Deployment
       - isNotNullOrEmpty:
-          path: spec.template.spec.containers[?(@.name == "ut")].env[?(@.name == "NAME_OF_ENV")]
+          path: spec.template.spec.containers[?(@.name == "ut-backend-service")].env[?(@.name == "NAME_OF_ENV")]
       - contains:
-          path: spec.template.spec.containers[?(@.name == "ut")].env
+          path: spec.template.spec.containers[?(@.name == "ut-backend-service")].env
           content:
             name: NAME_OF_ENV
             valueFrom:
@@ -68,61 +72,29 @@ tests:
           count: 1
           any: true
 
-  - it: When given metadata in deployment
+  - it: When given env and envSecrets, should render ConfigMap and Secret
     set:
-      tyk.listenPath: /unit-test
       image.tag: pinned-version
-      deployment.enabled: true
-      deployment.metadata.labels.app: test
-      deployment.metadata.annotations.test: true
-
-    template: deployment.yaml
+      env.TEST_VAR: test-value
+      envSecrets.SECRET_VAR: secret-value
+    template: configmap-env.yaml
     asserts:
       - isKind:
-          of: Deployment
-      - isNotNullOrEmpty:
-          path: metadata.labels.app
-      - isNotNullOrEmpty:
-          path: metadata.annotations.test
+          of: ConfigMap
       - equal:
-          path: metadata.labels.app
-          value: test
-      - equal:
-          path: metadata.annotations.test
-          value: true
+          path: data.TEST_VAR
+          value: test-value
 
-  - it: When given an initContainer, should always render volumeMounts and volumes for them
+  - it: When given envSecrets, should render Secret
     set:
-      tyk.listenPath: /unit-test
       image.tag: pinned-version
-      deployment.enabled: true
-      deployment.initContainers[0]:
-        volumeMounts:
-          - name: data
-            mountPath: /opt
-            mountPathDeployment: /opt/folder
-        command:
-          - "sh"
-          - "-e"
-          - "echo"
-          - "helloWorld"
-
-    template: deployment.yaml
+      envSecrets.SECRET_VAR: secret-value
+    template: secret-env.yaml
     asserts:
       - isKind:
-          of: Deployment
+          of: Secret
       - isNotNullOrEmpty:
-          path: spec.template.spec.initContainers[0]
-      - isNotNullOrEmpty:
-          path: spec.template.spec.initContainers[?(@.name == "init-ut")]
-      - isNotNullOrEmpty:
-          path: spec.template.spec.volumes[?(@.name == "data")]
-      - isNotNullOrEmpty:
-          path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.name == "data")]
-      - isNotNullOrEmpty:
-          path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.mountPath == "/opt/folder")]
-      - isNotNullOrEmpty:
-          path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.readOnly == false)]
+          path: data.SECRET_VAR
 
   - it: When given a keda block, should not set replicas
     set:
@@ -164,3 +136,21 @@ tests:
       - equal:
           path: spec.template.metadata.annotations.test
           value: true
+
+  - it: When given sidecars, should render them in the deployment
+    set:
+      image.tag: pinned-version
+      sidecars:
+        - name: sidecar-container
+          image: nginx:latest
+          ports:
+            - containerPort: 80
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - isNotNullOrEmpty:
+          path: spec.template.spec.containers[?(@.name == "sidecar-container")]
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "sidecar-container")].image
+          value: nginx:latest

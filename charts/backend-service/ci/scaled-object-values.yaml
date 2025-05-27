@@ -1,19 +1,21 @@
-eventBasedAutoscaling:
+keda:
   enabled: true
   minReplicaCount: 1
   maxReplicaCount: 2
-  cron:
-    timezone: Europe/Zurich
-    start: 0 8 * * 1-5
-    end: 0 19 * * 1-5
-    desiredReplicas: "1"
-  rabbitmq:
-    protocol: auto
-    queueName: queue.name.example
-    mode: QueueLength
-    value: "1"
-    hostFromEnv: AMQP_URL
-  customTriggers:
+  scalers:
+    - type: cron
+      metadata:
+        timezone: Europe/Zurich
+        start: 0 8 * * 1-5
+        end: 0 19 * * 1-5
+        desiredReplicas: "1"
+    - type: rabbitmq
+      metadata:
+        protocol: auto
+        queueName: queue.name.example
+        mode: QueueLength
+        value: "1"
+        hostFromEnv: AMQP_URL
     - type: cpu
       metricType: Utilization
       metadata:
