@@ -709,7 +709,7 @@
             "cpu": {
               "oneOf": [
                 { "type": "string" },
-                { "type": "integer", "minimum": 0 }
+                { "type": "number", "minimum": 0 }
               ],
               "description": "CPU limit",
               "examples": [2, "1000m"]
@@ -728,7 +728,7 @@
             "cpu": {
               "oneOf": [
                 { "type": "string" },
-                { "type": "integer", "minimum": 0 }
+                { "type": "number", "minimum": 0 }
               ],
               "description": "CPU request",
               "examples": [1, "100m"]
@@ -900,6 +900,11 @@
           "description": "Workload identity configuration"
         }
       }
+    },
+    "terminationGracePeriodSeconds": {
+      "type": "integer",
+      "description": "Override the termination grace period seconds.",
+      "examples": [30, 900]
     },
     "tolerations": {
       "type": "array",

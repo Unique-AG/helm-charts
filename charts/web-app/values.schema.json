@@ -335,7 +335,7 @@
             "cpu": {
               "oneOf": [
                 { "type": "string" },
-                { "type": "integer", "minimum": 0 }
+                { "type": "number", "minimum": 0 }
               ],
               "description": "CPU limit",
               "examples": [2, "1000m"]
@@ -354,7 +354,7 @@
             "cpu": {
               "oneOf": [
                 { "type": "string" },
-                { "type": "integer", "minimum": 0 }
+                { "type": "number", "minimum": 0 }
               ],
               "description": "CPU request",
               "examples": [1, "100m"]

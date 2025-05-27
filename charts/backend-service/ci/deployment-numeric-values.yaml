@@ -1,6 +1,7 @@
 image:
   repository: "ghcr.io/unique-ag/chart-testing-service"
   tag: "1.0.3"
+terminationGracePeriodSeconds: 30
 resources:
   limits:
     cpu: 1
