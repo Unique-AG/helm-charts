@@ -17,3 +17,5 @@ annotations:
   artifacthub.io/changes: |
     - kind: fixed
       description: "terminationGracePeriodSeconds is now allowed (again)."
+    - kind: fixed
+      description: "Allow CPU requests/limits float values."
