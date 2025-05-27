@@ -376,6 +376,31 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: fixed
+          description: "terminationGracePeriodSeconds is now allowed (again)."
+        - kind: fixed
+          description: "Allow CPU requests/limits float values."
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    created: "2025-05-27T13:09:37.390367488Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: 544be301ebca65cca8b0538321ca000f4f297fdf071c7b6779554e78c8c73062
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-4.1.2/backend-service-4.1.2.tgz
+    version: 4.1.2
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: fixed
           description: "Integer CPU requests/limits are now allowed (again)."
       artifacthub.io/license: Apache-2.0
     apiVersion: v2
@@ -1603,6 +1628,28 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: fixed
+          description: "Allow CPU requests/limits float values."
+    apiVersion: v2
+    created: "2025-05-27T13:09:37.510157994Z"
+    description: 'The ''web-app'' chart is a "convenience" chart from Unique AG that
+      can generically be used to deploy web-content serving workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: bf8d633d5266bb603490d9bc5fb4b8c56f4b129463dd2129c9a4b159c1deccb2
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: web-app
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/web-app
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/web-app-4.1.2/web-app-4.1.2.tgz
+    version: 4.1.2
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: fixed
           description: "Integer CPU requests/limits are now allowed (again)."
         - kind: fixed
           description: "Default path extraAnnotations are now validated correctly as an object."
@@ -1934,4 +1981,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-05-26T08:48:21.344306719Z"
+generated: "2025-05-27T13:09:37.510516951Z"
