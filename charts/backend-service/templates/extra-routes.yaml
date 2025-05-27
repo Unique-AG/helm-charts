@@ -3,6 +3,13 @@
 {{/* SPDX-SnippetCopyrightText: 2024 © Grafana, grafana/helm-charts */}}
 {{/* SPDX-SnippetCopyrightText: 2024 © Unique AG */}}
 {{/* SPDX-SnippetEnd */}}
+{{- $hasEnabledRoutes := false }}
+{{- range $name, $route := .Values.extraRoutes }}
+  {{- if $route.enabled }}
+    {{- $hasEnabledRoutes = true }}
+  {{- end }}
+{{- end }}
+{{- if $hasEnabledRoutes }}
 {{- if .Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1" }}
 {{- range $name, $route := .Values.extraRoutes }}
   {{- if $route.enabled }}
@@ -14,9 +21,9 @@ metadata:
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  name: {{ template "backendService.fullname" $ }}-{{ $name }}
+  name: {{ include "backend-service.fullname" $ }}-{{ $name }}
   labels:
-    {{- include "backendService.labels" $ | nindent 4 }}
+    {{- include "backend-service.labels" $ | nindent 4 }}
     {{- with $route.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
@@ -34,8 +41,8 @@ spec:
     {{- tpl (toYaml $route.additionalRules) $ | nindent 4 }}
     {{- end }}
     - backendRefs:
-        - name: {{ include "backendService.fullname" $ }}
-          port: {{ include "backendService.servicePort" $ }}
+        - name: {{ include "backend-service.fullname" $ }}
+          port: {{ include "backend-service.servicePort" $ }}
           kind: Service
       {{- with $route.filters }}
       filters:
@@ -49,4 +56,5 @@ spec:
 {{- end }}
 {{- else }}
 {{- fail "You can't use extraRoutes without CRDs installed. Install CRDs first."}}
+{{- end }}
 {{- end }}

@@ -1,10 +1,12 @@
 # backend-service
 
-The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
+The 'backend-service' chart is a modern, maintainable chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
+
+This is a major version with breaking changes focused on consistency, maintainability, and modern Kubernetes patterns.
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 4.1.2](https://img.shields.io/badge/Version-4.1.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 5.0.0](https://img.shields.io/badge/Version-5.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +14,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 4.1.2
+helm install my-backend-service unique/backend-service --version 5.0.0
 
 # or
-helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 4.1.2
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 5.0.0
 ```
 
 ### Docker Images
@@ -84,6 +86,22 @@ The chart provides a JSON schema for validating `values.yaml` files. This schema
 The schema is available in the `values.schema.json` file in the chart.
 
 ## Upgrade Guides
+
+### ~> `5.0.0` - 🔄 Major Modernization Achievements
+
+- Flattened values structure - Removed nested deployment.*
+- Consistent naming - All kebab-case, modern helper functions
+- Enhanced secretsProvider - Flexible Azure Key Vault support
+- New features - initContainers, sidecars, extraEnvConfigMaps, minReadySeconds
+- Removed deprecated - Tyk, legacy cronJob, eventBasedAutoscaling, pod identity
+- Modern templates - Reusable helpers, better maintainability
+- Complete test coverage - All functionality validated
+
+The chart now features modern patterns, excellent maintainability, and comprehensive test coverage. All CI configurations and unit tests are working perfectly, ensuring the chart will continue to work reliably in all environments.
+
+### ~> `4.0.0`
+
+Chart drops now all `ALL` capabilities by default (`securityContext`). Unique is not aware of any impact but since this can break services theoretically the bump is major.
 
 ### ~> `3.0.0`
 

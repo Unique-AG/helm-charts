@@ -1,229 +1,25 @@
-{{- $fullName := include "backendService.fullname" . -}}
-{{- if .Values.deployment.enabled -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ $fullName }}
+  name: {{ include "backend-service.fullname" . }}
   labels:
-    {{- include "backendService.labels" . | nindent 4 }}
-    {{- if .Values.deployment.metadata}}
-    {{- toYaml .Values.deployment.metadata.labels | nindent 4 }}
-    {{- end }}
-    helm.sh/chart: {{ include "backendService.chart" . }}
-    {{- if .Values.image.tag }}
-    app.kubernetes.io/version: {{ .Values.image.tag | quote }}
-    {{- end }}
-  {{- if .Values.deployment.metadata }}
-  annotations:
-    {{- toYaml .Values.deployment.metadata.annotations | nindent 4 }}
-  {{- end }}
+    {{- include "backend-service.labels" . | nindent 4 }}
 
 spec:
-  {{- if not (or .Values.autoscaling.enabled .Values.eventBasedAutoscaling.enabled .Values.keda.enabled) }}
+  {{- if not (or .Values.autoscaling.enabled .Values.keda.enabled) }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "backendService.selectorLabels" . | nindent 6 }}
+      {{- include "backend-service.selectorLabels" . | nindent 6 }}
   strategy:
+    type: RollingUpdate
     {{- with .Values.rollingUpdate }}
     rollingUpdate:
       {{- toYaml . | nindent 6 }}
     {{- end }}
-  minReadySeconds: {{ .Values.minReadySeconds | default 5 }}
+  minReadySeconds: {{ .Values.minReadySeconds }}
   template:
-    metadata:
-      annotations:
-      {{- if .Values.podAnnotations }}
-        {{- with .Values.podAnnotations }}
-          {{- toYaml . | nindent 8 }}
-        {{- end }}
-      {{- end }}
-        checksum/deployment-env: {{ include (print $.Chart.Name "/templates/deployment-env.yaml") . | sha256sum | trunc 8 | quote }}
-        {{- if .Values.envSecrets }}
-        checksum/secrets: {{ include (print $.Chart.Name "/templates/secrets.yaml") . | sha256sum | trunc 8 | quote }}
-        {{- end }}
-      labels:
-      {{- if .Values.podLabels }}
-        {{- with .Values.podLabels }}
-          {{- toYaml . | nindent 8 }}
-        {{- end }}
-      {{- end }}
-        app.kubernetes.io/component: server
-        {{- include "backendService.labels" . | nindent 8 }}
-        {{- if and (.Values.secretProvider) (not .Values.secretProvider.useVMManagedIdentity) }}
-        aadpodidbinding: {{ default "keyvault" (.Values.secretProvider).aadPodIdBinding }}
-        {{- end }}
-        {{- if .Values.serviceAccount.workloadIdentity.enabled }}
-        azure.workload.identity/use: 'true'
-        {{- end }}
+    {{- include "backend-service.podTemplateMetadata" . | nindent 4 }}
     spec:
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      serviceAccountName: {{ include "backendService.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
-
-      {{- if .Values.deployment.initContainers }}
-      initContainers:
-      {{- range .Values.deployment.initContainers }}
-        - name: {{ .name | default (printf "init-%s" $fullName) }}
-          image: "{{ .image | default "busybox:1.28" }}"
-          restartPolicy: "{{ .restartPolicy | default "Always" }}"
-          command: {{ .command | toYaml | nindent 10 }}
-          {{- if .volumeMounts }}
-          volumeMounts:
-          {{- range .volumeMounts }}
-            - name: {{ .name}}
-              mountPath: {{ .mountPath }}
-              readOnly: {{ .readOnly | default true }}
-          {{- end }}
-          {{- end }}
-      {{- end }}
-      {{- end }}
-      containers:
-        - name: {{ $fullName }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - name: http
-              containerPort: {{ include "backendService.applicationPort" $ }}
-              protocol: TCP
-          {{- if .Values.probes.enabled }}
-          {{- if .Values.probes.liveness }}
-          livenessProbe:
-            {{- toYaml .Values.probes.liveness | nindent 12 }}
-          {{- end }}
-          {{- if .Values.probes.readiness }}
-          readinessProbe:
-            {{- toYaml .Values.probes.readiness | nindent 12 }}
-          {{- end }}
-          {{- if .Values.probes.startup }}
-          startupProbe:
-            {{- toYaml .Values.probes.startup | nindent 12 }}
-          {{- end }}
-          {{- end }}
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          envFrom:
-            - configMapRef:
-                name: {{ $fullName }}-env
-            {{- if .Values.envSecrets }}
-            - secretRef:
-                name: {{ $fullName }}-secrets
-            {{- end }}
-            {{- if .Values.extraEnvCM }}
-            {{- range $v := .Values.extraEnvCM }}
-            - configMapRef:
-                name: {{ $v }}
-            {{- end }}
-            {{- end }}
-            {{- if .Values.extraEnvSecrets }}
-            {{- range $v := .Values.extraEnvSecrets }}
-            - secretRef:
-                name: {{ $v }}
-            {{- end }}
-            {{- end }}
-          env:
-            {{- with .Values.envVars }}
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
-            {{- if .Values.secretProvider }}
-            {{- range $k, $v := .Values.secretProvider.vaults }}
-            {{- range $key, $value := $v }}
-            - name: {{ $key }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $fullName }}-{{ $k }}
-                  key: {{ $value }}
-            {{- end }}
-            {{- end }}
-            {{- end }}
-            {{- if .Values.externalSecrets }}
-            {{- range $k, $v := .Values.externalSecrets }}
-            {{- range $key := $v.secrets }}
-            {{- range $d := $key.data }}
-            - name: {{ $key.name }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $v.keyvaultName }}
-                  key: {{ $d.key }}
-            {{- end }}
-            {{- end }}
-            {{- end }}
-            {{- end }}
-          volumeMounts:
-          {{- with .Values.volumeMounts }}
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- if .Values.auditVolume.enabled }}
-            - name: audit
-              mountPath: {{ default "/audit" .Values.auditVolume.mountPath }}
-          {{- end }}
-          {{- if .Values.deployment.initContainers }}
-          {{- range .Values.deployment.initContainers }}
-          {{- if .volumeMounts }}
-          {{- range .volumeMounts }}
-            - name: {{ .name }}
-              mountPath: {{ .mountPathDeployment | default .mountPath }}
-              readOnly: {{ .readOnly | default false }}
-          {{- end }}
-          {{- end }}
-          {{- end }}
-          {{- end }}
-          {{- if .Values.secretProvider }}
-          {{- range $k, $v := .Values.secretProvider.vaults }}
-            - name: {{ $fullName }}-{{ $k }}
-              mountPath: "/mnt/{{ $fullName }}-{{ $k }}"
-              readOnly: true
-           {{- end }}
-           {{- end }}
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.terminationGracePeriodSeconds }}
-      terminationGracePeriodSeconds: {{ . }}
-      {{- end }}
-      volumes:
-      {{- with .Values.volumes }}
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- if .Values.auditVolume.enabled }}
-        - name: audit
-          persistentVolumeClaim:
-            claimName: {{ $fullName }}-audit
-      {{- end }}
-      {{- if .Values.deployment.initContainers }}
-      {{- range .Values.deployment.initContainers }}
-      {{- if .volumeMounts }}
-      {{- range .volumeMounts }}
-        - name: {{ .name }}
-          emptyDir: {}
-      {{- end }}
-      {{- end }}
-      {{- end }}
-      {{- end }}
-      {{- if .Values.secretProvider }}
-      {{- range $k, $v := .Values.secretProvider.vaults }}
-        - name: {{ $fullName }}-{{ $k }}
-          csi:
-            driver: secrets-store.csi.k8s.io
-            readOnly: true
-            volumeAttributes:
-              secretProviderClass: {{ $fullName }}-{{ $k }}
-      {{- end }}
-      {{- end }}
-{{- end }}
+      {{- include "backend-service.podSpec" . | nindent 6 }}

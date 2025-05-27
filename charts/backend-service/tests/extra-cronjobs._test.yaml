@@ -11,7 +11,7 @@ tests:
     template: extra-cronjobs.yaml
     documentSelector:
       path: metadata.name
-      value: ecj-foo
+      value: ecj-backend-service-foo
     asserts:
       - isKind:
           of: CronJob
@@ -29,7 +29,7 @@ tests:
 
   - it: When given pod labels and annotations
     values:
-    - ../ci/extra-cronjobs-values.yaml
+      - ../ci/extra-cronjobs-values.yaml
     set:
       podLabels.app: test
       podAnnotations.test: true

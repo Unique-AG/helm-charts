@@ -9,13 +9,13 @@
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: {{ include "backendService.fullname" . }}
+  name: {{ include "backend-service.fullname" . }}
   labels:
-    {{- include "backendService.labels" . | nindent 4 }}
+    {{- include "backend-service.labels" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
-      {{- include "backendService.selectorLabels" . | nindent 6 }}
+      {{- include "backend-service.selectorLabels" . | nindent 6 }}
   {{- toYaml .Values.pdb | nindent 2 }}
 {{- end }}
 {{- end }}

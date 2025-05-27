@@ -1,5 +1,5 @@
-{{- $fullName := include "backendService.fullname" . -}}
-{{- $labelsCronJob := include "backendService.mutableLabels" . -}}
+{{- $fullName := include "backend-service.fullname" . -}}
+{{- $labels := include "backend-service.labels" . -}}
 {{- $globalValues := .Values -}}
 {{- range $key, $value := .Values.extraCronJobs -}}
 apiVersion: batch/v1
@@ -7,8 +7,8 @@ kind: CronJob
 metadata:
   name: {{ $fullName }}-{{ $key }}
   labels:
-    {{- $labelsCronJob | nindent 4 }}
-    app.kubernetes.io/component: cron-job-extra-{{ $key }}
+    {{- $labels | nindent 4 }}
+    app.kubernetes.io/component: cron-job-{{ $key }}
 spec:
   {{- if $value.schedule }}
   schedule: {{ $value.schedule | quote }}
@@ -31,8 +31,8 @@ spec:
                 {{- toYaml . | nindent 12 }}
               {{- end }}
             {{- end }}
-            {{- $labelsCronJob | nindent 12 }}
-            app.kubernetes.io/component: cron-job-extra-{{ $key }}
+            {{- $labels | nindent 12 }}
+            app.kubernetes.io/component: cron-job-{{ $key }}
           annotations:
             {{- if $.Values.podAnnotations }}
               {{- with $.Values.podAnnotations }}
@@ -40,7 +40,7 @@ spec:
               {{- end }}
             {{- end }}
             {{- if $globalValues.envSecrets }}
-            checksum/secrets: {{ include (print $.Chart.Name "/templates/secrets.yaml") . | sha256sum | trunc 8 | quote }}
+            checksum/secrets: {{ include (print $.Template.BasePath "/secret-env.yaml") . | sha256sum }}
             {{- end }}
         spec:
           {{- with $globalValues.imagePullSecrets }}
@@ -56,29 +56,32 @@ spec:
               resources:
                 {{- toYaml $globalValues.resources | nindent 16 }}
               volumeMounts:
-              {{- if $globalValues.secretProvider }}
-              {{- range $k, $v := $globalValues.secretProvider.vaults }}
-                - name: {{ $fullName }}-{{ $k }}
-                  mountPath: "/mnt/{{ $fullName }}-{{ $k }}"
+              {{- with $globalValues.volumeMounts }}
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              {{- if and $globalValues.secretsProvider.enabled (eq $globalValues.secretsProvider.provider "azure") }}
+              {{- range $globalValues.secretsProvider.azure.keyVaults }}
+                - name: secrets-store-{{ .name }}
+                  mountPath: /mnt/secrets-store/{{ .name }}
                   readOnly: true
               {{- end }}
               {{- end }}
               envFrom:
+                {{- if $globalValues.env }}
+                - configMapRef:
+                    name: {{ $fullName }}-env
+                {{- end }}
                 {{- if $globalValues.envSecrets }}
                 - secretRef:
                     name: {{ $fullName }}-secrets
                 {{- end }}
-                {{- if $globalValues.extraEnvSecrets }}
-                {{- range $v := $globalValues.extraEnvSecrets }}
-                - secretRef:
-                    name: {{ $v }}
-                {{- end }}
-                {{- end }}
-                {{- if $globalValues.extraEnvCM }}
-                {{- range $v := $globalValues.extraEnvCM }}
+                {{- range $globalValues.extraEnvConfigMaps }}
                 - configMapRef:
-                    name: {{ $v }}
+                    name: {{ . }}
                 {{- end }}
+                {{- range $globalValues.extraEnvSecrets }}
+                - secretRef:
+                    name: {{ . }}
                 {{- end }}
               env:
                 - name: VERSION
@@ -86,29 +89,18 @@ spec:
                 {{- with $globalValues.envVars }}
                   {{- toYaml . | nindent 16 }}
                 {{- end }}
-                {{- range $key, $value := $globalValues.env }}
-                - name: {{ $key }}
-                  value: {{ $value | quote }}
-                {{- end }}
                 {{- /* local envVars will take precedence over global envVars as they are specified last */}}
                 {{- with .envVars }}
                   {{- toYaml . | nindent 16 }}
                 {{- end }}
-                {{- with .envVars }}
-                  {{- toYaml . | nindent 16 }}
-                {{- end }}
-                {{- range $key, $value := .env }}
-                - name: {{ $key }}
-                  value: {{ $value | quote }}
-                {{- end }}
-                {{- if $globalValues.secretProvider }}
-                {{- range $k, $v := $globalValues.secretProvider.vaults }}
-                {{- range $key, $value := $v }}
-                - name: {{ $key }}
+                {{- if and $globalValues.secretsProvider.enabled (eq $globalValues.secretsProvider.provider "azure") }}
+                {{- range $globalValues.secretsProvider.azure.keyVaults }}
+                {{- range .secrets }}
+                - name: {{ .name }}
                   valueFrom:
                     secretKeyRef:
-                      name: {{ $fullName }}-{{ $k }}
-                      key: {{ $value }}
+                      name: {{ $fullName }}-{{ $.name }}
+                      key: {{ .key }}
                 {{- end }}
                 {{- end }}
                 {{- end }}
@@ -128,14 +120,14 @@ spec:
           {{- with $globalValues.volumes }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if $globalValues.secretProvider }}
-          {{- range $k, $v := $globalValues.secretProvider.vaults }}
-            - name: {{ $fullName }}-{{ $k }}
+          {{- if and $globalValues.secretsProvider.enabled (eq $globalValues.secretsProvider.provider "azure") }}
+          {{- range $globalValues.secretsProvider.azure.keyVaults }}
+            - name: secrets-store-{{ .name }}
               csi:
                 driver: secrets-store.csi.k8s.io
                 readOnly: true
                 volumeAttributes:
-                  secretProviderClass: {{ $fullName }}-{{ $k }}
+                  secretProviderClass: {{ $fullName }}-{{ .name }}
           {{- end }}
           {{- end }}
 {{- end }}

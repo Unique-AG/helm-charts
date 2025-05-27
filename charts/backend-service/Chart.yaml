@@ -7,15 +7,27 @@ maintainers:
 name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
-version: 4.1.2
+version: 5.0.0
 description: |
-  The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
+  The 'backend-service' chart is a modern, maintainable chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
 
   Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
-    - kind: fixed
-      description: "terminationGracePeriodSeconds is now allowed (again)."
-    - kind: fixed
-      description: "Allow CPU requests/limits float values."
+    - kind: changed
+      description: "BREAKING: Major modernization and consistency improvements"
+    - kind: removed
+      description: "BREAKING: Removed Tyk API Gateway support (deprecated)"
+    - kind: removed
+      description: "BREAKING: Removed legacy cronJob (use extraCronJobs instead)"
+    - kind: removed
+      description: "BREAKING: Removed pod identity support (use managed or workload identity)"
+    - kind: changed
+      description: "BREAKING: Flattened deployment.* values to top-level"
+    - kind: changed
+      description: "BREAKING: Modernized secretsProvider with flexible key/secret/cert support"
+    - kind: added
+      description: "Enhanced helper templates for better maintainability"
+    - kind: added
+      description: "Consistent naming conventions throughout"

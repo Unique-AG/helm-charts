@@ -1,11 +1,12 @@
-{{- $fullName := include "backendService.fullname" . -}}
+{{- $fullName := include "backend-service.fullname" . -}}
 {{- if .Values.hooks.migration.enabled -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ $fullName }}-db-migration
   labels:
-    {{- include "backendService.labelsHooksDbMigrations" . | nindent 4 }}
+    {{- include "backend-service.labels" . | nindent 4 }}
+    app.kubernetes.io/component: db-migration
   annotations:
     helm.sh/hook: pre-install,pre-upgrade
     helm.sh/hook-weight: "10"
@@ -20,10 +21,8 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "backendService.labelsHooksDbMigrations" . | nindent 8 }}
-        {{- if .Values.secretProvider }}
-        aadpodidbinding: {{ default "keyvault" (.Values.secretProvider).aadPodIdBinding }}
-        {{- end }}
+        {{- include "backend-service.labels" . | nindent 8 }}
+        app.kubernetes.io/component: db-migration
         {{- if .Values.serviceAccount.workloadIdentity.enabled }}
         azure.workload.identity/use: 'true'
         {{- end }}
@@ -33,7 +32,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- if .Values.serviceAccount.enabled }}
-      serviceAccountName: {{ include "backendService.serviceAccountName" . }}-migration
+      serviceAccountName: {{ include "backend-service.serviceAccountName" . }}
       {{- end }}
       restartPolicy: Never
       {{- if .Values.hooks.migration.initContainers }}
@@ -67,13 +66,7 @@ spec:
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if .Values.secretProvider }}
-          {{- range $k, $v := .Values.secretProvider.vaults }}
-            - name: {{ $fullName }}-{{ $k }}
-              mountPath: "/mnt/{{ $fullName }}-{{ $k }}"
-              readOnly: true
-           {{- end }}
-           {{- end }}
+          {{- include "backend-service.secretsProviderVolumeMounts" . | nindent 12 }}
           {{- if .Values.hooks.migration.initContainers }}
           {{- range .Values.hooks.migration.initContainers }}
           {{- if .volumeMounts }}
@@ -87,52 +80,12 @@ spec:
           {{- end }}
           securityContext: {{- toYaml .Values.securityContext | nindent 12 }}
           envFrom:
-            - configMapRef:
-                name: {{ $fullName }}-migration-env
-            {{- if .Values.envSecrets }}
-            - secretRef:
-                name: {{ $fullName }}-migration-secrets
-            {{- end }}
-            {{- if .Values.extraEnvCM }}
-            {{- range $v := .Values.extraEnvCM }}
-            - configMapRef:
-                name: {{ $v }}
-            {{- end }}
-            {{- end }}
-            {{- if .Values.extraEnvSecrets }}
-            {{- range $v := .Values.extraEnvSecrets }}
-            - secretRef:
-                name: {{ $v }}
-            {{- end }}
-            {{- end }}
+            {{- include "backend-service.envFrom" . | nindent 12 }}
           env:
             {{- with .Values.envVars }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
-            {{- if .Values.secretProvider }}
-            {{- range $k, $v := .Values.secretProvider.vaults }}
-            {{- range $key, $value := $v }}
-            - name: {{ $key }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $fullName }}-{{ $k }}
-                  key: {{ $value }}
-            {{- end }}
-            {{- end }}
-            {{- end }}
-            {{- if .Values.externalSecrets }}
-            {{- range $k, $v := .Values.externalSecrets }}
-            {{- range $key := $v.secrets }}
-            {{- range $d := $key.data }}
-            - name: {{ $key.name }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $v.keyvaultName }}
-                  key: {{ $d.key }}
-            {{- end }}
-            {{- end }}
-            {{- end }}
-            {{- end }}
+            {{- include "backend-service.secretsProviderEnv" . | nindent 12 }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -159,14 +112,5 @@ spec:
       {{- end }}   
       {{- end }}
       {{- end }}
-      {{- if .Values.secretProvider }}
-      {{- range $k, $v := .Values.secretProvider.vaults }}
-        - name: {{ $fullName }}-{{ $k }}
-          csi:
-            driver: secrets-store.csi.k8s.io
-            readOnly: true
-            volumeAttributes:
-              secretProviderClass: {{ $fullName }}-{{ $k }}-migration
-      {{- end }}
-      {{- end }}
+      {{- include "backend-service.secretsProviderVolumes" . | nindent 8 }}
 {{- end }}
