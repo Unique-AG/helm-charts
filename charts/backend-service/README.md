@@ -2,8 +2,6 @@
 
 The 'backend-service' chart is a modern, maintainable chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
 
-This is a major version with breaking changes focused on consistency, maintainability, and modern Kubernetes patterns.
-
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
 ![Version: 5.0.0](https://img.shields.io/badge/Version-5.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
