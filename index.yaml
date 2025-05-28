@@ -375,6 +375,29 @@ entries:
   backend-service:
   - annotations:
       artifacthub.io/changes: |
+        - kind: added
+          description: "Added lifecycle to deployment."
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    created: "2025-05-28T13:09:37.307315326Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: 0390a36481fd845dd6623162f2752f2886234c8b0e73a36d63daace523f8ef59
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-4.2.0/backend-service-4.2.0.tgz
+    version: 4.2.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: fixed
           description: "terminationGracePeriodSeconds is now allowed (again)."
         - kind: fixed
@@ -1981,4 +2004,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-05-27T13:09:37.510516951Z"
+generated: "2025-05-28T13:09:37.307588676Z"
