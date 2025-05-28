@@ -91,6 +91,10 @@ spec:
             - name: http
               containerPort: {{ include "backendService.applicationPort" $ }}
               protocol: TCP
+          {{- if .Values.lifecycle }}
+          lifecycle:
+            {{- toYaml .Values.lifecycle | nindent 12 }}
+          {{- end }}
           {{- if .Values.probes.enabled }}
           {{- if .Values.probes.liveness }}
           livenessProbe:

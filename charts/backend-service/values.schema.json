@@ -569,6 +569,20 @@
       "type": "array",
       "description": "Image pull secrets"
     },
+    "lifecycle": {
+      "type": "object",
+      "description": "Container lifecycle configuration",
+      "examples": [
+        {
+          "preStop": {
+            "httpGet": {
+              "path": "can_shutdown",
+              "port": "8080"
+            }
+          }
+        }
+      ]
+    },
     "pdb": {
       "type": "object",
       "description": "Pod Disruption Budget configuration",
