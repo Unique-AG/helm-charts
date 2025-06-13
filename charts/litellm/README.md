@@ -1,6 +1,6 @@
 # litellm
 
-![Version: 1.65.4](https://img.shields.io/badge/Version-1.65.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v1.65.4-stable](https://img.shields.io/badge/AppVersion-v1.65.4--stable-informational?style=flat-square)
+![Version: 1.72.2](https://img.shields.io/badge/Version-1.72.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v1.72.2-stable](https://img.shields.io/badge/AppVersion-v1.72.2--stable-informational?style=flat-square)
 
 The 'litellm' chart provides a solution for deploying LiteLLM proxy with helm.
 
