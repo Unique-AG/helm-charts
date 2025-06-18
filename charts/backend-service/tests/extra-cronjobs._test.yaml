@@ -26,6 +26,18 @@ tests:
       - equal:
           path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "foo")].env[?(@.name == "BAZ")].value
           value: qux
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "foo")].resources.requests.cpu
+          value: 100m
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "foo")].resources.requests.memory
+          value: 100Mi
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "foo")].resources.limits.cpu
+          value: 200m
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "foo")].resources.limits.memory
+          value: 200Mi
 
   - it: When given pod labels and annotations
     values:

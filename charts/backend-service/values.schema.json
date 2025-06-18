@@ -494,6 +494,50 @@
             "type": "string",
             "description": "Timezone for the cron job",
             "examples": ["Europe/Zurich"]
+          },
+          "resources": {
+            "type": "object",
+            "description": "CPU/Memory resource requests/limits",
+            "properties": {
+              "limits": {
+                "type": "object",
+                "description": "Resource limits",
+                "properties": {
+                  "cpu": {
+                    "oneOf": [
+                      { "type": "string" },
+                      { "type": "number", "minimum": 0 }
+                    ],
+                    "description": "CPU limit",
+                    "examples": [2, "1000m"]
+                  },
+                  "memory": {
+                    "type": "string",
+                    "description": "Memory limit",
+                    "examples": ["1Gi"]
+                  }
+                }
+              },
+              "requests": {
+                "type": "object",
+                "description": "Resource requests",
+                "properties": {
+                  "cpu": {
+                    "oneOf": [
+                      { "type": "string" },
+                      { "type": "number", "minimum": 0 }
+                    ],
+                    "description": "CPU request",
+                    "examples": [1, "100m"]
+                  },
+                  "memory": {
+                    "type": "string",
+                    "description": "Memory request",
+                    "examples": ["128Mi"]
+                  }
+                }
+              }
+            }
           }
         }
       },

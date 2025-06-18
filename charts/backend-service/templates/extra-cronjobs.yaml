@@ -54,7 +54,7 @@ spec:
               imagePullPolicy: {{ $globalValues.image.pullPolicy }}
               securityContext: {{- toYaml $globalValues.securityContext | nindent 16 }}
               resources:
-                {{- toYaml $globalValues.resources | nindent 16 }}
+                {{- toYaml ($value.resources | default $globalValues.resources) | nindent 16 }}
               volumeMounts:
               {{- if $globalValues.secretProvider }}
               {{- range $k, $v := $globalValues.secretProvider.vaults }}
