@@ -1,7 +1,8 @@
 {{- $fullName := include "backendService.fullname" . -}}
 {{- $labelsCronJob := include "backendService.mutableLabels" . -}}
 {{- $globalValues := .Values -}}
-{{- range $key, $value := .Values.extraCronJobs -}}
+{{- range $key, $value := .Values.extraCronJobs }}
+---
 apiVersion: batch/v1
 kind: CronJob
 metadata:
