@@ -224,11 +224,7 @@ local function do_authentication(conf)
         }
     end
 
-    kong.log.info(string.format("app_repository_url: %s app_id: %s company_id: %s user_id: %s",
-                            conf.app_repository_url or "nil", 
-                            app_id or "nil", 
-                            company_id or "nil", 
-                            user_id or "nil"))
+    kong.log.info("app_repository_url: " .. conf.app_repository_url .. " app_id: " .. app_id .. " company_id: " .. company_id .. " user_id: " .. user_id)
 
     if validate_api_key(conf.app_repository_url, app_id, company_id, token, user_id) then
         return true
