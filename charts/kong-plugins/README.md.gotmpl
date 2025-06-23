@@ -36,7 +36,7 @@ config:
   allowed_iss:
     - https://id.example.com
   jwks_extra_headers:
-    forwarded: host=zitadel.<namespace>.svc.cluster.local;proto=http
+    forwarded: host=id.example.com
   jwks_uri: http://zitadel.<namespace>.svc.cluster.local:8080/oauth/v2/keys
   uri_param_names:
     - token
