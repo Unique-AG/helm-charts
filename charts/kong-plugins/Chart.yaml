@@ -14,5 +14,5 @@ description: |
   Please report any security concerns with the plugins via the [Security Policy](https://github.com/Unique-AG/helm-charts/tree/main?tab=security-ov-file).
 annotations:
   artifacthub.io/changes: |
-    - kind: changed
-      description: Fixes logging issue for nil values.
+    - kind: fixed
+      description: Logging issue for nil values.
