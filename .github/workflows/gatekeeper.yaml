@@ -11,7 +11,7 @@ on:
 
 jobs:
   conventional-pr-title:
-    runs-on: singularity
+    runs-on: ubuntu-latest
     name: Validate PR title against conventional commit format
     permissions:
       pull-requests: read
@@ -24,7 +24,7 @@ jobs:
           requireScope: true
 
   gatekeeper:
-    runs-on: singularity
+    runs-on: ubuntu-latest
     permissions:
       checks: read
       statuses: read
