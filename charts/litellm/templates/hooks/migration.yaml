@@ -70,6 +70,12 @@ spec:
             - secretRef:
                 name: {{ .Values.secretFrom.name }}
             {{- end }}
+            {{- if .Values.envFromSecretRefs }}
+            {{- range .Values.envFromSecretRefs }}
+            - secretRef:
+                name: {{ . }}
+            {{- end }}
+            {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

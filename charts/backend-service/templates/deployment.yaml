@@ -34,14 +34,21 @@ spec:
   template:
     metadata:
       annotations:
-      {{- with .Values.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
+      {{- if .Values.podAnnotations }}
+        {{- with .Values.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
       {{- end }}
         checksum/deployment-env: {{ include (print $.Chart.Name "/templates/deployment-env.yaml") . | sha256sum | trunc 8 | quote }}
         {{- if .Values.envSecrets }}
         checksum/secrets: {{ include (print $.Chart.Name "/templates/secrets.yaml") . | sha256sum | trunc 8 | quote }}
         {{- end }}
       labels:
+      {{- if .Values.podLabels }}
+        {{- with .Values.podLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
         app.kubernetes.io/component: server
         {{- include "backendService.labels" . | nindent 8 }}
         {{- if and (.Values.secretProvider) (not .Values.secretProvider.useVMManagedIdentity) }}
@@ -84,6 +91,10 @@ spec:
             - name: http
               containerPort: {{ include "backendService.applicationPort" $ }}
               protocol: TCP
+          {{- if .Values.lifecycle }}
+          lifecycle:
+            {{- toYaml .Values.lifecycle | nindent 12 }}
+          {{- end }}
           {{- if .Values.probes.enabled }}
           {{- if .Values.probes.liveness }}
           livenessProbe:
