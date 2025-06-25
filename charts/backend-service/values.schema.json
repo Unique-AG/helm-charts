@@ -586,6 +586,99 @@
         }
       }
     },
+    "networkPolicy": {
+      "type": "object",
+      "description": "Network policy configuration for controlling traffic flow to and from pods",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable or disable network policy creation",
+          "examples": [false]
+        },
+        "flavor": {
+          "type": "string",
+          "enum": ["kubernetes", "cilium"],
+          "description": "Network policy flavor - 'kubernetes' for standard NetworkPolicy or 'cilium' for CiliumNetworkPolicy",
+          "default": "kubernetes",
+          "examples": ["kubernetes", "cilium"]
+        },
+        "policyTypes": {
+          "type": "array",
+          "description": "Policy types to apply (Ingress, Egress, or both)",
+          "items": {
+            "type": "string",
+            "enum": ["Ingress", "Egress"]
+          },
+          "examples": [["Ingress", "Egress"]]
+        },
+        "ingress": {
+          "type": "array",
+          "description": "Ingress rules configuration",
+          "items": {
+            "type": "object",
+            "description": "Network policy ingress rule"
+          },
+          "examples": [
+            [
+              {
+                "from": [
+                  {
+                    "namespaceSelector": {
+                      "matchLabels": {
+                        "name": "monitoring"
+                      }
+                    }
+                  }
+                ],
+                "ports": [
+                  {
+                    "protocol": "TCP",
+                    "port": 8080
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        "egress": {
+          "type": "array",
+          "description": "Egress rules configuration",
+          "items": {
+            "type": "object",
+            "description": "Network policy egress rule"
+          },
+          "examples": [
+            [
+              {
+                "to": [
+                  {
+                    "namespaceSelector": {
+                      "matchLabels": {
+                        "name": "database"
+                      }
+                    }
+                  }
+                ],
+                "ports": [
+                  {
+                    "protocol": "TCP",
+                    "port": 5432
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        "labels": {
+          "type": "object",
+          "description": "Additional labels to add to the network policy"
+        },
+        "annotations": {
+          "type": "object",
+          "description": "Additional annotations to add to the network policy"
+        }
+      }
+    },
     "image": {
       "type": "object",
       "description": "Container image configuration",

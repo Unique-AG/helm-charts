@@ -45,6 +45,72 @@ The Root Route is a convenience Ingress/Gateway that routes all traffic from the
 
 Only one root route per cluster (technically per hostname) should be deployed to avoid conflicts or race conditions respectively.
 
+### Network Policies
+
+The chart supports Kubernetes Network Policies to control traffic flow to and from pods. Network Policies are a Kubernetes-native way to implement network segmentation and can help improve security by restricting network communication.
+
+#### Network Policy Flavors
+
+The chart supports two network policy flavors:
+
+- **`kubernetes`** (default): Standard Kubernetes NetworkPolicy resources
+- **`cilium`**: Cilium's CiliumNetworkPolicy resources with enhanced features
+
+```yaml
+networkPolicy:
+  enabled: true
+  flavor: kubernetes  # or "cilium"
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow ingress from monitoring namespace
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+      ports:
+        - protocol: TCP
+          port: 3000
+  egress:
+    # Allow egress to backend namespace
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: backend
+      ports:
+        - protocol: TCP
+          port: 8080
+    # Allow external HTTPS/HTTP access
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+```
+
+#### Kubernetes vs Cilium Differences
+
+When using `flavor: cilium`, the chart will:
+- Use `apiVersion: cilium.io/v2` and `kind: CiliumNetworkPolicy`
+- Use `endpointSelector` instead of `podSelector` in the spec
+- Support advanced Cilium-specific features in your rules
+
+When using `flavor: kubernetes` (default), the chart will:
+- Use `apiVersion: networking.k8s.io/v1` and `kind: NetworkPolicy`
+- Use standard `podSelector` in the spec
+- Maintain compatibility with any Kubernetes CNI that supports NetworkPolicy
+
+**Important Notes:**
+- Network Policies require a CNI (Container Network Interface) that supports them, such as Calico, Cilium, or Weave Net
+- For Cilium flavor, you must have Cilium CNI installed with CiliumNetworkPolicy CRDs
+- Once a Network Policy is applied to a pod, it becomes "isolated" and only allowed traffic will be permitted
+- Always include DNS resolution (port 53/UDP) in your egress rules if pods need to resolve hostnames
+- Test your network policies thoroughly to avoid inadvertently blocking required traffic
+
+You can find Network Policy examples in the [`ci/networkpolicy-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/web-app/ci/networkpolicy-values.yaml) (Kubernetes) and [`ci/networkpolicy-cilium-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/web-app/ci/networkpolicy-cilium-values.yaml) (Cilium) files.
+
 ## Values
 
 | Key | Type | Default | Description |
@@ -76,6 +142,16 @@ Only one root route per cluster (technically per hostname) should be deployed to
 | image.tag | string | `"1.0.2"` | tag, most often will refer one of the latest release of the Unique service Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image |
 | imagePullSecrets | list | `[]` |  |
 | nameOverride | string | `""` |  |
+| networkPolicy | object | `{"annotations":{},"egress":[{}],"enabled":false,"flavor":"kubernetes","ingress":[{}],"labels":{},"policyTypes":["Ingress","Egress"]}` | networkPolicy allows you to define network policies for the deployed pods Network policies are used to control traffic flow to and from pods |
+| networkPolicy.annotations | object | `{}` | Additional annotations to add to the network policy |
+| networkPolicy.egress | list | `[{}]` | Egress rules configuration |
+| networkPolicy.egress[0] | object | `{}` | Default egress rules applied to all pods |
+| networkPolicy.enabled | bool | `false` | Enable or disable network policy creation |
+| networkPolicy.flavor | string | `"kubernetes"` | Network policy flavor - "kubernetes" for standard NetworkPolicy or "cilium" for CiliumNetworkPolicy |
+| networkPolicy.ingress | list | `[{}]` | Ingress rules configuration |
+| networkPolicy.ingress[0] | object | `{}` | Default ingress rules applied to all pods |
+| networkPolicy.labels | object | `{}` | Additional labels to add to the network policy |
+| networkPolicy.policyTypes | list | `["Ingress","Egress"]` | Policy types to apply (Ingress, Egress, or both) |
 | nodeSelector | object | `{}` |  |
 | pdb | object | `{"minAvailable":1}` | Define the pod disruption budget for this deployment Is templated as YAML so all kuberentes native types are supported |
 | pdb.minAvailable | int | `1` | This setting matches the charts default replica count, make sure to adapt your PDB if you chose a different sizing of your deployment |

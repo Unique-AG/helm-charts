@@ -71,6 +71,59 @@ imagePullSecrets: []
 
 nodeSelector: {}
 
+# -- networkPolicy allows you to define network policies for the deployed pods
+# Network policies are used to control traffic flow to and from pods
+networkPolicy:
+  # -- Enable or disable network policy creation
+  enabled: false
+  # -- Network policy flavor - "kubernetes" for standard NetworkPolicy or "cilium" for CiliumNetworkPolicy
+  flavor: kubernetes
+  # -- Policy types to apply (Ingress, Egress, or both)
+  policyTypes:
+    - Ingress
+    - Egress
+  # -- Ingress rules configuration
+  ingress:
+    # -- Default ingress rules applied to all pods
+    - {}
+    # Example ingress rules:
+    # - from:
+    #     - namespaceSelector:
+    #         matchLabels:
+    #           name: monitoring
+    #   ports:
+    #     - protocol: TCP
+    #       port: 3000
+    # - from:
+    #     - podSelector:
+    #         matchLabels:
+    #           app: load-balancer
+    #   ports:
+    #     - protocol: TCP
+    #       port: 3000
+  # -- Egress rules configuration
+  egress:
+    # -- Default egress rules applied to all pods
+    - {}
+    # Example egress rules:
+    # - to:
+    #     - namespaceSelector:
+    #         matchLabels:
+    #           name: backend
+    #   ports:
+    #     - protocol: TCP
+    #       port: 8080
+    # - to: []
+    #   ports:
+    #     - protocol: TCP
+    #       port: 443
+    #     - protocol: TCP
+    #       port: 80
+  # -- Additional labels to add to the network policy
+  labels: {}
+  # -- Additional annotations to add to the network policy
+  annotations: {}
+
 # -- Define the pod disruption budget for this deployment
 # Is templated as YAML so all kuberentes native types are supported
 pdb:

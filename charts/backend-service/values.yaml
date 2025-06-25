@@ -188,6 +188,59 @@ hooks:
     #         mountPathJob: /opt/folder
     #         readOnly: true
 
+# -- networkPolicy allows you to define network policies for the deployed pods
+# Network policies are used to control traffic flow to and from pods
+networkPolicy:
+  # -- Enable or disable network policy creation
+  enabled: false
+  # -- Network policy flavor - "kubernetes" for standard NetworkPolicy or "cilium" for CiliumNetworkPolicy
+  flavor: kubernetes
+  # -- Policy types to apply (Ingress, Egress, or both)
+  policyTypes:
+    - Ingress
+    - Egress
+  # -- Ingress rules configuration
+  ingress:
+    # -- Default ingress rules applied to all pods
+    - {}
+    # Example ingress rules:
+    # - from:
+    #     - namespaceSelector:
+    #         matchLabels:
+    #           name: monitoring
+    #   ports:
+    #     - protocol: TCP
+    #       port: 8080
+    # - from:
+    #     - podSelector:
+    #         matchLabels:
+    #           app: frontend
+    #   ports:
+    #     - protocol: TCP
+    #       port: 80
+  # -- Egress rules configuration
+  egress:
+    # -- Default egress rules applied to all pods
+    - {}
+    # Example egress rules:
+    # - to:
+    #     - namespaceSelector:
+    #         matchLabels:
+    #           name: database
+    #   ports:
+    #     - protocol: TCP
+    #       port: 5432
+    # - to: []
+    #   ports:
+    #     - protocol: TCP
+    #       port: 443
+    #     - protocol: TCP
+    #       port: 80
+  # -- Additional labels to add to the network policy
+  labels: {}
+  # -- Additional annotations to add to the network policy
+  annotations: {}
+
 # -- The image to use for this specific deployment and its cron jobs
 image:
   # -- Repository, where the Unique service image is pulled from

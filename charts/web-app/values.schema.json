@@ -239,6 +239,172 @@
       "type": "object",
       "description": "Node selector for pod assignment"
     },
+    "networkPolicy": {
+      "type": "object",
+      "description": "Network policy configuration to control traffic flow to and from pods",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable or disable network policy creation",
+          "examples": [false]
+        },
+        "flavor": {
+          "type": "string",
+          "description": "Network policy flavor - 'kubernetes' for standard NetworkPolicy or 'cilium' for CiliumNetworkPolicy",
+          "enum": ["kubernetes", "cilium"],
+          "examples": ["kubernetes"]
+        },
+        "policyTypes": {
+          "type": "array",
+          "description": "Policy types to apply (Ingress, Egress, or both)",
+          "items": {
+            "type": "string",
+            "enum": ["Ingress", "Egress"]
+          },
+          "examples": [["Ingress", "Egress"]]
+        },
+        "ingress": {
+          "type": "array",
+          "description": "Ingress rules configuration",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              },
+              "ports": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "protocol": {
+                      "type": "string",
+                      "enum": ["TCP", "UDP", "SCTP"]
+                    },
+                    "port": {
+                      "oneOf": [
+                        { "type": "integer", "minimum": 1, "maximum": 65535 },
+                        { "type": "string" }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "examples": [
+            [
+              {
+                "from": [
+                  {
+                    "namespaceSelector": {
+                      "matchLabels": {
+                        "name": "monitoring"
+                      }
+                    }
+                  }
+                ],
+                "ports": [
+                  {
+                    "protocol": "TCP",
+                    "port": 3000
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        "egress": {
+          "type": "array",
+          "description": "Egress rules configuration",
+          "items": {
+            "type": "object",
+            "properties": {
+              "to": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              },
+              "ports": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "protocol": {
+                      "type": "string",
+                      "enum": ["TCP", "UDP", "SCTP"]
+                    },
+                    "port": {
+                      "oneOf": [
+                        { "type": "integer", "minimum": 1, "maximum": 65535 },
+                        { "type": "string" }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "examples": [
+            [
+              {
+                "to": [
+                  {
+                    "namespaceSelector": {
+                      "matchLabels": {
+                        "name": "backend"
+                      }
+                    }
+                  }
+                ],
+                "ports": [
+                  {
+                    "protocol": "TCP",
+                    "port": 8080
+                  }
+                ]
+              },
+              {
+                "to": [],
+                "ports": [
+                  {
+                    "protocol": "TCP",
+                    "port": 443
+                  },
+                  {
+                    "protocol": "TCP",
+                    "port": 80
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        "labels": {
+          "type": "object",
+          "description": "Additional labels to add to the network policy",
+          "examples": [
+            {
+              "environment": "test",
+              "team": "platform"
+            }
+          ]
+        },
+        "annotations": {
+          "type": "object",
+          "description": "Additional annotations to add to the network policy",
+          "examples": [
+            {
+              "description": "Test network policy for web app"
+            }
+          ]
+        }
+      }
+    },
     "pdb": {
       "type": "object",
       "description": "Pod Disruption Budget configuration",
