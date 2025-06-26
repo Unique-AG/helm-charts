@@ -1,0 +1,54 @@
+nameOverride: "cilium-test"
+
+routes:
+  paths:
+    default:
+      enabled: false
+
+networkPolicy:
+  enabled: true
+  flavor: cilium
+  labels:
+    environment: test
+    team: platform
+    flavor: cilium
+  annotations:
+    description: "Test Cilium network policy for web app"
+  ingress:
+    # Allow ingress from monitoring namespace
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+      ports:
+        - protocol: TCP
+          port: 3000
+    # Allow ingress from load balancer pods
+    - from:
+        - podSelector:
+            matchLabels:
+              app: load-balancer
+      ports:
+        - protocol: TCP
+          port: 3000
+  egress:
+    # Allow egress to backend namespace
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: backend
+      ports:
+        - protocol: TCP
+          port: 8080
+    # Allow external HTTPS/HTTP access
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+    # Allow DNS resolution
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53

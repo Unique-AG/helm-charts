@@ -1,0 +1,53 @@
+# Test values for Cilium network policy functionality
+nameOverride: "cilium-test"
+
+networkPolicy:
+  enabled: true
+  flavor: cilium
+  policyTypes:
+    - Ingress
+    - Egress
+  labels:
+    environment: test
+    team: platform
+    flavor: cilium
+  annotations:
+    description: "Test Cilium network policy for backend service"
+  ingress:
+    # Allow ingress from monitoring namespace
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+      ports:
+        - protocol: TCP
+          port: 8080
+    # Allow ingress from frontend pods
+    - from:
+        - podSelector:
+            matchLabels:
+              app: frontend
+      ports:
+        - protocol: TCP
+          port: 80
+  egress:
+    # Allow egress to database namespace
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: database
+      ports:
+        - protocol: TCP
+          port: 5432
+    # Allow egress to external HTTPS/HTTP
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+    # Allow DNS resolution
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
