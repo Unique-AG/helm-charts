@@ -142,14 +142,14 @@ You can find Network Policy examples in the [`ci/networkpolicy-values.yaml`](htt
 | image.tag | string | `"1.0.2"` | tag, most often will refer one of the latest release of the Unique service Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image |
 | imagePullSecrets | list | `[]` |  |
 | nameOverride | string | `""` |  |
-| networkPolicy | object | `{"annotations":{},"egress":[{}],"enabled":false,"flavor":"kubernetes","ingress":[{}],"labels":{},"policyTypes":["Ingress","Egress"]}` | networkPolicy allows you to define network policies for the deployed pods Network policies are used to control traffic flow to and from pods |
+| networkPolicy | object | `{"annotations":{},"egress":[{"to":[{"podSelector":{}}]},{"ports":[{"port":53,"protocol":"UDP"}],"to":[]}],"enabled":false,"flavor":"kubernetes","ingress":[{"from":[{"podSelector":{}}]}],"labels":{},"policyTypes":["Ingress","Egress"]}` | networkPolicy allows you to define network policies for the deployed pods Network policies are used to control traffic flow to and from pods |
 | networkPolicy.annotations | object | `{}` | Additional annotations to add to the network policy |
-| networkPolicy.egress | list | `[{}]` | Egress rules configuration |
-| networkPolicy.egress[0] | object | `{}` | Default egress rules applied to all pods |
+| networkPolicy.egress | list | `[{"to":[{"podSelector":{}}]},{"ports":[{"port":53,"protocol":"UDP"}],"to":[]}]` | Egress rules configuration |
+| networkPolicy.egress[0] | object | `{"to":[{"podSelector":{}}]}` | Default egress rules applied to all pods Allow egress to pods in the same namespace |
 | networkPolicy.enabled | bool | `false` | Enable or disable network policy creation |
 | networkPolicy.flavor | string | `"kubernetes"` | Network policy flavor - "kubernetes" for standard NetworkPolicy or "cilium" for CiliumNetworkPolicy |
-| networkPolicy.ingress | list | `[{}]` | Ingress rules configuration |
-| networkPolicy.ingress[0] | object | `{}` | Default ingress rules applied to all pods |
+| networkPolicy.ingress | list | `[{"from":[{"podSelector":{}}]}]` | Ingress rules configuration |
+| networkPolicy.ingress[0] | object | `{"from":[{"podSelector":{}}]}` | Default ingress rules applied to all pods Allow ingress from pods in the same namespace |
 | networkPolicy.labels | object | `{}` | Additional labels to add to the network policy |
 | networkPolicy.policyTypes | list | `["Ingress","Egress"]` | Policy types to apply (Ingress, Egress, or both) |
 | nodeSelector | object | `{}` |  |

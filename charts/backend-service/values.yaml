@@ -202,7 +202,9 @@ networkPolicy:
   # -- Ingress rules configuration
   ingress:
     # -- Default ingress rules applied to all pods
-    - {}
+    # Allow ingress from pods in the same namespace
+    - from:
+        - podSelector: {}
     # Example ingress rules:
     # - from:
     #     - namespaceSelector:
@@ -217,11 +219,18 @@ networkPolicy:
     #           app: frontend
     #   ports:
     #     - protocol: TCP
-    #       port: 80
+    #       port: 8080
   # -- Egress rules configuration
   egress:
     # -- Default egress rules applied to all pods
-    - {}
+    # Allow egress to pods in the same namespace
+    - to:
+        - podSelector: {}
+    # Allow DNS resolution
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
     # Example egress rules:
     # - to:
     #     - namespaceSelector:
