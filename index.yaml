@@ -1736,6 +1736,28 @@ entries:
   web-app:
   - annotations:
       artifacthub.io/changes: |
+        - kind: changed
+          description: "Updated to use v2 of the autoscaling API."
+    apiVersion: v2
+    created: "2025-07-03T12:09:47.645684127Z"
+    description: 'The ''web-app'' chart is a "convenience" chart from Unique AG that
+      can generically be used to deploy web-content serving workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: 39df7a7cc32c29e274ff2a99615e281284e73c6f2619ffbcd27ed417b4056ed1
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: web-app
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/web-app
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/web-app-4.2.0/web-app-4.2.0.tgz
+    version: 4.2.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: fixed
           description: "Allow CPU requests/limits float values."
     apiVersion: v2
@@ -2090,4 +2112,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-06-23T09:04:53.4077058Z"
+generated: "2025-07-03T12:09:47.646197616Z"
