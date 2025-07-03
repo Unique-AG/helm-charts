@@ -14,5 +14,5 @@ sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/web-app
 annotations:
   artifacthub.io/changes: |
-    - kind: fixed
-      description: "Allow CPU requests/limits float values."
+    - kind: feature
+      description: "Updated to use v2 of the autoscaling API."
