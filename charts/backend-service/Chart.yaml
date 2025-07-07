@@ -17,4 +17,4 @@ annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
     - kind: added
-      description: "Possibility to define network policies"
+      description: "Possibility to define network policies. While currently added for testing, they will be enabled by default in the next major chart release."
