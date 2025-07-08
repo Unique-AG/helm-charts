@@ -101,12 +101,6 @@ jobs:
         if: steps.list-changed.outputs.changed == 'true'
         run: ./scripts/install-crds.sh
 
-      - name: Install Cilium in order to be able to test network policies
-        run: |
-          helm repo add cilium https://helm.cilium.io/
-          helm repo update
-          helm install cilium cilium/cilium
-
       - name: Run chart-testing (install)
         run: ct install --config ./.github/configs/ct-install.yaml
         if: steps.list-changed.outputs.changed == 'true'

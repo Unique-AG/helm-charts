@@ -27,3 +27,8 @@ else
   echo "Kubernetes version $version < 1.23, skipping Gateway API CRDs installation"
   echo "Please use an older version of Gateway API CRDs or upgrade your Kubernetes version"
 fi
+
+# Install Cilium in order to be able to test Cilium network policies
+helm repo add cilium https://helm.cilium.io/
+helm repo update
+helm install cilium cilium/cilium
