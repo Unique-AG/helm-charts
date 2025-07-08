@@ -94,8 +94,10 @@ networkPolicy:
   #   tier: web
   # -- Labels to be applied to the network policy spec (Cilium only)
   # ciliumPolicylabels:
-  #   - component: frontend
-  #   - tier: web
+  #   - key: component
+  #     value: frontend
+  #   - key: tier
+  #     value: web
   # -- Ingress rules configuration
   ingress:
     # -- Default ingress rules applied to all pods

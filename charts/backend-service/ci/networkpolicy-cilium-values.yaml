@@ -10,59 +10,75 @@ networkPolicy:
     team: platform
     flavor: cilium
   ciliumPolicylabels:
-    - component: backend
-    - tier: application
-    - environment: test
+    - key: component
+      value: backend
+    - key: tier
+      value: application
+    - key: environment
+      value: test
   enableDefaultDeny:
     ingress: true
     egress: false
+
+  # Cilium-specific policy structure
+  endpointSelector:
+    matchLabels:
+      app: backend-service
+
   ingress:
     # Allow ingress from monitoring namespace
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              name: monitoring
-      ports:
-        - protocol: TCP
-          port: 8080
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
     # Allow ingress from frontend pods
-    - from:
-        - podSelector:
-            matchLabels:
-              app: frontend
-      ports:
-        - protocol: TCP
-          port: 80
+    - fromEndpoints:
+        - matchLabels:
+            app: frontend
+      toPorts:
+        - ports:
+            - port: "80"
+              protocol: TCP
+
+  # Cilium ingress deny rules
   ingressDeny:
     # Deny ingress from untrusted pods
-    - from:
-        - podSelector:
-            matchLabels:
-              security: untrusted
+    - fromEndpoints:
+        - matchLabels:
+            security: untrusted
+
   egress:
     # Allow egress to database namespace
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              name: database
-      ports:
-        - protocol: TCP
-          port: 5432
-    # Allow egress to external HTTPS/HTTP
-    - to: []
-      ports:
-        - protocol: TCP
-          port: 443
-        - protocol: TCP
-          port: 80
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": database
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
     # Allow DNS resolution
-    - to: []
-      ports:
-        - protocol: UDP
-          port: 53
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+    # Alternative DNS rule using CIDR
+    - toCIDR:
+        - "0.0.0.0/0"
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+
+  # Cilium egress deny rules
   egressDeny:
     # Deny egress to restricted namespace
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              name: restricted
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": restricted

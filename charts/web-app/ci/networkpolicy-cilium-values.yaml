@@ -14,9 +14,12 @@ networkPolicy:
     team: platform
     flavor: cilium
   ciliumPolicylabels:
-    - component: frontend
-    - tier: web
-    - environment: test
+    - key: component
+      value: frontend
+    - key: tier
+      value: web
+    - key: environment
+      value: test
   enableDefaultDeny:
     ingress: true
     egress: false
