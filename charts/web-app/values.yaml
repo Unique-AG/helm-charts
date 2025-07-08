@@ -82,6 +82,16 @@ networkPolicy:
   policyTypes:
     - Ingress
     - Egress
+  # -- Description of the network policy (Cilium only)
+  # description: "Network policy for web app"
+  # -- Enable default deny for all traffic (Cilium only)
+  # enableDefaultDeny:
+  #   ingress: true
+  #   egress: false
+  # -- Labels to be applied to the network policy spec (Cilium only)
+  # labels:
+  #   component: frontend
+  #   tier: web
   # -- Ingress rules configuration
   ingress:
     # -- Default ingress rules applied to all pods
@@ -103,6 +113,12 @@ networkPolicy:
     #   ports:
     #     - protocol: TCP
     #       port: 3000
+  # -- Ingress deny rules configuration (Cilium only)
+  # ingressDeny:
+  #   - from:
+  #       - podSelector:
+  #           matchLabels:
+  #             app: untrusted
   # -- Egress rules configuration
   egress:
     # -- Default egress rules applied to all pods
@@ -128,6 +144,12 @@ networkPolicy:
     #       port: 443
     #     - protocol: TCP
     #       port: 80
+  # -- Egress deny rules configuration (Cilium only)
+  # egressDeny:
+  #   - to:
+  #       - namespaceSelector:
+  #           matchLabels:
+  #             name: restricted
   # -- Additional labels to add to the network policy
   labels: {}
   # -- Additional annotations to add to the network policy

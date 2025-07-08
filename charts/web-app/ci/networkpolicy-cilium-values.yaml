@@ -8,12 +8,18 @@ routes:
 networkPolicy:
   enabled: true
   flavor: cilium
+  description: "Cilium network policy for web app test"
   labels:
     environment: test
     team: platform
     flavor: cilium
+    component: frontend
+    tier: web
   annotations:
     description: "Test Cilium network policy for web app"
+  enableDefaultDeny:
+    ingress: true
+    egress: false
   ingress:
     # Allow ingress from monitoring namespace
     - from:
@@ -31,6 +37,12 @@ networkPolicy:
       ports:
         - protocol: TCP
           port: 3000
+  ingressDeny:
+    # Deny ingress from untrusted pods
+    - from:
+        - podSelector:
+            matchLabels:
+              security: untrusted
   egress:
     # Allow egress to backend namespace
     - to:
@@ -52,3 +64,9 @@ networkPolicy:
       ports:
         - protocol: UDP
           port: 53
+  egressDeny:
+    # Deny egress to restricted namespace
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: restricted

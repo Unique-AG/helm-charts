@@ -254,6 +254,33 @@
           "enum": ["kubernetes", "cilium"],
           "examples": ["kubernetes"]
         },
+        "description": {
+          "type": "string",
+          "description": "Description of the network policy (Cilium only)",
+          "examples": ["Network policy for web app"]
+        },
+        "enableDefaultDeny": {
+          "type": "object",
+          "description": "Enable default deny for all traffic (Cilium only)",
+          "properties": {
+            "ingress": {
+              "type": "boolean",
+              "description": "Enable default deny for ingress traffic",
+              "examples": [true]
+            },
+            "egress": {
+              "type": "boolean",
+              "description": "Enable default deny for egress traffic",
+              "examples": [false]
+            }
+          },
+          "examples": [
+            {
+              "ingress": true,
+              "egress": false
+            }
+          ]
+        },
         "policyTypes": {
           "type": "array",
           "description": "Policy types to apply (Ingress, Egress, or both)",
@@ -311,6 +338,29 @@
                   {
                     "protocol": "TCP",
                     "port": 3000
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        "ingressDeny": {
+          "type": "array",
+          "description": "Ingress deny rules configuration (Cilium only)",
+          "items": {
+            "type": "object",
+            "description": "Network policy ingress deny rule"
+          },
+          "examples": [
+            [
+              {
+                "from": [
+                  {
+                    "podSelector": {
+                      "matchLabels": {
+                        "app": "untrusted"
+                      }
+                    }
                   }
                 ]
               }
@@ -384,13 +434,36 @@
             ]
           ]
         },
+        "egressDeny": {
+          "type": "array",
+          "description": "Egress deny rules configuration (Cilium only)",
+          "items": {
+            "type": "object",
+            "description": "Network policy egress deny rule"
+          },
+          "examples": [
+            [
+              {
+                "to": [
+                  {
+                    "namespaceSelector": {
+                      "matchLabels": {
+                        "name": "restricted"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          ]
+        },
         "labels": {
           "type": "object",
           "description": "Additional labels to add to the network policy",
           "examples": [
             {
-              "environment": "test",
-              "team": "platform"
+              "component": "frontend",
+              "tier": "web"
             }
           ]
         },

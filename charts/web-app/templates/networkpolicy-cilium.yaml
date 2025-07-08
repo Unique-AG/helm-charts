@@ -1,4 +1,8 @@
 {{- if and .Values.networkPolicy.enabled (eq .Values.networkPolicy.flavor "cilium") }}
+{{- /* Check if Kubernetes-specific fields are used with Cilium flavor */ -}}
+{{- if hasKey .Values.networkPolicy "policyTypes" }}
+{{- fail "ERROR: Standard NetworkPolicy field 'policyTypes' is set but networkPolicy.flavor is 'cilium'. Please remove the 'policyTypes' field." }}
+{{- end }}
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
@@ -14,15 +18,34 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
+  {{- if hasKey .Values.networkPolicy "description" }}
+  description: {{ .Values.networkPolicy.description | quote }}
+  {{- end }}
   endpointSelector:
     matchLabels:
       {{- include "common.selectorLabels" . | nindent 6 }}
+  {{- if hasKey .Values.networkPolicy "labels" }}
+  labels:
+    {{- toYaml .Values.networkPolicy.labels | nindent 4 }}
+  {{- end }}
+  {{- if hasKey .Values.networkPolicy "enableDefaultDeny" }}
+  enableDefaultDeny:
+    {{- toYaml .Values.networkPolicy.enableDefaultDeny | nindent 4 }}
+  {{- end }}
   {{- if hasKey .Values.networkPolicy "ingress" }}
   ingress:
     {{- toYaml .Values.networkPolicy.ingress | nindent 4 }}
   {{- end }}
+  {{- if hasKey .Values.networkPolicy "ingressDeny" }}
+  ingressDeny:
+    {{- toYaml .Values.networkPolicy.ingressDeny | nindent 4 }}
+  {{- end }}
   {{- if hasKey .Values.networkPolicy "egress" }}
   egress:
     {{- toYaml .Values.networkPolicy.egress | nindent 4 }}
+  {{- end }}
+  {{- if hasKey .Values.networkPolicy "egressDeny" }}
+  egressDeny:
+    {{- toYaml .Values.networkPolicy.egressDeny | nindent 4 }}
   {{- end }}
 {{- end }}
