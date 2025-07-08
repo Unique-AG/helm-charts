@@ -290,6 +290,9 @@ tests:
       networkPolicy.enabled: true
       networkPolicy.flavor: cilium
     template: networkpolicy-cilium.yaml
+    capabilities:
+      apiVersions:
+        - cilium.io/v2
     asserts:
       - isKind:
           of: CiliumNetworkPolicy
@@ -327,6 +330,9 @@ tests:
     values:
       - ../ci/networkpolicy-cilium-values.yaml
     template: networkpolicy-cilium.yaml
+    capabilities:
+      apiVersions:
+        - cilium.io/v2
     asserts:
       - isKind:
           of: CiliumNetworkPolicy
@@ -376,6 +382,9 @@ tests:
             - protocol: TCP
               port: 8080
     template: networkpolicy-cilium.yaml
+    capabilities:
+      apiVersions:
+        - cilium.io/v2
     asserts:
       - isKind:
           of: CiliumNetworkPolicy
@@ -408,6 +417,9 @@ tests:
       networkPolicy.enabled: true
       networkPolicy.flavor: cilium
     template: networkpolicy.yaml
+    capabilities:
+      apiVersions:
+        - cilium.io/v2
     asserts:
       - hasDocuments:
           count: 0
@@ -417,6 +429,9 @@ tests:
       networkPolicy.enabled: true
       networkPolicy.flavor: kubernetes
     template: networkpolicy-cilium.yaml
+    capabilities:
+      apiVersions:
+        - cilium.io/v2
     asserts:
       - hasDocuments:
           count: 0
