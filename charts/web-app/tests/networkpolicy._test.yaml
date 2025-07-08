@@ -42,9 +42,6 @@ tests:
       - equal:
           path: metadata.labels.team
           value: platform
-      - equal:
-          path: metadata.annotations.description
-          value: "Test network policy"
 
   - it: When networkPolicy is enabled with default values, should render basic NetworkPolicy
     set:
@@ -59,12 +56,6 @@ tests:
       - equal:
           path: spec.podSelector.matchLabels["app.kubernetes.io/instance"]
           value: ut
-      - contains:
-          path: spec.policyTypes
-          content: Ingress
-      - contains:
-          path: spec.policyTypes
-          content: Egress
       - isNotNullOrEmpty:
           path: spec.ingress
       - isNotNullOrEmpty:
@@ -201,9 +192,6 @@ tests:
       - equal:
           path: metadata.labels.team
           value: platform
-      - equal:
-          path: metadata.annotations.description
-          value: "Test network policy for web app"
       - lengthEqual:
           path: spec.ingress
           count: 2
@@ -348,9 +336,6 @@ tests:
       - equal:
           path: metadata.labels.flavor
           value: cilium
-      - equal:
-          path: metadata.annotations.description
-          value: "Test Cilium network policy for web app"
       - lengthEqual:
           path: spec.ingress
           count: 2

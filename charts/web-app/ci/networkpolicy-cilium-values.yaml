@@ -13,8 +13,6 @@ networkPolicy:
     environment: test
     team: platform
     flavor: cilium
-  annotations:
-    description: "Test Cilium network policy for web app"
   ciliumPolicylabels:
     - component: frontend
     - tier: web

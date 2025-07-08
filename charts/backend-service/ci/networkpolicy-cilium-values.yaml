@@ -9,8 +9,6 @@ networkPolicy:
     environment: test
     team: platform
     flavor: cilium
-  annotations:
-    description: "Test Cilium network policy"
   ciliumPolicylabels:
     - component: backend
     - tier: application

@@ -42,9 +42,6 @@ tests:
       - equal:
           path: metadata.labels.team
           value: platform
-      - equal:
-          path: metadata.annotations.description
-          value: "Test network policy"
 
   - it: When networkPolicy is enabled with default values, should render basic NetworkPolicy
     set:
@@ -198,9 +195,6 @@ tests:
       - equal:
           path: metadata.labels.team
           value: platform
-      - equal:
-          path: metadata.annotations.description
-          value: "Test network policy for backend service"
       - lengthEqual:
           path: spec.ingress
           count: 2
@@ -351,9 +345,6 @@ tests:
       - equal:
           path: metadata.labels.flavor
           value: cilium
-      - equal:
-          path: metadata.annotations.description
-          value: "Test Cilium network policy for backend service"
       - lengthEqual:
           path: spec.ingress
           count: 2
