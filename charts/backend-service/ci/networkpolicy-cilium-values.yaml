@@ -12,10 +12,12 @@ networkPolicy:
     environment: test
     team: platform
     flavor: cilium
+  annotations:
+    description: "Test Cilium network policy"
+  ciliumPolicylabels:
     component: backend
     tier: application
-  annotations:
-    description: "Test Cilium network policy for backend service"
+    environment: test
   enableDefaultDeny:
     ingress: true
     egress: false
