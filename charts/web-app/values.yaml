@@ -71,6 +71,96 @@ imagePullSecrets: []
 
 nodeSelector: {}
 
+# -- networkPolicy allows you to define network policies for the deployed pods
+# Network policies are used to control traffic flow to and from pods
+networkPolicy:
+  # -- Enable or disable network policy creation
+  enabled: false
+  # -- Network policy flavor - "kubernetes" for standard NetworkPolicy or "cilium" for CiliumNetworkPolicy
+  flavor: kubernetes
+  # -- Policy types to apply (Ingress, Egress, or both)
+  # policyTypes:
+  #   - Ingress
+  #   - Egress
+  # -- Description of the network policy (Cilium only)
+  # description: "Network policy for web app"
+  # -- Enable default deny for all traffic (Cilium only)
+  # enableDefaultDeny:
+  #   ingress: true
+  #   egress: true
+  # -- Labels to be applied to the network policy spec (Cilium only)
+  # labels:
+  #   component: frontend
+  #   tier: web
+  # -- Labels to be applied to the network policy spec (Cilium only)
+  # ciliumPolicylabels:
+  #   - key: component
+  #     value: frontend
+  #   - key: tier
+  #     value: web
+  # -- Ingress rules configuration
+  ingress:
+    # -- Default ingress rules applied to all pods
+    # Allow ingress from pods in the same namespace
+    - from:
+        - podSelector: {}
+    # Example ingress rules:
+    # - from:
+    #     - namespaceSelector:
+    #         matchLabels:
+    #           name: monitoring
+    #   ports:
+    #     - protocol: TCP
+    #       port: 3000
+    # - from:
+    #     - podSelector:
+    #         matchLabels:
+    #           app: load-balancer
+    #   ports:
+    #     - protocol: TCP
+    #       port: 3000
+  # -- Ingress deny rules configuration (Cilium only)
+  # ingressDeny:
+  #   - from:
+  #       - podSelector:
+  #           matchLabels:
+  #             app: untrusted
+  # -- Egress rules configuration
+  egress:
+    # -- Default egress rules applied to all pods
+    # Allow egress to pods in the same namespace
+    - to:
+        - podSelector: {}
+    # Allow DNS resolution
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
+    # Example egress rules:
+    # - to:
+    #     - namespaceSelector:
+    #         matchLabels:
+    #           name: backend
+    #   ports:
+    #     - protocol: TCP
+    #       port: 8080
+    # - to: []
+    #   ports:
+    #     - protocol: TCP
+    #       port: 443
+    #     - protocol: TCP
+    #       port: 80
+  # -- Egress deny rules configuration (Cilium only)
+  # egressDeny:
+  #   - to:
+  #       - namespaceSelector:
+  #           matchLabels:
+  #             name: restricted
+  # -- Additional labels to add to the network policy
+  labels: {}
+  # -- Additional annotations to add to the network policy
+  annotations: {}
+
 # -- Define the pod disruption budget for this deployment
 # Is templated as YAML so all kuberentes native types are supported
 pdb:

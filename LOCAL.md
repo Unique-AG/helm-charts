@@ -9,6 +9,6 @@ You need minikube or a similar tool to test the charts locally. You can use the 
 
 ```
 kubectl config set-context <something_local>
-./scripts/install-crds.sh
+./scripts/setup-cluster.sh
 ct install --config .github/configs/ct-install.yaml
 ```
