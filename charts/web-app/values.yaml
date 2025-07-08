@@ -79,9 +79,9 @@ networkPolicy:
   # -- Network policy flavor - "kubernetes" for standard NetworkPolicy or "cilium" for CiliumNetworkPolicy
   flavor: kubernetes
   # -- Policy types to apply (Ingress, Egress, or both)
-  policyTypes:
-    - Ingress
-    - Egress
+  # policyTypes:
+  #   - Ingress
+  #   - Egress
   # -- Description of the network policy (Cilium only)
   # description: "Network policy for web app"
   # -- Enable default deny for all traffic (Cilium only)
