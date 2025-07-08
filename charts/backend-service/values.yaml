@@ -204,7 +204,7 @@ networkPolicy:
   # -- Enable default deny for all traffic (Cilium only)
   # enableDefaultDeny:
   #   ingress: true
-  #   egress: false
+  #   egress: true
   # -- Labels to be applied to the network policy spec (Cilium only)
   # labels:
   #   component: backend

@@ -1,4 +1,8 @@
 {{- if and .Values.networkPolicy.enabled (eq .Values.networkPolicy.flavor "cilium") }}
+{{- /* Check if Cilium CRDs are installed */ -}}
+{{- if not (.Capabilities.APIVersions.Has "cilium.io/v2") }}
+{{- fail "ERROR: Cilium CRDs are not installed. Please install Cilium CRDs before deploying this chart with networkPolicy.flavor=cilium" }}
+{{- end }}
 {{- /* Check if Kubernetes-specific fields are used with Cilium flavor */ -}}
 {{- if hasKey .Values.networkPolicy "policyTypes" }}
 {{- fail "ERROR: Standard NetworkPolicy field 'policyTypes' is set but networkPolicy.flavor is 'cilium'. Please remove the 'policyTypes' field." }}
