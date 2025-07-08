@@ -468,13 +468,21 @@
           ]
         },
         "ciliumPolicylabels": {
-          "type": "object",
+          "type": "array",
           "description": "Labels to be applied to the network policy spec (Cilium only)",
+          "items": {
+            "type": "object",
+            "description": "Label object for Cilium NetworkPolicy spec"
+          },
           "examples": [
-            {
-              "component": "frontend",
-              "tier": "web"
-            }
+            [
+              {
+                "component": "frontend"
+              },
+              {
+                "tier": "web"
+              }
+            ]
           ]
         },
         "annotations": {

@@ -15,9 +15,9 @@ networkPolicy:
   annotations:
     description: "Test Cilium network policy"
   ciliumPolicylabels:
-    component: backend
-    tier: application
-    environment: test
+    - component: backend
+    - tier: application
+    - environment: test
   enableDefaultDeny:
     ingress: true
     egress: false
