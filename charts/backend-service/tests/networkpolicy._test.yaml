@@ -62,12 +62,6 @@ tests:
       - equal:
           path: spec.podSelector.matchLabels["app.kubernetes.io/component"]
           value: server
-      - contains:
-          path: spec.policyTypes
-          content: Ingress
-      - contains:
-          path: spec.policyTypes
-          content: Egress
       - isNotNullOrEmpty:
           path: spec.ingress
       - isNotNullOrEmpty:

@@ -5,9 +5,6 @@ networkPolicy:
   enabled: true
   flavor: cilium
   description: "Cilium network policy for backend service test"
-  policyTypes:
-    - Ingress
-    - Egress
   labels:
     environment: test
     team: platform
