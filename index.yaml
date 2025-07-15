@@ -375,6 +375,29 @@ entries:
   backend-service:
   - annotations:
       artifacthub.io/changes: |
+        - kind: changed
+          description: "Support for injecting global volumeMounts into ExtraCronJobs templates"
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    created: "2025-07-15T09:28:43.566971181Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: b65cb4bc9e859adfee82c3d5943d17fec27c379686764feca6d74c58c6e7e660
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-4.4.0/backend-service-4.4.0.tgz
+    version: 4.4.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: fixed
           description: "Fixed extraCronJobs loop."
       artifacthub.io/license: Apache-2.0
@@ -2112,4 +2135,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-07-03T12:09:47.646197616Z"
+generated: "2025-07-15T09:28:43.56740083Z"
