@@ -8,7 +8,7 @@ name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
 # change on next major: enable netpol by default, remove tyk, remove eventBasedAutoscaling, deprecate cronJob
-version: 4.4.0
+version: 4.5.0
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
 
