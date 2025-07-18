@@ -16,4 +16,4 @@ annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
     - kind: changed
-      description: "Support for injecting global volumeMounts into ExtraCronJobs templates"
+      description: "add audit volume mount support for extracronjobs templates"
