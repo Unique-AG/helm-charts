@@ -64,7 +64,6 @@ spec:
                 - name: audit
                   mountPath: {{ default "/audit" .Values.auditVolume.mountPath }}
               {{- end }}
-
               {{- if $globalValues.secretProvider }}
               {{- range $k, $v := $globalValues.secretProvider.vaults }}
                 - name: {{ $fullName }}-{{ $k }}
