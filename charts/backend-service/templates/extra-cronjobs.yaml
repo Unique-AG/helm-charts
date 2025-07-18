@@ -60,6 +60,10 @@ spec:
               {{- with $globalValues.volumeMounts }}
                 {{- toYaml . | nindent 16 }}
               {{- end }}
+              {{- if $globalValues.auditVolume.enabled }}
+                - name: audit
+                  mountPath: {{ default "/audit" $globalValues.auditVolume.mountPath }}
+              {{- end }}
               {{- if $globalValues.secretProvider }}
               {{- range $k, $v := $globalValues.secretProvider.vaults }}
                 - name: {{ $fullName }}-{{ $k }}
