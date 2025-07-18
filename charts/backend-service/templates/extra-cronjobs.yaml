@@ -57,12 +57,12 @@ spec:
               resources:
                 {{- toYaml ($value.resources | default $globalValues.resources) | nindent 16 }}
               volumeMounts:
-              {{- with $globalValues.volumeMounts }}
-                {{- toYaml . | nindent 16 }}
-              {{- end }}
               {{- if $globalValues.auditVolume.enabled }}
                 - name: audit
                   mountPath: {{ default "/audit" .$globalValues.auditVolume.mountPath }}
+              {{- end }}
+              {{- with $globalValues.volumeMounts }}
+                {{- toYaml . | nindent 16 }}
               {{- end }}
               {{- if $globalValues.secretProvider }}
               {{- range $k, $v := $globalValues.secretProvider.vaults }}
