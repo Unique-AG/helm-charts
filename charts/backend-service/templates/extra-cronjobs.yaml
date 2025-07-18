@@ -62,7 +62,7 @@ spec:
               {{- end }}
               {{- if $globalValues.auditVolume.enabled }}
                 - name: audit
-                  mountPath: {{ default "/audit" .Values.auditVolume.mountPath }}
+                  mountPath: {{ default "/audit" .$globalValues.auditVolume.mountPath }}
               {{- end }}
               {{- if $globalValues.secretProvider }}
               {{- range $k, $v := $globalValues.secretProvider.vaults }}
