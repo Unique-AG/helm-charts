@@ -375,6 +375,29 @@ entries:
   backend-service:
   - annotations:
       artifacthub.io/changes: |
+        - kind: added
+          description: "Possibility to define network policies. While currently added for testing, they will be enabled by default in the next major chart release."
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    created: "2025-07-23T07:35:46.619770252Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: 376c50b8c9d48b4a8b26fce04f7c1abf74116c595811642aab89370a5a3401f7
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-4.6.0/backend-service-4.6.0.tgz
+    version: 4.6.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: changed
           description: "add audit volume mount support for extracronjobs templates"
       artifacthub.io/license: Apache-2.0
@@ -1782,6 +1805,28 @@ entries:
   web-app:
   - annotations:
       artifacthub.io/changes: |
+        - kind: added
+          description: "Possibility to define network policies"
+    apiVersion: v2
+    created: "2025-07-23T07:35:46.839878613Z"
+    description: 'The ''web-app'' chart is a "convenience" chart from Unique AG that
+      can generically be used to deploy web-content serving workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: 29983d83e341cca4c12b6d023719a4007f31348d569a9eaa43d64cd8ef83f1df
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: web-app
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/web-app
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/web-app-4.3.0/web-app-4.3.0.tgz
+    version: 4.3.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: changed
           description: "Updated to use v2 of the autoscaling API."
     apiVersion: v2
@@ -2158,4 +2203,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-07-18T13:46:07.269968735Z"
+generated: "2025-07-23T07:35:46.840393447Z"
