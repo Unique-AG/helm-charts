@@ -66,6 +66,74 @@ To use _Routes_ per se you need two things:
 ##### HTTPS Redirects
 Routes do not redirect to HTTPS by default. This redirect must be handled in the upstream services or extended via `extraAnnotations`. This is not due to a lack of security but the fact that the chart is agnostic to the upstream service and its configuration so enforcing a redirect can lead to unexpected behavior and indefinite redirects. Also, most modern browsers prefix all requests with `https` as a secure practice.
 
+### Network Policies
+<small>added in `4.4.0`</small>
+
+The chart supports Kubernetes Network Policies to control traffic flow to and from pods. Network Policies are a Kubernetes-native way to implement network segmentation and can help improve security by restricting network communication.
+
+#### Network Policy Flavors
+<small>added in `4.4.0`</small>
+
+The chart supports two network policy flavors:
+
+- **`kubernetes`** (default): Standard Kubernetes NetworkPolicy resources
+- **`cilium`**: Cilium's CiliumNetworkPolicy resources with enhanced features
+
+```yaml
+networkPolicy:
+  enabled: true
+  flavor: kubernetes  # or "cilium"
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow ingress from monitoring namespace
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+      ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    # Allow egress to database namespace
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: database
+      ports:
+        - protocol: TCP
+          port: 5432
+    # Allow external HTTPS/HTTP access
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+```
+
+#### Kubernetes vs Cilium Differences
+
+When using `flavor: cilium`, the chart will:
+- Use `apiVersion: cilium.io/v2` and `kind: CiliumNetworkPolicy`
+- Use `endpointSelector` instead of `podSelector` in the spec
+- Support advanced Cilium-specific features in your rules
+
+When using `flavor: kubernetes` (default), the chart will:
+- Use `apiVersion: networking.k8s.io/v1` and `kind: NetworkPolicy`
+- Use standard `podSelector` in the spec
+- Maintain compatibility with any Kubernetes CNI that supports NetworkPolicy
+
+**Important Notes:**
+- Network Policies require a CNI (Container Network Interface) that supports them, such as Calico, Cilium, or Weave Net
+- For Cilium flavor, you must have Cilium CNI installed with CiliumNetworkPolicy CRDs
+- Once a Network Policy is applied to a pod, it becomes "isolated" and only allowed traffic will be permitted
+- Always include DNS resolution (port 53/UDP) in your egress rules if pods need to resolve hostnames
+- Test your network policies thoroughly to avoid inadvertently blocking required traffic
+
+You can find Network Policy examples in the [`ci/networkpolicy-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/networkpolicy-values.yaml) (Kubernetes) and [`ci/networkpolicy-cilium-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/networkpolicy-cilium-values.yaml) (Cilium) files.
+
 ### CronJobs
 `cronJob` as well as `extraCronJobs` can be used to create cron jobs. These convenience fields are easing the effort to deploy Unique as package. Technically one can also deploy this same chart multiple times but this increases the management complexity on the user side. `cronJob` and `extraCronJobs` allow to deploy multiple cron jobs in a single chart deployment. Note, that they all share the same environment settings for now and that they base on the same image. You should not use this feature if you want to deploy arbitrary or other CronJobs not related to Unique or the current workload/deployment.
 

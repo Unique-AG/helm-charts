@@ -7,7 +7,8 @@ maintainers:
 name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
-version: 4.5.0
+# change on next major: enable netpol by default, remove tyk, remove eventBasedAutoscaling, deprecate cronJob
+version: 4.6.0
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
 
@@ -15,5 +16,5 @@ description: |
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
-    - kind: changed
-      description: "add audit volume mount support for extracronjobs templates"
+    - kind: added
+      description: "Possibility to define network policies. While currently added for testing, they will be enabled by default in the next major chart release."

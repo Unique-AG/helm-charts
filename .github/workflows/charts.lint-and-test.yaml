@@ -99,7 +99,7 @@ jobs:
 
       - name: Deploy CRDs needed for charts to be able to install
         if: steps.list-changed.outputs.changed == 'true'
-        run: ./scripts/install-crds.sh
+        run: ./scripts/setup-cluster.sh
 
       - name: Run chart-testing (install)
         run: ct install --config ./.github/configs/ct-install.yaml
