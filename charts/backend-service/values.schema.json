@@ -801,7 +801,7 @@
           "examples": ["IfNotPresent"]
         }
       },
-      "required": ["repository", "tag"]
+      "required": ["repository"]
     },
     "imagePullSecrets": {
       "type": "array",
