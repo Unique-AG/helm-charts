@@ -38,9 +38,9 @@ spec:
                 {{- toYaml . | nindent 12 }}
               {{- end }}
             {{- end }}
-            checksum/cronjob-env: {{ include (print $.Chart.Name "/templates/cronjob-env.yaml") . | sha256sum | trunc 8 | quote }}
+            checksum/cronjob-env: {{ include (print $.Template.BasePath "/cronjob-env.yaml") . | sha256sum | trunc 8 | quote }}
             {{- if .Values.envSecrets }}
-            checksum/secrets: {{ include (print $.Chart.Name "/templates/secrets.yaml") . | sha256sum | trunc 8 | quote }}
+            checksum/secrets: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum | trunc 8 | quote }}
             {{- end }}
         spec:
           {{- with .Values.imagePullSecrets }}

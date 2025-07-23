@@ -37,9 +37,9 @@ spec:
           {{- toYaml . | nindent 8 }}
         {{- end }}
       {{- end }}
-        checksum/deployment-env: {{ include (print $.Chart.Name "/templates/deployment-env.yaml") . | sha256sum | trunc 8 | quote }}
+        checksum/deployment-env: {{ include (print $.Template.BasePath "/deployment-env.yaml") . | sha256sum | trunc 8 | quote }}
         {{- if .Values.envSecrets }}
-        checksum/secrets: {{ include (print $.Chart.Name "/templates/secrets.yaml") . | sha256sum | trunc 8 | quote }}
+        checksum/secrets: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum | trunc 8 | quote }}
         {{- end }}
       labels:
       {{- if .Values.podLabels }}

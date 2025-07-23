@@ -41,7 +41,7 @@ spec:
               {{- end }}
             {{- end }}
             {{- if $globalValues.envSecrets }}
-            checksum/secrets: {{ include (print $.Chart.Name "/templates/secrets.yaml") . | sha256sum | trunc 8 | quote }}
+            checksum/secrets: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum | trunc 8 | quote }}
             {{- end }}
         spec:
           {{- with $globalValues.imagePullSecrets }}
