@@ -3,7 +3,7 @@
   "title": "Backend Service Helm Chart Values",
   "description": "Schema for the backend-service Helm chart values.yaml",
   "type": "object",
-  "additionalProperties": false,
+  "additionalProperties": true,
   "properties": {
     "nameOverride": {
       "type": "string",

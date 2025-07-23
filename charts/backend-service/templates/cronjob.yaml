@@ -67,7 +67,7 @@ spec:
           {{- end }}
           containers:
             - name: {{ .Values.cronJob.jobTemplate.containers.name | quote }}
-              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              image: "{{ .Values.image.repository }}:{{ include "backendService.imageTag" . }}"
               imagePullPolicy: {{ .Values.image.pullPolicy }}
               resources:
                 {{- toYaml .Values.resources | nindent 16 }}

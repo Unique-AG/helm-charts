@@ -51,7 +51,7 @@ spec:
           restartPolicy: {{ $value.restartPolicy | default "Never" | quote }}
           containers:
             - name: {{ $key }}
-              image: "{{ $globalValues.image.repository }}:{{ $globalValues.image.tag }}"
+              image: "{{ $globalValues.image.repository }}:{{ $globalValues.image.tag | default $.Chart.AppVersion }}"
               imagePullPolicy: {{ $globalValues.image.pullPolicy }}
               securityContext: {{- toYaml $globalValues.securityContext | nindent 16 }}
               resources:
@@ -90,7 +90,7 @@ spec:
                 {{- end }}
               env:
                 - name: VERSION
-                  value: {{ $globalValues.image.tag | quote}}
+                  value: {{ ($globalValues.image.tag | default $.Chart.AppVersion) | quote}}
                 {{- with $globalValues.envVars }}
                   {{- toYaml . | nindent 16 }}
                 {{- end }}
