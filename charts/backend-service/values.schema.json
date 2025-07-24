@@ -5,6 +5,10 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "global": {
+      "type": "object",
+      "description": "Global configuration"
+    },
     "nameOverride": {
       "type": "string",
       "description": "Override the name of the chart"
@@ -797,7 +801,7 @@
           "examples": ["IfNotPresent"]
         }
       },
-      "required": ["repository", "tag"]
+      "required": ["repository"]
     },
     "imagePullSecrets": {
       "type": "array",

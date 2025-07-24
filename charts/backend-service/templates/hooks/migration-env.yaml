@@ -11,7 +11,7 @@ metadata:
     helm.sh/hook-weight: "4"
     helm.sh/hook-delete-policy: before-hook-creation
 data:
-  VERSION: "{{ .Values.image.tag }}"
+  VERSION: "{{ include "backendService.imageTag" . }}"
   {{- if .Values.service.enabled }}
   {{- end }}
   {{- range $key, $value := .Values.env }}
