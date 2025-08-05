@@ -2,7 +2,6 @@
 suite: Test Extra CronJobs
 templates:
   - extra-cronjobs.yaml
-  - audit-volume.yaml
 release:
   name: ecj
 tests:
