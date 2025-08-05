@@ -1,0 +1,18 @@
+# Minimal test values for audit volume functionality
+auditVolume:
+  enabled: true
+  mountPath: /audit
+  capacity: 1Gi
+  attributes:
+    resourceGroup: my-azure-resource-group
+    storageAccount: my-azure-storage-account
+
+extraCronJobs:
+  test-job:
+    schedule: "0 0 1 1 *"
+    suspend: false
+    restartPolicy: Never
+
+image:
+  repository: "ghcr.io/unique-ag/chart-testing-service"
+  tag: "1.0.3"

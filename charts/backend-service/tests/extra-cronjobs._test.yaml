@@ -2,6 +2,7 @@
 suite: Test Extra CronJobs
 templates:
   - extra-cronjobs.yaml
+  - audit-volume.yaml
 release:
   name: ecj
 tests:
@@ -59,3 +60,64 @@ tests:
       - equal:
           path: spec.jobTemplate.spec.template.metadata.annotations.test
           value: true
+
+  - it: When auditVolume is enabled, renders audit volume mount and volume correctly
+    values:
+      - ../ci/audit-test-values.yaml
+    template: extra-cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: ecj-test-job
+    asserts:
+      - isKind:
+          of: CronJob
+      # Check that audit volume mount exists
+      - exists:
+          path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "test-job")].volumeMounts[?(@.name == "audit")]
+      # Check audit volume mount path
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "test-job")].volumeMounts[?(@.name == "audit")].mountPath
+          value: /audit
+      # Check that audit volume is defined in volumes section
+      - exists:
+          path: spec.jobTemplate.spec.template.spec.volumes[?(@.name == "audit")]
+      # Check that audit volume references the correct PVC
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.volumes[?(@.name == "audit")].persistentVolumeClaim.claimName
+          value: ecj-audit
+
+  - it: When auditVolume is disabled, audit volume mount and volume are not present
+    values:
+      - ../ci/extra-cronjobs-values.yaml
+    set:
+      auditVolume.enabled: false
+    template: extra-cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: ecj-foo
+    asserts:
+      - isKind:
+          of: CronJob
+      # Check that audit volume mount does not exist
+      - notExists:
+          path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "foo")].volumeMounts[?(@.name == "audit")]
+      # Check that audit volume is not defined in volumes section
+      - notExists:
+          path: spec.jobTemplate.spec.template.spec.volumes[?(@.name == "audit")]
+
+  - it: When auditVolume is enabled with custom mountPath, uses the correct path
+    values:
+      - ../ci/audit-test-values.yaml
+    set:
+      auditVolume.mountPath: /custom/audit/path
+    template: extra-cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: ecj-test-job
+    asserts:
+      - isKind:
+          of: CronJob
+      # Check audit volume mount uses custom path
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "test-job")].volumeMounts[?(@.name == "audit")].mountPath
+          value: /custom/audit/path
