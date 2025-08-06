@@ -519,57 +519,6 @@ serviceAccount:
 
 tolerations: []
 
-# -- Settings for Tyk API Gateway respectively its APIDefinition, in order to use Tyk API Gateway, you must install its Operators respective CRDs.
-# ⚠️ Since `2.0.0` this is no longer enabled by default. Unique will slowly migrate away from Tyk API Gateway and into `routes` and `extraRoutes`, refer to the readme.
-# ␡ `tyk` will be removed from the chart latest with an upcoming major release.
-tyk:
-  enabled: false
-  # -- ⚠️ When using Tyk API Gateway, you must set a valid listenPath
-  listenPath: "/unsert_default_path"
-  jwtSource: https://id.unique.app/oauth/v2/keys
-  rateLimit:
-    {}
-    # Limit per interval, example values are default values
-    # Rate limit can not be disabled fully only increased, we learned some lessons 🩸
-    # rate: 20 # requests to the key
-    # per: 60 # each minute (faster a human can not type)
-    # Quota per longer section
-    # quotaMax: 15000 # 500 chats per day for 30 days, generous as we are for now
-    # quotaRenewalRate: 2592000 # 30 days in seconds
-    # If quota or limit gets hit, what happens
-    # throttleInterval: -1 # for now we do not throttle
-    # throttleRetryLimit: -1 # for now we do not throttle
-  # hardTimeouts allows you to increase/decrease timeouts for specific paths
-  # hardTimeouts:
-  #   - path: "/longer"
-  #     method: "GET"
-  #     timeoutSeconds: 1000
-  exposePublicApi:
-    enabled: false
-    # appRepositoryUrlOverride: "" # defaults to http://node-app-repository.namespace.svc.cluster.local
-    # appRepositoryPortOverride: "" # defaults to 8088
-    # appRepositoryNamespaceOverride: "" # defaults to apps
-    # publicPathOverride: "" # defaults to '/public'
-    # hardTimeouts:
-    #   - path: "/longer"
-    #     method: "GET"
-    #     timeoutSeconds: 1000
-  # defaultTimeout: 30 # This setting is only to be modified after consulting the platform team. Disagreed changes will be reverted unquestioned.
-  scopedApi:
-    enabled: false
-    # scopedPathOverride: "" # defaults to '/scoped'
-    # hardTimeouts:
-    #   - path: "/longer"
-    #     method: "GET"
-    #     timeoutSeconds: 1000
-  # defaultTimeout: 30 # This setting is only to be modified after consulting the platform team. Disagreed changes will be reverted unquestioned.
-
-  # -- blockList allows you to block specific paths and methods
-  blockList:
-    - methods:
-        - GET
-      path: /metrics
-
 volumeMounts: []
 
 volumes: []
