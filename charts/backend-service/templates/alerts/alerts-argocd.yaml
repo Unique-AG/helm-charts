@@ -1,0 +1,104 @@
+{{- if and .Values.prometheus.defaultAlerts.argocd.enabled .Values.prometheus.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
+{{- $fullName := include "backendService.fullname" . -}}
+{{- $labels := include "backendService.labels" . -}}
+{{- $argoCDAppName := .Values.prometheus.defaultAlerts.argocd.applicationName | default .Release.Name -}}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ $fullName }}-argocd-alerts
+  labels:
+    {{- $labels | nindent 4 }}
+    role: alert-rules
+    alertGroup: argocd
+    {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: {{ $fullName }}-argocd
+      rules:
+      - alert: ArgoCDApplicationDegraded
+        expr: |
+          argocd_app_info{health_status="Degraded", dest_namespace="{{ .Release.Namespace }}", name="{{ $argoCDAppName }}"} > 0
+        for: {{ dig "ArgoCDApplicationDegraded" "for" "5m" .Values.prometheus.defaultAlerts.argocd.customRules }}
+        labels:
+          severity: warning
+          alertGroup: argocd
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "ArgoCD application {{ $argoCDAppName }} is unhealthy"
+          description: "ArgoCD application {{ $argoCDAppName }} health condition is not True for more than 5 minutes"
+
+      - alert: ArgoCDApplicationSyncError
+        expr: |
+          argocd_app_condition{name="{{ $argoCDAppName }}", type="SyncError", status="True"} > 0
+        for: {{ dig "ArgoCDApplicationSyncError" "for" "5m" .Values.prometheus.defaultAlerts.argocd.customRules }}
+        labels:
+          severity: critical
+          alertGroup: argocd
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "ArgoCD application {{ $argoCDAppName }} has sync errors"
+          description: "ArgoCD application {{ $argoCDAppName }} has sync errors for more than 5 minutes"
+
+      - alert: ArgoCDApplicationDeletionError
+        expr: |
+          argocd_app_condition{name="{{ $argoCDAppName }}", type="DeletionError", status="True"} > 0
+        for: {{ dig "ArgoCDApplicationDeletionError" "for" "5m" .Values.prometheus.defaultAlerts.argocd.customRules }}
+        labels:
+          severity: critical
+          alertGroup: argocd
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "ArgoCD application {{ $argoCDAppName }} has deletion errors"
+          description: "ArgoCD application {{ $argoCDAppName }} has deletion errors for more than 5 minutes"
+
+      - alert: ArgoCDApplicationInvalidSpecError
+        expr: |
+          argocd_app_condition{name="{{ $argoCDAppName }}", type="InvalidSpecError", status="True"} > 0
+        for: {{ dig "ArgoCDApplicationInvalidSpecError" "for" "5m" .Values.prometheus.defaultAlerts.argocd.customRules }}
+        labels:
+          severity: critical
+          alertGroup: argocd
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "ArgoCD application {{ $argoCDAppName }} has invalid spec errors"
+          description: "ArgoCD application {{ $argoCDAppName }} has invalid spec errors for more than 5 minutes"
+
+      - alert: ArgoCDApplicationComparisonError
+        expr: |
+          argocd_app_condition{name="{{ $argoCDAppName }}", type="ComparisonError", status="True"} > 0
+        for: {{ dig "ArgoCDApplicationComparisonError" "for" "5m" .Values.prometheus.defaultAlerts.argocd.customRules }}
+        labels:
+          severity: critical
+          alertGroup: argocd
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "ArgoCD application {{ $argoCDAppName }} has comparison errors"
+          description: "ArgoCD application {{ $argoCDAppName }} has comparison errors for more than 5 minutes"
+
+      - alert: ArgoCDApplicationUnknownError
+        expr: |
+          argocd_app_condition{name="{{ $argoCDAppName }}", type="UnknownError", status="True"} > 0
+        for: {{ dig "ArgoCDApplicationUnknownError" "for" "5m" .Values.prometheus.defaultAlerts.argocd.customRules }}
+        labels:
+          severity: critical
+          alertGroup: argocd
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "ArgoCD application {{ $argoCDAppName }} has unknown errors"
+          description: "ArgoCD application {{ $argoCDAppName }} has unknown errors for more than 5 minutes"
+
+{{- end }}

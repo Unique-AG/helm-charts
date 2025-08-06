@@ -374,38 +374,104 @@ probes:
 nodeSelector: {}
 
 prometheus:
-  enabled: false
-  # enabled: true
-  # team: <team-name> # defines alert routing
-  # rules:
-  #   QNodeChat5xx:
-  #     expression: >
-  #       sum(
-  #         max_over_time(
-  #           nestjs_http_server_responses_total{status=~"^5..$", app="node_chat"}[1m]
-  #         )
-  #         or
-  #         vector(0)
-  #       )
-  #         by (app, path, method, status)
-  #       -
-  #       sum(
-  #         max_over_time(
-  #           nestjs_http_server_responses_total{status=~"^5..$", app="node_chat"}[1m]
-  #           offset 1m
-  #         )
-  #         or vector(0)
-  #       )
-  #         by (app, path, method, status)
-  #       > 0
-  #     for: 0m
-  #     severity: critical
-  #     # Left side are alert labels, right side are the metrics labels ($labels.*)
+  enabled: true
+  # -- Additional custom alert rules that will be rendered using the alerts-custom.yaml template
+  # The alerts are rendered directly using toYaml, giving you complete control over the alert structure
+  # Labels from defaultAlerts.additionalLabels are automatically merged into each alert's labels
+  # additionalAlerts:
+  #   HighErrorRate:
+  #     alert: HighErrorRate
+  #     expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) * 100 > 5
+  #     for: 5m
   #     labels:
-  #       app: app
-  #       path: path
-  #       method: method
-  #       status: status
+  #       severity: critical
+  #       alertGroup: application
+  #       service: "{{ $labels.service }}"
+  #     annotations:
+  #       summary: "High error rate detected"
+  #       description: "Error rate is above 5% for more than 5 minutes"
+  #       runbook_url: "https://example.com/runbooks/high-error-rate"
+  #       dashboard: "https://grafana.example.com/d/app-dashboard"
+  #   DatabaseConnectionsHigh:
+  #     alert: DatabaseConnectionsHigh
+  #     expr: pg_stat_database_numbackends > 80
+  #     for: 10m
+  #     labels:
+  #       severity: warning
+  #       alertGroup: database
+  #     annotations:
+  #       summary: "Database connections are high"
+  #       description: "Database has {{ $value }} active connections"
+  # -- defaultAlerts allows you to enable predefined alert groups for monitoring
+  defaultAlerts:
+    # -- Enable ArgoCD application health and condition alerts
+    argocd:
+      enabled: true
+      # -- ArgoCD application name override (defaults to release name if not set)
+      # applicationName: ""
+    # -- Enable Kubernetes application alerts (restarts, crashlooping, etc.)
+    kubernetesApplication:
+      enabled: true
+      # -- Disable specific alerts by setting them to true
+      disabled: {}
+        # KubePodCrashLooping: false
+        # KubePodNotReady: false
+        # KubeDeploymentGenerationMismatch: false
+        # KubeDeploymentReplicasMismatch: false
+        # KubeDeploymentRolloutStuck: false
+        # KubeStatefulSetReplicasMismatch: false
+        # KubeStatefulSetGenerationMismatch: false
+        # KubeStatefulSetUpdateNotRolledOut: false
+        # KubeDaemonSetRolloutStuck: false
+        # KubeContainerWaiting: false
+        # KubeDaemonSetNotScheduled: false
+        # KubeDaemonSetMisScheduled: false
+        # KubePodFrequentRestarts: false
+        # KubeJobNotCompleted: false
+        # KubeJobFailed: false
+        # KubeHpaReplicasMismatch: false
+        # KubeHpaMaxedOut: false
+        # KubePersistentVolumeClaimPending: false
+        # KubePdbNotEnoughHealthyPods: false
+      # -- Override alert rules with custom values (for duration, severity, etc.)
+      customRules: {}
+        # KubePodCrashLooping:
+        #   for: "10m"
+        #   severity: "critical"
+        # KubePodNotReady:
+        #   for: "20m"
+        # KubeContainerWaiting:
+        #   for: "30m"
+        # KubeJobFailed:
+        #   for: "5m"
+    # -- Enable Kubernetes resource alerts (CPU, memory, disk, network, etc.)
+    kubernetesResources:
+      enabled: true
+      # -- Disable specific alerts by setting them to true
+      disabled: {}
+        # KubernetesPodHighCPUUsage: false
+        # KubernetesPodHighMemoryUsage: false
+        # KubernetesPodNearMemoryLimit: false
+        # KubernetesPodThrottled: false
+        # KubernetesPersistentVolumeHighUsage: false
+        # KubernetesPersistentVolumeNearFull: false
+        # KubernetesContainerOOMKilled: false
+        # KubernetesPodMissingResourceLimits: false
+        # KubernetesHPAScalingEvent: false
+        # KubernetesHPAMaxReplicasReached: false
+      # -- Override alert rules with custom values (for duration, severity, etc.)
+      customRules: {}
+        # KubernetesPodHighCPUUsage:
+        #   for: "15m"
+        #   severity: "critical"
+        # KubernetesPodNearMemoryLimit:
+        #   for: "2m"
+        # KubernetesContainerOOMKilled:
+        #   for: "1m"
+    # -- Additional labels to add to all default alerts
+    additionalLabels: {}
+      # environment: production
+      # team: backend
 
 resources: {}
 

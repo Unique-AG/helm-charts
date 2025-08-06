@@ -1,0 +1,192 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: Regression Test Kubernetes Resources Alerts
+templates:
+  - alerts/alerts-kubernetes-resources.yaml
+release:
+  name: ut
+tests:
+  - it: should render kubernetes resources alerts when prometheus and kubernetesResources are enabled
+    set:
+      prometheus.enabled: true
+      prometheus.defaultAlerts.kubernetesResources.enabled: true
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - isKind:
+          of: PrometheusRule
+      - equal:
+          path: metadata.name
+          value: ut-kubernetes-resources-alerts
+      - equal:
+          path: metadata.labels.alertGroup
+          value: kubernetes-resources
+      - equal:
+          path: spec.groups[0].name
+          value: ut-kubernetes-resources
+      - isNotEmpty:
+          path: spec.groups[0].rules
+
+  - it: should not render when prometheus is disabled
+    set:
+      prometheus.enabled: false
+      prometheus.defaultAlerts.kubernetesResources.enabled: true
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not render when kubernetesResources alerts are disabled
+    set:
+      prometheus.enabled: true
+      prometheus.defaultAlerts.kubernetesResources.enabled: false
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not render when monitoring.coreos.com/v1 API is not available
+    set:
+      prometheus.enabled: true
+      prometheus.defaultAlerts.kubernetesResources.enabled: true
+    capabilities:
+      apiVersions: []
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render with custom for duration
+    set:
+      prometheus.enabled: true
+      prometheus.defaultAlerts.kubernetesResources.enabled: true
+      prometheus.defaultAlerts.kubernetesResources.for: "10m"
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - isKind:
+          of: PrometheusRule
+      - contains:
+          path: spec.groups[0].rules
+          content:
+            alert: KubernetesPodHighCPUUsage
+          count: 1
+
+  - it: should disable specific alerts when configured
+    set:
+      prometheus.enabled: true
+      prometheus.defaultAlerts.kubernetesResources.enabled: true
+      prometheus.defaultAlerts.kubernetesResources.disabled:
+        KubernetesPodHighCPUUsage: true
+        KubernetesPodHighMemoryUsage: true
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - isKind:
+          of: PrometheusRule
+      - notContains:
+          path: spec.groups[0].rules
+          content:
+            alert: KubernetesPodHighCPUUsage
+      - notContains:
+          path: spec.groups[0].rules
+          content:
+            alert: KubernetesPodHighMemoryUsage
+
+  - it: should apply custom rules for severity and timing
+    set:
+      prometheus.enabled: true
+      prometheus.defaultAlerts.kubernetesResources.enabled: true
+      prometheus.defaultAlerts.kubernetesResources.customRules:
+        KubernetesPodHighCPUUsage:
+          for: "15m"
+          severity: "critical"
+        KubernetesPodNearMemoryLimit:
+          for: "2m"
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - isKind:
+          of: PrometheusRule
+      - contains:
+          path: spec.groups[0].rules
+          content:
+            alert: KubernetesPodHighCPUUsage
+            for: "15m"
+            labels:
+              severity: "critical"
+              alertGroup: kubernetes-resources
+
+  - it: should include additional labels when configured
+    set:
+      prometheus.enabled: true
+      prometheus.defaultAlerts.kubernetesResources.enabled: true
+      prometheus.defaultAlerts.additionalLabels:
+        environment: production
+        team: backend
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - isKind:
+          of: PrometheusRule
+      - equal:
+          path: metadata.labels.environment
+          value: production
+      - equal:
+          path: metadata.labels.team
+          value: backend
+
+  - it: should contain expected kubernetes resource alerts
+    set:
+      prometheus.enabled: true
+      prometheus.defaultAlerts.kubernetesResources.enabled: true
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - isKind:
+          of: PrometheusRule
+      - contains:
+          path: spec.groups[0].rules
+          content:
+            alert: KubernetesPodHighCPUUsage
+      - contains:
+          path: spec.groups[0].rules
+          content:
+            alert: KubernetesPodHighMemoryUsage
+      - contains:
+          path: spec.groups[0].rules
+          content:
+            alert: KubernetesPodNearMemoryLimit
+      - contains:
+          path: spec.groups[0].rules
+          content:
+            alert: KubernetesPodThrottled
+
+  - it: should have correct expression format for CPU usage alert
+    set:
+      prometheus.enabled: true
+      prometheus.defaultAlerts.kubernetesResources.enabled: true
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - isKind:
+          of: PrometheusRule
+      - contains:
+          path: spec.groups[0].rules
+          content:
+            alert: KubernetesPodHighCPUUsage
+            expr: |
+              (
+                sum(rate(container_cpu_usage_seconds_total{namespace="default", pod=~"ut-.*", container!="POD", container!=""}[5m])) by (pod, container)
+                /
+                sum(kube_pod_container_resource_limits{namespace="default", pod=~"ut-.*", resource="cpu"}) by (pod, container)
+              ) * 100 > 80

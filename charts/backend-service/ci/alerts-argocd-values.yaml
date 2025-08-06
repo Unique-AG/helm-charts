@@ -1,0 +1,14 @@
+# CI test configuration for ArgoCD Alerts
+prometheus:
+  enabled: true
+  defaultAlerts:
+    argocd:
+      enabled: true
+      applicationName: "my-backend-service"
+      for: "8m"
+    # Additional labels for testing
+    additionalLabels:
+      environment: "production"
+      team: "sre"
+      component: "argocd"
+      alert_type: "application_health"

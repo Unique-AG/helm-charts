@@ -947,6 +947,259 @@
         "rules": {
           "type": "object",
           "description": "Prometheus rules"
+        },
+        "defaultAlerts": {
+          "type": "object",
+          "description": "Default alert configurations",
+          "properties": {
+            "argocd": {
+              "type": "object",
+              "description": "ArgoCD alert configuration",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Enable ArgoCD alerts"
+                },
+                "applicationName": {
+                  "type": "string",
+                  "description": "ArgoCD application name override"
+                },
+                "for": {
+                  "type": "string",
+                  "description": "Duration to wait before firing alerts",
+                  "examples": ["5m", "10m"]
+                },
+                "customRules": {
+                  "type": "object",
+                  "description": "Override alert rules with custom values (for duration, severity, etc.)",
+                  "patternProperties": {
+                    "^ArgoCD.*": {
+                      "type": "object",
+                      "description": "Custom rule overrides for specific alerts",
+                      "properties": {
+                        "for": {
+                          "type": "string",
+                          "description": "Duration to wait before firing alert",
+                          "examples": ["5m", "10m", "1h"]
+                        },
+                        "severity": {
+                          "type": "string",
+                          "description": "Alert severity level",
+                          "enum": ["info", "warning", "critical"]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "kubernetesApplication": {
+              "type": "object",
+              "description": "Kubernetes application alert configuration",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Enable Kubernetes application alerts"
+                },
+                "for": {
+                  "type": "string",
+                  "description": "Duration to wait before firing alerts",
+                  "examples": ["5m", "10m"]
+                },
+                "disabled": {
+                  "type": "object",
+                  "description": "Disable specific alerts by setting them to true",
+                  "properties": {
+                    "KubePodCrashLooping": {
+                      "type": "boolean",
+                      "description": "Disable KubePodCrashLooping alert"
+                    },
+                    "KubePodNotReady": {
+                      "type": "boolean",
+                      "description": "Disable KubePodNotReady alert"
+                    },
+                    "KubeDeploymentGenerationMismatch": {
+                      "type": "boolean",
+                      "description": "Disable KubeDeploymentGenerationMismatch alert"
+                    },
+                    "KubeDeploymentReplicasMismatch": {
+                      "type": "boolean",
+                      "description": "Disable KubeDeploymentReplicasMismatch alert"
+                    },
+                    "KubeDeploymentRolloutStuck": {
+                      "type": "boolean",
+                      "description": "Disable KubeDeploymentRolloutStuck alert"
+                    },
+                    "KubeStatefulSetReplicasMismatch": {
+                      "type": "boolean",
+                      "description": "Disable KubeStatefulSetReplicasMismatch alert"
+                    },
+                    "KubeStatefulSetGenerationMismatch": {
+                      "type": "boolean",
+                      "description": "Disable KubeStatefulSetGenerationMismatch alert"
+                    },
+                    "KubeStatefulSetUpdateNotRolledOut": {
+                      "type": "boolean",
+                      "description": "Disable KubeStatefulSetUpdateNotRolledOut alert"
+                    },
+                    "KubeDaemonSetRolloutStuck": {
+                      "type": "boolean",
+                      "description": "Disable KubeDaemonSetRolloutStuck alert"
+                    },
+                    "KubeContainerWaiting": {
+                      "type": "boolean",
+                      "description": "Disable KubeContainerWaiting alert"
+                    },
+                    "KubeDaemonSetNotScheduled": {
+                      "type": "boolean",
+                      "description": "Disable KubeDaemonSetNotScheduled alert"
+                    },
+                    "KubeDaemonSetMisScheduled": {
+                      "type": "boolean",
+                      "description": "Disable KubeDaemonSetMisScheduled alert"
+                    },
+                    "KubePodFrequentRestarts": {
+                      "type": "boolean",
+                      "description": "Disable KubePodFrequentRestarts alert"
+                    },
+                    "KubeJobNotCompleted": {
+                      "type": "boolean",
+                      "description": "Disable KubeJobNotCompleted alert"
+                    },
+                    "KubeJobFailed": {
+                      "type": "boolean",
+                      "description": "Disable KubeJobFailed alert"
+                    },
+                    "KubeHpaReplicasMismatch": {
+                      "type": "boolean",
+                      "description": "Disable KubeHpaReplicasMismatch alert"
+                    },
+                    "KubeHpaMaxedOut": {
+                      "type": "boolean",
+                      "description": "Disable KubeHpaMaxedOut alert"
+                    },
+                    "KubePersistentVolumeClaimPending": {
+                      "type": "boolean",
+                      "description": "Disable KubePersistentVolumeClaimPending alert"
+                    },
+                    "KubePdbNotEnoughHealthyPods": {
+                      "type": "boolean",
+                      "description": "Disable KubePdbNotEnoughHealthyPods alert"
+                    }
+                  }
+                },
+                "customRules": {
+                  "type": "object",
+                  "description": "Override alert rules with custom values (for duration, severity, etc.)",
+                  "patternProperties": {
+                    "^Kube.*": {
+                      "type": "object",
+                      "description": "Custom rule overrides for specific alerts",
+                      "properties": {
+                        "for": {
+                          "type": "string",
+                          "description": "Duration to wait before firing alert",
+                          "examples": ["5m", "10m", "1h"]
+                        },
+                        "severity": {
+                          "type": "string",
+                          "description": "Alert severity level",
+                          "enum": ["info", "warning", "critical"]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "kubernetesResources": {
+              "type": "object",
+              "description": "Kubernetes resource alert configuration",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Enable Kubernetes resource alerts"
+                },
+                "for": {
+                  "type": "string",
+                  "description": "Duration to wait before firing alerts",
+                  "examples": ["5m", "10m"]
+                },
+                "disabled": {
+                  "type": "object",
+                  "description": "Disable specific alerts by setting them to true",
+                  "properties": {
+                    "KubernetesPodHighCPUUsage": {
+                      "type": "boolean",
+                      "description": "Disable KubernetesPodHighCPUUsage alert"
+                    },
+                    "KubernetesPodHighMemoryUsage": {
+                      "type": "boolean",
+                      "description": "Disable KubernetesPodHighMemoryUsage alert"
+                    },
+                    "KubernetesPodNearMemoryLimit": {
+                      "type": "boolean",
+                      "description": "Disable KubernetesPodNearMemoryLimit alert"
+                    },
+                    "KubernetesPodThrottled": {
+                      "type": "boolean",
+                      "description": "Disable KubernetesPodThrottled alert"
+                    },
+                    "KubernetesPersistentVolumeHighUsage": {
+                      "type": "boolean",
+                      "description": "Disable KubernetesPersistentVolumeHighUsage alert"
+                    },
+                    "KubernetesPersistentVolumeNearFull": {
+                      "type": "boolean",
+                      "description": "Disable KubernetesPersistentVolumeNearFull alert"
+                    },
+                    "KubernetesContainerOOMKilled": {
+                      "type": "boolean",
+                      "description": "Disable KubernetesContainerOOMKilled alert"
+                    },
+                    "KubernetesPodMissingResourceLimits": {
+                      "type": "boolean",
+                      "description": "Disable KubernetesPodMissingResourceLimits alert"
+                    },
+                    "KubernetesHPAScalingEvent": {
+                      "type": "boolean",
+                      "description": "Disable KubernetesHPAScalingEvent alert"
+                    },
+                    "KubernetesHPAMaxReplicasReached": {
+                      "type": "boolean",
+                      "description": "Disable KubernetesHPAMaxReplicasReached alert"
+                    }
+                  }
+                },
+                "customRules": {
+                  "type": "object",
+                  "description": "Override alert rules with custom values (for duration, severity, etc.)",
+                  "patternProperties": {
+                    "^Kubernetes.*": {
+                      "type": "object",
+                      "description": "Custom rule overrides for specific alerts",
+                      "properties": {
+                        "for": {
+                          "type": "string",
+                          "description": "Duration to wait before firing alert",
+                          "examples": ["5m", "10m", "1h"]
+                        },
+                        "severity": {
+                          "type": "string",
+                          "description": "Alert severity level",
+                          "enum": ["info", "warning", "critical"]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "additionalLabels": {
+              "type": "object",
+              "description": "Additional labels to add to all default alerts"
+            }
+          }
         }
       }
     },

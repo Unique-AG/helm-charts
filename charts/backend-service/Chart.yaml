@@ -7,8 +7,8 @@ maintainers:
 name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
-# change on next major: enable netpol by default, remove tyk, remove eventBasedAutoscaling, deprecate cronJob
-version: 4.6.2
+# change on next major: enable netpol by default, deprecate cronJob
+version: 5.0.0
 appVersion: latest
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
@@ -17,5 +17,15 @@ description: |
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
-    - kind: fixed
-      description: "Fixed missing audit volume definition in extraCronJobs template preventing 'Not found: audit' errors."
+    - kind: added
+      description: "Default alerts for ArgoCD, Kubernetes resources, and Kubernetes application."
+    - kind: added
+      description: "ServiceMonitor for the backend-service."
+    - kind: removed
+      description: "⚠️ Breaking change: PodMonitor for the backend-service."
+    - kind: changed
+      description: "⚠️ Breaking change: format for specyfying custom rules for alerts has changed."
+    - kind: removed
+      description: "⚠️ Breaking change: tyk resources are no longer deployed"
+    - kind: removed
+      description: "⚠️ Breaking change: eventBasedAutoscaling value is no longer supported. Use .Values.keda instead"
