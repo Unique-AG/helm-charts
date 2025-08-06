@@ -26,9 +26,9 @@ spec:
             /
             sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", resource="cpu"}) by (pod, container)
           ) * 100 > 80
-        for: {{ dig "KubernetesPodHighCPUUsage" "for" "10m" .Values.prometheus.defaultAlerts.kubernetesResources.customRules }}
+        for: {{ dig "KubernetesPodHighCPUUsage" "for" "10m" ((.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) | default dict) }}
         labels:
-          severity: {{ dig "KubernetesPodHighCPUUsage" "severity" "warning" .Values.prometheus.defaultAlerts.kubernetesResources.customRules }}
+          severity: {{ dig "KubernetesPodHighCPUUsage" "severity" "warning" ((.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) | default dict) }}
           alertGroup: kubernetes-resources
           {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
           {{- toYaml . | nindent 10 }}
@@ -46,9 +46,9 @@ spec:
             /
             sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", resource="memory"}) by (pod, container)
           ) * 100 > 80
-        for: {{ dig "KubernetesPodHighMemoryUsage" "for" "10m" .Values.prometheus.defaultAlerts.kubernetesResources.customRules }}
+        for: {{ dig "KubernetesPodHighMemoryUsage" "for" "10m" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
         labels:
-          severity: {{ dig "KubernetesPodHighMemoryUsage" "severity" "warning" .Values.prometheus.defaultAlerts.kubernetesResources.customRules }}
+          severity: {{ dig "KubernetesPodHighMemoryUsage" "severity" "warning" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
           alertGroup: kubernetes-resources
           {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
           {{- toYaml . | nindent 10 }}
@@ -66,9 +66,9 @@ spec:
             /
             sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", resource="memory"}) by (pod, container)
           ) * 100 > 95
-        for: {{ dig "KubernetesPodNearMemoryLimit" "for" "5m" .Values.prometheus.defaultAlerts.kubernetesResources.customRules }}
+        for: {{ dig "KubernetesPodNearMemoryLimit" "for" "5m" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
         labels:
-          severity: {{ dig "KubernetesPodNearMemoryLimit" "severity" "critical" .Values.prometheus.defaultAlerts.kubernetesResources.customRules }}
+          severity: {{ dig "KubernetesPodNearMemoryLimit" "severity" "critical" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
           alertGroup: kubernetes-resources
           {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
           {{- toYaml . | nindent 10 }}
@@ -85,9 +85,9 @@ spec:
           /
           increase(container_cpu_cfs_periods_total{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", container!="POD", container!=""}[5m])
           > 0.25
-        for: {{ dig "KubernetesPodThrottled" "for" "15m" .Values.prometheus.defaultAlerts.kubernetesResources.customRules }}
+        for: {{ dig "KubernetesPodThrottled" "for" "15m" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
         labels:
-          severity: {{ dig "KubernetesPodThrottled" "severity" "warning" .Values.prometheus.defaultAlerts.kubernetesResources.customRules }}
+          severity: {{ dig "KubernetesPodThrottled" "severity" "warning" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
           alertGroup: kubernetes-resources
           {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
           {{- toYaml . | nindent 10 }}
@@ -105,9 +105,9 @@ spec:
             /
             kubelet_volume_stats_capacity_bytes{namespace="{{ .Release.Namespace }}", persistentvolumeclaim=~"{{ $fullName }}-.*"}
           ) * 100 > 80
-        for: {{ dig "KubernetesPersistentVolumeHighUsage" "for" "10m" .Values.prometheus.defaultAlerts.kubernetesResources.customRules }}
+        for: {{ dig "KubernetesPersistentVolumeHighUsage" "for" "10m" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
         labels:
-          severity: {{ dig "KubernetesPersistentVolumeHighUsage" "severity" "warning" .Values.prometheus.defaultAlerts.kubernetesResources.customRules }}
+          severity: {{ dig "KubernetesPersistentVolumeHighUsage" "severity" "warning" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
           alertGroup: kubernetes-resources
           {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
           {{- toYaml . | nindent 10 }}
@@ -125,9 +125,9 @@ spec:
             /
             kubelet_volume_stats_capacity_bytes{namespace="{{ .Release.Namespace }}", persistentvolumeclaim=~"{{ $fullName }}-.*"}
           ) * 100 > 95
-        for: {{ dig "KubernetesPersistentVolumeNearFull" "for" "5m" .Values.prometheus.defaultAlerts.kubernetesResources.customRules }}
+        for: {{ dig "KubernetesPersistentVolumeNearFull" "for" "5m" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
         labels:
-          severity: {{ dig "KubernetesPersistentVolumeNearFull" "severity" "critical" .Values.prometheus.defaultAlerts.kubernetesResources.customRules }}
+          severity: {{ dig "KubernetesPersistentVolumeNearFull" "severity" "critical" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
           alertGroup: kubernetes-resources
           {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
           {{- toYaml . | nindent 10 }}
@@ -141,9 +141,9 @@ spec:
       - alert: KubernetesContainerOOMKilled
         expr: |
           increase(container_oom_events_total{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*"}[5m]) > 0
-        for: {{ dig "KubernetesContainerOOMKilled" "for" "0m" .Values.prometheus.defaultAlerts.kubernetesResources.customRules }}
+        for: {{ dig "KubernetesContainerOOMKilled" "for" "0m" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
         labels:
-          severity: {{ dig "KubernetesContainerOOMKilled" "severity" "warning" .Values.prometheus.defaultAlerts.kubernetesResources.customRules }}
+          severity: {{ dig "KubernetesContainerOOMKilled" "severity" "warning" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
           alertGroup: kubernetes-resources
           {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
           {{- toYaml . | nindent 10 }}

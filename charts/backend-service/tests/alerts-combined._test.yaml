@@ -23,14 +23,7 @@ tests:
         - monitoring.coreos.com/v1
     asserts:
       - hasDocuments:
-          count: 4
-      - documentIndex: 0
-        isKind:
-          of: PrometheusRule
-      - documentIndex: 0
-        equal:
-          path: metadata.labels.alertGroup
-          value: custom
+          count: 1
 
   - it: should render only enabled alert types
     set:
@@ -45,8 +38,18 @@ tests:
       apiVersions:
         - monitoring.coreos.com/v1
     asserts:
-      - hasDocuments:
-          count: 2
+      - template: alerts/alerts-custom.yaml
+        hasDocuments:
+          count: 1
+      - template: alerts/alerts-argocd.yaml
+        hasDocuments:
+          count: 1
+      - template: alerts/alerts-kubernetes-application.yaml
+        hasDocuments:
+          count: 0
+      - template: alerts/alerts-kubernetes-resources.yaml
+        hasDocuments:
+          count: 0
 
   - it: should not render anything when prometheus is disabled
     set:

@@ -20,7 +20,7 @@ spec:
       - alert: ArgoCDApplicationDegraded
         expr: |
           argocd_app_info{health_status="Degraded", dest_namespace="{{ .Release.Namespace }}", name="{{ $argoCDAppName }}"} > 0
-        for: {{ dig "ArgoCDApplicationDegraded" "for" "5m" .Values.prometheus.defaultAlerts.argocd.customRules }}
+        for: {{ dig "ArgoCDApplicationDegraded" "for" "5m" (.Values.prometheus.defaultAlerts.argocd.customRules | default dict) }}
         labels:
           severity: warning
           alertGroup: argocd
@@ -34,7 +34,7 @@ spec:
       - alert: ArgoCDApplicationSyncError
         expr: |
           argocd_app_condition{name="{{ $argoCDAppName }}", type="SyncError", status="True"} > 0
-        for: {{ dig "ArgoCDApplicationSyncError" "for" "5m" .Values.prometheus.defaultAlerts.argocd.customRules }}
+        for: {{ dig "ArgoCDApplicationSyncError" "for" "5m" (.Values.prometheus.defaultAlerts.argocd.customRules | default dict) }}
         labels:
           severity: critical
           alertGroup: argocd
@@ -48,7 +48,7 @@ spec:
       - alert: ArgoCDApplicationDeletionError
         expr: |
           argocd_app_condition{name="{{ $argoCDAppName }}", type="DeletionError", status="True"} > 0
-        for: {{ dig "ArgoCDApplicationDeletionError" "for" "5m" .Values.prometheus.defaultAlerts.argocd.customRules }}
+        for: {{ dig "ArgoCDApplicationDeletionError" "for" "5m" (.Values.prometheus.defaultAlerts.argocd.customRules | default dict) }}
         labels:
           severity: critical
           alertGroup: argocd
@@ -62,7 +62,7 @@ spec:
       - alert: ArgoCDApplicationInvalidSpecError
         expr: |
           argocd_app_condition{name="{{ $argoCDAppName }}", type="InvalidSpecError", status="True"} > 0
-        for: {{ dig "ArgoCDApplicationInvalidSpecError" "for" "5m" .Values.prometheus.defaultAlerts.argocd.customRules }}
+        for: {{ dig "ArgoCDApplicationInvalidSpecError" "for" "5m" (.Values.prometheus.defaultAlerts.argocd.customRules | default dict) }}
         labels:
           severity: critical
           alertGroup: argocd
@@ -76,7 +76,7 @@ spec:
       - alert: ArgoCDApplicationComparisonError
         expr: |
           argocd_app_condition{name="{{ $argoCDAppName }}", type="ComparisonError", status="True"} > 0
-        for: {{ dig "ArgoCDApplicationComparisonError" "for" "5m" .Values.prometheus.defaultAlerts.argocd.customRules }}
+        for: {{ dig "ArgoCDApplicationComparisonError" "for" "5m" (.Values.prometheus.defaultAlerts.argocd.customRules | default dict) }}
         labels:
           severity: critical
           alertGroup: argocd
@@ -90,7 +90,7 @@ spec:
       - alert: ArgoCDApplicationUnknownError
         expr: |
           argocd_app_condition{name="{{ $argoCDAppName }}", type="UnknownError", status="True"} > 0
-        for: {{ dig "ArgoCDApplicationUnknownError" "for" "5m" .Values.prometheus.defaultAlerts.argocd.customRules }}
+        for: {{ dig "ArgoCDApplicationUnknownError" "for" "5m" (.Values.prometheus.defaultAlerts.argocd.customRules | default dict) }}
         labels:
           severity: critical
           alertGroup: argocd

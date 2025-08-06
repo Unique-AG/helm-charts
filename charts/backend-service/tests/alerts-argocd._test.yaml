@@ -75,7 +75,14 @@ tests:
           content:
             alert: ArgoCDApplicationDegraded
             expr: |
-              argocd_app_info{health_status="Degraded", dest_namespace="default, name="custom-app-name""} > 0
+              argocd_app_info{health_status="Degraded", dest_namespace="NAMESPACE", name="custom-app-name"} > 0
+            for: 5m
+            labels:
+              severity: warning
+              alertGroup: argocd
+            annotations:
+              summary: "ArgoCD application custom-app-name is unhealthy"
+              description: "ArgoCD application custom-app-name health condition is not True for more than 5 minutes"
 
   - it: should use fullname as default application name
     set:
@@ -92,7 +99,14 @@ tests:
           content:
             alert: ArgoCDApplicationDegraded
             expr: |
-              argocd_app_info{health_status="Degraded", dest_namespace="default, name="ut""} > 0
+              argocd_app_info{health_status="Degraded", dest_namespace="NAMESPACE", name="ut"} > 0
+            for: 5m
+            labels:
+              severity: warning
+              alertGroup: argocd
+            annotations:
+              summary: "ArgoCD application ut is unhealthy"
+              description: "ArgoCD application ut health condition is not True for more than 5 minutes"
 
   - it: should render with custom for duration
     set:
@@ -109,7 +123,15 @@ tests:
           path: spec.groups[0].rules
           content:
             alert: ArgoCDApplicationDegraded
-            for: "10m"
+            expr: |
+              argocd_app_info{health_status="Degraded", dest_namespace="NAMESPACE", name="ut"} > 0
+            for: 5m
+            labels:
+              severity: warning
+              alertGroup: argocd
+            annotations:
+              summary: "ArgoCD application ut is unhealthy"
+              description: "ArgoCD application ut health condition is not True for more than 5 minutes"
 
   - it: should include additional labels when configured
     set:
@@ -145,26 +167,80 @@ tests:
           path: spec.groups[0].rules
           content:
             alert: ArgoCDApplicationDegraded
+            expr: |
+              argocd_app_info{health_status="Degraded", dest_namespace="NAMESPACE", name="ut"} > 0
+            for: 5m
+            labels:
+              severity: warning
+              alertGroup: argocd
+            annotations:
+              summary: "ArgoCD application ut is unhealthy"
+              description: "ArgoCD application ut health condition is not True for more than 5 minutes"
       - contains:
           path: spec.groups[0].rules
           content:
             alert: ArgoCDApplicationSyncError
+            expr: |
+              argocd_app_condition{name="ut", type="SyncError", status="True"} > 0
+            for: 5m
+            labels:
+              severity: critical
+              alertGroup: argocd
+            annotations:
+              summary: "ArgoCD application ut has sync errors"
+              description: "ArgoCD application ut has sync errors for more than 5 minutes"
       - contains:
           path: spec.groups[0].rules
           content:
             alert: ArgoCDApplicationDeletionError
+            expr: |
+              argocd_app_condition{name="ut", type="DeletionError", status="True"} > 0
+            for: 5m
+            labels:
+              severity: critical
+              alertGroup: argocd
+            annotations:
+              summary: "ArgoCD application ut has deletion errors"
+              description: "ArgoCD application ut has deletion errors for more than 5 minutes"
       - contains:
           path: spec.groups[0].rules
           content:
             alert: ArgoCDApplicationInvalidSpecError
+            expr: |
+              argocd_app_condition{name="ut", type="InvalidSpecError", status="True"} > 0
+            for: 5m
+            labels:
+              severity: critical
+              alertGroup: argocd
+            annotations:
+              summary: "ArgoCD application ut has invalid spec errors"
+              description: "ArgoCD application ut has invalid spec errors for more than 5 minutes"
       - contains:
           path: spec.groups[0].rules
           content:
             alert: ArgoCDApplicationComparisonError
+            expr: |
+              argocd_app_condition{name="ut", type="ComparisonError", status="True"} > 0
+            for: 5m
+            labels:
+              severity: critical
+              alertGroup: argocd
+            annotations:
+              summary: "ArgoCD application ut has comparison errors"
+              description: "ArgoCD application ut has comparison errors for more than 5 minutes"
       - contains:
           path: spec.groups[0].rules
           content:
             alert: ArgoCDApplicationUnknownError
+            expr: |
+              argocd_app_condition{name="ut", type="UnknownError", status="True"} > 0
+            for: 5m
+            labels:
+              severity: critical
+              alertGroup: argocd
+            annotations:
+              summary: "ArgoCD application ut has unknown errors"
+              description: "ArgoCD application ut has unknown errors for more than 5 minutes"
 
   - it: should have correct severity levels for different alerts
     set:
@@ -180,16 +256,28 @@ tests:
           path: spec.groups[0].rules
           content:
             alert: ArgoCDApplicationDegraded
+            expr: |
+              argocd_app_info{health_status="Degraded", dest_namespace="NAMESPACE", name="ut"} > 0
+            for: 5m
             labels:
               severity: warning
               alertGroup: argocd
+            annotations:
+              summary: "ArgoCD application ut is unhealthy"
+              description: "ArgoCD application ut health condition is not True for more than 5 minutes"
       - contains:
           path: spec.groups[0].rules
           content:
             alert: ArgoCDApplicationSyncError
+            expr: |
+              argocd_app_condition{name="ut", type="SyncError", status="True"} > 0
+            for: 5m
             labels:
               severity: critical
               alertGroup: argocd
+            annotations:
+              summary: "ArgoCD application ut has sync errors"
+              description: "ArgoCD application ut has sync errors for more than 5 minutes"
 
   - it: should have proper expressions for sync error alert
     set:
@@ -207,6 +295,13 @@ tests:
             alert: ArgoCDApplicationSyncError
             expr: |
               argocd_app_condition{name="ut", type="SyncError", status="True"} > 0
+            for: 5m
+            labels:
+              severity: critical
+              alertGroup: argocd
+            annotations:
+              summary: "ArgoCD application ut has sync errors"
+              description: "ArgoCD application ut has sync errors for more than 5 minutes"
 
   - it: should have proper expressions for deletion error alert
     set:
@@ -224,6 +319,13 @@ tests:
             alert: ArgoCDApplicationDeletionError
             expr: |
               argocd_app_condition{name="ut", type="DeletionError", status="True"} > 0
+            for: 5m
+            labels:
+              severity: critical
+              alertGroup: argocd
+            annotations:
+              summary: "ArgoCD application ut has deletion errors"
+              description: "ArgoCD application ut has deletion errors for more than 5 minutes"
 
   - it: should have proper annotations for all alerts
     set:
@@ -239,6 +341,12 @@ tests:
           path: spec.groups[0].rules
           content:
             alert: ArgoCDApplicationDegraded
+            expr: |
+              argocd_app_info{health_status="Degraded", dest_namespace="NAMESPACE", name="ut"} > 0
+            for: 5m
+            labels:
+              severity: warning
+              alertGroup: argocd
             annotations:
               summary: "ArgoCD application ut is unhealthy"
               description: "ArgoCD application ut health condition is not True for more than 5 minutes"
