@@ -149,6 +149,102 @@ The schema is available in the `values.schema.json` file in the chart.
 
 ## Upgrade Guides
 
+### ~> `5.0.0`
+
+- switch to `.Values.keda` for autoscaling instead of `.Values.eventBasedAutoscaling`. See values file for an example.
+- if you don't want to deploy a default route, set `routes.paths.default.enabled` to `false`
+- ⚠️ tyk resources are no longer deployed. Please move to Kong.
+
+Migrating alerts:
+
+The chart has introduced a new structured approach to alerts that replaces the previous custom `prometheus.rules` configuration. This new system provides predefined alert groups with sensible defaults while still allowing customization.
+
+#### Key Changes:
+
+1. **Structured Alert Groups**: Instead of manually defining each alert rule, you can now enable predefined alert groups:
+   - `defaultAlerts.argocd` - ArgoCD application health and condition alerts
+   - `defaultAlerts.kubernetesApplication` - Pod, deployment, and workload health alerts
+   - `defaultAlerts.kubernetesResources` - CPU, memory, and storage resource alerts
+
+2. **Custom Alerts**: Use `additionalAlerts` for completely custom alert rules with full control over the alert structure.
+
+#### Migration Steps:
+
+**From:**
+```yaml
+prometheus:
+  enabled: true
+  team: backend-team
+  rules:
+    QNodeChat5xx:
+      expression: >
+        sum(
+          max_over_time(
+            nestjs_http_server_responses_total{status=~"^5..$", app="node_chat"}[1m]
+          )
+          or
+          vector(0)
+        )
+          by (app, path, method, status)
+        -
+        sum(
+          max_over_time(
+            nestjs_http_server_responses_total{status=~"^5..$", app="node_chat"}[1m]
+            offset 1m
+          )
+          or vector(0)
+        )
+          by (app, path, method, status)
+        > 0
+      for: 0m
+      severity: critical
+      labels:
+        app: app
+```
+
+**To:**
+```yaml
+prometheus:
+  enabled: true
+  # Enable predefined alert groups
+  defaultAlerts:
+    # Global labels applied to all alerts
+    additionalLabels:
+      team: backend-team
+      app: app
+
+  # Custom alerts for application-specific monitoring
+  additionalAlerts:
+    QNodeChat5xx:
+      alert: QNodeChat5xx
+      expr: >
+        sum(
+          max_over_time(
+            nestjs_http_server_responses_total{status=~"^5..$", app="node_chat"}[1m]
+          )
+          or
+          vector(0)
+        )
+          by (app, path, method, status)
+        -
+        sum(
+          max_over_time(
+            nestjs_http_server_responses_total{status=~"^5..$", app="node_chat"}[1m]
+            offset 1m
+          )
+          or vector(0)
+        )
+          by (app, path, method, status)
+        > 0
+      for: 0m
+      labels:
+        severity: critical
+        alertGroup: application
+      annotations:
+        summary: "High 5xx error rate detected"
+        description: "Application {{ $labels.app }} is experiencing 5xx errors"
+```
+
 ### ~> `3.0.0`
 
 - `routes` uses `camelCase` for its keys, replace all `lower_snake_case` keys with `camelCase`
