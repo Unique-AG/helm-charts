@@ -8,7 +8,6 @@ release:
 tests:
   - it: When given a secretProvider, should always render volumeMounts and volumes for them
     set:
-      tyk.listenPath: /unit-test
       image.tag: pinned-version
       secretProvider.tenantId: 99330c76-81d2-460e-861e-35af8e2a4266
       secretProvider.vaults.qa-app-common.AMQP_URL: RABBITMQ-ORANGE-WOLF-URL
@@ -24,7 +23,6 @@ tests:
 
   - it: When given initContainers in deployment
     set:
-      tyk.listenPath: /unit-test
       image.tag: pinned-version
       deployment.enabled: true
       deployment.initContainers[0].command:
@@ -43,7 +41,6 @@ tests:
 
   - it: When given envVars, renders them to the PodSpec
     set:
-      tyk.listenPath: /unit-test
       image.tag: pinned-version
       envVars:
         - name: NAME_OF_ENV
@@ -70,7 +67,6 @@ tests:
 
   - it: When given metadata in deployment
     set:
-      tyk.listenPath: /unit-test
       image.tag: pinned-version
       deployment.enabled: true
       deployment.metadata.labels.app: test
@@ -93,7 +89,6 @@ tests:
 
   - it: When given an initContainer, should always render volumeMounts and volumes for them
     set:
-      tyk.listenPath: /unit-test
       image.tag: pinned-version
       deployment.enabled: true
       deployment.initContainers[0]:

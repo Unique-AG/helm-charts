@@ -1,0 +1,235 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: Regression Test Custom Alerts
+templates:
+  - alerts/alerts-custom.yaml
+release:
+  name: ut
+tests:
+  - it: should render custom alerts when prometheus and additionalAlerts are enabled
+    set:
+      prometheus.enabled: true
+      prometheus.additionalAlerts:
+        HighErrorRate:
+          alert: HighErrorRate
+          expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) * 100 > 5
+          for: 5m
+          labels:
+            severity: critical
+            alertGroup: application
+          annotations:
+            summary: "High error rate detected"
+            description: "Error rate is above 5%"
+            runbook_url: "https://example.com/runbooks/high-error-rate"
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - isKind:
+          of: PrometheusRule
+      - equal:
+          path: metadata.name
+          value: ut-custom-alerts
+      - equal:
+          path: spec.groups[0].name
+          value: ut-custom
+      - equal:
+          path: spec.groups[0].rules[0].alert
+          value: HighErrorRate
+      - equal:
+          path: spec.groups[0].rules[0].for
+          value: 5m
+      - equal:
+          path: spec.groups[0].rules[0].labels.severity
+          value: critical
+      - equal:
+          path: spec.groups[0].rules[0].labels.alertGroup
+          value: application
+      - equal:
+          path: spec.groups[0].rules[0].annotations.summary
+          value: "High error rate detected"
+
+  - it: should merge additionalLabels into alert rules
+    set:
+      prometheus.enabled: true
+      prometheus.defaultAlerts:
+        additionalLabels:
+          environment: production
+          team: backend
+          cluster: main
+      prometheus.additionalAlerts:
+        TestAlert:
+          alert: TestAlert
+          expr: up == 0
+          labels:
+            severity: critical
+            alertGroup: application
+          annotations:
+            summary: "Test alert"
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - isKind:
+          of: PrometheusRule
+      - equal:
+          path: metadata.labels.environment
+          value: production
+      - equal:
+          path: metadata.labels.team
+          value: backend
+      - equal:
+          path: metadata.labels.cluster
+          value: main
+      - equal:
+          path: spec.groups[0].rules[0].alert
+          value: TestAlert
+      - equal:
+          path: spec.groups[0].rules[0].labels.severity
+          value: critical
+      - equal:
+          path: spec.groups[0].rules[0].labels.alertGroup
+          value: application
+      - equal:
+          path: spec.groups[0].rules[0].labels.environment
+          value: production
+      - equal:
+          path: spec.groups[0].rules[0].labels.team
+          value: backend
+      - equal:
+          path: spec.groups[0].rules[0].labels.cluster
+          value: main
+
+  - it: should merge additionalLabels when alert has no existing labels
+    set:
+      prometheus.enabled: true
+      prometheus.defaultAlerts:
+        additionalLabels:
+          environment: staging
+          team: platform
+      prometheus.additionalAlerts:
+        MinimalAlert:
+          alert: MinimalAlert
+          expr: up == 0
+          annotations:
+            summary: "Minimal alert"
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - isKind:
+          of: PrometheusRule
+      - equal:
+          path: spec.groups[0].rules[0].alert
+          value: MinimalAlert
+      - equal:
+          path: spec.groups[0].rules[0].labels.environment
+          value: staging
+      - equal:
+          path: spec.groups[0].rules[0].labels.team
+          value: platform
+
+  - it: should allow complete flexibility in alert definition
+    set:
+      prometheus.enabled: true
+      prometheus.additionalAlerts:
+        DatabaseAlert:
+          alert: DatabaseAlert
+          expr: pg_up == 0
+          labels:
+            severity: critical
+            alertGroup: database
+            team: database-team
+          annotations:
+            summary: "Database is down"
+        ApplicationAlert:
+          alert: ApplicationAlert
+          expr: up == 0
+          for: 2m
+          labels:
+            severity: warning
+            alertGroup: application
+            environment: production
+          annotations:
+            summary: "Application is down"
+            description: "Application has been down for 2 minutes"
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - isKind:
+          of: PrometheusRule
+      - lengthEqual:
+          path: spec.groups[0].rules
+          count: 2
+
+  - it: should not render when prometheus is disabled
+    set:
+      prometheus.enabled: false
+      prometheus.additionalAlerts:
+        TestAlert:
+          alert: TestAlert
+          expr: up == 0
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not render when additionalAlerts are not defined
+    set:
+      prometheus.enabled: true
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render minimal alert
+    set:
+      prometheus.enabled: true
+      prometheus.additionalAlerts:
+        SimpleAlert:
+          alert: SimpleAlert
+          expr: up == 0
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - isKind:
+          of: PrometheusRule
+      - equal:
+          path: spec.groups[0].rules[0].alert
+          value: SimpleAlert
+      - equal:
+          path: spec.groups[0].rules[0].expr
+          value: up == 0
+
+  - it: should render multiple alerts with different structures
+    set:
+      prometheus.enabled: true
+      prometheus.additionalAlerts:
+        Alert1:
+          alert: Alert1
+          expr: up == 0
+          labels:
+            severity: critical
+            alertGroup: service
+        Alert2:
+          alert: Alert2
+          expr: cpu_usage > 80
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High CPU usage"
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - isKind:
+          of: PrometheusRule
+      - lengthEqual:
+          path: spec.groups[0].rules
+          count: 2

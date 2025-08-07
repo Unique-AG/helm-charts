@@ -1,0 +1,95 @@
+# CI test configuration for comprehensive alerts testing
+prometheus:
+  enabled: true
+
+  # Test additional custom alerts along with default ones
+  additionalAlerts:
+    HighErrorRate:
+      alert: HighErrorRate
+      expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) * 100 > 5
+      for: 5m
+      labels:
+        severity: critical
+        service: service
+        pod: pod
+      annotations:
+        summary: "High error rate detected"
+        description: "Error rate is above 5% for more than 5 minutes"
+        runbook_url: "https://example.com/runbooks/high-error-rate"
+        dashboard: "https://grafana.example.com/d/app-dashboard"
+    DatabaseConnectionsHigh:
+      alert: DatabaseConnectionsHigh
+      expr: pg_stat_database_numbackends > 80
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Database connections are high"
+        description: "Database has {{ $value }} active connections"
+
+  defaultAlerts:
+    # ArgoCD alerts with custom application name
+    argocd:
+      enabled: true
+      applicationName: "comprehensive-test-app"
+      for: "7m"
+
+    # Kubernetes application alerts with selective disabling and custom rules
+    kubernetesApplication:
+      enabled: true
+      for: "4m"
+      disabled:
+        KubePodFrequentRestarts: true
+        KubeDaemonSetNotScheduled: true
+      customRules:
+        KubePodCrashLooping:
+          for: "6m"
+          severity: "critical"
+        KubeDeploymentReplicasMismatch:
+          for: "18m"
+          severity: "warning"
+        KubeJobFailed:
+          for: "1m"
+          severity: "critical"
+        KubeHpaReplicasMismatch:
+          for: "12m"
+        KubePersistentVolumeClaimPending:
+          for: "8m"
+          severity: "warning"
+
+    # Kubernetes resources alerts with comprehensive custom rules
+    kubernetesResources:
+      enabled: true
+      for: "5m"
+      disabled:
+        KubernetesPodThrottled: true
+      customRules:
+        KubernetesPodHighCPUUsage:
+          for: "10m"
+          severity: "critical"
+        KubernetesPodHighMemoryUsage:
+          for: "8m"
+          severity: "warning"
+        KubernetesPodNearMemoryLimit:
+          for: "2m"
+          severity: "critical"
+        KubernetesContainerOOMKilled:
+          for: "0m"
+          severity: "critical"
+        KubernetesPersistentVolumeHighUsage:
+          for: "15m"
+          severity: "warning"
+        KubernetesPersistentVolumeNearFull:
+          for: "5m"
+          severity: "critical"
+        KubernetesHPAMaxReplicasReached:
+          for: "8m"
+          severity: "warning"
+
+    # Additional labels for all alerts
+    additionalLabels:
+      environment: "comprehensive-test"
+      team: "platform"
+      component: "monitoring"
+      alert_category: "infrastructure"
+      cluster: "test-cluster"

@@ -7,7 +7,6 @@ release:
 tests:
   - it: When given a secretProvider, should always render volumeMounts and volumes for them
     set:
-      tyk.listenPath: /unit-test
       image.tag: pinned-version
       secretProvider.tenantId: 99330c76-81xxxx
       secretProvider.vaults.qa-app-common.AMQP_URL: RABBITMQ-ORANGE-WOLF-URL
@@ -44,7 +43,6 @@ tests:
 
   - it: When given initContainers in migration
     set:
-      tyk.listenPath: /unit-test
       image.tag: pinned-version
       hooks.migration.enabled: true
       hooks.migration.initContainers[0].command:
@@ -63,7 +61,6 @@ tests:
 
   - it: When given envVars, renders them to the JobSpec
     set:
-      tyk.listenPath: /unit-test
       image.tag: pinned-version
       hooks.migration.enabled: true
       envVars:
@@ -91,7 +88,6 @@ tests:
 
   - it: When given an initContainer, should always render volumeMounts and volumes for them
     set:
-      tyk.listenPath: /unit-test
       image.tag: pinned-version
       hooks.migration.enabled: true
       hooks.migration.initContainers[0]:
@@ -104,7 +100,7 @@ tests:
           - "-e"
           - "echo"
           - "helloWorld"
-        
+
     template: hooks/migration.yaml
     asserts:
       - isKind:

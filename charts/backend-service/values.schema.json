@@ -207,85 +207,6 @@
       "type": "array",
       "description": "Environment variables with Kubernetes native syntax"
     },
-    "eventBasedAutoscaling": {
-      "type": "object",
-      "description": "Event-based autoscaling configuration (deprecated, use keda instead)",
-      "properties": {
-        "enabled": {
-          "type": "boolean",
-          "description": "Enable event-based autoscaling",
-          "examples": [false]
-        },
-        "minReplicaCount": {
-          "type": "integer",
-          "description": "Minimum number of replicas",
-          "minimum": 0,
-          "examples": [0]
-        },
-        "maxReplicaCount": {
-          "type": "integer",
-          "description": "Maximum number of replicas",
-          "minimum": 1,
-          "examples": [2]
-        },
-        "cron": {
-          "type": "object",
-          "description": "Cron-based autoscaling configuration",
-          "properties": {
-            "timezone": {
-              "type": "string",
-              "description": "Timezone for the cron schedule",
-              "examples": ["Europe/Zurich"]
-            },
-            "start": {
-              "type": "string",
-              "description": "Cron schedule for scaling up",
-              "examples": ["0 8 * * 1-5"]
-            },
-            "end": {
-              "type": "string",
-              "description": "Cron schedule for scaling down",
-              "examples": ["0 19 * * 1-5"]
-            },
-            "desiredReplicas": {
-              "type": "string",
-              "description": "Desired number of replicas during schedule",
-              "examples": ["1"]
-            }
-          }
-        },
-        "rabbitmq": {
-          "type": "object",
-          "description": "RabbitMQ-based autoscaling configuration",
-          "properties": {
-            "protocol": {
-              "type": "string",
-              "description": "Protocol for RabbitMQ connection",
-              "examples": ["auto"]
-            },
-            "mode": {
-              "type": "string",
-              "description": "Mode for RabbitMQ scaling",
-              "examples": ["QueueLength"]
-            },
-            "value": {
-              "type": "string",
-              "description": "Threshold value for scaling",
-              "examples": ["1"]
-            },
-            "hostFromEnv": {
-              "type": "string",
-              "description": "Environment variable containing the RabbitMQ host",
-              "examples": ["AMQP_URL"]
-            }
-          }
-        },
-        "customTriggers": {
-          "type": "array",
-          "description": "Custom scaling triggers"
-        }
-      }
-    },
     "keda": {
       "type": "object",
       "description": "KEDA configuration for event-based scaling",
@@ -947,6 +868,259 @@
         "rules": {
           "type": "object",
           "description": "Prometheus rules"
+        },
+        "defaultAlerts": {
+          "type": "object",
+          "description": "Default alert configurations",
+          "properties": {
+            "argocd": {
+              "type": "object",
+              "description": "ArgoCD alert configuration",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Enable ArgoCD alerts"
+                },
+                "applicationName": {
+                  "type": "string",
+                  "description": "ArgoCD application name override"
+                },
+                "for": {
+                  "type": "string",
+                  "description": "Duration to wait before firing alerts",
+                  "examples": ["5m", "10m"]
+                },
+                "customRules": {
+                  "type": "object",
+                  "description": "Override alert rules with custom values (for duration, severity, etc.)",
+                  "patternProperties": {
+                    "^ArgoCD.*": {
+                      "type": "object",
+                      "description": "Custom rule overrides for specific alerts",
+                      "properties": {
+                        "for": {
+                          "type": "string",
+                          "description": "Duration to wait before firing alert",
+                          "examples": ["5m", "10m", "1h"]
+                        },
+                        "severity": {
+                          "type": "string",
+                          "description": "Alert severity level",
+                          "enum": ["info", "warning", "critical"]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "kubernetesApplication": {
+              "type": "object",
+              "description": "Kubernetes application alert configuration",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Enable Kubernetes application alerts"
+                },
+                "for": {
+                  "type": "string",
+                  "description": "Duration to wait before firing alerts",
+                  "examples": ["5m", "10m"]
+                },
+                "disabled": {
+                  "type": "object",
+                  "description": "Disable specific alerts by setting them to true",
+                  "properties": {
+                    "KubePodCrashLooping": {
+                      "type": "boolean",
+                      "description": "Disable KubePodCrashLooping alert"
+                    },
+                    "KubePodNotReady": {
+                      "type": "boolean",
+                      "description": "Disable KubePodNotReady alert"
+                    },
+                    "KubeDeploymentGenerationMismatch": {
+                      "type": "boolean",
+                      "description": "Disable KubeDeploymentGenerationMismatch alert"
+                    },
+                    "KubeDeploymentReplicasMismatch": {
+                      "type": "boolean",
+                      "description": "Disable KubeDeploymentReplicasMismatch alert"
+                    },
+                    "KubeDeploymentRolloutStuck": {
+                      "type": "boolean",
+                      "description": "Disable KubeDeploymentRolloutStuck alert"
+                    },
+                    "KubeStatefulSetReplicasMismatch": {
+                      "type": "boolean",
+                      "description": "Disable KubeStatefulSetReplicasMismatch alert"
+                    },
+                    "KubeStatefulSetGenerationMismatch": {
+                      "type": "boolean",
+                      "description": "Disable KubeStatefulSetGenerationMismatch alert"
+                    },
+                    "KubeStatefulSetUpdateNotRolledOut": {
+                      "type": "boolean",
+                      "description": "Disable KubeStatefulSetUpdateNotRolledOut alert"
+                    },
+                    "KubeDaemonSetRolloutStuck": {
+                      "type": "boolean",
+                      "description": "Disable KubeDaemonSetRolloutStuck alert"
+                    },
+                    "KubeContainerWaiting": {
+                      "type": "boolean",
+                      "description": "Disable KubeContainerWaiting alert"
+                    },
+                    "KubeDaemonSetNotScheduled": {
+                      "type": "boolean",
+                      "description": "Disable KubeDaemonSetNotScheduled alert"
+                    },
+                    "KubeDaemonSetMisScheduled": {
+                      "type": "boolean",
+                      "description": "Disable KubeDaemonSetMisScheduled alert"
+                    },
+                    "KubePodFrequentRestarts": {
+                      "type": "boolean",
+                      "description": "Disable KubePodFrequentRestarts alert"
+                    },
+                    "KubeJobNotCompleted": {
+                      "type": "boolean",
+                      "description": "Disable KubeJobNotCompleted alert"
+                    },
+                    "KubeJobFailed": {
+                      "type": "boolean",
+                      "description": "Disable KubeJobFailed alert"
+                    },
+                    "KubeHpaReplicasMismatch": {
+                      "type": "boolean",
+                      "description": "Disable KubeHpaReplicasMismatch alert"
+                    },
+                    "KubeHpaMaxedOut": {
+                      "type": "boolean",
+                      "description": "Disable KubeHpaMaxedOut alert"
+                    },
+                    "KubePersistentVolumeClaimPending": {
+                      "type": "boolean",
+                      "description": "Disable KubePersistentVolumeClaimPending alert"
+                    },
+                    "KubePdbNotEnoughHealthyPods": {
+                      "type": "boolean",
+                      "description": "Disable KubePdbNotEnoughHealthyPods alert"
+                    }
+                  }
+                },
+                "customRules": {
+                  "type": "object",
+                  "description": "Override alert rules with custom values (for duration, severity, etc.)",
+                  "patternProperties": {
+                    "^Kube.*": {
+                      "type": "object",
+                      "description": "Custom rule overrides for specific alerts",
+                      "properties": {
+                        "for": {
+                          "type": "string",
+                          "description": "Duration to wait before firing alert",
+                          "examples": ["5m", "10m", "1h"]
+                        },
+                        "severity": {
+                          "type": "string",
+                          "description": "Alert severity level",
+                          "enum": ["info", "warning", "critical"]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "kubernetesResources": {
+              "type": "object",
+              "description": "Kubernetes resource alert configuration",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Enable Kubernetes resource alerts"
+                },
+                "for": {
+                  "type": "string",
+                  "description": "Duration to wait before firing alerts",
+                  "examples": ["5m", "10m"]
+                },
+                "disabled": {
+                  "type": "object",
+                  "description": "Disable specific alerts by setting them to true",
+                  "properties": {
+                    "KubernetesPodHighCPUUsage": {
+                      "type": "boolean",
+                      "description": "Disable KubernetesPodHighCPUUsage alert"
+                    },
+                    "KubernetesPodHighMemoryUsage": {
+                      "type": "boolean",
+                      "description": "Disable KubernetesPodHighMemoryUsage alert"
+                    },
+                    "KubernetesPodNearMemoryLimit": {
+                      "type": "boolean",
+                      "description": "Disable KubernetesPodNearMemoryLimit alert"
+                    },
+                    "KubernetesPodThrottled": {
+                      "type": "boolean",
+                      "description": "Disable KubernetesPodThrottled alert"
+                    },
+                    "KubernetesPersistentVolumeHighUsage": {
+                      "type": "boolean",
+                      "description": "Disable KubernetesPersistentVolumeHighUsage alert"
+                    },
+                    "KubernetesPersistentVolumeNearFull": {
+                      "type": "boolean",
+                      "description": "Disable KubernetesPersistentVolumeNearFull alert"
+                    },
+                    "KubernetesContainerOOMKilled": {
+                      "type": "boolean",
+                      "description": "Disable KubernetesContainerOOMKilled alert"
+                    },
+                    "KubernetesPodMissingResourceLimits": {
+                      "type": "boolean",
+                      "description": "Disable KubernetesPodMissingResourceLimits alert"
+                    },
+                    "KubernetesHPAScalingEvent": {
+                      "type": "boolean",
+                      "description": "Disable KubernetesHPAScalingEvent alert"
+                    },
+                    "KubernetesHPAMaxReplicasReached": {
+                      "type": "boolean",
+                      "description": "Disable KubernetesHPAMaxReplicasReached alert"
+                    }
+                  }
+                },
+                "customRules": {
+                  "type": "object",
+                  "description": "Override alert rules with custom values (for duration, severity, etc.)",
+                  "patternProperties": {
+                    "^Kubernetes.*": {
+                      "type": "object",
+                      "description": "Custom rule overrides for specific alerts",
+                      "properties": {
+                        "for": {
+                          "type": "string",
+                          "description": "Duration to wait before firing alert",
+                          "examples": ["5m", "10m", "1h"]
+                        },
+                        "severity": {
+                          "type": "string",
+                          "description": "Alert severity level",
+                          "enum": ["info", "warning", "critical"]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "additionalLabels": {
+              "type": "object",
+              "description": "Additional labels to add to all default alerts"
+            }
+          }
         }
       }
     },
@@ -1161,65 +1335,6 @@
     "tolerations": {
       "type": "array",
       "description": "Tolerations for pod placement"
-    },
-    "tyk": {
-      "type": "object",
-      "description": "Tyk API Gateway configuration",
-      "properties": {
-        "enabled": {
-          "type": "boolean",
-          "description": "Enable Tyk API Gateway",
-          "examples": [false]
-        },
-        "listenPath": {
-          "type": "string",
-          "description": "Listen path for Tyk API Gateway",
-          "examples": ["/unsert_default_path"]
-        },
-        "jwtSource": {
-          "type": "string",
-          "description": "JWT source URL",
-          "examples": ["https://id.unique.app/oauth/v2/keys"]
-        },
-        "rateLimit": {
-          "type": "object",
-          "description": "Rate limit configuration"
-        },
-        "exposePublicApi": {
-          "type": "object",
-          "description": "Public API exposure configuration",
-          "properties": {
-            "enabled": {
-              "type": "boolean",
-              "description": "Enable public API exposure",
-              "examples": [false]
-            }
-          }
-        },
-        "scopedApi": {
-          "type": "object",
-          "description": "Scoped API configuration",
-          "properties": {
-            "enabled": {
-              "type": "boolean",
-              "description": "Enable scoped API",
-              "examples": [false]
-            }
-          }
-        },
-        "blockList": {
-          "type": "array",
-          "description": "Block list of paths and methods",
-          "examples": [
-            [
-              {
-                "methods": ["GET"],
-                "path": "/metrics"
-              }
-            ]
-          ]
-        }
-      }
     },
     "volumeMounts": {
       "type": "array",

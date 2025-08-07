@@ -4,7 +4,7 @@ The 'backend-service' chart is a "convenience" chart from Unique AG that can gen
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 4.6.2](https://img.shields.io/badge/Version-4.6.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
+![Version: 5.0.0](https://img.shields.io/badge/Version-5.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,21 +12,17 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 4.6.2
+helm install my-backend-service unique/backend-service --version 5.0.0
 
 # or
-helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 4.6.2
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 5.0.0
 ```
 
 ### Docker Images
 The chart itself uses `ghcr.io/unique-ag/chart-testing-service` as its base image. This is due to automation aspects and because there is no specific `appVersion` or service delivered with it. Using `chart-testing-service` Unique can improve the charts quality without dealing with the complexity of private registries during testing. Naturally, when deploying the Unique product, the image will be replaced with the actual Unique image(s). You can inspect the image [here](https://github.com/Unique-AG/helm-charts/tree/main/docker) and it is served from [`ghcr.io/unique-ag/chart-testing-service`](https://github.com/Unique-AG/helm-charts/pkgs/container/chart-testing-service).
 
 ### Networking
-The chart supports two ways of networking in different stages:
-
-- _Tyk_ - Tyk has been source-closed in late 2024 and thus Unique has decided to move away from it. The chart still supports Tyk but it is not enabled by default anymore since `2.0.0`. If you want to use Tyk, you need to set `tyk.enabled: true` in your values file, see [Upgrade ~> 2.0.0](#-200).
-    + Support fot Tyk will be removed with an upcoming major release.
-- _Gateway API_ - The chart supports the Gateway API and its resources. This is the recommended way to go forward. The Gateway API is a Kubernetes-native way to manage your networking resources and is part of the [Gateway API](https://gateway-api.sigs.k8s.io) project.
+The chart supports the Gateway API and its resources. This is the recommended way to go forward. The Gateway API is a Kubernetes-native way to manage your networking resources and is part of the [Gateway API](https://gateway-api.sigs.k8s.io) project.
     + The Gateway API is not enabled by default yet, you need to selectively `enable` different `routes` or use `extraRoutes` to configure them. See [Routes](#routes) for more information.
 
 ### Ports
@@ -152,6 +148,102 @@ The chart provides a JSON schema for validating `values.yaml` files. This schema
 The schema is available in the `values.schema.json` file in the chart.
 
 ## Upgrade Guides
+
+### ~> `5.0.0`
+
+- switch to `.Values.keda` for autoscaling instead of `.Values.eventBasedAutoscaling`. See values file for an example.
+- if you don't want to deploy a default route, set `routes.paths.default.enabled` to `false`
+- ⚠️ tyk resources are no longer deployed. Please move to Kong.
+
+Migrating alerts:
+
+The chart has introduced a new structured approach to alerts that replaces the previous custom `prometheus.rules` configuration. This new system provides predefined alert groups with sensible defaults while still allowing customization.
+
+#### Key Changes:
+
+1. **Structured Alert Groups**: Instead of manually defining each alert rule, you can now enable predefined alert groups:
+   - `defaultAlerts.argocd` - ArgoCD application health and condition alerts
+   - `defaultAlerts.kubernetesApplication` - Pod, deployment, and workload health alerts
+   - `defaultAlerts.kubernetesResources` - CPU, memory, and storage resource alerts
+
+2. **Custom Alerts**: Use `additionalAlerts` for completely custom alert rules with full control over the alert structure.
+
+#### Migration Steps:
+
+**From:**
+```yaml
+prometheus:
+  enabled: true
+  team: backend-team
+  rules:
+    QNodeChat5xx:
+      expression: >
+        sum(
+          max_over_time(
+            nestjs_http_server_responses_total{status=~"^5..$", app="node_chat"}[1m]
+          )
+          or
+          vector(0)
+        )
+          by (app, path, method, status)
+        -
+        sum(
+          max_over_time(
+            nestjs_http_server_responses_total{status=~"^5..$", app="node_chat"}[1m]
+            offset 1m
+          )
+          or vector(0)
+        )
+          by (app, path, method, status)
+        > 0
+      for: 0m
+      severity: critical
+      labels:
+        app: app
+```
+
+**To:**
+```yaml
+prometheus:
+  enabled: true
+  # Enable predefined alert groups
+  defaultAlerts:
+    # Global labels applied to all alerts
+    additionalLabels:
+      team: backend-team
+      app: app
+
+  # Custom alerts for application-specific monitoring
+  additionalAlerts:
+    QNodeChat5xx:
+      alert: QNodeChat5xx
+      expr: >
+        sum(
+          max_over_time(
+            nestjs_http_server_responses_total{status=~"^5..$", app="node_chat"}[1m]
+          )
+          or
+          vector(0)
+        )
+          by (app, path, method, status)
+        -
+        sum(
+          max_over_time(
+            nestjs_http_server_responses_total{status=~"^5..$", app="node_chat"}[1m]
+            offset 1m
+          )
+          or vector(0)
+        )
+          by (app, path, method, status)
+        > 0
+      for: 0m
+      labels:
+        severity: critical
+        alertGroup: application
+      annotations:
+        summary: "High 5xx error rate detected"
+        description: "Application {{ $labels.app }} is experiencing 5xx errors"
+```
 
 ### ~> `3.0.0`
 

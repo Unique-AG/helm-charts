@@ -1,0 +1,70 @@
+# CI test configuration for custom alerts using toYaml format with map structure
+prometheus:
+  enabled: true
+  defaultAlerts:
+    additionalLabels:
+      environment: ci-testing
+      team: platform
+      cluster: test-cluster
+  additionalAlerts:
+    ApplicationErrorRate:
+      alert: ApplicationErrorRate
+      expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) * 100 > 10
+      for: 3m
+      labels:
+        severity: critical
+        alertGroup: application
+        service: "{{ $labels.service }}"
+        environment: "{{ $labels.environment }}"
+      annotations:
+        summary: "Application error rate is high"
+        description: "Application error rate is {{ printf \"%.2f\" $value }}% for more than 3 minutes"
+        runbook_url: "https://example.com/runbooks/application-errors"
+        dashboard: "https://grafana.example.com/d/application-errors"
+
+    DatabaseConnectionsHigh:
+      alert: DatabaseConnectionsHigh
+      expr: pg_stat_database_numbackends > 80
+      for: 5m
+      labels:
+        severity: warning
+        alertGroup: database
+      annotations:
+        summary: "Database connections are high"
+        description: "Database has {{ $value }} active connections"
+
+    GenericInfrastructureAlert:
+      alert: GenericInfrastructureAlert
+      expr: up{job="infrastructure"} == 0
+      for: 2m
+      labels:
+        severity: critical
+        alertGroup: infrastructure
+        component: infrastructure
+      annotations:
+        summary: "Infrastructure component is down"
+        description: "Infrastructure component {{ $labels.instance }} is down"
+
+    ApplicationLatencyHigh:
+      alert: ApplicationLatencyHigh
+      expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+      for: 5m
+      labels:
+        severity: warning
+        alertGroup: performance
+        sla: response-time
+      annotations:
+        summary: "Application latency is high"
+        description: "95th percentile latency is {{ printf \"%.2f\" $value }}s"
+
+# Disable routes to avoid gateway CRD issues in testing
+routes:
+  paths:
+    default:
+      enabled: false
+    versioned:
+      enabled: false
+    scoped:
+      enabled: false
+    probe:
+      enabled: false
