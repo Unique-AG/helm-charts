@@ -344,7 +344,6 @@ ports:
   # If you need to use a port below 1024, you can override the securityContext of the deployment (discouraged) or get the `NET_BIND_SERVICE` capability added to the container (also discouraged but preferred if absolutely needed, at your own risk/liability)
   application: 8080
   # -- service port, this is the port that the service will be exposed on
-  # ⚠️ This is not applied to `tyk` objects as tyk is getting sunset, for Tyk, always service.port|80 is used
   service: 80
 
 probes:
@@ -500,7 +499,7 @@ routes:
   pathPrefix: ""
   paths:
     default:
-      enabled: false
+      enabled: true
       # -- explicitly list paths to block
       blockList:
         - /metrics

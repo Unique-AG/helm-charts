@@ -22,11 +22,7 @@ helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-serv
 The chart itself uses `ghcr.io/unique-ag/chart-testing-service` as its base image. This is due to automation aspects and because there is no specific `appVersion` or service delivered with it. Using `chart-testing-service` Unique can improve the charts quality without dealing with the complexity of private registries during testing. Naturally, when deploying the Unique product, the image will be replaced with the actual Unique image(s). You can inspect the image [here](https://github.com/Unique-AG/helm-charts/tree/main/docker) and it is served from [`ghcr.io/unique-ag/chart-testing-service`](https://github.com/Unique-AG/helm-charts/pkgs/container/chart-testing-service).
 
 ### Networking
-The chart supports two ways of networking in different stages:
-
-- _Tyk_ - Tyk has been source-closed in late 2024 and thus Unique has decided to move away from it. The chart still supports Tyk but it is not enabled by default anymore since `2.0.0`. If you want to use Tyk, you need to set `tyk.enabled: true` in your values file, see [Upgrade ~> 2.0.0](#-200).
-    + Support fot Tyk will be removed with an upcoming major release.
-- _Gateway API_ - The chart supports the Gateway API and its resources. This is the recommended way to go forward. The Gateway API is a Kubernetes-native way to manage your networking resources and is part of the [Gateway API](https://gateway-api.sigs.k8s.io) project.
+The chart supports the Gateway API and its resources. This is the recommended way to go forward. The Gateway API is a Kubernetes-native way to manage your networking resources and is part of the [Gateway API](https://gateway-api.sigs.k8s.io) project.
     + The Gateway API is not enabled by default yet, you need to selectively `enable` different `routes` or use `extraRoutes` to configure them. See [Routes](#routes) for more information.
 
 ### Ports
