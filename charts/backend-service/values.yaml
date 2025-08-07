@@ -276,7 +276,7 @@ image:
 imagePullSecrets: []
 
 # -- keda allows you to enable KEDA for the chart
-# `keda` and `eventBasedAutoscaling` are mutually exclusive.
+# `keda` and are mutually exclusive.
 keda:
   # -- enable KEDA/ScaledObject for the chart
   enabled: false
