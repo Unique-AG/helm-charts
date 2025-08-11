@@ -1,0 +1,14 @@
+{{- if .Values.podDisruptionBudget.create }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name:  {{ include "litellm.fullname" . }}
+spec:
+  minAvailable: {{ .Values.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "litellm.labels" . | nindent 6 }}
+      {{- with .Values.podLabels }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+{{- end }}
