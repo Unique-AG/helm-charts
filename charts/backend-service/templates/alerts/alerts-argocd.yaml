@@ -33,7 +33,7 @@ spec:
 
       - alert: ArgoCDApplicationSyncError
         expr: |
-          argocd_app_condition{name="{{ $argoCDAppName }}", type="SyncError", status="True"} > 0
+          argocd_app_condition{name="{{ $argoCDAppName }}", condition="SyncError"} > 0
         for: {{ dig "ArgoCDApplicationSyncError" "for" "5m" (.Values.prometheus.defaultAlerts.argocd.customRules | default dict) }}
         labels:
           severity: critical
@@ -47,7 +47,7 @@ spec:
 
       - alert: ArgoCDApplicationDeletionError
         expr: |
-          argocd_app_condition{name="{{ $argoCDAppName }}", type="DeletionError", status="True"} > 0
+          argocd_app_condition{name="{{ $argoCDAppName }}", condition="DeletionError"} > 0
         for: {{ dig "ArgoCDApplicationDeletionError" "for" "5m" (.Values.prometheus.defaultAlerts.argocd.customRules | default dict) }}
         labels:
           severity: critical
@@ -61,7 +61,7 @@ spec:
 
       - alert: ArgoCDApplicationInvalidSpecError
         expr: |
-          argocd_app_condition{name="{{ $argoCDAppName }}", type="InvalidSpecError", status="True"} > 0
+          argocd_app_condition{name="{{ $argoCDAppName }}", condition="InvalidSpecError"} > 0
         for: {{ dig "ArgoCDApplicationInvalidSpecError" "for" "5m" (.Values.prometheus.defaultAlerts.argocd.customRules | default dict) }}
         labels:
           severity: critical
@@ -75,7 +75,7 @@ spec:
 
       - alert: ArgoCDApplicationComparisonError
         expr: |
-          argocd_app_condition{name="{{ $argoCDAppName }}", type="ComparisonError", status="True"} > 0
+          argocd_app_condition{name="{{ $argoCDAppName }}", condition="ComparisonError"} > 0
         for: {{ dig "ArgoCDApplicationComparisonError" "for" "5m" (.Values.prometheus.defaultAlerts.argocd.customRules | default dict) }}
         labels:
           severity: critical
@@ -89,7 +89,7 @@ spec:
 
       - alert: ArgoCDApplicationUnknownError
         expr: |
-          argocd_app_condition{name="{{ $argoCDAppName }}", type="UnknownError", status="True"} > 0
+          argocd_app_condition{name="{{ $argoCDAppName }}", condition="UnknownError"} > 0
         for: {{ dig "ArgoCDApplicationUnknownError" "for" "5m" (.Values.prometheus.defaultAlerts.argocd.customRules | default dict) }}
         labels:
           severity: critical
