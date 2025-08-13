@@ -21,13 +21,13 @@ annotations:
       description: "Default alerts for ArgoCD, Kubernetes resources, and Kubernetes application."
     - kind: added
       description: "ServiceMonitor for the backend-service."
-    - kind: removed
-      description: "⚠️ Breaking change: PodMonitor for the backend-service."
     - kind: changed
-      description: "⚠️ Breaking change: format for specyfying custom rules for alerts has changed."
-    - kind: removed
-      description: "⚠️ Breaking change: tyk resources are no longer deployed"
-    - kind: removed
-      description: "⚠️ Breaking change: eventBasedAutoscaling value is no longer supported. Use .Values.keda instead"
+      description: "⚠️ Breaking: PodMonitor removed, use ServiceMonitor instead."
+    - kind: changed
+      description: "⚠️ Breaking: format for specyfying custom rules for alerts has changed, refer to readme."
+    - kind: changed
+      description: "⚠️ Breaking: tyk resources are no longer available, upgrade to routes."
+    - kind: changed
+      description: "⚠️ Breaking: eventBasedAutoscaling value is no longer supported. Use .Values.keda instead"
     - kind: added
-      description: "⚠️ Breaking change: default route is now enabled by default"
+      description: "⚠️ Breaking: default route is now enabled by default"
