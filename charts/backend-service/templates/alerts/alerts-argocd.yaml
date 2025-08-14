@@ -1,3 +1,4 @@
+# Requires exposing the ArgoCD metrics: https://argo-cd.readthedocs.io/en/latest/operator-manual/metrics
 {{- if and .Values.prometheus.defaultAlerts .Values.prometheus.defaultAlerts.argocd .Values.prometheus.defaultAlerts.argocd.enabled .Values.prometheus.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
 {{- $fullName := include "backendService.fullname" . -}}
 {{- $labels := include "backendService.labels" . -}}
@@ -31,7 +32,7 @@ spec:
           summary: "ArgoCD application {{ $argoCDAppName }} is unhealthy"
           description: "ArgoCD application {{ $argoCDAppName }} health condition is not True for more than 5 minutes"
 
-      - alert: ArgoCDApplicationSyncError
+      - alert: ArgoCDApplicationSyncError # requires exposing SyncError condition - https://argo-cd.readthedocs.io/en/latest/operator-manual/metrics/#exposing-application-conditions-as-prometheus-metrics
         expr: |
           argocd_app_condition{name="{{ $argoCDAppName }}", condition="SyncError"} > 0
         for: {{ dig "ArgoCDApplicationSyncError" "for" "5m" (.Values.prometheus.defaultAlerts.argocd.customRules | default dict) }}
@@ -45,7 +46,7 @@ spec:
           summary: "ArgoCD application {{ $argoCDAppName }} has sync errors"
           description: "ArgoCD application {{ $argoCDAppName }} has sync errors for more than 5 minutes"
 
-      - alert: ArgoCDApplicationDeletionError
+      - alert: ArgoCDApplicationDeletionError # requires exposing DeletionError condition - https://argo-cd.readthedocs.io/en/latest/operator-manual/metrics/#exposing-application-conditions-as-prometheus-metrics
         expr: |
           argocd_app_condition{name="{{ $argoCDAppName }}", condition="DeletionError"} > 0
         for: {{ dig "ArgoCDApplicationDeletionError" "for" "5m" (.Values.prometheus.defaultAlerts.argocd.customRules | default dict) }}
@@ -59,7 +60,7 @@ spec:
           summary: "ArgoCD application {{ $argoCDAppName }} has deletion errors"
           description: "ArgoCD application {{ $argoCDAppName }} has deletion errors for more than 5 minutes"
 
-      - alert: ArgoCDApplicationInvalidSpecError
+      - alert: ArgoCDApplicationInvalidSpecError # requires exposing InvalidSpecError condition - https://argo-cd.readthedocs.io/en/latest/operator-manual/metrics/#exposing-application-conditions-as-prometheus-metrics
         expr: |
           argocd_app_condition{name="{{ $argoCDAppName }}", condition="InvalidSpecError"} > 0
         for: {{ dig "ArgoCDApplicationInvalidSpecError" "for" "5m" (.Values.prometheus.defaultAlerts.argocd.customRules | default dict) }}
@@ -73,7 +74,7 @@ spec:
           summary: "ArgoCD application {{ $argoCDAppName }} has invalid spec errors"
           description: "ArgoCD application {{ $argoCDAppName }} has invalid spec errors for more than 5 minutes"
 
-      - alert: ArgoCDApplicationComparisonError
+      - alert: ArgoCDApplicationComparisonError # requires exposing ComparisonError condition - https://argo-cd.readthedocs.io/en/latest/operator-manual/metrics/#exposing-application-conditions-as-prometheus-metrics
         expr: |
           argocd_app_condition{name="{{ $argoCDAppName }}", condition="ComparisonError"} > 0
         for: {{ dig "ArgoCDApplicationComparisonError" "for" "5m" (.Values.prometheus.defaultAlerts.argocd.customRules | default dict) }}
@@ -87,7 +88,7 @@ spec:
           summary: "ArgoCD application {{ $argoCDAppName }} has comparison errors"
           description: "ArgoCD application {{ $argoCDAppName }} has comparison errors for more than 5 minutes"
 
-      - alert: ArgoCDApplicationUnknownError
+      - alert: ArgoCDApplicationUnknownError # requires exposing UnknownError condition - https://argo-cd.readthedocs.io/en/latest/operator-manual/metrics/#exposing-application-conditions-as-prometheus-metrics
         expr: |
           argocd_app_condition{name="{{ $argoCDAppName }}", condition="UnknownError"} > 0
         for: {{ dig "ArgoCDApplicationUnknownError" "for" "5m" (.Values.prometheus.defaultAlerts.argocd.customRules | default dict) }}
