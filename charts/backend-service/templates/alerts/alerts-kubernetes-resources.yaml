@@ -1,4 +1,4 @@
-{{- if and .Values.prometheus.defaultAlerts.kubernetesResources.enabled .Values.prometheus.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
+{{- if and .Values.prometheus.defaultAlerts .Values.prometheus.defaultAlerts.kubernetesResources .Values.prometheus.defaultAlerts.kubernetesResources.enabled .Values.prometheus.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
 {{- $fullName := include "backendService.fullname" . -}}
 {{- $labels := include "backendService.labels" . -}}
 {{- $selectorLabels := include "backendService.selectorLabels" . -}}
@@ -26,9 +26,9 @@ spec:
             /
             sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", resource="cpu"}) by (pod, container)
           ) * 100 > 80
-        for: {{ dig "KubernetesPodHighCPUUsage" "for" "10m" ((.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) | default dict) }}
+        for: {{ dig "KubernetesPodHighCPUUsage" "for" "10m" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
         labels:
-          severity: {{ dig "KubernetesPodHighCPUUsage" "severity" "warning" ((.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) | default dict) }}
+          severity: {{ dig "KubernetesPodHighCPUUsage" "severity" "warning" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
           alertGroup: kubernetes-resources
           {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
           {{- toYaml . | nindent 10 }}

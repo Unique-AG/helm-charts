@@ -1,4 +1,4 @@
-{{- if and .Values.prometheus.defaultAlerts.argocd.enabled .Values.prometheus.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
+{{- if and .Values.prometheus.defaultAlerts .Values.prometheus.defaultAlerts.argocd .Values.prometheus.defaultAlerts.argocd.enabled .Values.prometheus.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
 {{- $fullName := include "backendService.fullname" . -}}
 {{- $labels := include "backendService.labels" . -}}
 {{- $argoCDAppName := .Values.prometheus.defaultAlerts.argocd.applicationName | default .Release.Name -}}

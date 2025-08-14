@@ -1,4 +1,4 @@
-{{- if and .Values.prometheus.defaultAlerts.kubernetesApplication.enabled .Values.prometheus.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
+{{- if and .Values.prometheus.defaultAlerts .Values.prometheus.defaultAlerts.kubernetesApplication .Values.prometheus.defaultAlerts.kubernetesApplication.enabled .Values.prometheus.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
 {{- $fullName := include "backendService.fullname" . -}}
 {{- $labels := include "backendService.labels" . -}}
 {{- $selectorLabels := include "backendService.selectorLabels" . -}}
