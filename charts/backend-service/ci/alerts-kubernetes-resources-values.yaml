@@ -1,0 +1,26 @@
+# CI test configuration for Kubernetes Resources Alerts
+prometheus:
+  enabled: true
+  defaultAlerts:
+    kubernetesResources:
+      enabled: true
+      for: "8m"
+      # Test with some alerts disabled
+      disabled:
+        KubernetesPodThrottled: true
+        KubernetesHPAScalingEvent: true
+      # Test with custom rules
+      customRules:
+        KubernetesPodHighCPUUsage:
+          for: "12m"
+          severity: "critical"
+        KubernetesPodNearMemoryLimit:
+          for: "3m"
+          severity: "warning"
+        KubernetesContainerOOMKilled:
+          for: "1m"
+    # Additional labels for testing
+    additionalLabels:
+      environment: "testing"
+      team: "platform"
+      component: "monitoring"

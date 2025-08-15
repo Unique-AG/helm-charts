@@ -1,0 +1,68 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: Regression Test Combined Alerts
+templates:
+  - alerts/alerts-custom.yaml
+  - alerts/alerts-argocd.yaml
+  - alerts/alerts-kubernetes-application.yaml
+  - alerts/alerts-kubernetes-resources.yaml
+release:
+  name: ut
+tests:
+  - it: should render all alert types when fully enabled
+    set:
+      prometheus.enabled: true
+      prometheus.additionalAlerts:
+        CustomAlert:
+          expression: up == 0
+          severity: warning
+      prometheus.defaultAlerts.argocd.enabled: true
+      prometheus.defaultAlerts.kubernetesApplication.enabled: true
+      prometheus.defaultAlerts.kubernetesResources.enabled: true
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  - it: should render only enabled alert types
+    set:
+      prometheus.enabled: true
+      prometheus.additionalAlerts:
+        CustomAlert:
+          expression: up == 0
+      prometheus.defaultAlerts.argocd.enabled: true
+      prometheus.defaultAlerts.kubernetesApplication.enabled: false
+      prometheus.defaultAlerts.kubernetesResources.enabled: false
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - template: alerts/alerts-custom.yaml
+        hasDocuments:
+          count: 1
+      - template: alerts/alerts-argocd.yaml
+        hasDocuments:
+          count: 1
+      - template: alerts/alerts-kubernetes-application.yaml
+        hasDocuments:
+          count: 0
+      - template: alerts/alerts-kubernetes-resources.yaml
+        hasDocuments:
+          count: 0
+
+  - it: should not render anything when prometheus is disabled
+    set:
+      prometheus.enabled: false
+      prometheus.additionalAlerts:
+        TestAlert:
+          expression: up == 0
+      prometheus.defaultAlerts.argocd.enabled: true
+      prometheus.defaultAlerts.kubernetesApplication.enabled: true
+      prometheus.defaultAlerts.kubernetesResources.enabled: true
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - hasDocuments:
+          count: 0

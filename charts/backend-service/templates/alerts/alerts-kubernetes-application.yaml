@@ -1,0 +1,413 @@
+{{- if and .Values.prometheus.defaultAlerts .Values.prometheus.defaultAlerts.kubernetesApplication .Values.prometheus.defaultAlerts.kubernetesApplication.enabled .Values.prometheus.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
+{{- $fullName := include "backendService.fullname" . -}}
+{{- $labels := include "backendService.labels" . -}}
+{{- $selectorLabels := include "backendService.selectorLabels" . -}}
+{{- $kubernetesAppFor := .Values.prometheus.defaultAlerts.kubernetesApplication.for | default "5m" -}}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ $fullName }}-kubernetes-application-alerts
+  labels:
+    {{- $labels | nindent 4 }}
+    role: alert-rules
+    alertGroup: kubernetes-application
+    {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: {{ $fullName }}-kubernetes-application
+      rules:
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubePodCrashLooping | default false) }}
+      - alert: KubePodCrashLooping
+        expr: |
+          max_over_time(kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff", namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*"}[5m]) >= 1
+        for: {{ dig "KubePodCrashLooping" "for" "5m" ((.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) | default dict) }}
+        labels:
+          severity: warning
+          alertGroup: kubernetes-application
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Pod {{ `{{ $labels.pod }}` }} is crash looping"
+          description: "Pod {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.pod }}` }} ({{ `{{ $labels.container }}` }}) is in waiting state (reason: \"CrashLoopBackOff\")"
+          runbook_url: "https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubePodNotReady | default false) }}
+      - alert: KubePodNotReady
+        expr: |
+          sum by (namespace, pod) (
+            max by (namespace, pod) (
+              kube_pod_status_phase{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", phase=~"Pending|Unknown|Failed"}
+            ) * on (namespace, pod) group_left(owner_kind) topk by (namespace, pod) (
+              1, max by (namespace, pod, owner_kind) (kube_pod_owner{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", owner_kind!="Job"})
+            )
+          ) > 0
+        for: {{ dig "KubePodNotReady" "for" "15m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
+        labels:
+          severity: warning
+          alertGroup: kubernetes-application
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Pod {{ `{{ $labels.pod }}` }} is not ready"
+          description: "Pod {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.pod }}` }} has been in a non-ready state for longer than 15 minutes"
+          runbook_url: "https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-conditions"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeDeploymentGenerationMismatch | default false) }}
+      - alert: KubeDeploymentGenerationMismatch
+        expr: |
+          kube_deployment_status_observed_generation{namespace="{{ .Release.Namespace }}", deployment="{{ $fullName }}"}
+            !=
+          kube_deployment_metadata_generation{namespace="{{ .Release.Namespace }}", deployment="{{ $fullName }}"}
+        for: {{ dig "KubeDeploymentGenerationMismatch" "for" "15m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
+        labels:
+          severity: warning
+          alertGroup: kubernetes-application
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Deployment {{ $fullName }} generation mismatch"
+          description: "Deployment generation for {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.deployment }}` }} does not match, this indicates that the Deployment has failed but has not been rolled back"
+          runbook_url: "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeDeploymentReplicasMismatch | default false) }}
+      - alert: KubeDeploymentReplicasMismatch
+        expr: |
+          (
+            kube_deployment_spec_replicas{namespace="{{ .Release.Namespace }}", deployment="{{ $fullName }}"}
+              >
+            kube_deployment_status_replicas_available{namespace="{{ .Release.Namespace }}", deployment="{{ $fullName }}"}
+          ) and (
+            changes(kube_deployment_status_replicas_updated{namespace="{{ .Release.Namespace }}", deployment="{{ $fullName }}"}[10m])
+              ==
+            0
+          )
+        for: {{ dig "KubeDeploymentReplicasMismatch" "for" "15m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
+        labels:
+          severity: warning
+          alertGroup: kubernetes-application
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Deployment {{ $fullName }} has mismatched replicas"
+          description: "Deployment {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.deployment }}` }} has not matched the expected number of replicas for longer than 15 minutes"
+          runbook_url: "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeDeploymentRolloutStuck | default false) }}
+      - alert: KubeDeploymentRolloutStuck
+        expr: |
+          kube_deployment_status_condition{condition="Progressing", status="false", namespace="{{ .Release.Namespace }}", deployment="{{ $fullName }}"}
+          != 0
+        for: {{ dig "KubeDeploymentRolloutStuck" "for" "15m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
+        labels:
+          severity: warning
+          alertGroup: kubernetes-application
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Deployment {{ $fullName }} rollout is stuck"
+          description: "Rollout of deployment {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.deployment }}` }} is not progressing for longer than 15 minutes"
+          runbook_url: "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeStatefulSetReplicasMismatch | default false) }}
+      - alert: KubeStatefulSetReplicasMismatch
+        expr: |
+          (
+            kube_statefulset_status_replicas_ready{namespace="{{ .Release.Namespace }}", statefulset=~"{{ $fullName }}-.*"}
+              !=
+            kube_statefulset_replicas{namespace="{{ .Release.Namespace }}", statefulset=~"{{ $fullName }}-.*"}
+          ) and (
+            changes(kube_statefulset_status_replicas_updated{namespace="{{ .Release.Namespace }}", statefulset=~"{{ $fullName }}-.*"}[10m])
+              ==
+            0
+          )
+        for: {{ dig "KubeStatefulSetReplicasMismatch" "for" "15m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
+        labels:
+          severity: warning
+          alertGroup: kubernetes-application
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "StatefulSet {{ `{{ $labels.statefulset }}` }} has mismatched replicas"
+          description: "StatefulSet {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.statefulset }}` }} has not matched the expected number of replicas for longer than 15 minutes"
+          runbook_url: "https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeStatefulSetGenerationMismatch | default false) }}
+      - alert: KubeStatefulSetGenerationMismatch
+        expr: |
+          kube_statefulset_status_observed_generation{namespace="{{ .Release.Namespace }}", statefulset=~"{{ $fullName }}-.*"}
+            !=
+          kube_statefulset_metadata_generation{namespace="{{ .Release.Namespace }}", statefulset=~"{{ $fullName }}-.*"}
+        for: {{ dig "KubeStatefulSetGenerationMismatch" "for" "15m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
+        labels:
+          severity: warning
+          alertGroup: kubernetes-application
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "StatefulSet {{ `{{ $labels.statefulset }}` }} generation mismatch"
+          description: "StatefulSet generation for {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.statefulset }}` }} does not match, this indicates that the StatefulSet has failed but has not been rolled back"
+          runbook_url: "https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeStatefulSetUpdateNotRolledOut | default false) }}
+      - alert: KubeStatefulSetUpdateNotRolledOut
+        expr: |
+          (
+            max by (namespace, statefulset) (
+              kube_statefulset_status_current_revision{namespace="{{ .Release.Namespace }}", statefulset=~"{{ $fullName }}-.*"}
+                unless
+              kube_statefulset_status_update_revision{namespace="{{ .Release.Namespace }}", statefulset=~"{{ $fullName }}-.*"}
+            )
+              * on (namespace, statefulset)
+            (
+              kube_statefulset_replicas{namespace="{{ .Release.Namespace }}", statefulset=~"{{ $fullName }}-.*"}
+                !=
+              kube_statefulset_status_replicas_updated{namespace="{{ .Release.Namespace }}", statefulset=~"{{ $fullName }}-.*"}
+            )
+          )  and on (namespace, statefulset) (
+            changes(kube_statefulset_status_replicas_updated{namespace="{{ .Release.Namespace }}", statefulset=~"{{ $fullName }}-.*"}[5m])
+              ==
+            0
+          )
+        for: {{ dig "KubeStatefulSetUpdateNotRolledOut" "for" "15m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
+        labels:
+          severity: warning
+          alertGroup: kubernetes-application
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "StatefulSet {{ `{{ $labels.statefulset }}` }} update not rolled out"
+          description: "StatefulSet {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.statefulset }}` }} update has not been rolled out"
+          runbook_url: "https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeDaemonSetRolloutStuck | default false) }}
+      - alert: KubeDaemonSetRolloutStuck
+        expr: |
+          (
+            (
+              kube_daemonset_status_current_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset=~"{{ $fullName }}-.*"}
+                !=
+              kube_daemonset_status_desired_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset=~"{{ $fullName }}-.*"}
+            ) or (
+              kube_daemonset_status_number_misscheduled{namespace="{{ .Release.Namespace }}", daemonset=~"{{ $fullName }}-.*"}
+                !=
+              0
+            ) or (
+              kube_daemonset_status_updated_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset=~"{{ $fullName }}-.*"}
+                !=
+              kube_daemonset_status_desired_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset=~"{{ $fullName }}-.*"}
+            ) or (
+              kube_daemonset_status_number_available{namespace="{{ .Release.Namespace }}", daemonset=~"{{ $fullName }}-.*"}
+                !=
+              kube_daemonset_status_desired_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset=~"{{ $fullName }}-.*"}
+            )
+          ) and (
+            changes(kube_daemonset_status_updated_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset=~"{{ $fullName }}-.*"}[5m])
+              ==
+            0
+          )
+        for: {{ dig "KubeDaemonSetRolloutStuck" "for" "15m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
+        labels:
+          severity: warning
+          alertGroup: kubernetes-application
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "DaemonSet {{ `{{ $labels.daemonset }}` }} rollout is stuck"
+          description: "DaemonSet {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.daemonset }}` }} has not finished or progressed for at least 15m"
+          runbook_url: "https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeContainerWaiting | default false) }}
+      - alert: KubeContainerWaiting
+        expr: |
+          kube_pod_container_status_waiting_reason{reason!="CrashLoopBackOff", namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*"} > 0
+        for: {{ dig "KubeContainerWaiting" "for" "1h" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
+        labels:
+          severity: warning
+          alertGroup: kubernetes-application
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Container in pod {{ `{{ $labels.pod }}` }} is waiting"
+          description: "Pod/{{ `{{ $labels.pod }}` }} in namespace {{ `{{ $labels.namespace }}` }} on container {{ `{{ $labels.container}}` }} has been in waiting state for longer than 1 hour. (reason: \"{{ `{{ $labels.reason }}` }}\")"
+          runbook_url: "https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-states"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeDaemonSetNotScheduled | default false) }}
+      - alert: KubeDaemonSetNotScheduled
+        expr: |
+          kube_daemonset_status_desired_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset=~"{{ $fullName }}-.*"}
+            -
+          kube_daemonset_status_current_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset=~"{{ $fullName }}-.*"} > 0
+        for: {{ dig "KubeDaemonSetNotScheduled" "for" "10m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
+        labels:
+          severity: warning
+          alertGroup: kubernetes-application
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "DaemonSet {{ `{{ $labels.daemonset }}` }} pods are not scheduled"
+          description: "{{ `{{ $value }}` }} Pods of DaemonSet {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.daemonset }}` }} are not scheduled"
+          runbook_url: "https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeDaemonSetMisScheduled | default false) }}
+      - alert: KubeDaemonSetMisScheduled
+        expr: |
+          kube_daemonset_status_number_misscheduled{namespace="{{ .Release.Namespace }}", daemonset=~"{{ $fullName }}-.*"} > 0
+        for: {{ dig "KubeDaemonSetMisScheduled" "for" "15m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
+        labels:
+          severity: warning
+          alertGroup: kubernetes-application
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "DaemonSet {{ `{{ $labels.daemonset }}` }} pods are misscheduled"
+          description: "{{ `{{ $value }}` }} Pods of DaemonSet {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.daemonset }}` }} are running where they are not supposed to run"
+          runbook_url: "https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubePodFrequentRestarts | default false) }}
+      - alert: KubePodFrequentRestarts
+        expr: |
+          increase(kube_pod_container_status_restarts_total{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*"}[1h]) > 5
+        for: {{ dig "KubePodFrequentRestarts" "for" $kubernetesAppFor (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
+        labels:
+          severity: critical
+          alertGroup: kubernetes-application
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Pod {{ `{{ $labels.pod }}` }} is restarting frequently"
+          description: "Pod {{ `{{ $labels.pod }}` }} ({{ `{{ $labels.container }}` }}) has restarted {{ `{{ printf \"%.2f\" $value }}` }} times in the last hour"
+          runbook_url: "https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeJobNotCompleted | default false) }}
+      - alert: KubeJobNotCompleted
+        expr: |
+          time() - max by (namespace, job_name) (kube_job_status_start_time{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-.*"}
+            and
+          kube_job_status_active{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-.*"} > 0) > 43200
+        for: {{ dig "KubeJobNotCompleted" "for" "0m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
+        labels:
+          severity: warning
+          alertGroup: kubernetes-application
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Job {{ `{{ $labels.job_name }}` }} did not complete in time"
+          description: "Job {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.job_name }}` }} is taking more than {{ `{{ \"43200\" | humanizeDuration }}` }} to complete"
+          runbook_url: "https://kubernetes.io/docs/concepts/workloads/controllers/job/"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeJobFailed | default false) }}
+      - alert: KubeJobFailed
+        expr: |
+          kube_job_failed{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-.*"} > 0
+        for: {{ dig "KubeJobFailed" "for" "0m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
+        labels:
+          severity: warning
+          alertGroup: kubernetes-application
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Job {{ `{{ $labels.job_name }}` }} failed"
+          description: "Job {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.job_name }}` }} failed to complete. Removing failed job after investigation should clear this alert"
+          runbook_url: "https://kubernetes.io/docs/concepts/workloads/controllers/job/"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeHpaReplicasMismatch | default false) }}
+      - alert: KubeHpaReplicasMismatch
+        expr: |
+          (kube_horizontalpodautoscaler_status_desired_replicas{namespace="{{ .Release.Namespace }}", horizontalpodautoscaler="{{ $fullName }}"}
+            !=
+          kube_horizontalpodautoscaler_status_current_replicas{namespace="{{ .Release.Namespace }}", horizontalpodautoscaler="{{ $fullName }}"})
+            and
+          (kube_horizontalpodautoscaler_status_current_replicas{namespace="{{ .Release.Namespace }}", horizontalpodautoscaler="{{ $fullName }}"}
+            >
+          kube_horizontalpodautoscaler_spec_min_replicas{namespace="{{ .Release.Namespace }}", horizontalpodautoscaler="{{ $fullName }}"})
+            and
+          (kube_horizontalpodautoscaler_status_current_replicas{namespace="{{ .Release.Namespace }}", horizontalpodautoscaler="{{ $fullName }}"}
+            <
+          kube_horizontalpodautoscaler_spec_max_replicas{namespace="{{ .Release.Namespace }}", horizontalpodautoscaler="{{ $fullName }}"})
+            and
+          changes(kube_horizontalpodautoscaler_status_current_replicas{namespace="{{ .Release.Namespace }}", horizontalpodautoscaler="{{ $fullName }}"}[15m]) == 0
+        for: {{ dig "KubeHpaReplicasMismatch" "for" "15m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
+        labels:
+          severity: warning
+          alertGroup: kubernetes-application
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "HPA {{ $fullName }} has mismatched replicas"
+          description: "HPA {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.horizontalpodautoscaler }}` }} has not matched the desired number of replicas for longer than 15 minutes"
+          runbook_url: "https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeHpaMaxedOut | default false) }}
+      - alert: KubeHpaMaxedOut
+        expr: |
+          kube_horizontalpodautoscaler_status_current_replicas{namespace="{{ .Release.Namespace }}", horizontalpodautoscaler="{{ $fullName }}"}
+            ==
+          kube_horizontalpodautoscaler_spec_max_replicas{namespace="{{ .Release.Namespace }}", horizontalpodautoscaler="{{ $fullName }}"}
+        for: {{ dig "KubeHpaMaxedOut" "for" "15m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
+        labels:
+          severity: warning
+          alertGroup: kubernetes-application
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "HPA {{ $fullName }} is running at max replicas"
+          description: "HPA {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.horizontalpodautoscaler }}` }} has been running at max replicas for longer than 15 minutes"
+          runbook_url: "https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubePersistentVolumeClaimPending | default false) }}
+      - alert: KubePersistentVolumeClaimPending
+        expr: |
+          kube_persistentvolumeclaim_status_phase{namespace="{{ .Release.Namespace }}", persistentvolumeclaim=~"{{ $fullName }}-.*", phase="Pending"} == 1
+        for: {{ dig "KubePersistentVolumeClaimPending" "for" "10m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
+        labels:
+          severity: warning
+          alertGroup: kubernetes-application
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "PVC {{ `{{ $labels.persistentvolumeclaim }}` }} is pending"
+          description: "PersistentVolumeClaim {{ `{{ $labels.persistentvolumeclaim }}` }} has been pending for more than 10 minutes"
+          runbook_url: "https://kubernetes.io/docs/concepts/storage/persistent-volumes/"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubePdbNotEnoughHealthyPods | default false) }}
+      - alert: KubePdbNotEnoughHealthyPods
+        expr: |
+          (
+            kube_poddisruptionbudget_status_desired_healthy{namespace="{{ .Release.Namespace }}"}
+            -
+            kube_poddisruptionbudget_status_current_healthy{namespace="{{ .Release.Namespace }}"}
+          )
+          > 0
+        for: {{ dig "KubePdbNotEnoughHealthyPods" "for" "15m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
+        labels:
+          severity: warning
+          alertGroup: kubernetes-application
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "PDB does not have enough healthy pods"
+          description: "PDB {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.poddisruptionbudget }}` }} expects {{ `{{ $value }}` }} more healthy pods. The desired number of healthy pods has not been met for at least 15m."
+          runbook_url: "https://kubernetes.io/docs/concepts/workloads/pods/disruptions/"
+{{- end }}
+{{- end }}

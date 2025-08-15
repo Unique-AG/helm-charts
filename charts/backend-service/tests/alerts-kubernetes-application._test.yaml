@@ -1,0 +1,160 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: Regression Test Kubernetes Application Alerts
+templates:
+  - alerts/alerts-kubernetes-application.yaml
+release:
+  name: ut
+tests:
+  - it: should render kubernetes application alerts when prometheus and kubernetesApplication are enabled
+    set:
+      prometheus.enabled: true
+      prometheus.defaultAlerts.kubernetesApplication.enabled: true
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - isKind:
+          of: PrometheusRule
+      - equal:
+          path: metadata.name
+          value: ut-kubernetes-application-alerts
+      - equal:
+          path: metadata.labels.alertGroup
+          value: kubernetes-application
+      - equal:
+          path: spec.groups[0].name
+          value: ut-kubernetes-application
+      - isNotEmpty:
+          path: spec.groups[0].rules
+
+  - it: should not render when prometheus is disabled
+    set:
+      prometheus.enabled: false
+      prometheus.defaultAlerts.kubernetesApplication.enabled: true
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not render when kubernetesApplication alerts are disabled
+    set:
+      prometheus.enabled: true
+      prometheus.defaultAlerts.kubernetesApplication.enabled: false
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not render when monitoring.coreos.com/v1 API is not available
+    set:
+      prometheus.enabled: true
+      prometheus.defaultAlerts.kubernetesApplication.enabled: true
+    capabilities:
+      apiVersions: []
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render with custom for duration
+    set:
+      prometheus.enabled: true
+      prometheus.defaultAlerts.kubernetesApplication.enabled: true
+      prometheus.defaultAlerts.kubernetesApplication.for: "10m"
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - isKind:
+          of: PrometheusRule
+      - contains:
+          path: spec.groups[0].rules
+          content:
+            alert: KubePodCrashLooping
+            expr: |
+              max_over_time(kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff", namespace="NAMESPACE", pod=~"ut-.*"}[5m]) >= 1
+            for: 5m
+            labels:
+              alertGroup: kubernetes-application
+              severity: warning
+            annotations:
+              description: 'Pod {{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container }}) is in waiting state (reason: "CrashLoopBackOff")'
+              runbook_url: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy
+              summary: Pod {{ $labels.pod }} is crash looping
+          count: 1
+
+  - it: should disable specific alerts when configured
+    set:
+      prometheus.enabled: true
+      prometheus.defaultAlerts.kubernetesApplication.enabled: true
+      prometheus.defaultAlerts.kubernetesApplication.disabled:
+        KubePodCrashLooping: true
+        KubePodNotReady: true
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - isKind:
+          of: PrometheusRule
+      - notContains:
+          path: spec.groups[0].rules
+          content:
+            alert: KubePodCrashLooping
+      - notContains:
+          path: spec.groups[0].rules
+          content:
+            alert: KubePodNotReady
+
+  - it: should apply custom rules for severity and timing
+    set:
+      prometheus.enabled: true
+      prometheus.defaultAlerts.kubernetesApplication.enabled: true
+      prometheus.defaultAlerts.kubernetesApplication.customRules:
+        KubePodCrashLooping:
+          for: "10m"
+          severity: "critical"
+        KubeDeploymentReplicasMismatch:
+          for: "20m"
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - isKind:
+          of: PrometheusRule
+      - contains:
+          path: spec.groups[0].rules
+          content:
+            alert: KubePodCrashLooping
+            expr: |
+              max_over_time(kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff", namespace="NAMESPACE", pod=~"ut-.*"}[5m]) >= 1
+            for: "10m"
+            labels:
+              severity: "warning"
+              alertGroup: kubernetes-application
+            annotations:
+              description: 'Pod {{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container }}) is in waiting state (reason: "CrashLoopBackOff")'
+              runbook_url: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy
+              summary: Pod {{ $labels.pod }} is crash looping
+
+  - it: should include additional labels when configured
+    set:
+      prometheus.enabled: true
+      prometheus.defaultAlerts.kubernetesApplication.enabled: true
+      prometheus.defaultAlerts.additionalLabels:
+        environment: production
+        team: backend
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - isKind:
+          of: PrometheusRule
+      - equal:
+          path: metadata.labels.environment
+          value: production
+      - equal:
+          path: metadata.labels.team
+          value: backend

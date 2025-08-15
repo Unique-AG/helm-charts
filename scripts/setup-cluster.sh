@@ -14,6 +14,10 @@ kubectl apply -f https://raw.githubusercontent.com/TykTechnologies/tyk-operator/
 # Keda CRD needs --server-side as the CRD is too large (The CustomResourceDefinition "scaledjobs.keda.sh" is invalid: metadata.annotations: Too long: must have at most 262144 bytes)
 kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.16.0/keda-2.16.0-crds.yaml
 
+# Install Prometheus Operator CRDs (includes ServiceMonitor, PrometheusRule, etc.)
+echo "Installing Prometheus Operator CRDs (monitoring.coreos.com/v1)..."
+kubectl apply --server-side -f https://github.com/prometheus-operator/prometheus-operator/releases/download/v0.84.1/stripped-down-crds.yaml
+
 # Get Kubernetes version and extract the major.minor version
 version=$(kubectl version -o json | jq -r '.serverVersion.major + "." + .serverVersion.minor' | tr -d '+')
 major_version=$(echo $version | cut -d. -f1)
