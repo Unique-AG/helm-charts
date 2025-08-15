@@ -1,8 +1,8 @@
-# Requires exposing the ArgoCD metrics: https://argo-cd.readthedocs.io/en/latest/operator-manual/metrics
 {{- if and .Values.prometheus.defaultAlerts .Values.prometheus.defaultAlerts.argocd .Values.prometheus.defaultAlerts.argocd.enabled .Values.prometheus.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
 {{- $fullName := include "backendService.fullname" . -}}
 {{- $labels := include "backendService.labels" . -}}
 {{- $argoCDAppName := .Values.prometheus.defaultAlerts.argocd.applicationName | default .Release.Name -}}
+# Requires exposing the ArgoCD metrics: https://argo-cd.readthedocs.io/en/latest/operator-manual/metrics
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
