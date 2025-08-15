@@ -375,6 +375,42 @@ entries:
   backend-service:
   - annotations:
       artifacthub.io/changes: |
+        - kind: added
+          description: "Default alerts for ArgoCD, Kubernetes resources, and Kubernetes application."
+        - kind: added
+          description: "ServiceMonitor for the backend-service."
+        - kind: changed
+          description: "⚠️ Breaking: PodMonitor removed, use ServiceMonitor instead."
+        - kind: changed
+          description: "⚠️ Breaking: format for specyfying custom rules for alerts has changed, refer to readme."
+        - kind: changed
+          description: "⚠️ Breaking: tyk resources are no longer available, upgrade to routes."
+        - kind: changed
+          description: "⚠️ Breaking: eventBasedAutoscaling value is no longer supported. Use .Values.keda instead"
+        - kind: added
+          description: "⚠️ Breaking: default route is now enabled by default"
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    appVersion: latest
+    created: "2025-08-15T14:03:07.024218682Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: 19b65b8235a459ef020337147864f0d31d033e849969be165fc709b33bc93acf
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-5.0.0/backend-service-5.0.0.tgz
+    version: 5.0.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: fixed
           description: "Fixed missing audit volume definition in extraCronJobs template preventing 'Not found: audit' errors."
       artifacthub.io/license: Apache-2.0
@@ -2253,4 +2289,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-08-05T18:40:20.417000918Z"
+generated: "2025-08-15T14:03:07.0245875Z"
