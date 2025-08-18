@@ -4,7 +4,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   {{- if .Values.cronJob.name }}
-  name: {{ $fullName }}-{{ .Values.cronJob.name }}
+  name: {{ .Values.cronJob.name }}
   {{- else }}
   name: {{ $fullName }}
   {{- end }}
