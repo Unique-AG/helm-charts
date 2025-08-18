@@ -17,7 +17,7 @@ description: |
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
-    - kind: added
+    - kind: NOREALCHJANNGE
       description: "Default alerts for ArgoCD, Kubernetes resources, and Kubernetes application."
     - kind: added
       description: "ServiceMonitor for the backend-service."
