@@ -8,7 +8,7 @@ name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
 # change on next major: enable netpol by default, deprecate cronJob
-version: 5.0.0
+version: 5.1.0
 appVersion: latest
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
@@ -17,17 +17,7 @@ description: |
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
-    - kind: added
-      description: "Default alerts for ArgoCD, Kubernetes resources, and Kubernetes application."
-    - kind: added
-      description: "ServiceMonitor for the backend-service."
+    - kind: fixed
+      description: "ServiceMonitor is now only rendered when coreos CRDs are available"
     - kind: changed
-      description: "⚠️ Breaking: PodMonitor removed, use ServiceMonitor instead."
-    - kind: changed
-      description: "⚠️ Breaking: format for specyfying custom rules for alerts has changed, refer to readme."
-    - kind: changed
-      description: "⚠️ Breaking: tyk resources are no longer available, upgrade to routes."
-    - kind: changed
-      description: "⚠️ Breaking: eventBasedAutoscaling value is no longer supported. Use .Values.keda instead"
-    - kind: added
-      description: "⚠️ Breaking: default route is now enabled by default"
+      description: "Cronjobs names now don't include the fullname anymore"
