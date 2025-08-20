@@ -7,7 +7,7 @@ metadata:
   labels:
     {{- include "backendService.labels" . | nindent 4 }}
 data:
-  VERSION: "{{ .Values.image.tag }}"
+  VERSION: "{{ include "backendService.imageTag" . }}"
   {{- range $key, $value := .Values.env }}
   {{ $key }}: {{ $value | quote }}
   {{- end }}

@@ -98,3 +98,12 @@ app.kubernetes.io/component: hooks-db-migration
 8080
 {{- end -}}
 {{- end -}}
+
+{{/* Helper to get the image tag - uses image.tag if specified, otherwise falls back to Chart.AppVersion */}}
+{{- define "backendService.imageTag" -}}
+{{- if .Values.image.tag -}}
+{{- .Values.image.tag -}}
+{{- else -}}
+{{- .Chart.AppVersion -}}
+{{- end -}}
+{{- end -}}

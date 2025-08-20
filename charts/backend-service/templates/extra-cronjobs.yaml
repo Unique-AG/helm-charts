@@ -6,7 +6,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ $fullName }}-{{ $key }}
+  name: {{ $key }}
   labels:
     {{- $labelsCronJob | nindent 4 }}
     app.kubernetes.io/component: cron-job-extra-{{ $key }}
@@ -41,7 +41,7 @@ spec:
               {{- end }}
             {{- end }}
             {{- if $globalValues.envSecrets }}
-            checksum/secrets: {{ include (print $.Chart.Name "/templates/secrets.yaml") . | sha256sum | trunc 8 | quote }}
+            checksum/secrets: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum | trunc 8 | quote }}
             {{- end }}
         spec:
           {{- with $globalValues.imagePullSecrets }}
@@ -51,12 +51,19 @@ spec:
           restartPolicy: {{ $value.restartPolicy | default "Never" | quote }}
           containers:
             - name: {{ $key }}
-              image: "{{ $globalValues.image.repository }}:{{ $globalValues.image.tag }}"
+              image: "{{ $globalValues.image.repository }}:{{ $globalValues.image.tag | default $.Chart.AppVersion }}"
               imagePullPolicy: {{ $globalValues.image.pullPolicy }}
               securityContext: {{- toYaml $globalValues.securityContext | nindent 16 }}
               resources:
                 {{- toYaml ($value.resources | default $globalValues.resources) | nindent 16 }}
               volumeMounts:
+              {{- with $globalValues.volumeMounts }}
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              {{- if $globalValues.auditVolume.enabled }}
+                - name: audit
+                  mountPath: {{ default "/audit" $globalValues.auditVolume.mountPath }}
+              {{- end }}
               {{- if $globalValues.secretProvider }}
               {{- range $k, $v := $globalValues.secretProvider.vaults }}
                 - name: {{ $fullName }}-{{ $k }}
@@ -83,7 +90,7 @@ spec:
                 {{- end }}
               env:
                 - name: VERSION
-                  value: {{ $globalValues.image.tag | quote}}
+                  value: {{ ($globalValues.image.tag | default $.Chart.AppVersion) | quote}}
                 {{- with $globalValues.envVars }}
                   {{- toYaml . | nindent 16 }}
                 {{- end }}
@@ -128,6 +135,11 @@ spec:
           volumes:
           {{- with $globalValues.volumes }}
             {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if $globalValues.auditVolume.enabled }}
+            - name: audit
+              persistentVolumeClaim:
+                claimName: {{ $fullName }}-audit
           {{- end }}
           {{- if $globalValues.secretProvider }}
           {{- range $k, $v := $globalValues.secretProvider.vaults }}

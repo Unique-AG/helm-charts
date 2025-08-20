@@ -1,0 +1,136 @@
+{{- if and .Values.prometheus.defaultAlerts .Values.prometheus.defaultAlerts.kubernetesResources .Values.prometheus.defaultAlerts.kubernetesResources.enabled .Values.prometheus.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
+{{- $fullName := include "backendService.fullname" . -}}
+{{- $labels := include "backendService.labels" . -}}
+{{- $selectorLabels := include "backendService.selectorLabels" . -}}
+{{- $kubernetesResourcesFor := .Values.prometheus.defaultAlerts.kubernetesResources.for | default "5m" -}}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ $fullName }}-kubernetes-resources-alerts
+  labels:
+    {{- $labels | nindent 4 }}
+    role: alert-rules
+    alertGroup: kubernetes-resources
+    {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: {{ $fullName }}-kubernetes-resources
+      rules:
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesResources.disabled.KubernetesPodHighCPUUsage | default false) }}
+      - alert: KubernetesPodHighCPUUsage
+        expr: |
+          (
+            sum(rate(container_cpu_usage_seconds_total{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", container!="POD", container!=""}[5m])) by (pod, container)
+            /
+            sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", resource="cpu"}) by (pod, container)
+          ) * 100 > 80
+        for: {{ dig "KubernetesPodHighCPUUsage" "for" "10m" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
+        labels:
+          severity: {{ dig "KubernetesPodHighCPUUsage" "severity" "warning" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
+          alertGroup: kubernetes-resources
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "High CPU usage on pod {{ `{{ $labels.pod }}` }}"
+          description: "Pod {{ `{{ $labels.pod }}` }} container {{ `{{ $labels.container }}` }} CPU usage is {{ `{{ printf \"%.2f\" $value }}` }}% of the limit"
+          runbook_url: "https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesResources.disabled.KubernetesPodNearMemoryLimit | default false) }}
+      - alert: KubernetesPodNearMemoryLimit
+        expr: |
+          (
+            sum(container_memory_working_set_bytes{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", container!="POD", container!=""}) by (pod, container)
+            /
+            sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", resource="memory"}) by (pod, container)
+          ) * 100 > 90
+        for: {{ dig "KubernetesPodNearMemoryLimit" "for" "5m" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
+        labels:
+          severity: {{ dig "KubernetesPodNearMemoryLimit" "severity" "critical" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
+          alertGroup: kubernetes-resources
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Pod {{ `{{ $labels.pod }}` }} is near memory limit"
+          description: "Pod {{ `{{ $labels.pod }}` }} container {{ `{{ $labels.container }}` }} memory usage is {{ `{{ printf \"%.2f\" $value }}` }}% of the limit"
+          runbook_url: "https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesResources.disabled.KubernetesPodThrottled | default false) }}
+      - alert: KubernetesPodThrottled
+        expr: |
+          increase(container_cpu_cfs_throttled_periods_total{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", container!="POD", container!=""}[5m])
+          /
+          increase(container_cpu_cfs_periods_total{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", container!="POD", container!=""}[5m])
+          > 0.25
+        for: {{ dig "KubernetesPodThrottled" "for" "15m" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
+        labels:
+          severity: {{ dig "KubernetesPodThrottled" "severity" "warning" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
+          alertGroup: kubernetes-resources
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Pod {{ `{{ $labels.pod }}` }} is being throttled"
+          description: "Pod {{ `{{ $labels.pod }}` }} container {{ `{{ $labels.container }}` }} is being throttled {{ `{{ printf \"%.2f\" $value }}` }}% of the time"
+          runbook_url: "https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesResources.disabled.KubernetesPersistentVolumeHighUsage | default false) }}
+      - alert: KubernetesPersistentVolumeHighUsage
+        expr: |
+          (
+            kubelet_volume_stats_used_bytes{namespace="{{ .Release.Namespace }}", persistentvolumeclaim=~"{{ $fullName }}-.*"}
+            /
+            kubelet_volume_stats_capacity_bytes{namespace="{{ .Release.Namespace }}", persistentvolumeclaim=~"{{ $fullName }}-.*"}
+          ) * 100 > 80
+        for: {{ dig "KubernetesPersistentVolumeHighUsage" "for" "10m" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
+        labels:
+          severity: {{ dig "KubernetesPersistentVolumeHighUsage" "severity" "warning" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
+          alertGroup: kubernetes-resources
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "High disk usage on PVC {{ `{{ $labels.persistentvolumeclaim }}` }}"
+          description: "PersistentVolumeClaim {{ `{{ $labels.persistentvolumeclaim }}` }} is {{ `{{ printf \"%.2f\" $value }}` }}% full"
+          runbook_url: "https://kubernetes.io/docs/concepts/storage/persistent-volumes/"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesResources.disabled.KubernetesPersistentVolumeNearFull | default false) }}
+      - alert: KubernetesPersistentVolumeNearFull
+        expr: |
+          (
+            kubelet_volume_stats_used_bytes{namespace="{{ .Release.Namespace }}", persistentvolumeclaim=~"{{ $fullName }}-.*"}
+            /
+            kubelet_volume_stats_capacity_bytes{namespace="{{ .Release.Namespace }}", persistentvolumeclaim=~"{{ $fullName }}-.*"}
+          ) * 100 > 95
+        for: {{ dig "KubernetesPersistentVolumeNearFull" "for" "5m" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
+        labels:
+          severity: {{ dig "KubernetesPersistentVolumeNearFull" "severity" "critical" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
+          alertGroup: kubernetes-resources
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "PVC {{ `{{ $labels.persistentvolumeclaim }}` }} is nearly full"
+          description: "PersistentVolumeClaim {{ `{{ $labels.persistentvolumeclaim }}` }} is {{ `{{ printf \"%.2f\" $value }}` }}% full"
+          runbook_url: "https://kubernetes.io/docs/concepts/storage/persistent-volumes/"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.kubernetesResources.disabled.KubernetesContainerOOMKilled | default false) }}
+      - alert: KubernetesContainerOOMKilled
+        expr: |
+          increase(container_oom_events_total{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*"}[5m]) > 0
+        for: {{ dig "KubernetesContainerOOMKilled" "for" "0m" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
+        labels:
+          severity: {{ dig "KubernetesContainerOOMKilled" "severity" "warning" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
+          alertGroup: kubernetes-resources
+          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Container in pod {{ `{{ $labels.pod }}` }} was OOMKilled"
+          description: "Container {{ `{{ $labels.container }}` }} in pod {{ `{{ $labels.pod }}` }} was killed due to an out of memory condition"
+          runbook_url: "https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
+{{- end }}
+{{- end }}

@@ -10,5 +10,5 @@ data:
   {{ $key }}: {{ $value | quote }}
   {{- end }}
   {{/* Static values are added last so that they override the dynamic values (avoids regression and breaking changes) */}}
-  VERSION: "{{ .Values.image.tag }}"
+  VERSION: "{{ include "backendService.imageTag" . }}"
   PORT: {{ include "backendService.applicationPort" $ | quote }}

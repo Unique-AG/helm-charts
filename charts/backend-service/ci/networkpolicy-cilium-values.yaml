@@ -1,0 +1,84 @@
+# Test values for Cilium network policy functionality
+nameOverride: "cilium-test"
+
+networkPolicy:
+  enabled: true
+  flavor: cilium
+  description: "Cilium network policy for backend service test"
+  labels:
+    environment: test
+    team: platform
+    flavor: cilium
+  ciliumPolicylabels:
+    - key: component
+      value: backend
+    - key: tier
+      value: application
+    - key: environment
+      value: test
+  enableDefaultDeny:
+    ingress: true
+    egress: false
+
+  # Cilium-specific policy structure
+  endpointSelector:
+    matchLabels:
+      app: backend-service
+
+  ingress:
+    # Allow ingress from monitoring namespace
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": monitoring
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+    # Allow ingress from frontend pods
+    - fromEndpoints:
+        - matchLabels:
+            app: frontend
+      toPorts:
+        - ports:
+            - port: "80"
+              protocol: TCP
+
+  # Cilium ingress deny rules
+  ingressDeny:
+    # Deny ingress from untrusted pods
+    - fromEndpoints:
+        - matchLabels:
+            security: untrusted
+
+  egress:
+    # Allow egress to database namespace
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": database
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+    # Allow DNS resolution
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+    # Alternative DNS rule using CIDR
+    - toCIDR:
+        - "0.0.0.0/0"
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+
+  # Cilium egress deny rules
+  egressDeny:
+    # Deny egress to restricted namespace
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": restricted

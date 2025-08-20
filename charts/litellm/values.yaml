@@ -26,6 +26,10 @@ podLabels: {}
 podSecurityContext: {}
 securityContext: {}
 
+podDisruptionBudget:
+  create: false
+  minAvailable: 1
+
 # Default environment variables for the proxy. They are put into the environment configMap.
 env:
   LITELLM_LOG: "ERROR"
@@ -42,7 +46,8 @@ env:
 #   REDIS_PASSWORD:
 #   SLACK_WEBHOOK_URL: # only if you have Slack alerts enabled
 # When needing more than one secret, use the envFromSecretRefs list below
-secretFrom: {}
+secretFrom:
+  {}
   # name: ""
 
 # -- List of secrets to be used as environment variables for the proxy
@@ -66,7 +71,8 @@ ingress:
           pathType: ImplementationSpecific
   tls: []
 
-resources: {}
+resources:
+  {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -133,9 +139,9 @@ proxy_config:
     disable_error_logs: False # Disable to improve performance
 
   litellm_settings:
-    request_timeout: 600    # raise Timeout error if call takes longer than 600 seconds. Default value is 6000seconds if not set
-    set_verbose: False      # Switch off Debug Logging, ensure your logs do not have any debugging on
-    json_logs: true         # Get debug logs in json format
+    request_timeout: 600 # raise Timeout error if call takes longer than 600 seconds. Default value is 6000seconds if not set
+    set_verbose: False # Switch off Debug Logging, ensure your logs do not have any debugging on
+    json_logs: true # Get debug logs in json format
 
 hooks:
   migration:
