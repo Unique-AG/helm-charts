@@ -1,11 +1,12 @@
 # Unique Helm Charts
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/unique)](https://artifacthub.io/packages/search?repo=unique)
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/unique)](https://artifacthub.io/packages/search?repo=unique) # TODO: fix when published
 
-Unique `helm-charts` is a collection of charts for [https://unqiue.ch](https://unique.ch) projects.
+This contains a helm chart for litellm based on <https://github.com/Unique-AG/helm-charts>.
 
 Most charts are available both as Helm Repository as well as OCI artefact (Unique recommends the latter).
+
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
 helm install my-<chart> unique/<chart> --version <version>
@@ -40,9 +41,10 @@ We'd love to have you contribute! Please refer to our [contribution guidelines](
 
 ### Changelog
 
-Releases are managed independently for each helm chart, and changelogs are tracked on each release. Read more about this process [here](https://github.com/Unique-AG/helm-charts/blob/main/CONTRIBUTING.md#changelog).
+Releases are managed independently for each helm chart, and changelogs are tracked on each release. Read more about this process [here](https://github.com/RichardoC/litellm_helm-chart/blob/main/CONTRIBUTING.md#changelog).
 
 ## License Notice
+
 While being licensed under the Apache 2.0 license, the work in this repository is strongly inspired by others. Matching identifiers are provided in the source code where applicable. The original work is licensed under the Apache 2.0 license as well.
 
 - [`argo-helm`](https://github.com/argoproj/argo-helm/tree/main)

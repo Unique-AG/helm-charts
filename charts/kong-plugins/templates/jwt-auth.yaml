@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Values.jwtAuth.name | default "kong-plugin-unique-jwt-auth" }}
-data:
-{{ (.Files.Glob "files/unique-jwt-auth/*").AsConfig | indent 2 }}

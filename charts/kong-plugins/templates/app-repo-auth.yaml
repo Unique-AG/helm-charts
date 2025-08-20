@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Values.appRepoAuth.name | default "kong-plugin-unique-app-repo-auth" }}
-data:
-{{ (.Files.Glob "files/unique-app-repo-auth/*").AsConfig | indent 2 }}
