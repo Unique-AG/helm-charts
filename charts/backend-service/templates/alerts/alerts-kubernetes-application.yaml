@@ -42,6 +42,10 @@ spec:
               kube_pod_status_phase{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", phase=~"Pending|Unknown|Failed"}
             ) * on (namespace, pod) group_left(owner_kind) topk by (namespace, pod) (
               1, max by (namespace, pod, owner_kind) (kube_pod_owner{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", owner_kind!="Job"})
+            ) * on (namespace, pod) group_left() (
+              (kube_pod_status_phase{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", phase!="Failed"} == 1)
+              or
+              (kube_pod_status_phase{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", phase="Failed"} == 1 and on (namespace, pod) (time() - kube_pod_created{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*"} < 43200))
             )
           ) > 0
         for: {{ dig "KubePodNotReady" "for" "15m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
@@ -53,7 +57,7 @@ spec:
           {{- end }}
         annotations:
           summary: "Pod {{ `{{ $labels.pod }}` }} is not ready"
-          description: "Pod {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.pod }}` }} has been in a non-ready state for longer than 15 minutes"
+          description: "Pod {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.pod }}` }} has been in a non-ready state for longer than 15 minutes (excludes Failed pods older than 12 hours)"
           runbook_url: "https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-conditions"
 {{- end }}
 {{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeDeploymentGenerationMismatch | default false) }}
@@ -296,9 +300,9 @@ spec:
 {{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeJobNotCompleted | default false) }}
       - alert: KubeJobNotCompleted
         expr: |
-          time() - max by (namespace, job_name) (kube_job_status_start_time{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-.*"}
+          time() - max by (namespace, job_name) (kube_job_status_start_time{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-.*{{- if .Values.cronJob.name }}|{{ .Values.cronJob.name }}-.*{{- end }}|{{ .Release.Name }}-.*{{- range $key, $value := .Values.extraCronJobs }}|{{ $key }}-.*{{- end }}"}
             and
-          kube_job_status_active{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-.*"} > 0) > 43200
+          kube_job_status_active{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-.*{{- if .Values.cronJob.name }}|{{ .Values.cronJob.name }}-.*{{- end }}|{{ .Release.Name }}-.*{{- range $key, $value := .Values.extraCronJobs }}|{{ $key }}-.*{{- end }}"} > 0) > 43200
         for: {{ dig "KubeJobNotCompleted" "for" "0m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
         labels:
           severity: warning
@@ -314,7 +318,11 @@ spec:
 {{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeJobFailed | default false) }}
       - alert: KubeJobFailed
         expr: |
-          kube_job_failed{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-.*"} > 0
+          count by() (
+            kube_job_failed{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-.*{{- if .Values.cronJob.name }}|{{ .Values.cronJob.name }}-.*{{- end }}|{{ .Release.Name }}-.*{{- range $key, $value := .Values.extraCronJobs }}|{{ $key }}-.*{{- end }}"}
+            and on (job_name, namespace)
+            kube_job_status_start_time{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-.*{{- if .Values.cronJob.name }}|{{ .Values.cronJob.name }}-.*{{- end }}|{{ .Release.Name }}-.*{{- range $key, $value := .Values.extraCronJobs }}|{{ $key }}-.*{{- end }}"} > (time() - 3600)
+          ) > 0
         for: {{ dig "KubeJobFailed" "for" "0m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
         labels:
           severity: warning
@@ -323,8 +331,8 @@ spec:
           {{- toYaml . | nindent 10 }}
           {{- end }}
         annotations:
-          summary: "Job {{ `{{ $labels.job_name }}` }} failed"
-          description: "Job {{ `{{ $labels.namespace }}` }}/{{ `{{ $labels.job_name }}` }} failed to complete. Removing failed job after investigation should clear this alert"
+          summary: "Recent job failures detected in namespace {{ .Release.Namespace }}"
+          description: "{{ `{{ $value }}` }} job(s) from this release (including main jobs, cronjobs, and extra cronjobs) have failed within the last 1 hour in namespace {{ .Release.Namespace }}. Old failed jobs (>1h) are ignored by this alert"
           runbook_url: "https://kubernetes.io/docs/concepts/workloads/controllers/job/"
 {{- end }}
 {{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeHpaReplicasMismatch | default false) }}

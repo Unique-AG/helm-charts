@@ -38,26 +38,6 @@ spec:
           description: "Pod {{ `{{ $labels.pod }}` }} container {{ `{{ $labels.container }}` }} CPU usage is {{ `{{ printf \"%.2f\" $value }}` }}% of the limit"
           runbook_url: "https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
 {{- end }}
-{{- if not (.Values.prometheus.defaultAlerts.kubernetesResources.disabled.KubernetesPodHighMemoryUsage | default false) }}
-      - alert: KubernetesPodHighMemoryUsage
-        expr: |
-          (
-            sum(container_memory_working_set_bytes{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", container!="POD", container!=""}) by (pod, container)
-            /
-            sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", resource="memory"}) by (pod, container)
-          ) * 100 > 80
-        for: {{ dig "KubernetesPodHighMemoryUsage" "for" "10m" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
-        labels:
-          severity: {{ dig "KubernetesPodHighMemoryUsage" "severity" "warning" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
-          alertGroup: kubernetes-resources
-          {{- with .Values.prometheus.defaultAlerts.additionalLabels }}
-          {{- toYaml . | nindent 10 }}
-          {{- end }}
-        annotations:
-          summary: "High memory usage on pod {{ `{{ $labels.pod }}` }}"
-          description: "Pod {{ `{{ $labels.pod }}` }} container {{ `{{ $labels.container }}` }} memory usage is {{ `{{ printf \"%.2f\" $value }}` }}% of the limit"
-          runbook_url: "https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
-{{- end }}
 {{- if not (.Values.prometheus.defaultAlerts.kubernetesResources.disabled.KubernetesPodNearMemoryLimit | default false) }}
       - alert: KubernetesPodNearMemoryLimit
         expr: |
@@ -65,7 +45,7 @@ spec:
             sum(container_memory_working_set_bytes{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", container!="POD", container!=""}) by (pod, container)
             /
             sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", resource="memory"}) by (pod, container)
-          ) * 100 > 95
+          ) * 100 > 90
         for: {{ dig "KubernetesPodNearMemoryLimit" "for" "5m" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
         labels:
           severity: {{ dig "KubernetesPodNearMemoryLimit" "severity" "critical" (.Values.prometheus.defaultAlerts.kubernetesResources.customRules | default dict) }}
