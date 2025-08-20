@@ -18,8 +18,8 @@ annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
     - kind: fixed
-      description: "Alert  for jobs that only failed recently - in the last hour. "
+      description: "Alert for jobs that only failed in the last hour."
     - kind: fixed
       description: "Remove duplicate alert for high memory.
     - kind: fixed
-      description: "KubePodNotReady alerts only on recently non-ready pods."
+      description: "KubePodNotReady now alerts only on recent pods."
