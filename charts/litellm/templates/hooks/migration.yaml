@@ -54,7 +54,7 @@ spec:
             - -c
             - {{ .Values.hooks.migration.command | quote }}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- toYaml .Values.hooks.migration.resources | nindent 12 }}
           volumeMounts:
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}

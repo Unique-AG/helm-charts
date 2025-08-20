@@ -148,3 +148,4 @@ hooks:
     enabled: true
     command: |
       python litellm/proxy/prisma_migration.py
+    resources: {}
