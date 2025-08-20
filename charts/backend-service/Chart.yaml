@@ -20,6 +20,6 @@ annotations:
     - kind: fixed
       description: "Alert for jobs that only failed in the last hour."
     - kind: fixed
-      description: "Remove duplicate alert for high memory.
+      description: "Remove duplicate alert for high memory."
     - kind: fixed
       description: "KubePodNotReady now alerts only on recent pods."
