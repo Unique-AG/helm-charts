@@ -376,6 +376,34 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: fixed
+          description: "Alert for jobs that only failed in the last hour."
+        - kind: fixed
+          description: "Remove duplicate alert for high memory."
+        - kind: fixed
+          description: "KubePodNotReady now alerts only on recent pods."
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    appVersion: latest
+    created: "2025-08-20T11:09:01.744145607Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: a976df772f18141fd9a40f84c5e847ccc8de17c6212492d4b158e0ec2ebc6236
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-5.1.1/backend-service-5.1.1.tgz
+    version: 5.1.1
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: fixed
           description: "ServiceMonitor is now only rendered when coreos CRDs are available"
         - kind: changed
           description: "Cronjobs names now don't include the fullname anymore"
@@ -2315,4 +2343,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-08-19T06:48:32.905022806Z"
+generated: "2025-08-20T11:09:01.744566877Z"
