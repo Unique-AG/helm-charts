@@ -159,3 +159,16 @@ tests:
       - equal:
           path: spec.template.metadata.annotations.test
           value: true
+
+  - it: When given a revisionHistoryLimit in deployment
+    set:
+      image.tag: pinned-version
+      deployment.enabled: true
+      deployment.revisionHistoryLimit: 22
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 22

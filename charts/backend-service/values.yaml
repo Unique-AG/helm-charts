@@ -33,10 +33,10 @@ cronJob:
   failedJobsHistoryLimit: 1
   jobTemplate:
     containers:
-      name: ''
+      name: ""
     restartPolicy: OnFailure
-  name: ''
-  schedule: ''
+  name: ""
+  schedule: ""
   startingDeadlineSeconds: 60
   successfulJobsHistoryLimit: 1
   suspend: false
@@ -46,6 +46,8 @@ cronJob:
 # since this chart allows to also deploy as a CronJob or both, all deployment related values are in this section
 deployment:
   enabled: true
+  # -- Specify how many old ReplicaSets for this Deployment you want to retain.
+  revisionHistoryLimit: 3
   # metadata:
   #   labels:
   #     app: backend-service
@@ -139,7 +141,8 @@ extraRoutes:
     additionalRules: []
 
 # -- extraCronJobs allows you to define additional cron jobs besides 'cronJob' itself.
-extraCronJobs: {}
+extraCronJobs:
+  {}
   #   - foo
   #   suspend: false
   #   schedule: "0 0 1 1 *"
@@ -299,7 +302,8 @@ keda:
   maxReplicaCount: 4
   # -- scalers for the ScaledObject
   # You can specify multiple scalers for the ScaledObject as outlined in https://keda.sh/docs/2.14/scalers/
-  scalers: []
+  scalers:
+    []
     # # -- rabbitmq example
     # - type: rabbitmq
     #   metadata:
@@ -412,7 +416,8 @@ prometheus:
     kubernetesApplication:
       enabled: true
       # -- Disable specific alerts by setting them to true
-      disabled: {}
+      disabled:
+        {}
         # KubePodCrashLooping: false
         # KubePodNotReady: false
         # KubeDeploymentGenerationMismatch: false
@@ -433,7 +438,8 @@ prometheus:
         # KubePersistentVolumeClaimPending: false
         # KubePdbNotEnoughHealthyPods: false
       # -- Override alert rules with custom values (for duration, severity, etc.)
-      customRules: {}
+      customRules:
+        {}
         # KubePodCrashLooping:
         #   for: "10m"
         #   severity: "critical"
@@ -447,7 +453,8 @@ prometheus:
     kubernetesResources:
       enabled: true
       # -- Disable specific alerts by setting them to true
-      disabled: {}
+      disabled:
+        {}
         # KubernetesPodHighCPUUsage: false
         # KubernetesPodHighMemoryUsage: false
         # KubernetesPodNearMemoryLimit: false
@@ -459,7 +466,8 @@ prometheus:
         # KubernetesHPAScalingEvent: false
         # KubernetesHPAMaxReplicasReached: false
       # -- Override alert rules with custom values (for duration, severity, etc.)
-      customRules: {}
+      customRules:
+        {}
         # KubernetesPodHighCPUUsage:
         #   for: "15m"
         #   severity: "critical"
@@ -468,7 +476,8 @@ prometheus:
         # KubernetesContainerOOMKilled:
         #   for: "1m"
     # -- Additional labels to add to all default alerts
-    additionalLabels: {}
+    additionalLabels:
+      {}
       # environment: production
       # team: backend
 
@@ -503,7 +512,8 @@ routes:
       # -- explicitly list paths to block
       blockList:
         - /metrics
-      extraAnnotations: []
+      extraAnnotations:
+        []
         # konghq.com/request-buffering: "false"
         # konghq.com/read-timeout: "120s"
     versioned:
@@ -512,7 +522,8 @@ routes:
       # ⚠️ Customizing this value requires also changing the default url in multiple places including all SDK or integration use cases
       # @default -- the chart will default to 'public' to stay backward compatible
       pathOverride: /public
-      extraAnnotations: []
+      extraAnnotations:
+        []
         # konghq.com/request-buffering: "false"
     scoped:
       enabled: false
@@ -533,7 +544,8 @@ routes:
       enabled: false
       # -- path to the probe endpoint
       probePath: /probe
-      extraAnnotations: []
+      extraAnnotations:
+        []
         # konghq.com/strip-path: "true"
 
 # !!! usePodIdentity will be deprecated in the future please use useVMManagedIdentity with the clientID
@@ -567,7 +579,7 @@ securityContext:
   # -- capabilities section controls the Linux capabilities for the container
   capabilities:
     drop:
-    - ALL
+      - ALL
 
 service:
   enabled: true

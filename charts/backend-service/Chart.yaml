@@ -8,7 +8,7 @@ name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
 # change on next major: enable netpol by default, deprecate cronJob
-version: 5.1.1
+version: 5.2.0
 appVersion: latest
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
@@ -17,9 +17,5 @@ description: |
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
-    - kind: fixed
-      description: "Alert for jobs that only failed in the last hour."
-    - kind: fixed
-      description: "Remove duplicate alert for high memory."
-    - kind: fixed
-      description: "KubePodNotReady now alerts only on recent pods."
+    - kind: changed
+      description: "Revision History Limit now defaults to 3. Set revisionHistoryLimit to 10 to keep old behavior. This change accomodates for ArgoCD, whereon most services are deployed."
