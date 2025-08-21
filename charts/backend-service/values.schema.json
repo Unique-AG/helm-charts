@@ -189,6 +189,12 @@
           "description": "Enable deployment",
           "examples": [true]
         },
+        "revisionHistoryLimit": {
+          "type": "integer",
+          "description": "Number of old ReplicaSets to retain",
+          "minimum": 0,
+          "examples": [3, 10]
+        },
         "metadata": {
           "type": "object",
           "description": "Metadata for the deployment"

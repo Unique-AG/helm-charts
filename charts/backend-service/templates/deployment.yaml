@@ -17,6 +17,7 @@ metadata:
   {{- end }}
 
 spec:
+  revisionHistoryLimit: {{ .Values.deployment.revisionHistoryLimit }}
   {{- if not (or .Values.autoscaling.enabled .Values.keda.enabled) }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
