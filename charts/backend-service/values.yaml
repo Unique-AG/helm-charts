@@ -332,7 +332,8 @@ pdb:
 podAnnotations: {}
 
 # -- Define additional pod labels for all the pods
-podLabels: {}
+podLabels:
+  logging.unique.ai/format: "pino-json"
 
 # -- PodSecurityContext for the pod(s)
 podSecurityContext:

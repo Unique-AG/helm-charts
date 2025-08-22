@@ -20,6 +20,11 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
+        {{- if .Values.podLabels }}
+          {{- with .Values.podLabels }}
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+        {{- end }}
         {{- include "backendService.labelsHooksDbMigrations" . | nindent 8 }}
         {{- if .Values.secretProvider }}
         aadpodidbinding: {{ default "keyvault" (.Values.secretProvider).aadPodIdBinding }}
@@ -47,7 +52,7 @@ spec:
           volumeMounts:
           {{- range .volumeMounts }}
             - name: {{ .name}}
-              mountPath: {{ .mountPath }}   
+              mountPath: {{ .mountPath }}
               readOnly: {{ .readOnly | default false }}
           {{- end }}
           {{- end }}
@@ -82,7 +87,7 @@ spec:
               mountPath: {{ .mountPathJob | default .mountPath }}
               readOnly: {{ .readOnly | default false }}
           {{- end }}
-          {{- end }}   
+          {{- end }}
           {{- end }}
           {{- end }}
           securityContext: {{- toYaml .Values.securityContext | nindent 12 }}
@@ -156,7 +161,7 @@ spec:
         - name: {{ .name }}
           emptyDir: {}
       {{- end }}
-      {{- end }}   
+      {{- end }}
       {{- end }}
       {{- end }}
       {{- if .Values.secretProvider }}
