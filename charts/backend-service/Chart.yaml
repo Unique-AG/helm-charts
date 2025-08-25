@@ -18,4 +18,4 @@ annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
     - kind: added
-      description: "Add support for custom metrics port in prometheus settings"
+      description: "Support for custom metrics port in Prometheus settings"
