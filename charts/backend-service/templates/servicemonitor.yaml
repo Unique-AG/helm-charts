@@ -13,5 +13,5 @@ spec:
     matchLabels:
       {{- include "backendService.selectorLabels" . | nindent 6 }}
   endpoints:
-  - port: {{ .Values.prometheus.serviceMonitor.port | default "http" }}
+  - port: {{ dig "serviceMonitor" "port" "http" .Values.prometheus | quote }}
 {{- end }}
