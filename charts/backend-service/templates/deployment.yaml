@@ -92,7 +92,7 @@ spec:
               protocol: TCP
             {{- if .Values.ports.metrics }}
             - name: metrics
-              containerPort: {{ include "backendService.metricsPort" $ }}
+              containerPort: {{ .Values.ports.metrics }}
               protocol: TCP
             {{- end }}
           {{- if .Values.lifecycle }}

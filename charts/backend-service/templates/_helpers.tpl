@@ -99,13 +99,6 @@ app.kubernetes.io/component: hooks-db-migration
 {{- end -}}
 {{- end -}}
 
-{{/* Helper to get the metrics port */}}
-{{- define "backendService.metricsPort" -}}
-{{- if .Values.ports.metrics -}}
-{{- .Values.ports.metrics -}}
-{{- end -}}
-{{- end -}}
-
 {{/* Helper to get the image tag - uses image.tag if specified, otherwise falls back to Chart.AppVersion */}}
 {{- define "backendService.imageTag" -}}
 {{- if .Values.image.tag -}}
