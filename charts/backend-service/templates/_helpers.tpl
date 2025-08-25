@@ -103,7 +103,6 @@ app.kubernetes.io/component: hooks-db-migration
 {{- define "backendService.metricsPort" -}}
 {{- if .Values.ports.metrics -}}
 {{- .Values.ports.metrics -}}
-{{- else -}}
 {{- end -}}
 {{- end -}}
 
