@@ -90,6 +90,11 @@ spec:
             - name: http
               containerPort: {{ include "backendService.applicationPort" $ }}
               protocol: TCP
+            {{- if .Values.ports.metrics }}
+            - name: metrics
+              containerPort: {{ .Values.ports.metrics }}
+              protocol: TCP
+            {{- end }}
           {{- if .Values.lifecycle }}
           lifecycle:
             {{- toYaml .Values.lifecycle | nindent 12 }}

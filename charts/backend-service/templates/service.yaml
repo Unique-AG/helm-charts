@@ -15,6 +15,12 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+    {{- if .Values.ports.metrics }}
+    - port: {{ .Values.ports.metrics }}
+      targetPort: metrics
+      protocol: TCP
+      name: metrics
+    {{- end }}
   selector:
     {{- include "backendService.selectorLabels" . | nindent 4 }}
 {{- end }}
