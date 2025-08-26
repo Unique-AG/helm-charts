@@ -376,6 +376,30 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: added
+          description: "Support for custom metrics port in Prometheus settings"
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    appVersion: latest
+    created: "2025-08-26T06:34:31.575763762Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: e90c2340e0009413a5d506182f60e84cfaaba401f5266a3a72d767f323cce83b
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-5.4.0/backend-service-5.4.0.tgz
+    version: 5.4.0
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: added
           description: "Default label for log format"
       artifacthub.io/license: Apache-2.0
     apiVersion: v2
@@ -2391,4 +2415,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-08-25T08:50:01.240856617Z"
+generated: "2025-08-26T06:34:31.576170146Z"
