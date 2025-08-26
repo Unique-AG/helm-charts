@@ -16,7 +16,7 @@ spec:
       protocol: TCP
       name: http
     {{- if .Values.ports.metrics }}
-    - port: {{ include "backendService.metricsPort" . }}
+    - port: {{ .Values.ports.metrics }}
       targetPort: metrics
       protocol: TCP
       name: metrics
