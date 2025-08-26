@@ -1,17 +1,14 @@
 {{- if and .Values.prometheus.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
-{{- $fullName := include "backendService.fullname" . -}}
-{{- $labels := include "backendService.labels" . -}}
-{{- $selectorLabels := include "backendService.selectorLabels" . -}}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ $fullName }}
+  name: {{ include "backendService.fullname" . }}
   labels:
     {{- include "backendService.labels" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
-      {{- include "backendService.selectorLabels" . | nindent 6 }}
+      {{- include "backendService.serviceLabels" . | nindent 6 }}
   endpoints:
   - port: {{ hasKey .Values.ports "metrics" | ternary "metrics" "http" }}
 {{- end }}
