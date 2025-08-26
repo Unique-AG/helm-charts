@@ -48,6 +48,12 @@ tests:
             app.kubernetes.io/name: ut
             app.kubernetes.io/instance: ut
             app.kubernetes.io/component: server
+      - template: service.yaml
+        equal:
+          path: metadata.labels
+          value:
+            app.kubernetes.io/name: ut
+            app.kubernetes.io/instance: ut
       - template: servicemonitor.yaml
         hasDocuments:
           count: 1
@@ -57,4 +63,3 @@ tests:
           value:
             app.kubernetes.io/name: ut
             app.kubernetes.io/instance: ut
-            app.kubernetes.io/component: server
