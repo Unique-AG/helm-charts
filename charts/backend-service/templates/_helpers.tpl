@@ -48,6 +48,13 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/component: server
 {{- end }}
 
+{{- define "backendService.serviceLabels" -}}
+{{- include "backendService.labels" . }}
+{{ with .Values.service.extraLabels }}
+{{- toYaml . }}
+{{- end }}
+{{- end }}
+
 {{/* These labels are shared between all components (or shared resources) and have no component awareness */}}
 {{- define "backendService.mutableLabels" -}}
 {{- include "backendService.immutableLabels" . }}
