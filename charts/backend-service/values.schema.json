@@ -789,6 +789,13 @@
           "maximum": 65535,
           "examples": [8080]
         },
+        "metrics": {
+          "type": "integer",
+          "description": "Optional metrics port, does not default and is disabled when not set.",
+          "minimum": 1,
+          "maximum": 65535,
+          "examples": [8081]
+        },
         "service": {
           "type": "integer",
           "description": "Service port",

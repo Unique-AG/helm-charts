@@ -348,7 +348,7 @@ ports:
   # ℹ You may not be able to use ports below 1024 as non-root user which is the default securityContext of this chart
   # If you need to use a port below 1024, you can override the securityContext of the deployment (discouraged) or get the `NET_BIND_SERVICE` capability added to the container (also discouraged but preferred if absolutely needed, at your own risk/liability)
   application: 8080
-  # -- metrics port, this is the port that the deployed application exposes metrics on (optional)
+  # -- optional metrics port, does not default and is disabled when not set. Basic uses cases use the application port.
   # metrics: 8081
   # -- service port, this is the port that the service will be exposed on
   service: 80
