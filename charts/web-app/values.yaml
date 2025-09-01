@@ -285,3 +285,7 @@ strategy:
   type: RollingUpdate # or `Recreate`
 
 tolerations: []
+
+volumeMounts: []
+
+volumes: []
