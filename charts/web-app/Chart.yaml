@@ -5,7 +5,7 @@ maintainers:
   - name: unique-ag
     url: https://unique.ch/
 name: web-app
-version: 4.3.0
+version: 4.4.0
 # change on next major: enable netpol by default
 description: |
   The 'web-app' chart is a "convenience" chart from Unique AG that can generically be used to deploy web-content serving workloads to Kubernetes.
@@ -16,4 +16,4 @@ sources:
 annotations:
   artifacthub.io/changes: |
     - kind: added
-      description: "Possibility to define network policies"
+      description: "Possibility to define volumes and volumeMounts"
