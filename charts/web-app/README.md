@@ -192,6 +192,8 @@ You can find Network Policy examples in the [`ci/networkpolicy-values.yaml`](htt
 | serviceAccount.name | string | `""` |  |
 | strategy.type | string | `"RollingUpdate"` |  |
 | tolerations | list | `[]` |  |
+| volumeMounts | list | `[]` |  |
+| volumes | list | `[]` |  |
 
 ## Upgrade Guides
 
