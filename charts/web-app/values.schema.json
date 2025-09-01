@@ -855,6 +855,20 @@
       "items": {
         "type": "object"
       }
+    },
+    "volumeMounts": {
+      "type": "array",
+      "description": "Volume mounts for the pod",
+      "items": {
+        "type": "object"
+      }
+    },
+    "volumes": {
+      "type": "array",
+      "description": "Volumes for the pod",
+      "items": {
+        "type": "object"
+      }
     }
   }
 }
