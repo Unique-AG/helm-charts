@@ -2042,6 +2042,28 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: added
+          description: "Possibility to define volumes and volumeMounts"
+    apiVersion: v2
+    created: "2025-09-01T10:15:08.124724079Z"
+    description: 'The ''web-app'' chart is a "convenience" chart from Unique AG that
+      can generically be used to deploy web-content serving workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: 31aa4d7a23b060f281f491f4bab0c77908f9703d809be962ec22735d4053faee
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: web-app
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/web-app
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/web-app-4.4.0/web-app-4.4.0.tgz
+    version: 4.4.0
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: added
           description: "Possibility to define network policies"
     apiVersion: v2
     created: "2025-07-23T07:35:46.839878613Z"
@@ -2439,4 +2461,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-08-26T08:52:52.193587468Z"
+generated: "2025-09-01T10:15:08.124980081Z"
