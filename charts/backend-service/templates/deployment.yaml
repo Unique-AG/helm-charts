@@ -6,16 +6,15 @@ metadata:
   name: {{ $fullName }}
   labels:
     {{- include "backendService.labels" . | nindent 4 }}
-    {{- if .Values.deployment.metadata}}
-    {{- toYaml .Values.deployment.metadata.labels | nindent 4 }}
+    {{- with .Values.deployment.metadata.labels }}
+    {{- toYaml . | nindent 4 }}
     {{- end }}
     helm.sh/chart: {{ include "backendService.chart" . }}
     app.kubernetes.io/version: {{ include "backendService.imageTag" . | quote }}
-  {{- if .Values.deployment.metadata }}
+  {{- with .Values.deployment.metadata.annotations }}
   annotations:
-    {{- toYaml .Values.deployment.metadata.annotations | nindent 4 }}
+  {{- toYaml . | nindent 4 }}
   {{- end }}
-
 spec:
   revisionHistoryLimit: {{ .Values.deployment.revisionHistoryLimit }}
   {{- if not (or .Values.autoscaling.enabled .Values.keda.enabled) }}
