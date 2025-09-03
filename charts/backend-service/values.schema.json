@@ -196,8 +196,23 @@
           "examples": [3, 10]
         },
         "metadata": {
+          "additionalProperties": false,
           "type": "object",
-          "description": "Metadata for the deployment"
+          "description": "Metadata for the deployment",
+          "properties": {
+            "annotations": {
+              "type": "object",
+              "description": "Annotations for the deployment"
+            },
+            "labels": {
+              "type": "object",
+              "description": "Labels for the deployment"
+            },
+            "name": {
+              "type": "string",
+              "description": "Name for the deployment"
+            }
+          }
         }
       }
     },

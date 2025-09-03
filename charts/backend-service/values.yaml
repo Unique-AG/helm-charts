@@ -46,6 +46,12 @@ cronJob:
 # since this chart allows to also deploy as a CronJob or both, all deployment related values are in this section
 deployment:
   enabled: true
+  # -- Specify the metadata for the deployment
+  metadata:
+    # -- Specify the annotations for the deployment
+    annotations: {}
+    # -- Specify the labels for the deployment
+    labels: {}
   # -- Specify how many old ReplicaSets for this Deployment you want to retain.
   revisionHistoryLimit: 3
   # metadata:

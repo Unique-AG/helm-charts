@@ -172,3 +172,13 @@ tests:
       - equal:
           path: spec.revisionHistoryLimit
           value: 22
+
+  - it: When given annotations, renders properly
+    set:
+      image.tag: pinned-version
+      deployment.metadata.annotations:
+        reloader.stakater.com/auto: "true"
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
