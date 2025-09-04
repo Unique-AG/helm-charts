@@ -1315,6 +1315,7 @@
     "service": {
       "type": "object",
       "description": "Kubernetes service configuration",
+      "additionalProperties": false,
       "properties": {
         "enabled": {
           "type": "boolean",
@@ -1337,6 +1338,10 @@
         "extraLabels": {
           "type": "object",
           "description": "Extra labels for the service"
+        },
+        "annotations": {
+          "type": "object",
+          "description": "Annotations for the service"
         }
       }
     },
