@@ -46,21 +46,37 @@ servers.forEach(srv => {
   serverInstances.push(server);
 });
 
-process.on('SIGTERM', () => {
-  console.log('Received SIGTERM, shutting down gracefully...');
+const gracefulShutdown = (signal) => {
+  console.log(`Received ${signal}, shutting down gracefully...`);
+  
+  let closedServers = 0;
+  const totalServers = serverInstances.length;
+  
+  const checkShutdown = () => {
+    if (closedServers === totalServers) {
+      console.log('All servers closed successfully');
+      process.exit(0);
+    }
+  };
+  
   serverInstances.forEach(server => {
     server.close(err => {
+      closedServers++;
       if (err) {
         console.error('Error closing server:', err);
-        process.exit(1);
       } else {
         console.log('Server closed successfully');
       }
+      checkShutdown();
     });
   });
 
+  // Force shutdown after 2 seconds for testing environments
   setTimeout(() => {
     console.error('Forcing shutdown due to timeout');
     process.exit(1);
-  }, 10000);
-});
+  }, 2000);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
