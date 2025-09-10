@@ -28,7 +28,7 @@ extraCronJobs:
         memory: 200Mi
 image:
   repository: "ghcr.io/unique-ag/chart-testing-service"
-  tag: "1.0.3"
+  tag: "1.0.4"
 securityContext:
   allowPrivilegeEscalation: false
   seccompProfile:

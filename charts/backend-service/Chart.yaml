@@ -21,3 +21,11 @@ annotations:
       description: "⚠️ KEDA scalers from list to map structure and renamed to triggers for better overlay support, see upgrade guide for more details."
     - kind: changed
       description: "⚠️ external-secrets.io/* to external-secrets.io/v1, see upgrade guide for more details."
+    - kind: changed
+      description: "Uses chart-testing-service:1.0.4 for faster test teardown."
+    - kind: fixed
+      description: "helm-charts/issues/114 - extraCronJobs is a map not a list example."
+    - kind: fixed
+      description: "helm-charts/issues/98 - gracefully handle PDB misconfiguration, prefer minAvailable over maxUnavailable when both are set."
+    - kind: fixed
+      description: "helm-charts/issues/42 - only force CRDs when routes are enabled."

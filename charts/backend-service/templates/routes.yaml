@@ -1,4 +1,4 @@
-{{- if .Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1" }}
+{{- if and .Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1" (or .Values.routes.paths.default.enabled .Values.routes.paths.versioned.enabled .Values.routes.paths.scoped.enabled .Values.routes.paths.probe.enabled) }}
 
 {{/* Default route, protected with Unique Kong JWT Auth */}}
 {{- if .Values.routes.paths.default.enabled -}}
@@ -189,6 +189,6 @@ spec:
           kind: Service
 {{- end }}
 
-{{- else }}
+{{- else if or .Values.routes.paths.default.enabled .Values.routes.paths.versioned.enabled .Values.routes.paths.scoped.enabled .Values.routes.paths.probe.enabled }}
 {{- fail "You can't use routes without gateway.networking.k8s.io CRDs installed. Install CRDs first."}}
 {{- end }}

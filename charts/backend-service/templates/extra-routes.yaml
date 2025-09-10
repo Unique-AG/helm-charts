@@ -3,6 +3,13 @@
 {{/* SPDX-SnippetCopyrightText: 2024 © Grafana, grafana/helm-charts */}}
 {{/* SPDX-SnippetCopyrightText: 2024 © Unique AG */}}
 {{/* SPDX-SnippetEnd */}}
+{{- $hasEnabledRoutes := false }}
+{{- range $name, $route := .Values.extraRoutes }}
+  {{- if $route.enabled }}
+    {{- $hasEnabledRoutes = true }}
+  {{- end }}
+{{- end }}
+{{- if $hasEnabledRoutes }}
 {{- if .Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1" }}
 {{- range $name, $route := .Values.extraRoutes }}
   {{- if $route.enabled }}
@@ -49,4 +56,5 @@ spec:
 {{- end }}
 {{- else }}
 {{- fail "You can't use extraRoutes without CRDs installed. Install CRDs first."}}
+{{- end }}
 {{- end }}

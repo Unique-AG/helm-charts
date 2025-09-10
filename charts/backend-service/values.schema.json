@@ -761,7 +761,7 @@
         "tag": {
           "type": "string",
           "description": "Tag for the image",
-          "examples": ["1.0.3"]
+          "examples": ["1.0.4"]
         },
         "pullPolicy": {
           "type": "string",
