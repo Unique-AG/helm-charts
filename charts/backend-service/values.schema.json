@@ -275,12 +275,39 @@
           "minimum": 1,
           "examples": [10]
         },
-        "scalers": {
-          "type": "array",
-          "description": "Scalers for the ScaledObject",
+        "triggers": {
+          "type": "object",
+          "description": "Triggers for the ScaledObject, defined as a map for easier overlay configuration",
+          "patternProperties": {
+            "^.*$": {
+              "type": "object",
+              "description": "Trigger configuration",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Trigger type (e.g., rabbitmq, cron, prometheus, etc.)"
+                },
+                "metadata": {
+                  "type": "object",
+                  "description": "Trigger metadata specific to the type"
+                },
+                "authenticationRef": {
+                  "type": "object",
+                  "description": "Reference to TriggerAuthentication resource",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Name of the TriggerAuthentication resource"
+                    }
+                  }
+                }
+              },
+              "required": ["type", "metadata"]
+            }
+          },
           "examples": [
-            [
-              {
+            {
+              "rabbitmq-trigger": {
                 "type": "rabbitmq",
                 "metadata": {
                   "protocol": "amqp",
@@ -292,7 +319,7 @@
                   "name": "keda-trigger-auth-rabbitmq-conn"
                 }
               },
-              {
+              "cron-trigger": {
                 "type": "cron",
                 "metadata": {
                   "timezone": "Europe/Zurich",
@@ -301,7 +328,7 @@
                   "desiredReplicas": "10"
                 }
               }
-            ]
+            }
           ]
         }
       }

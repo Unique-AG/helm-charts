@@ -7,8 +7,8 @@ maintainers:
 name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
-# change on next major: enable netpol by default, deprecate cronJob
-version: 5.6.0
+# changes to consider on next major: enable netpol by default, deprecate cronJob, remove external-secrets
+version: 6.0.0
 appVersion: latest
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
@@ -17,7 +17,7 @@ description: |
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
-    - kind: added
-      description: "PodMonitor is added when service is disabled"
     - kind: changed
-      description: "ServiceMonitor is rendered only when service is enabled"
+      description: "⚠️ KEDA scalers from list to map structure and renamed to triggers for better overlay support, see upgrade guide for more details."
+    - kind: changed
+      description: "⚠️ external-secrets.io/* to external-secrets.io/v1, see upgrade guide for more details."
