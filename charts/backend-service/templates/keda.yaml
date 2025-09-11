@@ -46,7 +46,7 @@ spec:
   {{- end }}
   {{- $hasValidTriggers := false }}
   {{- range $name, $trigger := .Values.keda.triggers }}
-  {{- if ne $trigger nil }}
+  {{- if not (empty $trigger) }}
   {{- $hasValidTriggers = true }}
   - {{ toYaml $trigger | nindent 4  | trim }}
   {{- end }}
