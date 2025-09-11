@@ -149,18 +149,27 @@ extraRoutes:
 # -- extraCronJobs allows you to define additional cron jobs besides 'cronJob' itself.
 extraCronJobs:
   {}
-  #   - foo
-  #   suspend: false
-  #   schedule: "0 0 1 1 *"
-  #   timeZone: "Europe/Zurich"
+  # foo:
   #   concurrencyPolicy: Forbid
-  #   restartPolicy: Never
-  #   successfulJobsHistoryLimit: 3
-  #   failedJobsHistoryLimit: 3
-  #   startingDeadlineSeconds: 10
+  #   env:
+  #     FOO: BAR
   #   envVars:
-  #     - name: RUNNING_MODE
-  #       value: "bar"
+  #     - name: BAZ
+  #       value: qux
+  #   failedJobsHistoryLimit: 3
+  #   restartPolicy: Never
+  #   schedule: 0 0 1 1 *
+  #   startingDeadlineSeconds: 600
+  #   successfulJobsHistoryLimit: 3
+  #   suspend: false
+  #   timeZone: Europe/Zurich
+  #   resources:
+  #     requests:
+  #       cpu: 100m
+  #       memory: 100Mi
+  #     limits:
+  #       cpu: 200m
+  #       memory: 200Mi
 
 hooks:
   migration:
@@ -278,7 +287,7 @@ image:
   repository: "ghcr.io/unique-ag/chart-testing-service"
   # -- tag, most often will refer one of the latest release of the Unique service
   # Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image
-  tag: "1.0.3"
+  tag: "1.0.4"
   # -- pullPolicy, Unique recommends to never use 'Always'
   pullPolicy: IfNotPresent
 
@@ -306,12 +315,16 @@ keda:
   minReplicaCount: 1
   # -- max replica count for the ScaledObject
   maxReplicaCount: 4
-  # -- scalers for the ScaledObject
-  # You can specify multiple scalers for the ScaledObject as outlined in https://keda.sh/docs/2.14/scalers/
-  scalers:
-    []
+  # -- triggers for the ScaledObject
+  # You can specify multiple triggers for the ScaledObject as outlined in https://keda.sh/docs/2.14/scalers/
+  # The key names are arbitrary and used only for overlay purposes
+  # Note that when disabling/overriding a trigger with `null` to unset it, helm will issue a warning as its cautious about merging types.
+  # For that case, the warning can be ignored.
+  triggers:
+    {}
     # # -- rabbitmq example
-    # - type: rabbitmq
+    # rabbitmq-trigger:
+    #   type: rabbitmq
     #   metadata:
     #     protocol: amqp
     #     queueName: testqueue
@@ -322,7 +335,8 @@ keda:
     #   authenticationRef:
     #     name: keda-trigger-auth-rabbitmq-conn
     # # -- cron example
-    # - type: cron
+    # cron-trigger:
+    #   type: cron
     #   metadata:
     #     # -- The acceptable values would be a value from the IANA Time Zone Database.
     #     timezone: Europe/Zurich
@@ -331,8 +345,15 @@ keda:
     #     # -- desired replicas for the ScaledObject
     #     desiredReplicas: "10"
 
+# -- PodDisruptionBudget configuration
+# Note: If both maxUnavailable and minAvailable are set, minAvailable takes precedence
 pdb:
+  # -- Maximum number of pods that can be unavailable during a disruption
+  # Can be either a percentage (e.g., "30%") or an absolute number (e.g., "2")
   maxUnavailable: 30%
+  # -- Minimum number of pods that must be available during a disruption
+  # Can be either a percentage (e.g., "50%") or an absolute number (e.g., "1")
+  # minAvailable: 1
 
 # -- Define additional pod annotations for all the pods
 podAnnotations: {}

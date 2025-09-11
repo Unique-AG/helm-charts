@@ -4,7 +4,7 @@ The 'backend-service' chart is a "convenience" chart from Unique AG that can gen
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 5.6.0](https://img.shields.io/badge/Version-5.6.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
+![Version: 6.0.0](https://img.shields.io/badge/Version-6.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 5.6.0
+helm install my-backend-service unique/backend-service --version 6.0.0
 
 # or
-helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 5.6.0
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 6.0.0
 ```
 
 ### Docker Images
@@ -148,6 +148,72 @@ The chart provides a JSON schema for validating `values.yaml` files. This schema
 The schema is available in the `values.schema.json` file in the chart.
 
 ## Upgrade Guides
+
+### ~> `6.0.0`
+
+#### KEDA
+The KEDA configuration has been restructured to use a map instead of a list for better overlay support. This allows users to overlay specific triggers without having to redefine the entire list.
+
+**Migration Steps:**
+
+**From (5.x):**
+```yaml
+keda:
+  enabled: true
+  scalers:
+    - type: rabbitmq
+      metadata:
+        protocol: amqp
+        queueName: testqueue
+        mode: QueueLength
+        value: "20"
+      authenticationRef:
+        name: keda-trigger-auth-rabbitmq-conn
+    - type: cron
+      metadata:
+        timezone: Europe/Zurich
+        start: 0 6 * * *
+        end: 0 20 * * *
+        desiredReplicas: "10"
+```
+
+**To (6.x):**
+```yaml
+keda:
+  enabled: true
+  triggers:
+    rabbitmq-trigger:  # arbitrary key name for overlay purposes
+      type: rabbitmq
+      metadata:
+        protocol: amqp
+        queueName: testqueue
+        mode: QueueLength
+        value: "20"
+      authenticationRef:
+        name: keda-trigger-auth-rabbitmq-conn
+    cron-trigger:  # arbitrary key name for overlay purposes
+      type: cron
+      metadata:
+        timezone: Europe/Zurich
+        start: 0 6 * * *
+        end: 0 20 * * *
+        desiredReplicas: "10"
+```
+
+**Benefits:**
+- Easier to overlay specific triggers without redefining the entire configuration
+- Better support for GitOps workflows where different environments may need different triggers
+- The map keys are arbitrary and only used for identification during overlays
+
+#### Rationale on circling back to `~4` version like support
+
+Version `~5` removed the previous ScaledObject implementation in favor of a CRD-compliant version that aligns with native KEDA scaler syntax.
+
+Our clients and internal deployments rely heavily on GitOps workflows with ArgoCD. Value overlay capabilities are essential for these use cases. Based on this feedback, we addressed the list structure limitations in this major release.
+
+#### External Secrets
+This feature is barely used but the version of the CR's was updated to `v1`. We recommend switching away from using the inbuilt CR's of the chart and providing the secrets externally to the application as manifests.
+Support for external-secrets might get removed in upcoming versions due to responsibility mismatches.
 
 ### ~> `5.0.0`
 

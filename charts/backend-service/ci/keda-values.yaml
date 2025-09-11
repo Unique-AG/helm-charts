@@ -7,8 +7,9 @@ keda:
   idleReplicaCount: 0
   minReplicaCount: 1
   maxReplicaCount: 10
-  scalers:
-    - type: rabbitmq
+  triggers:
+    rabbitmq-trigger:
+      type: rabbitmq
       metadata:
         protocol: amqp
         queueName: testqueue
@@ -16,7 +17,8 @@ keda:
         value: "20"
       authenticationRef:
         name: keda-trigger-auth-rabbitmq-conn
-    - type: cron
+    cron-trigger:
+      type: cron
       metadata:
         timezone: Europe/Zurich
         start: 0 6 * * *
