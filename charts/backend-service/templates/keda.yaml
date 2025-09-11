@@ -44,8 +44,15 @@ spec:
   {{- if eq (len .Values.keda.triggers) 0 }}
   {{- fail "You must specify at least one trigger in .Values.keda.triggers" }}
   {{- end }}
+  {{- $hasValidTriggers := false }}
   {{- range $name, $trigger := .Values.keda.triggers }}
+  {{- if ne $trigger nil }}
+  {{- $hasValidTriggers = true }}
   - {{ toYaml $trigger | nindent 4  | trim }}
+  {{- end }}
+  {{- end }}
+  {{- if not $hasValidTriggers }}
+  {{- fail "You must specify at least one valid (non-null) trigger in .Values.keda.triggers" }}
   {{- end }}
 {{- else }}
 {{- fail "You can't use keda without CRDs installed. Install CRDs first."}}
