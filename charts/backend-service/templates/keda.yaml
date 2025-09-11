@@ -46,7 +46,7 @@ spec:
   {{- fail "You must specify at least one trigger in .Values.keda.triggers" }}
   {{- end }}
   {{- range $name, $trigger := .Values.keda.triggers }}
-  - {{ toYaml $trigger | nindent 4 }}
+  - {{ toYaml $trigger | nindent 4  | trim }}
   {{- end }}
 {{- else }}
 {{- fail "You can't use keda without CRDs installed. Install CRDs first."}}
