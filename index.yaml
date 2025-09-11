@@ -375,6 +375,30 @@ entries:
   backend-service:
   - annotations:
       artifacthub.io/changes: |
+        - kind: fixed
+          description: "remove nulled triggers from the rendered output (is invalid: spec.triggers[0]: Invalid value: null: spec.triggers[0] in body must be of type object: null)"
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    appVersion: latest
+    created: "2025-09-11T19:48:48.412245875Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: 3bfe6800ac1070fc99a49a16b2e9b5ec0efe4f0e044fb52e89f9b47e21ff98cc
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-6.0.1/backend-service-6.0.1.tgz
+    version: 6.0.1
+  - annotations:
+      artifacthub.io/changes: |
         - kind: changed
           description: "⚠️ KEDA scalers from list to map structure and renamed to triggers for better overlay support, see upgrade guide for more details."
         - kind: changed
@@ -2569,4 +2593,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-09-11T08:13:15.931412825Z"
+generated: "2025-09-11T19:48:48.41259031Z"
