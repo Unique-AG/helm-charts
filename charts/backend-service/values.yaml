@@ -318,6 +318,8 @@ keda:
   # -- triggers for the ScaledObject
   # You can specify multiple triggers for the ScaledObject as outlined in https://keda.sh/docs/2.14/scalers/
   # The key names are arbitrary and used only for overlay purposes
+  # Note that when disabling/overriding a trigger with `null` to unset it, helm will issue a warning as its cautious about merging types.
+  # For that case, the warning can be ignored.
   triggers:
     {}
     # # -- rabbitmq example

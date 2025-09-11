@@ -280,29 +280,37 @@
           "description": "Triggers for the ScaledObject, defined as a map for easier overlay configuration",
           "patternProperties": {
             "^.*$": {
-              "type": "object",
-              "description": "Trigger configuration",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "description": "Trigger type (e.g., rabbitmq, cron, prometheus, etc.)"
-                },
-                "metadata": {
+              "oneOf": [
+                {
                   "type": "object",
-                  "description": "Trigger metadata specific to the type"
-                },
-                "authenticationRef": {
-                  "type": "object",
-                  "description": "Reference to TriggerAuthentication resource",
+                  "description": "Trigger configuration",
                   "properties": {
-                    "name": {
+                    "type": {
                       "type": "string",
-                      "description": "Name of the TriggerAuthentication resource"
+                      "description": "Trigger type (e.g., rabbitmq, cron, prometheus, etc.)"
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "description": "Trigger metadata specific to the type"
+                    },
+                    "authenticationRef": {
+                      "type": "object",
+                      "description": "Reference to TriggerAuthentication resource",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "Name of the TriggerAuthentication resource"
+                        }
+                      }
                     }
-                  }
+                  },
+                  "required": ["type", "metadata"]
+                },
+                {
+                  "type": "null",
+                  "description": "Set to null to disable this trigger"
                 }
-              },
-              "required": ["type", "metadata"]
+              ]
             }
           },
           "examples": [

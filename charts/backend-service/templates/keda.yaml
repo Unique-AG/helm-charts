@@ -36,7 +36,6 @@ spec:
   {{- else }}
   maxReplicaCount: 4
   {{- end }}
-
   # fallback and advanced are for now defaulting/omitted
   triggers:
   {{- if not .Values.keda.triggers }}
