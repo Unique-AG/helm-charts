@@ -375,6 +375,40 @@ entries:
   backend-service:
   - annotations:
       artifacthub.io/changes: |
+        - kind: changed
+          description: "⚠️ KEDA scalers from list to map structure and renamed to triggers for better overlay support, see upgrade guide for more details."
+        - kind: changed
+          description: "⚠️ external-secrets.io/* to external-secrets.io/v1, see upgrade guide for more details."
+        - kind: changed
+          description: "Uses chart-testing-service:1.0.4 for faster test teardown."
+        - kind: fixed
+          description: "helm-charts/issues/114 - extraCronJobs is a map not a list example."
+        - kind: fixed
+          description: "helm-charts/issues/98 - gracefully handle PDB misconfiguration, prefer minAvailable over maxUnavailable when both are set."
+        - kind: fixed
+          description: "helm-charts/issues/42 - only force CRDs when routes are enabled."
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    appVersion: latest
+    created: "2025-09-11T08:13:15.93078951Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: 54d635489e9869ec922ce131139ef75b701d80c2da21724b2340721b4f0f8484
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-6.0.0/backend-service-6.0.0.tgz
+    version: 6.0.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: added
           description: "PodMonitor is added when service is disabled"
         - kind: changed
@@ -2535,4 +2569,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-09-09T10:54:45.803834779Z"
+generated: "2025-09-11T08:13:15.931412825Z"
