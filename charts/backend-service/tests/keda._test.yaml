@@ -5,7 +5,7 @@ templates:
 release:
   name: ecj
 tests:
-  - it: When unsetting overlaid triggers, triggers get nulled
+  - it: When unsetting overlaid triggers, render fails if all triggers are null
     values:
       - ../ci/keda-values.yaml
     capabilities:
@@ -19,11 +19,40 @@ tests:
           rabbitmq-trigger: null
           cron-trigger: null
     asserts:
+      - failedTemplate:
+          errorPattern: "at least one valid \\(non-null\\) trigger"
+
+  - it: When some triggers are null, only valid triggers are rendered
+    values:
+      - ../ci/keda-values.yaml
+    capabilities:
+      apiVersions:
+        - keda.sh/v1alpha1
+    template: keda.yaml
+    set:
+      keda:
+        enabled: true
+        triggers:
+          rabbitmq-trigger: null
+          cron-trigger:
+            type: cron
+            metadata:
+              timezone: Europe/Zurich
+              start: 0 6 * * *
+              end: 0 20 * * *
+              desiredReplicas: "10"
+    asserts:
       - isKind:
           of: ScaledObject
       - equal:
           path: spec.triggers
-          value: [null, null]
+          value:
+            - type: cron
+              metadata:
+                timezone: Europe/Zurich
+                start: 0 6 * * *
+                end: 0 20 * * *
+                desiredReplicas: "10"
 
   - it: When nulling triggers, render fails
     values:
