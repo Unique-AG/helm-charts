@@ -375,6 +375,30 @@ entries:
   backend-service:
   - annotations:
       artifacthub.io/changes: |
+        - kind: added
+          description: "Resources for the migration hook can now be configured, defaulting to the global resources configuration"
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    appVersion: latest
+    created: "2025-10-02T09:41:27.992714555Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: 7035f9d2a09676200f7bef7aa006f7f3a1914906576c81ba5620c72694291d3a
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-6.1.0/backend-service-6.1.0.tgz
+    version: 6.1.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: fixed
           description: "remove nulled triggers from the rendered output (is invalid: spec.triggers[0]: Invalid value: null: spec.triggers[0] in body must be of type object: null)"
       artifacthub.io/license: Apache-2.0
@@ -2593,4 +2617,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-09-11T19:48:48.41259031Z"
+generated: "2025-10-02T09:41:27.993203852Z"
