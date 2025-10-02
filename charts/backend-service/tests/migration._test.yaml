@@ -117,3 +117,73 @@ tests:
           path: spec.template.spec.containers[?(@.name == "db-migration")].volumeMounts[?(@.mountPath == "/opt/folder")]
       - isNotNullOrEmpty:
           path: spec.template.spec.containers[?(@.name == "db-migration")].volumeMounts[?(@.readOnly == false)]
+
+  - it: When migration resources are not set, should use global resources
+    set:
+      image.tag: pinned-version
+      hooks.migration.enabled: true
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
+    template: hooks/migration.yaml
+    asserts:
+      - isKind:
+          of: Job
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "db-migration")].resources.requests.cpu
+          value: 100m
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "db-migration")].resources.limits.memory
+          value: 256Mi
+
+  - it: When migration resources are set, should use migration-specific resources
+    set:
+      image.tag: pinned-version
+      hooks.migration.enabled: true
+      hooks.migration.resources:
+        requests:
+          cpu: 500m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 1Gi
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+    template: hooks/migration.yaml
+    asserts:
+      - isKind:
+          of: Job
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "db-migration")].resources.requests.cpu
+          value: 500m
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "db-migration")].resources.requests.memory
+          value: 512Mi
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "db-migration")].resources.limits.cpu
+          value: 1000m
+
+  - it: When migration resources are set to empty object, should not render resources
+    set:
+      image.tag: pinned-version
+      hooks.migration.enabled: true
+      hooks.migration.resources: {}
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
+    template: hooks/migration.yaml
+    asserts:
+      - isKind:
+          of: Job
+      - isNull:
+          path: spec.template.spec.containers[?(@.name == "db-migration")].resources

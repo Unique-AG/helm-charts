@@ -176,6 +176,14 @@ hooks:
     enabled: false
     # name: "" defaults to db-migration
     command: ""
+    # -- Optional resource requirements for the migration job
+    # If not set, will use the global resources configuration
+    # resources:
+    #   requests:
+    #     cpu: 100m
+    #     memory: 128Mi
+    #   limits:
+    #     memory: 128Mi
     # initContainers:
     #   - command:
     #       - sh

@@ -66,8 +66,15 @@ spec:
             - /bin/sh
             - -c
             - {{ .Values.hooks.migration.command | quote }}
+          {{- if hasKey .Values.hooks.migration "resources" }}
+          {{- with .Values.hooks.migration.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- else if .Values.resources }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          {{- end }}
           volumeMounts:
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
