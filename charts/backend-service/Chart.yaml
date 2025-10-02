@@ -8,7 +8,7 @@ name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
 # changes to consider on next major: enable netpol by default, deprecate cronJob, remove external-secrets
-version: 6.0.1
+version: 6.1.0
 appVersion: latest
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
@@ -17,5 +17,5 @@ description: |
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
-    - kind: fixed
-      description: "remove nulled triggers from the rendered output (is invalid: spec.triggers[0]: Invalid value: null: spec.triggers[0] in body must be of type object: null)"
+    - kind: added
+      description: "Resources for the migration hook can now be configured, defaulting to the global resources configuration"
