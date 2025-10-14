@@ -375,6 +375,30 @@ entries:
   backend-service:
   - annotations:
       artifacthub.io/changes: |
+        - kind: fixed
+          description: "Regex matching in the default alerts matches now only the relevant pods"
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    appVersion: latest
+    created: "2025-10-14T13:00:09.027605751Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: 9987e7d3fea7d6dcd9309d99c4524dc7c95b3e4f1ae1eed2f9900c07f628509d
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-6.1.1/backend-service-6.1.1.tgz
+    version: 6.1.1
+  - annotations:
+      artifacthub.io/changes: |
         - kind: added
           description: "Resources for the migration hook can now be configured, defaulting to the global resources configuration"
       artifacthub.io/license: Apache-2.0
@@ -2617,4 +2641,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-10-02T09:41:27.993203852Z"
+generated: "2025-10-14T13:00:09.028007879Z"
