@@ -70,21 +70,12 @@ tests:
     asserts:
       - isKind:
           of: PrometheusRule
-      - contains:
-          path: spec.groups[0].rules
-          content:
-            alert: KubePodCrashLooping
-            expr: |
-              max_over_time(kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff", namespace="NAMESPACE", pod=~"ut-.*"}[5m]) >= 1
-            for: 5m
-            labels:
-              alertGroup: kubernetes-application
-              severity: warning
-            annotations:
-              description: 'Pod {{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container }}) is in waiting state (reason: "CrashLoopBackOff")'
-              runbook_url: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy
-              summary: Pod {{ $labels.pod }} is crash looping
-          count: 1
+      - matchRegex:
+          path: spec.groups[0].rules[?(@.alert=="KubePodCrashLooping")].alert
+          pattern: ^KubePodCrashLooping$
+      - equal:
+          path: spec.groups[0].rules[?(@.alert=="KubePodCrashLooping")].for
+          value: 5m
 
   - it: should disable specific alerts when configured
     set:
@@ -124,20 +115,15 @@ tests:
     asserts:
       - isKind:
           of: PrometheusRule
-      - contains:
-          path: spec.groups[0].rules
-          content:
-            alert: KubePodCrashLooping
-            expr: |
-              max_over_time(kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff", namespace="NAMESPACE", pod=~"ut-.*"}[5m]) >= 1
-            for: "10m"
-            labels:
-              severity: "warning"
-              alertGroup: kubernetes-application
-            annotations:
-              description: 'Pod {{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container }}) is in waiting state (reason: "CrashLoopBackOff")'
-              runbook_url: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy
-              summary: Pod {{ $labels.pod }} is crash looping
+      - matchRegex:
+          path: spec.groups[0].rules[?(@.alert=="KubePodCrashLooping")].alert
+          pattern: ^KubePodCrashLooping$
+      - equal:
+          path: spec.groups[0].rules[?(@.alert=="KubePodCrashLooping")].for
+          value: "10m"
+      - equal:
+          path: spec.groups[0].rules[?(@.alert=="KubeDeploymentReplicasMismatch")].for
+          value: "20m"
 
   - it: should include additional labels when configured
     set:

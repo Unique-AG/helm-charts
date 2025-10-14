@@ -21,8 +21,8 @@ spec:
 {{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubePodCrashLooping | default false) }}
       - alert: KubePodCrashLooping
         expr: |
-          max_over_time(kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff", namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*"}[5m]) >= 1
-        for: {{ dig "KubePodCrashLooping" "for" "5m" ((.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) | default dict) }}
+          max_over_time(kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff", namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-[0-9a-z]+-[0-9a-z]+"}[5m]) >= 1
+        for: {{ dig "KubePodCrashLooping" "for" "5m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
         labels:
           severity: warning
           alertGroup: kubernetes-application
@@ -39,13 +39,13 @@ spec:
         expr: |
           sum by (namespace, pod) (
             max by (namespace, pod) (
-              kube_pod_status_phase{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", phase=~"Pending|Unknown|Failed"}
+              kube_pod_status_phase{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-[0-9a-z]+-[0-9a-z]+", phase=~"Pending|Unknown|Failed"}
             ) * on (namespace, pod) group_left(owner_kind) topk by (namespace, pod) (
-              1, max by (namespace, pod, owner_kind) (kube_pod_owner{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", owner_kind!="Job"})
+              1, max by (namespace, pod, owner_kind) (kube_pod_owner{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-[0-9a-z]+-[0-9a-z]+", owner_kind!="Job"})
             ) * on (namespace, pod) group_left() (
-              (kube_pod_status_phase{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", phase!="Failed"} == 1)
+              (kube_pod_status_phase{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-[0-9a-z]+-[0-9a-z]+", phase!="Failed"} == 1)
               or
-              (kube_pod_status_phase{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*", phase="Failed"} == 1 and on (namespace, pod) (time() - kube_pod_created{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*"} < 43200))
+              (kube_pod_status_phase{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-[0-9a-z]+-[0-9a-z]+", phase="Failed"} == 1 and on (namespace, pod) (time() - kube_pod_created{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-[0-9a-z]+-[0-9a-z]+"} < 43200))
             )
           ) > 0
         for: {{ dig "KubePodNotReady" "for" "15m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
@@ -123,11 +123,11 @@ spec:
       - alert: KubeStatefulSetReplicasMismatch
         expr: |
           (
-            kube_statefulset_status_replicas_ready{namespace="{{ .Release.Namespace }}", statefulset=~"{{ $fullName }}-.*"}
+            kube_statefulset_status_replicas_ready{namespace="{{ .Release.Namespace }}", statefulset="{{ $fullName }}"}
               !=
-            kube_statefulset_replicas{namespace="{{ .Release.Namespace }}", statefulset=~"{{ $fullName }}-.*"}
+            kube_statefulset_replicas{namespace="{{ .Release.Namespace }}", statefulset="{{ $fullName }}"}
           ) and (
-            changes(kube_statefulset_status_replicas_updated{namespace="{{ .Release.Namespace }}", statefulset=~"{{ $fullName }}-.*"}[10m])
+            changes(kube_statefulset_status_replicas_updated{namespace="{{ .Release.Namespace }}", statefulset="{{ $fullName }}"}[10m])
               ==
             0
           )
@@ -146,9 +146,9 @@ spec:
 {{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeStatefulSetGenerationMismatch | default false) }}
       - alert: KubeStatefulSetGenerationMismatch
         expr: |
-          kube_statefulset_status_observed_generation{namespace="{{ .Release.Namespace }}", statefulset=~"{{ $fullName }}-.*"}
+          kube_statefulset_status_observed_generation{namespace="{{ .Release.Namespace }}", statefulset="{{ $fullName }}"}
             !=
-          kube_statefulset_metadata_generation{namespace="{{ .Release.Namespace }}", statefulset=~"{{ $fullName }}-.*"}
+          kube_statefulset_metadata_generation{namespace="{{ .Release.Namespace }}", statefulset="{{ $fullName }}"}
         for: {{ dig "KubeStatefulSetGenerationMismatch" "for" "15m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
         labels:
           severity: warning
@@ -166,18 +166,18 @@ spec:
         expr: |
           (
             max by (namespace, statefulset) (
-              kube_statefulset_status_current_revision{namespace="{{ .Release.Namespace }}", statefulset=~"{{ $fullName }}-.*"}
+              kube_statefulset_status_current_revision{namespace="{{ .Release.Namespace }}", statefulset="{{ $fullName }}"}
                 unless
-              kube_statefulset_status_update_revision{namespace="{{ .Release.Namespace }}", statefulset=~"{{ $fullName }}-.*"}
+              kube_statefulset_status_update_revision{namespace="{{ .Release.Namespace }}", statefulset="{{ $fullName }}"}
             )
               * on (namespace, statefulset)
             (
-              kube_statefulset_replicas{namespace="{{ .Release.Namespace }}", statefulset=~"{{ $fullName }}-.*"}
+              kube_statefulset_replicas{namespace="{{ .Release.Namespace }}", statefulset="{{ $fullName }}"}
                 !=
-              kube_statefulset_status_replicas_updated{namespace="{{ .Release.Namespace }}", statefulset=~"{{ $fullName }}-.*"}
+              kube_statefulset_status_replicas_updated{namespace="{{ .Release.Namespace }}", statefulset="{{ $fullName }}"}
             )
           )  and on (namespace, statefulset) (
-            changes(kube_statefulset_status_replicas_updated{namespace="{{ .Release.Namespace }}", statefulset=~"{{ $fullName }}-.*"}[5m])
+            changes(kube_statefulset_status_replicas_updated{namespace="{{ .Release.Namespace }}", statefulset="{{ $fullName }}"}[5m])
               ==
             0
           )
@@ -198,24 +198,24 @@ spec:
         expr: |
           (
             (
-              kube_daemonset_status_current_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset=~"{{ $fullName }}-.*"}
+              kube_daemonset_status_current_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset="{{ $fullName }}"}
                 !=
-              kube_daemonset_status_desired_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset=~"{{ $fullName }}-.*"}
+              kube_daemonset_status_desired_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset="{{ $fullName }}"}
             ) or (
-              kube_daemonset_status_number_misscheduled{namespace="{{ .Release.Namespace }}", daemonset=~"{{ $fullName }}-.*"}
+              kube_daemonset_status_number_misscheduled{namespace="{{ .Release.Namespace }}", daemonset="{{ $fullName }}"}
                 !=
               0
             ) or (
-              kube_daemonset_status_updated_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset=~"{{ $fullName }}-.*"}
+              kube_daemonset_status_updated_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset="{{ $fullName }}"}
                 !=
-              kube_daemonset_status_desired_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset=~"{{ $fullName }}-.*"}
+              kube_daemonset_status_desired_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset="{{ $fullName }}"}
             ) or (
-              kube_daemonset_status_number_available{namespace="{{ .Release.Namespace }}", daemonset=~"{{ $fullName }}-.*"}
+              kube_daemonset_status_number_available{namespace="{{ .Release.Namespace }}", daemonset="{{ $fullName }}"}
                 !=
-              kube_daemonset_status_desired_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset=~"{{ $fullName }}-.*"}
+              kube_daemonset_status_desired_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset="{{ $fullName }}"}
             )
           ) and (
-            changes(kube_daemonset_status_updated_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset=~"{{ $fullName }}-.*"}[5m])
+            changes(kube_daemonset_status_updated_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset="{{ $fullName }}"}[5m])
               ==
             0
           )
@@ -234,7 +234,7 @@ spec:
 {{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeContainerWaiting | default false) }}
       - alert: KubeContainerWaiting
         expr: |
-          kube_pod_container_status_waiting_reason{reason!="CrashLoopBackOff", namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*"} > 0
+          kube_pod_container_status_waiting_reason{reason!="CrashLoopBackOff", namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-[0-9a-z]+-[0-9a-z]+"} > 0
         for: {{ dig "KubeContainerWaiting" "for" "1h" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
         labels:
           severity: warning
@@ -250,9 +250,9 @@ spec:
 {{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeDaemonSetNotScheduled | default false) }}
       - alert: KubeDaemonSetNotScheduled
         expr: |
-          kube_daemonset_status_desired_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset=~"{{ $fullName }}-.*"}
+          kube_daemonset_status_desired_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset="{{ $fullName }}"}
             -
-          kube_daemonset_status_current_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset=~"{{ $fullName }}-.*"} > 0
+          kube_daemonset_status_current_number_scheduled{namespace="{{ .Release.Namespace }}", daemonset="{{ $fullName }}"} > 0
         for: {{ dig "KubeDaemonSetNotScheduled" "for" "10m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
         labels:
           severity: warning
@@ -268,7 +268,7 @@ spec:
 {{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeDaemonSetMisScheduled | default false) }}
       - alert: KubeDaemonSetMisScheduled
         expr: |
-          kube_daemonset_status_number_misscheduled{namespace="{{ .Release.Namespace }}", daemonset=~"{{ $fullName }}-.*"} > 0
+          kube_daemonset_status_number_misscheduled{namespace="{{ .Release.Namespace }}", daemonset="{{ $fullName }}"} > 0
         for: {{ dig "KubeDaemonSetMisScheduled" "for" "15m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
         labels:
           severity: warning
@@ -284,7 +284,7 @@ spec:
 {{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubePodFrequentRestarts | default false) }}
       - alert: KubePodFrequentRestarts
         expr: |
-          increase(kube_pod_container_status_restarts_total{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-.*"}[1h]) > 5
+          increase(kube_pod_container_status_restarts_total{namespace="{{ .Release.Namespace }}", pod=~"{{ $fullName }}-[0-9a-z]+-[0-9a-z]+"}[1h]) > 5
         for: {{ dig "KubePodFrequentRestarts" "for" $kubernetesAppFor (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
         labels:
           severity: critical
@@ -300,9 +300,9 @@ spec:
 {{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeJobNotCompleted | default false) }}
       - alert: KubeJobNotCompleted
         expr: |
-          time() - max by (namespace, job_name) (kube_job_status_start_time{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-.*{{- if .Values.cronJob.name }}|{{ .Values.cronJob.name }}-.*{{- end }}|{{ .Release.Name }}-.*{{- range $key, $value := .Values.extraCronJobs }}|{{ $key }}-.*{{- end }}"}
+          time() - max by (namespace, job_name) (kube_job_status_start_time{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-([0-9]+|db-migration){{- if .Values.cronJob.name }}|{{ .Values.cronJob.name }}-[0-9]+{{- end }}|{{ .Release.Name }}-[0-9]+{{- range $key, $value := .Values.extraCronJobs }}|{{ $key }}-[0-9]+{{- end }}"}
             and
-          kube_job_status_active{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-.*{{- if .Values.cronJob.name }}|{{ .Values.cronJob.name }}-.*{{- end }}|{{ .Release.Name }}-.*{{- range $key, $value := .Values.extraCronJobs }}|{{ $key }}-.*{{- end }}"} > 0) > 43200
+          kube_job_status_active{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-([0-9]+|db-migration){{- if .Values.cronJob.name }}|{{ .Values.cronJob.name }}-[0-9]+{{- end }}|{{ .Release.Name }}-[0-9]+{{- range $key, $value := .Values.extraCronJobs }}|{{ $key }}-[0-9]+{{- end }}"} > 0) > 43200
         for: {{ dig "KubeJobNotCompleted" "for" "0m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
         labels:
           severity: warning
@@ -319,9 +319,9 @@ spec:
       - alert: KubeJobFailed
         expr: |
           count by() (
-            kube_job_failed{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-.*{{- if .Values.cronJob.name }}|{{ .Values.cronJob.name }}-.*{{- end }}|{{ .Release.Name }}-.*{{- range $key, $value := .Values.extraCronJobs }}|{{ $key }}-.*{{- end }}"}
+            kube_job_failed{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-([0-9]+|db-migration){{- if .Values.cronJob.name }}|{{ .Values.cronJob.name }}-[0-9]+{{- end }}|{{ .Release.Name }}-[0-9]+{{- range $key, $value := .Values.extraCronJobs }}|{{ $key }}-[0-9]+{{- end }}"}
             and on (job_name, namespace)
-            kube_job_status_start_time{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-.*{{- if .Values.cronJob.name }}|{{ .Values.cronJob.name }}-.*{{- end }}|{{ .Release.Name }}-.*{{- range $key, $value := .Values.extraCronJobs }}|{{ $key }}-.*{{- end }}"} > (time() - 3600)
+            kube_job_status_start_time{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-([0-9]+|db-migration){{- if .Values.cronJob.name }}|{{ .Values.cronJob.name }}-[0-9]+{{- end }}|{{ .Release.Name }}-[0-9]+{{- range $key, $value := .Values.extraCronJobs }}|{{ $key }}-[0-9]+{{- end }}"} > (time() - 3600)
           ) > 0
         for: {{ dig "KubeJobFailed" "for" "0m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
         labels:
