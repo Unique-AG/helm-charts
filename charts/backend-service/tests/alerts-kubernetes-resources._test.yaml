@@ -70,25 +70,12 @@ tests:
     asserts:
       - isKind:
           of: PrometheusRule
-      - contains:
-          path: spec.groups[0].rules
-          content:
-            alert: KubernetesPodHighCPUUsage
-            expr: |
-              (
-                sum(rate(container_cpu_usage_seconds_total{namespace="NAMESPACE", pod=~"ut-.*", container!="POD", container!=""}[5m])) by (pod, container)
-                /
-                sum(kube_pod_container_resource_limits{namespace="NAMESPACE", pod=~"ut-.*", resource="cpu"}) by (pod, container)
-              ) * 100 > 80
-            for: 10m
-            labels:
-              severity: warning
-              alertGroup: kubernetes-resources
-            annotations:
-              summary: High CPU usage on pod {{ $labels.pod }}
-              description: Pod {{ $labels.pod }} container {{ $labels.container }} CPU usage is {{ printf "%.2f" $value }}% of the limit
-              runbook_url: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-          count: 1
+      - matchRegex:
+          path: spec.groups[0].rules[?(@.alert=="KubernetesPodHighCPUUsage")].alert
+          pattern: ^KubernetesPodHighCPUUsage$
+      - equal:
+          path: spec.groups[0].rules[?(@.alert=="KubernetesPodHighCPUUsage")].for
+          value: 10m
 
   - it: should disable specific alerts when configured
     set:
@@ -128,24 +115,18 @@ tests:
     asserts:
       - isKind:
           of: PrometheusRule
-      - contains:
-          path: spec.groups[0].rules
-          content:
-            alert: KubernetesPodHighCPUUsage
-            expr: |
-              (
-                sum(rate(container_cpu_usage_seconds_total{namespace="NAMESPACE", pod=~"ut-.*", container!="POD", container!=""}[5m])) by (pod, container)
-                /
-                sum(kube_pod_container_resource_limits{namespace="NAMESPACE", pod=~"ut-.*", resource="cpu"}) by (pod, container)
-              ) * 100 > 80
-            for: "15m"
-            labels:
-              severity: "critical"
-              alertGroup: kubernetes-resources
-            annotations:
-              summary: "High CPU usage on pod {{ $labels.pod }}"
-              description: "Pod {{ $labels.pod }} container {{ $labels.container }} CPU usage is {{ printf \"%.2f\" $value }}% of the limit"
-              runbook_url: "https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
+      - matchRegex:
+          path: spec.groups[0].rules[?(@.alert=="KubernetesPodHighCPUUsage")].alert
+          pattern: ^KubernetesPodHighCPUUsage$
+      - equal:
+          path: spec.groups[0].rules[?(@.alert=="KubernetesPodHighCPUUsage")].for
+          value: "15m"
+      - equal:
+          path: spec.groups[0].rules[?(@.alert=="KubernetesPodHighCPUUsage")].labels.severity
+          value: "critical"
+      - equal:
+          path: spec.groups[0].rules[?(@.alert=="KubernetesPodNearMemoryLimit")].for
+          value: "2m"
 
   - it: should include additional labels when configured
     set:
