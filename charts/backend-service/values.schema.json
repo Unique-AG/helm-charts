@@ -896,13 +896,6 @@
           "minimum": 1,
           "maximum": 65535,
           "examples": [80]
-        },
-        "metrics": {
-          "type": "integer",
-          "description": "Metrics port",
-          "minimum": 1,
-          "maximum": 65535,
-          "examples": [8081]
         }
       }
     },
