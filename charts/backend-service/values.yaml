@@ -377,6 +377,10 @@ podSecurityContext:
     ## -- type, the type of seccomp profile to use, defaults to 'RuntimeDefault'
     type: RuntimeDefault
 
+# -- priorityClassName sets the priority class for pod scheduling priority
+# This can be used to ensure critical workloads are scheduled before less important ones
+# priorityClassName: high-priority
+
 # -- the ports section allows specify ports used for different purposes
 ports:
   # -- application port, this is the port that the deployed Unique application listens on

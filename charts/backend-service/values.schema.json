@@ -866,6 +866,11 @@
         }
       ]
     },
+    "priorityClassName": {
+      "type": "string",
+      "description": "Priority class name for pod scheduling priority",
+      "examples": ["high-priority", "system-cluster-critical"]
+    },
     "ports": {
       "type": "object",
       "description": "Port configuration",

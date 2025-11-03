@@ -183,3 +183,15 @@ tests:
     asserts:
       - isKind:
           of: Deployment
+
+  - it: When given priorityClassName, renders properly
+    set:
+      image.tag: pinned-version
+      priorityClassName: high-priority
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.spec.priorityClassName
+          value: high-priority
