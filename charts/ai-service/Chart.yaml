@@ -13,9 +13,5 @@ description: |
   Version 2.1.2 is the last supported iteration of this chart. Subsequent changes will only be supplied to https://artifacthub.io/packages/helm/unique/backend-service. Refer to End of Life Notice in README.md.
 annotations:
   artifacthub.io/changes: |
-    - kind: fixed
-      description: "Integer CPU requests/limits are now allowed (again)."
-    - kind: changed
-      description: "⚠️ End Of Life Notice."
     - kind: added
       description: "Added podLabels to the deployment template."
