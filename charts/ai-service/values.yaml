@@ -30,6 +30,9 @@ serviceAccount:
 
 podAnnotations: {}
 
+# -- Define additional pod labels for all the pods
+podLabels: {}
+
 # -- PodSecurityContext for the pod(s)
 podSecurityContext:
   # -- seccompProfile, controls the seccomp profile for the container, defaults to 'RuntimeDefault'
