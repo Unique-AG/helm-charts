@@ -216,7 +216,7 @@ Common uses include:
 | nodeSelector | object | `{}` |  |
 | pdb.maxUnavailable | string | `"30%"` |  |
 | podAnnotations | object | `{}` |  |
-| podLabels | object | `{}` |  |
+| podLabels | object | `{}` | Define additional pod labels for all the pods |
 | podSecurityContext | object | `{"seccompProfile":{"type":"RuntimeDefault"}}` | PodSecurityContext for the pod(s) |
 | podSecurityContext.seccompProfile | object | `{"type":"RuntimeDefault"}` | seccompProfile, controls the seccomp profile for the container, defaults to 'RuntimeDefault' |
 | probes.enabled | bool | `false` |  |
