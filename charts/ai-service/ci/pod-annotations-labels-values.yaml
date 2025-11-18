@@ -1,0 +1,20 @@
+# Test values for pod annotations and labels
+image:
+  tag: "test-version"
+
+podLabels:
+  app: test-application
+  environment: ci-testing
+  version: v1.0.0
+  team: platform
+  custom.domain/label: custom-value
+  kubernetes.io/managed-by: helm
+
+podAnnotations:
+  example.com/annotation: test-annotation-value
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8081"
+  prometheus.io/path: "/metrics"
+  fluentd.org/exclude: "false"
+  custom.domain/annotation: custom-annotation-value
+  deployment.kubernetes.io/revision: "1"

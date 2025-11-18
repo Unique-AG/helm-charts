@@ -8,12 +8,10 @@ maintainers:
 name: ai-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/ai-service
-version: 2.1.1
+version: 2.2.0
 description: |
-  Version 2.1.1 is the last supported iteration of this chart. Subsequent changes will only be supplied to https://artifacthub.io/packages/helm/unique/backend-service. Refer to End of Life Notice in README.md.
+  Version 2.2.0 is the last supported iteration of this chart. Subsequent changes will only be supplied to https://artifacthub.io/packages/helm/unique/backend-service. Refer to End of Life Notice in README.md.
 annotations:
   artifacthub.io/changes: |
-    - kind: fixed
-      description: "Integer CPU requests/limits are now allowed (again)."
-    - kind: changed
-      description: "⚠️ End Of Life Notice."
+    - kind: added
+      description: "podLabels can be now specified."
