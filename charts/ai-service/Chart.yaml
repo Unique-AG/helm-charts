@@ -14,4 +14,4 @@ description: |
 annotations:
   artifacthub.io/changes: |
     - kind: added
-      description: "Added podLabels to the deployment template."
+      description: "podLabels can be now specified."
