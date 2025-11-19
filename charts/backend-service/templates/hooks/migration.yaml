@@ -26,9 +26,6 @@ spec:
           {{- end }}
         {{- end }}
         {{- include "backendService.labelsHooksDbMigrations" . | nindent 8 }}
-        {{- if .Values.secretProvider }}
-        aadpodidbinding: {{ default "keyvault" (.Values.secretProvider).aadPodIdBinding }}
-        {{- end }}
         {{- if .Values.serviceAccount.workloadIdentity.enabled }}
         azure.workload.identity/use: 'true'
         {{- end }}
@@ -129,19 +126,6 @@ spec:
                 secretKeyRef:
                   name: {{ $fullName }}-{{ $k }}-migration
                   key: {{ $value }}
-            {{- end }}
-            {{- end }}
-            {{- end }}
-            {{- if .Values.externalSecrets }}
-            {{- range $k, $v := .Values.externalSecrets }}
-            {{- range $key := $v.secrets }}
-            {{- range $d := $key.data }}
-            - name: {{ $key.name }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $v.keyvaultName }}
-                  key: {{ $d.key }}
-            {{- end }}
             {{- end }}
             {{- end }}
             {{- end }}
