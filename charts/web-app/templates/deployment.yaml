@@ -41,9 +41,6 @@ spec:
         {{- end }}
       {{- end }}
         {{- include "common.selectorLabels" . | nindent 8 }}
-        {{- if .Values.secretProvider }}
-        aadpodidbinding: {{ default "keyvault" (.Values.secretProvider).aadPodIdBinding }}
-        {{- end }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:

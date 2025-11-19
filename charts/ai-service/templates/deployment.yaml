@@ -35,9 +35,6 @@ spec:
         {{- end }}
       {{- end }}
         {{- include "common.selectorLabels" . | nindent 8 }}
-        {{- if and (.Values.secretProvider) (not .Values.secretProvider.useVMManagedIdentity) }}
-        aadpodidbinding: {{ default "keyvault" (.Values.secretProvider).aadPodIdBinding }}
-        {{- end }}
         {{- if .Values.serviceAccount.workloadIdentity.enabled }}
         azure.workload.identity/use: 'true'
         {{- end }}

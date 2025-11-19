@@ -10,6 +10,7 @@ tests:
     set:
       image.tag: pinned-version
       secretProvider.tenantId: 99330c76-81d2-460e-861e-35af8e2a4266
+      secretProvider.userAssignedIdentityID: test-identity-id
       secretProvider.vaults.qa-app-common.AMQP_URL: RABBITMQ-ORANGE-WOLF-URL
     template: deployment.yaml
     asserts:
@@ -19,14 +20,12 @@ tests:
           path: spec.template.spec.volumes[?(@.name == "ut-qa-app-common")]
       - isNotNullOrEmpty:
           path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.name == "ut-qa-app-common")]
-      - isNotNullOrEmpty:
-          path: spec.template.metadata.labels.aadpodidbinding
 
-  - it: When given a secretProvider and useVMManagedIdentity, should not render the keyvault label
+  - it: When given a secretProvider with VM Managed Identity, should render correctly
     set:
       image.tag: pinned-version
       secretProvider.tenantId: 99330c76-81d2-460e-861e-35af8e2a4266
-      secretProvider.useVMManagedIdentity: "true"
+      secretProvider.userAssignedIdentityID: test-identity-id
       secretProvider.vaults.qa-app-common.AMQP_URL: RABBITMQ-ORANGE-WOLF-URL
     template: deployment.yaml
     asserts:

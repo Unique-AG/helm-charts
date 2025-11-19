@@ -1,11 +1,11 @@
 # ai-service
 
-Version 2.2.0 is the last supported iteration of this chart. Subsequent changes will only be supplied to https://artifacthub.io/packages/helm/unique/backend-service. Refer to End of Life Notice in README.md.
+Version 3.0.0 is the last supported iteration of this chart. Subsequent changes will only be supplied to https://artifacthub.io/packages/helm/unique/backend-service. Refer to End of Life Notice in README.md.
 
 > [!IMPORTANT]
 > Version `2.2.0` is the last supported iteration of this chart. Subsequent changes will only be supplied to [`unique/backend-service`](https://artifacthub.io/packages/helm/unique/backend-service). Refer to [**End of Life Notice**](#End-of-Life-Notice).
 
-![Version: 2.2.0](https://img.shields.io/badge/Version-2.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 3.0.0](https://img.shields.io/badge/Version-3.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -13,10 +13,10 @@ Version 2.2.0 is the last supported iteration of this chart. Subsequent changes 
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-ai-service unique/ai-service --version 2.2.0
+helm install my-ai-service unique/ai-service --version 3.0.0
 
 # or
-helm install my-ai-service oci://ghcr.io/unique-ag/helm-charts/ai-service --version 2.2.0
+helm install my-ai-service oci://ghcr.io/unique-ag/helm-charts/ai-service --version 3.0.0
 ```
 
 ### Docker Images
