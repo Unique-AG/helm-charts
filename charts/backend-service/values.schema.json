@@ -341,10 +341,6 @@
         }
       }
     },
-    "externalSecrets": {
-      "type": "array",
-      "description": "External secrets configuration"
-    },
     "extraEnvCM": {
       "type": "array",
       "description": "List of existing ConfigMaps to be loaded"
@@ -1354,7 +1350,30 @@
     },
     "secretProvider": {
       "type": "object",
-      "description": "Secret provider configuration for Azure Key Vault"
+      "description": "Secret provider configuration for Azure Key Vault using VM Managed Identity. When enabled, tenantId, userAssignedIdentityID, and vaults are required.",
+      "properties": {
+        "tenantId": {
+          "type": "string",
+          "description": "Azure tenant ID for the Key Vault (required when secretProvider is used)",
+          "examples": ["00000000-0000-0000-0000-000000000000"]
+        },
+        "userAssignedIdentityID": {
+          "type": "string",
+          "description": "Client ID of the user-assigned managed identity (required when secretProvider is used)",
+          "examples": ["00000000-0000-0000-0000-000000000000"]
+        },
+        "vaults": {
+          "type": "object",
+          "description": "Map of Key Vault names to environment variable mappings (required when secretProvider is used)",
+          "additionalProperties": {
+            "type": "object",
+            "description": "Map of environment variable names to Key Vault secret names",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      }
     },
     "securityContext": {
       "type": "object",

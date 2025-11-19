@@ -7,8 +7,8 @@ maintainers:
 name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
-# changes to consider on next major: enable netpol by default, deprecate cronJob, remove external-secrets
-version: 6.2.1
+# changes to consider on next major: enable netpol by default, deprecate cronJob
+version: 7.0.0
 appVersion: latest
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
@@ -17,5 +17,7 @@ description: |
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
-    - kind: fixed
-      description: "SecretProviderClass for migration hook now uses a secret name separate from the deployment"
+    - kind: removed
+      description: "BREAKING: Pod identity support. Users must migrate to VM Managed Identity. The aadPodIdBinding annotation and usePodIdentity parameter have been removed. See upgrade guide in readme."
+    - kind: removed
+      description: "BREAKING: External-secrets support. The externalSecrets parameter and external-secrets.yaml template have been removed. See upgrade guide in readme."

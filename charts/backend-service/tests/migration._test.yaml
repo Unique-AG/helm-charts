@@ -9,6 +9,7 @@ tests:
     set:
       image.tag: pinned-version
       secretProvider.tenantId: 99330c76-81xxxx
+      secretProvider.userAssignedIdentityID: test-identity-id
       secretProvider.vaults.qa-app-common.AMQP_URL: RABBITMQ-ORANGE-WOLF-URL
       hooks.migration.enabled: true
     template: hooks/migration.yaml

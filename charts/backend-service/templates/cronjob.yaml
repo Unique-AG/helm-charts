@@ -29,9 +29,6 @@ spec:
               {{- end }}
             {{- end }}
             {{- include "backendService.labelsCronJob" . | nindent 12 }}
-            {{- if .Values.secretProvider }}
-            aadpodidbinding: {{ default "keyvault" (.Values.secretProvider).aadPodIdBinding }}
-            {{- end }}
           annotations:
             {{- if .Values.podAnnotations }}
               {{- with .Values.podAnnotations }}
