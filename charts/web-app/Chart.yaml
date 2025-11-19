@@ -5,7 +5,7 @@ maintainers:
   - name: unique-ag
     url: https://unique.ch/
 name: web-app
-version: 4.4.0
+version: 5.0.0
 # change on next major: enable netpol by default
 description: |
   The 'web-app' chart is a "convenience" chart from Unique AG that can generically be used to deploy web-content serving workloads to Kubernetes.
@@ -15,5 +15,7 @@ sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/web-app
 annotations:
   artifacthub.io/changes: |
-    - kind: added
-      description: "Possibility to define volumes and volumeMounts"
+    - kind: removed
+      description: "BREAKING: Pod identity support. The aadPodIdBinding annotation and usePodIdentity parameter have been removed."
+    - kind: changed
+      description: "BREAKING: VM Managed Identity now requires userAssignedIdentityID parameter."

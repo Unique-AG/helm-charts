@@ -185,8 +185,7 @@ lifecycle:
       path: can_shutdown
       port: 8081
 
-# !!! usePodIdentity will be deprecated in the future please use useVMManagedIdentity with the clientID
-# .Values.secretProvider lets you mount secrets from Azure Key Vault into the pod
+# .Values.secretProvider lets you mount secrets from Azure Key Vault into the pod using VM Managed Identity
 # Note that 'vault-1' is the literal vault name from azure
 # The line format is 'make <ENV>: from <KEY_VAULT_SECRET_NAME>'
 # The conversion from - to _ is done automatically
@@ -194,9 +193,7 @@ secretProvider: {}
 # Example
 # secretProvider:
 #   tenantId: 99330c76-81d2-460e-861e-35af8e2a4266
-#   aadPodIdBinding: binding-21 # optional, defaults to 'keyvault'
-#   useVMManagedIdentity: "true" # optional, if not present usePodIdentity is set to "true" useVMManagedIdentity to "false"
-#   userAssignedIdentityID: "xx-pls-provide-client-id-xx"   # Should not be empty if useVMManagedIdentity is present and has the value "true"
+#   userAssignedIdentityID: "xx-pls-provide-client-id-xx"   # Required - the client ID of the managed identity
 #   vaults:
 #     vault-name-1:
 #       MY_ENV_VARIABLE_1: keyvault-secret-name-a
