@@ -8,10 +8,10 @@ maintainers:
 name: ai-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/ai-service
-version: 3.0.0
+version: 3.0.1
 description: |
-  Version 3.0.0 is the last supported iteration of this chart. Subsequent changes will only be supplied to https://artifacthub.io/packages/helm/unique/backend-service. Refer to End of Life Notice in README.md.
+  Version 3.0.1 is the last supported iteration of this chart. Subsequent changes will only be supplied to https://artifacthub.io/packages/helm/unique/backend-service. Refer to End of Life Notice in README.md.
 annotations:
   artifacthub.io/changes: |
-    - kind: removed
-      description: "BREAKING: Pod identity support. The aadPodIdBinding annotation and usePodIdentity parameter have been removed."
+    - kind: fixed
+      description: "Invalid secretproviderclass which tried to use pod identity and managed identity at the same time."
