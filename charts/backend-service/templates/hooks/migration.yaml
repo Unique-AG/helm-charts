@@ -1,46 +1,49 @@
-{{- $fullName := include "backendService.fullname" . -}}
-{{- if .Values.hooks.migration.enabled -}}
+{{- if .Values.hooks }}
+{{- range $hookName, $hookConfig := .Values.hooks }}
+{{- if and $hookConfig $hookConfig.enabled }}
+{{- $fullName := include "backendService.fullname" $ }}
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ $fullName }}-db-migration
+  name: {{ $fullName }}-{{ $hookName }}
   labels:
-    {{- include "backendService.labelsHooksDbMigrations" . | nindent 4 }}
+    {{- include "backendService.labelsHooks" $ | nindent 4 }}
+  {{- with $hookConfig.annotations }}
   annotations:
-    helm.sh/hook: pre-install,pre-upgrade
-    helm.sh/hook-weight: "10"
-    helm.sh/hook-delete-policy: before-hook-creation
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
-  backoffLimit: 2
+  backoffLimit: {{ $hookConfig.backoffLimit }}
   template:
     metadata:
-      name: "{{ .Release.Name }}"
-      {{- with .Values.podAnnotations }}
+      name: "{{ $.Release.Name }}"
+      {{- with $.Values.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- if .Values.podLabels }}
-          {{- with .Values.podLabels }}
+        {{- if $.Values.podLabels }}
+          {{- with $.Values.podLabels }}
             {{- toYaml . | nindent 8 }}
           {{- end }}
         {{- end }}
-        {{- include "backendService.labelsHooksDbMigrations" . | nindent 8 }}
-        {{- if .Values.serviceAccount.workloadIdentity.enabled }}
+        {{- include "backendService.labelsHooks" $ | nindent 8 }}
+        {{- if $.Values.serviceAccount.workloadIdentity.enabled }}
         azure.workload.identity/use: 'true'
         {{- end }}
     spec:
-      {{- with .Values.imagePullSecrets }}
+      {{- with $.Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.serviceAccount.enabled }}
-      serviceAccountName: {{ include "backendService.serviceAccountName" . }}-migration
+      {{- if $.Values.serviceAccount.enabled }}
+      serviceAccountName: {{ include "backendService.serviceAccountName" $ }}-hooks
       {{- end }}
       restartPolicy: Never
-      {{- if .Values.hooks.migration.initContainers }}
+      {{- if $hookConfig.initContainers }}
       initContainers:
-      {{- range .Values.hooks.migration.initContainers }}
+      {{- range $hookConfig.initContainers }}
         - name: {{ .name | default (printf "init-%s" $fullName) }}
           image: "{{ .image | default "busybox:1.28" }}"
           restartPolicy: "{{ .restartPolicy | default "Always" }}"
@@ -56,35 +59,35 @@ spec:
       {{- end }}
       {{- end }}
       containers:
-        - name: {{ default "db-migration" .Values.hooks.migration.name | quote }}
-          image: "{{ .Values.image.repository }}:{{ include "backendService.imageTag" . }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+        - name: {{ default (ternary "db-migration" $hookName (eq $hookName "migration")) $hookConfig.name | quote }}
+          image: "{{ $.Values.image.repository }}:{{ include "backendService.imageTag" $ }}"
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
           command:
             - /bin/sh
             - -c
-            - {{ .Values.hooks.migration.command | quote }}
-          {{- if hasKey .Values.hooks.migration "resources" }}
-          {{- with .Values.hooks.migration.resources }}
+            - {{ $hookConfig.command | quote }}
+          {{- if hasKey $hookConfig "resources" }}
+          {{- with $hookConfig.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- else if .Values.resources }}
+          {{- else if $.Values.resources }}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- toYaml $.Values.resources | nindent 12 }}
           {{- end }}
           volumeMounts:
-          {{- with .Values.volumeMounts }}
+          {{- with $.Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if .Values.secretProvider }}
-          {{- range $k, $v := .Values.secretProvider.vaults }}
+          {{- if $.Values.secretProvider }}
+          {{- range $k, $v := $.Values.secretProvider.vaults }}
             - name: {{ $fullName }}-{{ $k }}
               mountPath: "/mnt/{{ $fullName }}-{{ $k }}"
               readOnly: true
            {{- end }}
            {{- end }}
-          {{- if .Values.hooks.migration.initContainers }}
-          {{- range .Values.hooks.migration.initContainers }}
+          {{- if $hookConfig.initContainers }}
+          {{- range $hookConfig.initContainers }}
           {{- if .volumeMounts }}
           {{- range .volumeMounts }}
             - name: {{ .name }}
@@ -94,59 +97,59 @@ spec:
           {{- end }}
           {{- end }}
           {{- end }}
-          securityContext: {{- toYaml .Values.securityContext | nindent 12 }}
+          securityContext: {{- toYaml $.Values.securityContext | nindent 12 }}
           envFrom:
             - configMapRef:
-                name: {{ $fullName }}-migration-env
-            {{- if .Values.envSecrets }}
+                name: {{ $fullName }}-hooks-env
+            {{- if $.Values.envSecrets }}
             - secretRef:
-                name: {{ $fullName }}-migration-secrets
+                name: {{ $fullName }}-hooks-secrets
             {{- end }}
-            {{- if .Values.extraEnvCM }}
-            {{- range $v := .Values.extraEnvCM }}
+            {{- if $.Values.extraEnvCM }}
+            {{- range $v := $.Values.extraEnvCM }}
             - configMapRef:
                 name: {{ $v }}
             {{- end }}
             {{- end }}
-            {{- if .Values.extraEnvSecrets }}
-            {{- range $v := .Values.extraEnvSecrets }}
+            {{- if $.Values.extraEnvSecrets }}
+            {{- range $v := $.Values.extraEnvSecrets }}
             - secretRef:
                 name: {{ $v }}
             {{- end }}
             {{- end }}
           env:
-            {{- with .Values.envVars }}
+            {{- with $.Values.envVars }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
-            {{- if .Values.secretProvider }}
-            {{- range $k, $v := .Values.secretProvider.vaults }}
+            {{- if $.Values.secretProvider }}
+            {{- range $k, $v := $.Values.secretProvider.vaults }}
             {{- range $key, $value := $v }}
             - name: {{ $key }}
               valueFrom:
                 secretKeyRef:
-                  name: {{ $fullName }}-{{ $k }}-migration
+                  name: {{ $fullName }}-{{ $k }}-hooks
                   key: {{ $value }}
             {{- end }}
             {{- end }}
             {{- end }}
-      {{- with .Values.nodeSelector }}
+      {{- with $.Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tolerations }}
+      {{- with $.Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.affinity }}
+      {{- with $.Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-      {{- with .Values.volumes }}
+      {{- with $.Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.hooks.migration.initContainers }}
-      {{- range .Values.hooks.migration.initContainers }}
+      {{- if $hookConfig.initContainers }}
+      {{- range $hookConfig.initContainers }}
       {{- if .volumeMounts }}
       {{- range .volumeMounts }}
         - name: {{ .name }}
@@ -155,14 +158,16 @@ spec:
       {{- end }}
       {{- end }}
       {{- end }}
-      {{- if .Values.secretProvider }}
-      {{- range $k, $v := .Values.secretProvider.vaults }}
+      {{- if $.Values.secretProvider }}
+      {{- range $k, $v := $.Values.secretProvider.vaults }}
         - name: {{ $fullName }}-{{ $k }}
           csi:
             driver: secrets-store.csi.k8s.io
             readOnly: true
             volumeAttributes:
-              secretProviderClass: {{ $fullName }}-{{ $k }}-migration
+              secretProviderClass: {{ $fullName }}-{{ $k }}-hooks
       {{- end }}
       {{- end }}
+{{- end }}
+{{- end }}
 {{- end }}

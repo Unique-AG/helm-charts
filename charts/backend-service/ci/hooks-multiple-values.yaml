@@ -1,0 +1,56 @@
+# CI test for multiple hooks configuration
+# This file tests the multi-hook functionality where multiple hooks can be defined
+# and they share common resources (ConfigMap, Secret, ServiceAccount, SecretProviderClass)
+
+image:
+  tag: test-version
+
+# Configure multiple hooks
+hooks:
+  # Database migration hook - runs before install/upgrade
+  migration:
+    enabled: true
+    backoffLimit: 2
+    command: npm run db:migrate
+    annotations:
+      helm.sh/hook: pre-install,pre-upgrade
+      helm.sh/hook-weight: "10"
+      helm.sh/hook-delete-policy: before-hook-creation
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 256Mi
+
+  # Database seeding hook - runs after install/upgrade
+  seed:
+    enabled: true
+    backoffLimit: 1
+    command: npm run db:seed
+    annotations:
+      helm.sh/hook: post-install,post-upgrade
+      helm.sh/hook-weight: "11"
+      helm.sh/hook-delete-policy: before-hook-creation
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        memory: 128Mi
+
+# Environment variables (shared across all hooks)
+env:
+  NODE_ENV: production
+  DATABASE_URL: postgres://localhost:5432/mydb
+  LOG_LEVEL: info
+
+# Service account for hooks
+serviceAccount:
+  enabled: true
+  annotations:
+    azure.workload.identity/client-id: 12345678-1234-1234-1234-123456789abc
+
+# Enable deployment for full chart rendering
+deployment:
+  enabled: true

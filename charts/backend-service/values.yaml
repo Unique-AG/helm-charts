@@ -150,10 +150,20 @@ extraCronJobs:
   #       memory: 200Mi
 
 hooks:
+  # -- Hooks are defined as a map where each key is the hook name
+  # The "migration" hook is the default and most common hook
+  # Additional hooks can be added by adding new map entries
   migration:
     enabled: false
-    # name: "" defaults to db-migration
+    # -- Number of retries before the migration job is considered failed
+    backoffLimit: 2
+    # name: "" defaults to the hook name (e.g., "migration")
     command: ""
+    # -- Configure annotations for the migration hook Job
+    annotations:
+      helm.sh/hook: pre-install,pre-upgrade
+      helm.sh/hook-weight: "10"
+      helm.sh/hook-delete-policy: before-hook-creation
     # -- Optional resource requirements for the migration job
     # If not set, will use the global resources configuration
     # resources:
@@ -172,6 +182,15 @@ hooks:
     #         mountPath: /opt
     #         mountPathJob: /opt/folder
     #         readOnly: true
+  # -- Example of an additional hook (commented out by default)
+  # seed:
+  #   enabled: false
+  #   backoffLimit: 2
+  #   command: "npm run seed"
+  #   annotations:
+  #     helm.sh/hook: post-install,post-upgrade
+  #     helm.sh/hook-weight: "11"
+  #     helm.sh/hook-delete-policy: before-hook-creation
 
 # -- networkPolicy allows you to define network policies for the deployed pods
 # Network policies are used to control traffic flow to and from pods

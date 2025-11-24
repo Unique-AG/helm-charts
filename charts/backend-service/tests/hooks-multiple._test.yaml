@@ -1,0 +1,267 @@
+suite: Test Multiple Hooks
+templates:
+  - hooks/migration-env.yaml
+  - hooks/migration.yaml
+  - hooks/secrets.yaml
+  - hooks/serviceaccount.yaml
+  - hooks/secretproviderclass.yaml
+release:
+  name: ut
+tests:
+  - it: When multiple hooks are enabled, should create separate Jobs
+    set:
+      image.tag: pinned-version
+      hooks.migration.enabled: true
+      hooks.migration.command: npm run migrate
+      hooks.migration.backoffLimit: 2
+      hooks.migration.annotations:
+        helm.sh/hook: pre-install,pre-upgrade
+        helm.sh/hook-weight: "10"
+        helm.sh/hook-delete-policy: before-hook-creation
+      hooks.seed.enabled: true
+      hooks.seed.command: npm run seed
+      hooks.seed.backoffLimit: 1
+      hooks.seed.annotations:
+        helm.sh/hook: post-install,post-upgrade
+        helm.sh/hook-weight: "11"
+        helm.sh/hook-delete-policy: before-hook-creation
+    template: hooks/migration.yaml
+    asserts:
+      - hasDocuments:
+          count: 2
+
+      # Check migration job
+      - isKind:
+          of: Job
+        documentIndex: 0
+      - equal:
+          path: metadata.name
+          value: ut-migration
+        documentIndex: 0
+      - equal:
+          path: spec.backoffLimit
+          value: 2
+        documentIndex: 0
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: db-migration
+        documentIndex: 0
+      - equal:
+          path: spec.template.spec.containers[0].command[2]
+          value: npm run migrate
+        documentIndex: 0
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: pre-install,pre-upgrade
+        documentIndex: 0
+      - equal:
+          path: metadata.annotations["helm.sh/hook-weight"]
+          value: "10"
+        documentIndex: 0
+
+      # Check seed job
+      - isKind:
+          of: Job
+        documentIndex: 1
+      - equal:
+          path: metadata.name
+          value: ut-seed
+        documentIndex: 1
+      - equal:
+          path: spec.backoffLimit
+          value: 1
+        documentIndex: 1
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: seed
+        documentIndex: 1
+      - equal:
+          path: spec.template.spec.containers[0].command[2]
+          value: npm run seed
+        documentIndex: 1
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: post-install,post-upgrade
+        documentIndex: 1
+      - equal:
+          path: metadata.annotations["helm.sh/hook-weight"]
+          value: "11"
+        documentIndex: 1
+
+  - it: When multiple hooks are enabled, should create only one shared ConfigMap
+    set:
+      image.tag: pinned-version
+      hooks.migration.enabled: true
+      hooks.migration.command: npm run migrate
+      hooks.seed.enabled: true
+      hooks.seed.command: npm run seed
+      env:
+        DATABASE_URL: postgres://localhost
+        LOG_LEVEL: info
+    template: hooks/migration-env.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: ut-hooks-env
+      - equal:
+          path: data.VERSION
+          value: pinned-version
+      - equal:
+          path: data.DATABASE_URL
+          value: postgres://localhost
+      - equal:
+          path: data.LOG_LEVEL
+          value: info
+
+  - it: When multiple hooks are enabled, both Jobs should reference the shared ConfigMap
+    set:
+      image.tag: pinned-version
+      hooks.migration.enabled: true
+      hooks.migration.command: npm run migrate
+      hooks.seed.enabled: true
+      hooks.seed.command: npm run seed
+    template: hooks/migration.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].configMapRef.name
+          value: ut-hooks-env
+        documentIndex: 0
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].configMapRef.name
+          value: ut-hooks-env
+        documentIndex: 1
+
+  - it: When multiple hooks are enabled with envSecrets, should create only one shared Secret
+    set:
+      image.tag: pinned-version
+      hooks.migration.enabled: true
+      hooks.migration.command: npm run migrate
+      hooks.seed.enabled: true
+      hooks.seed.command: npm run seed
+      envSecrets:
+        DB_PASSWORD: secretpassword
+        API_KEY: myapikey
+    template: hooks/secrets.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Secret
+      - equal:
+          path: metadata.name
+          value: ut-hooks-secrets
+      - isNotEmpty:
+          path: data.DB_PASSWORD
+      - isNotEmpty:
+          path: data.API_KEY
+
+  - it: When multiple hooks are enabled with serviceAccount, should create only one shared ServiceAccount
+    set:
+      image.tag: pinned-version
+      serviceAccount.enabled: true
+      hooks.migration.enabled: true
+      hooks.migration.command: npm run migrate
+      hooks.seed.enabled: true
+      hooks.seed.command: npm run seed
+    template: hooks/serviceaccount.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ServiceAccount
+      - equal:
+          path: metadata.name
+          value: ut-hooks
+
+  - it: When multiple hooks are enabled, both Jobs should reference the shared ServiceAccount
+    set:
+      image.tag: pinned-version
+      serviceAccount.enabled: true
+      hooks.migration.enabled: true
+      hooks.migration.command: npm run migrate
+      hooks.seed.enabled: true
+      hooks.seed.command: npm run seed
+    template: hooks/migration.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: ut-hooks
+        documentIndex: 0
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: ut-hooks
+        documentIndex: 1
+
+  - it: When multiple hooks are enabled with secretProvider, should create only one shared SecretProviderClass per vault
+    set:
+      image.tag: pinned-version
+      secretProvider.tenantId: 99330c76-81xxxx
+      secretProvider.userAssignedIdentityID: test-identity-id
+      secretProvider.vaults.qa-app-common.AMQP_URL: RABBITMQ-ORANGE-WOLF-URL
+      secretProvider.vaults.qa-app-common.DB_PASSWORD: DATABASE-PASSWORD
+      hooks.migration.enabled: true
+      hooks.migration.command: npm run migrate
+      hooks.seed.enabled: true
+      hooks.seed.command: npm run seed
+    template: hooks/secretproviderclass.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: SecretProviderClass
+      - equal:
+          path: metadata.name
+          value: ut-qa-app-common-hooks
+      - equal:
+          path: spec.secretObjects[0].secretName
+          value: ut-qa-app-common-hooks
+
+  - it: When multiple hooks are enabled with secretProvider, both Jobs should reference the shared SecretProviderClass
+    set:
+      image.tag: pinned-version
+      secretProvider.tenantId: 99330c76-81xxxx
+      secretProvider.userAssignedIdentityID: test-identity-id
+      secretProvider.vaults.qa-app-common.AMQP_URL: RABBITMQ-ORANGE-WOLF-URL
+      hooks.migration.enabled: true
+      hooks.migration.command: npm run migrate
+      hooks.seed.enabled: true
+      hooks.seed.command: npm run seed
+    template: hooks/migration.yaml
+    asserts:
+      # Check migration job references shared SecretProviderClass
+      - equal:
+          path: spec.template.spec.volumes[0].csi.volumeAttributes.secretProviderClass
+          value: ut-qa-app-common-hooks
+        documentIndex: 0
+      - equal:
+          path: spec.template.spec.containers[0].env[0].valueFrom.secretKeyRef.name
+          value: ut-qa-app-common-hooks
+        documentIndex: 0
+
+      # Check seed job references shared SecretProviderClass
+      - equal:
+          path: spec.template.spec.volumes[0].csi.volumeAttributes.secretProviderClass
+          value: ut-qa-app-common-hooks
+        documentIndex: 1
+      - equal:
+          path: spec.template.spec.containers[0].env[0].valueFrom.secretKeyRef.name
+          value: ut-qa-app-common-hooks
+        documentIndex: 1
+
+  - it: When only one hook is enabled, should still create shared resources with correct naming
+    set:
+      image.tag: pinned-version
+      hooks.migration.enabled: true
+      hooks.migration.command: npm run migrate
+      hooks.seed.enabled: false
+    template: hooks/migration-env.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: ut-hooks-env
