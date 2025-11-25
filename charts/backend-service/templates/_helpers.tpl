@@ -74,7 +74,7 @@ app.kubernetes.io/component: cron-job
 {{/* These labels identify db migration job specific resources */}}
 {{- define "backendService.labelsHooks" -}}
 {{- include "backendService.mutableLabels" . }}
-app.kubernetes.io/component: hooks-db-migration
+app.kubernetes.io/component: hook
 {{- end }}
 
 {{/* Helper to get the prefix */}}
