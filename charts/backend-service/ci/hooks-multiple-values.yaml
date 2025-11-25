@@ -8,7 +8,7 @@ hooks:
   migration:
     enabled: true
     backoffLimit: 2
-    command: npm run db:migrate
+    command: echo "migration"
     # No need to specify annotations - defaults will be used
     resources:
       requests:
@@ -21,7 +21,7 @@ hooks:
   seed:
     enabled: true
     backoffLimit: 1
-    command: npm run db:seed
+    command: echo "seed"
     # Override only the hook timing, keep other defaults
     helm:
       weight: "11"
