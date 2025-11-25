@@ -14,17 +14,17 @@ tests:
       hooks.migration.enabled: true
       hooks.migration.command: npm run migrate
       hooks.migration.backoffLimit: 2
-      hooks.migration.annotations:
-        helm.sh/hook: pre-install,pre-upgrade
-        helm.sh/hook-weight: "10"
-        helm.sh/hook-delete-policy: before-hook-creation
+      hooks.migration.helm:
+        hook: pre-install,pre-upgrade
+        weight: "10"
+        deletePolicy: before-hook-creation
       hooks.seed.enabled: true
       hooks.seed.command: npm run seed
       hooks.seed.backoffLimit: 1
-      hooks.seed.annotations:
-        helm.sh/hook: post-install,post-upgrade
-        helm.sh/hook-weight: "11"
-        helm.sh/hook-delete-policy: before-hook-creation
+      hooks.seed.helm:
+        hook: post-install,post-upgrade
+        weight: "11"
+        deletePolicy: before-hook-creation
     template: hooks/migration.yaml
     asserts:
       - hasDocuments:

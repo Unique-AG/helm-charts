@@ -7,15 +7,12 @@ image:
 
 # Configure multiple hooks
 hooks:
-  # Database migration hook - runs before install/upgrade
+  # Database migration hook - uses default annotations (pre-install,pre-upgrade)
   migration:
     enabled: true
     backoffLimit: 2
     command: npm run db:migrate
-    annotations:
-      helm.sh/hook: pre-install,pre-upgrade
-      helm.sh/hook-weight: "10"
-      helm.sh/hook-delete-policy: before-hook-creation
+    # No need to specify annotations - defaults will be used
     resources:
       requests:
         cpu: 100m
@@ -23,15 +20,14 @@ hooks:
       limits:
         memory: 256Mi
 
-  # Database seeding hook - runs after install/upgrade
+  # Database seeding hook - overrides timing to run after install/upgrade
   seed:
     enabled: true
     backoffLimit: 1
     command: npm run db:seed
-    annotations:
-      helm.sh/hook: post-install,post-upgrade
-      helm.sh/hook-weight: "11"
-      helm.sh/hook-delete-policy: before-hook-creation
+    # Override only the hook timing, keep other defaults
+    helm:
+      weight: "11"
     resources:
       requests:
         cpu: 50m

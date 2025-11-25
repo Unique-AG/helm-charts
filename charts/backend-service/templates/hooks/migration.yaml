@@ -9,12 +9,12 @@ metadata:
   name: {{ $fullName }}-{{ $hookName }}
   labels:
     {{- include "backendService.labelsHooks" $ | nindent 4 }}
-  {{- with $hookConfig.annotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    helm.sh/hook: {{ dig "helm" "hook" "pre-install,pre-upgrade" $hookConfig | quote }}
+    helm.sh/hook-delete-policy: {{ dig "helm" "deletePolicy" "before-hook-creation" $hookConfig | quote }}
+    helm.sh/hook-weight: {{ dig "helm" "weight" "10" $hookConfig | quote }}
 spec:
-  backoffLimit: {{ $hookConfig.backoffLimit }}
+  backoffLimit: {{ default 2 $hookConfig.backoffLimit }}
   template:
     metadata:
       name: "{{ $.Release.Name }}"
