@@ -1,7 +1,7 @@
 suite: Test Multiple Hooks
 templates:
-  - hooks/migration-env.yaml
-  - hooks/migration.yaml
+  - hooks/hooks-env.yaml
+  - hooks/hooks.yaml
   - hooks/secrets.yaml
   - hooks/serviceaccount.yaml
   - hooks/secretproviderclass.yaml
@@ -15,17 +15,17 @@ tests:
       hooks.migration.command: npm run migrate
       hooks.migration.backoffLimit: 2
       hooks.migration.helm:
-        hook: pre-install,pre-upgrade
+        hook: pre-install
         weight: "10"
         deletePolicy: before-hook-creation
       hooks.seed.enabled: true
       hooks.seed.command: npm run seed
       hooks.seed.backoffLimit: 1
       hooks.seed.helm:
-        hook: post-install,post-upgrade
+        hook: post-upgrade
         weight: "11"
         deletePolicy: before-hook-creation
-    template: hooks/migration.yaml
+    template: hooks/hooks.yaml
     asserts:
       - hasDocuments:
           count: 2
@@ -52,7 +52,7 @@ tests:
         documentIndex: 0
       - equal:
           path: metadata.annotations["helm.sh/hook"]
-          value: pre-install,pre-upgrade
+          value: pre-install
         documentIndex: 0
       - equal:
           path: metadata.annotations["helm.sh/hook-weight"]
@@ -81,7 +81,7 @@ tests:
         documentIndex: 1
       - equal:
           path: metadata.annotations["helm.sh/hook"]
-          value: post-install,post-upgrade
+          value: post-upgrade
         documentIndex: 1
       - equal:
           path: metadata.annotations["helm.sh/hook-weight"]
@@ -98,7 +98,7 @@ tests:
       env:
         DATABASE_URL: postgres://localhost
         LOG_LEVEL: info
-    template: hooks/migration-env.yaml
+    template: hooks/hooks-env.yaml
     asserts:
       - hasDocuments:
           count: 1
@@ -124,7 +124,7 @@ tests:
       hooks.migration.command: npm run migrate
       hooks.seed.enabled: true
       hooks.seed.command: npm run seed
-    template: hooks/migration.yaml
+    template: hooks/hooks.yaml
     asserts:
       - equal:
           path: spec.template.spec.containers[0].envFrom[0].configMapRef.name
@@ -185,7 +185,7 @@ tests:
       hooks.migration.command: npm run migrate
       hooks.seed.enabled: true
       hooks.seed.command: npm run seed
-    template: hooks/migration.yaml
+    template: hooks/hooks.yaml
     asserts:
       - equal:
           path: spec.template.spec.serviceAccountName
@@ -230,7 +230,7 @@ tests:
       hooks.migration.command: npm run migrate
       hooks.seed.enabled: true
       hooks.seed.command: npm run seed
-    template: hooks/migration.yaml
+    template: hooks/hooks.yaml
     asserts:
       # Check migration job references shared SecretProviderClass
       - equal:
@@ -258,7 +258,7 @@ tests:
       hooks.migration.enabled: true
       hooks.migration.command: npm run migrate
       hooks.seed.enabled: false
-    template: hooks/migration-env.yaml
+    template: hooks/hooks-env.yaml
     asserts:
       - hasDocuments:
           count: 1

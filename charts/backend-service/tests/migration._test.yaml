@@ -1,7 +1,7 @@
 suite: Regression Test Migration
 templates:
-  - hooks/migration-env.yaml
-  - hooks/migration.yaml
+  - hooks/hooks-env.yaml
+  - hooks/hooks.yaml
 release:
   name: ut
 tests:
@@ -12,7 +12,7 @@ tests:
       secretProvider.userAssignedIdentityID: test-identity-id
       secretProvider.vaults.qa-app-common.AMQP_URL: RABBITMQ-ORANGE-WOLF-URL
       hooks.migration.enabled: true
-    template: hooks/migration.yaml
+    template: hooks/hooks.yaml
     asserts:
       - isKind:
           of: Job
@@ -51,7 +51,7 @@ tests:
         - "-e"
         - "echo"
         - "helloWorld"
-    template: hooks/migration.yaml
+    template: hooks/hooks.yaml
     asserts:
       - isKind:
           of: Job
@@ -70,7 +70,7 @@ tests:
             secretKeyRef:
               name: my-secret
               key: ENV_VALUE
-    template: hooks/migration.yaml
+    template: hooks/hooks.yaml
     asserts:
       - isKind:
           of: Job
@@ -102,7 +102,7 @@ tests:
           - "echo"
           - "helloWorld"
 
-    template: hooks/migration.yaml
+    template: hooks/hooks.yaml
     asserts:
       - isKind:
           of: Job
@@ -130,7 +130,7 @@ tests:
         limits:
           cpu: 200m
           memory: 256Mi
-    template: hooks/migration.yaml
+    template: hooks/hooks.yaml
     asserts:
       - isKind:
           of: Job
@@ -156,7 +156,7 @@ tests:
         requests:
           cpu: 100m
           memory: 128Mi
-    template: hooks/migration.yaml
+    template: hooks/hooks.yaml
     asserts:
       - isKind:
           of: Job
@@ -182,7 +182,7 @@ tests:
         limits:
           cpu: 200m
           memory: 256Mi
-    template: hooks/migration.yaml
+    template: hooks/hooks.yaml
     asserts:
       - isKind:
           of: Job
