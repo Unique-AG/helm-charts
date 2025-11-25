@@ -568,7 +568,7 @@
             "type": "string",
             "description": "Command to run for this hook"
           },
-          "annotations": {
+          "helm": {
             "type": "object",
             "description": "Annotations for the hook Job",
             "additionalProperties": {
