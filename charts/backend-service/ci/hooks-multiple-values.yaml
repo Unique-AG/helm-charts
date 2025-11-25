@@ -2,9 +2,6 @@
 # This file tests the multi-hook functionality where multiple hooks can be defined
 # and they share common resources (ConfigMap, Secret, ServiceAccount, SecretProviderClass)
 
-image:
-  tag: test-version
-
 # Configure multiple hooks
 hooks:
   # Database migration hook - uses default annotations (pre-install,pre-upgrade)
