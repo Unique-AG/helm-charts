@@ -20,4 +20,4 @@ annotations:
     - kind: added
       description: "Support for multiple hooks"
     - kind: added
-      description: "Support for overriding  the hook annotations"
+      description: "Support for overriding the hook annotations"
