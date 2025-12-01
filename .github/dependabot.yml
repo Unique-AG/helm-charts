@@ -20,5 +20,7 @@ updates:
       default-days: 14
     directories:
       - charts/**/*
+    exclude-paths:
+      - charts/ai-service/** # deprecated chart
     schedule:
       interval: weekly
