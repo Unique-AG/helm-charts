@@ -8,7 +8,7 @@ name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
 # changes to consider on next major: enable netpol by default, deprecate cronJob
-version: 7.1.0
+version: 8.0.0
 appVersion: latest
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
@@ -18,6 +18,6 @@ annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
     - kind: added
-      description: "Support for multiple hooks"
-    - kind: added
-      description: "Support for overriding the hook annotations"
+      description: "Support for GCP Workload Identity Federation"
+    - kind: changed
+      description: "⚠️ BREAKING: Azure Workload Identity is now defined in .Values.workloadIdentity.azure instead of .Values.serviceAccount.workloadIdentity"

@@ -114,3 +114,21 @@ app.kubernetes.io/component: hook
 {{- .Chart.AppVersion -}}
 {{- end -}}
 {{- end -}}
+
+{{/* Validate GCP workload identity configuration */}}
+{{- define "backendService.validateGcpWorkloadIdentity" -}}
+{{- if .Values.workloadIdentity.gcp.enabled -}}
+{{- if not .Values.workloadIdentity.gcp.projectId -}}
+{{- fail "workloadIdentity.gcp.projectId is required when workloadIdentity.gcp.enabled is true" -}}
+{{- end -}}
+{{- if not .Values.workloadIdentity.gcp.workloadIdentityPool -}}
+{{- fail "workloadIdentity.gcp.workloadIdentityPool is required when workloadIdentity.gcp.enabled is true" -}}
+{{- end -}}
+{{- if not .Values.workloadIdentity.gcp.provider -}}
+{{- fail "workloadIdentity.gcp.provider is required when workloadIdentity.gcp.enabled is true" -}}
+{{- end -}}
+{{- if not .Values.workloadIdentity.gcp.serviceAccountEmail -}}
+{{- fail "workloadIdentity.gcp.serviceAccountEmail is required when workloadIdentity.gcp.enabled is true" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}

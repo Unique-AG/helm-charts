@@ -1,0 +1,23 @@
+{{- if .Values.workloadIdentity.gcp.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "backendService.fullname" . }}-gcp-wif
+  labels:
+    {{- include "backendService.mutableLabels" . | nindent 4 }}
+data:
+  config.json: |
+    {
+      "type": "external_account",
+      "audience": "//iam.googleapis.com/projects/{{ .Values.workloadIdentity.gcp.projectId }}/locations/global/workloadIdentityPools/{{ .Values.workloadIdentity.gcp.workloadIdentityPool }}/providers/{{ .Values.workloadIdentity.gcp.provider }}",
+      "subject_token_type": "urn:ietf:params:oauth:token-type:jwt",
+      "token_url": "https://sts.googleapis.com/v1/token",
+      "credential_source": {
+        "file": "/var/run/secrets/gcp-token/gcp-token",
+        "format": {
+          "type": "text"
+        }
+      },
+      "service_account_impersonation_url": "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/{{ .Values.workloadIdentity.gcp.serviceAccountEmail }}:generateAccessToken"
+    }
+{{- end }}

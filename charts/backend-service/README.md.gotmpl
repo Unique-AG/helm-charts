@@ -158,6 +158,30 @@ Other authentication methods (service principals, pod identity) are not supporte
 
 ## Upgrade Guides
 
+### ~> `8.0.0`
+
+**Breaking change:** Azure Workload Identity moved from `.Values.serviceAccount.workloadIdentity` to `.Values.workloadIdentity.azure`.
+
+**From:**
+```yaml
+serviceAccount:
+  enabled: true
+  workloadIdentity:
+    enabled: true
+    clientId: "00000000-0000-0000-0000-000000000000"
+```
+
+**To:**
+```yaml
+serviceAccount:
+  enabled: true
+
+workloadIdentity:
+  azure:
+    enabled: true
+    clientId: "00000000-0000-0000-0000-000000000000"
+```
+
 ### ~> `7.0.0`
 
 **Breaking changes:** Pod identity and external-secrets support have been removed.

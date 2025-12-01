@@ -638,9 +638,18 @@ serviceAccount:
   enabled: false
   annotations: {}
   # name: ""
-  workloadIdentity: {}
 
 tolerations: []
+
+workloadIdentity:
+  azure: {}
+  gcp:
+    enabled: false
+    # projectId: "123456789"                        # GCP project number
+    # workloadIdentityPool: my-pool                 # Workload identity pool name
+    # provider: my-provider                         # Workload identity pool provider name
+    # serviceAccountEmail: sa@project.iam.gserviceaccount.com  # GCP service account to impersonate
+    # tokenExpirationSeconds: 3600                  # Optional, defaults to 3600
 
 volumeMounts: []
 
