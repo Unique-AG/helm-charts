@@ -544,54 +544,118 @@
     },
     "hooks": {
       "type": "object",
-      "description": "Hooks configuration",
-      "properties": {
-        "migration": {
-          "type": "object",
-          "description": "Migration hook configuration",
-          "properties": {
-            "enabled": {
-              "type": "boolean",
-              "description": "Enable migration hook",
-              "examples": [false]
-            },
-            "command": {
-              "type": "string",
-              "description": "Command to run for migration"
-            },
-            "resources": {
+      "description": "Hooks configuration. Define hooks as a map where each key is the hook name (e.g., 'migration', 'seed')",
+      "additionalProperties": {
+        "type": "object",
+        "description": "Hook configuration",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Enable this hook",
+            "examples": [false]
+          },
+          "backoffLimit": {
+            "type": "integer",
+            "description": "Number of retries before the job is marked failed",
+            "minimum": 0,
+            "examples": [2]
+          },
+          "name": {
+            "type": "string",
+            "description": "Optional name for the container. Defaults to the hook name"
+          },
+          "command": {
+            "type": "string",
+            "description": "Command to run for this hook"
+          },
+          "helm": {
+            "type": "object",
+            "description": "Annotations for the hook Job",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "resources": {
+            "type": "object",
+            "description": "Optional resource requirements for the hook job. If not set, will use the global resources configuration. Set to empty object {} to use no resource constraints.",
+            "properties": {
+              "limits": {
+                "type": "object",
+                "description": "Resource limits",
+                "properties": {
+                  "cpu": {
+                    "type": ["string", "null"],
+                    "description": "CPU limit",
+                    "examples": ["200m", "1"]
+                  },
+                  "memory": {
+                    "type": ["string", "null"],
+                    "description": "Memory limit",
+                    "examples": ["256Mi", "1Gi"]
+                  }
+                }
+              },
+              "requests": {
+                "type": "object",
+                "description": "Resource requests",
+                "properties": {
+                  "cpu": {
+                    "type": ["string", "null"],
+                    "description": "CPU request",
+                    "examples": ["100m", "500m"]
+                  },
+                  "memory": {
+                    "type": ["string", "null"],
+                    "description": "Memory request",
+                    "examples": ["128Mi", "512Mi"]
+                  }
+                }
+              }
+            }
+          },
+          "initContainers": {
+            "type": "array",
+            "description": "Init containers for the hook job",
+            "items": {
               "type": "object",
-              "description": "Optional resource requirements for the migration job. If not set, will use the global resources configuration. Set to empty object {} to use no resource constraints.",
               "properties": {
-                "limits": {
-                  "type": "object",
-                  "description": "Resource limits",
-                  "properties": {
-                    "cpu": {
-                      "type": ["string", "null"],
-                      "description": "CPU limit",
-                      "examples": ["200m", "1"]
-                    },
-                    "memory": {
-                      "type": ["string", "null"],
-                      "description": "Memory limit",
-                      "examples": ["256Mi", "1Gi"]
-                    }
+                "name": {
+                  "type": "string",
+                  "description": "Name of the init container"
+                },
+                "image": {
+                  "type": "string",
+                  "description": "Image for the init container"
+                },
+                "command": {
+                  "type": "array",
+                  "description": "Command to run",
+                  "items": {
+                    "type": "string"
                   }
                 },
-                "requests": {
-                  "type": "object",
-                  "description": "Resource requests",
-                  "properties": {
-                    "cpu": {
-                      "type": ["string", "null"],
-                      "description": "CPU request",
-                      "examples": ["100m", "500m"]
-                    },
-                    "memory": {
-                      "type": ["string", "null"],
-                      "description": "Memory request",
-                      "examples": ["128Mi", "512Mi"]
+                "restartPolicy": {
+                  "type": "string",
+                  "description": "Restart policy for the init container"
+                },
+                "volumeMounts": {
+                  "type": "array",
+                  "description": "Volume mounts for the init container",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "mountPath": {
+                        "type": "string"
+                      },
+                      "mountPathJob": {
+                        "type": "string"
+                      },
+                      "readOnly": {
+                        "type": "boolean"
+                      }
                     }
                   }
                 }

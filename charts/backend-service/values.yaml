@@ -150,10 +150,25 @@ extraCronJobs:
   #       memory: 200Mi
 
 hooks:
+  # -- Hooks are defined as a map where each key is the hook name
+  # The "migration" hook is the default and most common hook
+  # Additional hooks can be added by adding new map entries
+  #
+  # By default, both ArgoCD and Helm hooks are enabled with sensible defaults
+  # You can disable either one or customize their behavior per hook
   migration:
     enabled: false
-    # name: "" defaults to db-migration
+    # -- Number of retries before the migration job is considered failed (default: 2)
+    backoffLimit: 2
+    # name: "" defaults to the hook name (e.g., "migration")
+    # For backwards compatibility, the migration hook defaults to "db-migration"
     command: ""
+    # -- Configure hook annotations for ArgoCD and Helm
+    # helm:
+    #   enabled: true  # default: true
+    #   hook: "pre-install,pre-upgrade"  # default: "pre-install,pre-upgrade"
+    #   weight: "10"  # default: "10"
+    #   deletePolicy: "before-hook-creation"  # default: "before-hook-creation"
     # -- Optional resource requirements for the migration job
     # If not set, will use the global resources configuration
     # resources:
@@ -172,6 +187,19 @@ hooks:
     #         mountPath: /opt
     #         mountPathJob: /opt/folder
     #         readOnly: true
+  # -- Example of an additional hook (commented out by default)
+  # seed:
+  #   enabled: false
+  #   backoffLimit: 1
+  #   command: "npm run seed"
+  #   # Example: Disable ArgoCD hooks, only use Helm hooks with custom timing
+  #   hooks:
+  #     argocd:
+  #       enabled: false
+  #     helm:
+  #       enabled: true
+  #       hook: "post-install,post-upgrade"
+  #       weight: "11"
 
 # -- networkPolicy allows you to define network policies for the deployed pods
 # Network policies are used to control traffic flow to and from pods
