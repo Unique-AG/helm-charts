@@ -5,7 +5,7 @@ updates:
       default-days: 14
     directory: /
     schedule:
-      interval: daily
+      interval: weekly
 
   - package-ecosystem: docker
     cooldown:
@@ -13,7 +13,7 @@ updates:
     directories:
       - docker/**/*
     schedule:
-      interval: daily
+      interval: weekly
 
   - package-ecosystem: helm
     cooldown:
