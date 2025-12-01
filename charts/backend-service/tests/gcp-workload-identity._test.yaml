@@ -3,7 +3,7 @@ suite: GCP Workload Identity Federation
 templates:
   - deployment.yaml
   - deployment-env.yaml
-  - gcp-wif-config.yaml
+  - gcp-wif-cm.yaml
 release:
   name: ut
 tests:
@@ -17,18 +17,18 @@ tests:
       workloadIdentity.gcp.serviceAccountEmail: sa@my-project.iam.gserviceaccount.com
     asserts:
       # ConfigMap is created
-      - template: gcp-wif-config.yaml
+      - template: gcp-wif-cm.yaml
         isKind:
           of: ConfigMap
-      - template: gcp-wif-config.yaml
+      - template: gcp-wif-cm.yaml
         equal:
           path: metadata.name
           value: ut-gcp-wif
-      - template: gcp-wif-config.yaml
+      - template: gcp-wif-cm.yaml
         matchRegex:
           path: data["config.json"]
           pattern: "123456789.*my-pool.*my-provider"
-      - template: gcp-wif-config.yaml
+      - template: gcp-wif-cm.yaml
         matchRegex:
           path: data["config.json"]
           pattern: "sa@my-project.iam.gserviceaccount.com"
