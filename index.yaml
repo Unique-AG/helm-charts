@@ -420,6 +420,38 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: added
+          description: "Support for GCP Workload Identity Federation"
+        - kind: changed
+          description: "⚠️ BREAKING: Azure Workload Identity is now defined in .Values.workloadIdentity.azure instead of .Values.serviceAccount.workloadIdentity"
+        - kind: changed
+          description: "Pod security context now defines runAsNonRoot and runAsUser by default"
+        - kind: changed
+          description: "Service account now created by default"
+        - kind: added
+          description: "It's now possible to disable the service account token automount"
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    appVersion: latest
+    created: "2025-12-02T15:06:35.999379872Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: fd8a20cbcf9cc4fe85619ad021fb4d4f8cebc23ce96c534625a5e9f806beba35
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-8.0.0/backend-service-8.0.0.tgz
+    version: 8.0.0
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: added
           description: "Support for multiple hooks"
         - kind: added
           description: "Support for overriding the hook annotations"
@@ -2809,4 +2841,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-11-25T14:07:31.212191067Z"
+generated: "2025-12-02T15:06:35.999754048Z"
