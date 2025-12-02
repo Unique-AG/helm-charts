@@ -1516,9 +1516,10 @@
           "type": "string",
           "description": "Service account name"
         },
-        "workloadIdentity": {
-          "type": "object",
-          "description": "Workload identity configuration"
+        "automountServiceAccountToken": {
+          "type": "boolean",
+          "description": "Automount the service account token",
+          "examples": [true]
         }
       }
     },
@@ -1538,6 +1539,55 @@
     "volumes": {
       "type": "array",
       "description": "Volumes"
+    },
+    "workloadIdentity": {
+      "type": "object",
+      "description": "Workload identity configuration",
+      "properties": {
+        "azure": {
+          "type": "object",
+          "description": "Azure workload identity configuration"
+        },
+        "gcp": {
+          "type": "object",
+          "description": "GCP workload identity federation configuration",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable GCP workload identity federation",
+              "default": false,
+              "examples": [false]
+            },
+            "projectId": {
+              "type": "string",
+              "description": "GCP project number for the workload identity pool",
+              "examples": ["123456789"]
+            },
+            "workloadIdentityPool": {
+              "type": "string",
+              "description": "Name of the GCP workload identity pool",
+              "examples": ["my-pool"]
+            },
+            "provider": {
+              "type": "string",
+              "description": "Name of the workload identity pool provider",
+              "examples": ["my-provider"]
+            },
+            "serviceAccountEmail": {
+              "type": "string",
+              "description": "GCP service account email to impersonate",
+              "examples": ["my-sa@my-project.iam.gserviceaccount.com"]
+            },
+            "tokenExpirationSeconds": {
+              "type": "integer",
+              "description": "Expiration time in seconds for the projected service account token",
+              "default": 3600,
+              "minimum": 600,
+              "examples": [3600]
+            }
+          }
+        }
+      }
     }
   }
 }

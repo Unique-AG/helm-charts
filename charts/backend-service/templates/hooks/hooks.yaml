@@ -1,3 +1,4 @@
+{{- include "backendService.validateGcpWorkloadIdentity" . -}}
 {{- if .Values.hooks }}
 {{- range $hookName, $hookConfig := .Values.hooks }}
 {{- if and $hookConfig $hookConfig.enabled }}
@@ -29,7 +30,7 @@ spec:
           {{- end }}
         {{- end }}
         {{- include "backendService.labelsHooks" $ | nindent 8 }}
-        {{- if $.Values.serviceAccount.workloadIdentity.enabled }}
+        {{- if $.Values.workloadIdentity.azure.enabled }}
         azure.workload.identity/use: 'true'
         {{- end }}
     spec:
@@ -86,6 +87,14 @@ spec:
               readOnly: true
            {{- end }}
            {{- end }}
+          {{- if $.Values.workloadIdentity.gcp.enabled }}
+            - name: gcp-wif-config
+              mountPath: /var/run/secrets/gcp-wif
+              readOnly: true
+            - name: gcp-token
+              mountPath: /var/run/secrets/gcp-token
+              readOnly: true
+          {{- end }}
           {{- if $hookConfig.initContainers }}
           {{- range $hookConfig.initContainers }}
           {{- if .volumeMounts }}
@@ -120,6 +129,10 @@ spec:
           env:
             {{- with $.Values.envVars }}
               {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- if $.Values.workloadIdentity.gcp.enabled }}
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /var/run/secrets/gcp-wif/config.json
             {{- end }}
             {{- if $.Values.secretProvider }}
             {{- range $k, $v := $.Values.secretProvider.vaults }}
@@ -167,6 +180,18 @@ spec:
             volumeAttributes:
               secretProviderClass: {{ $fullName }}-{{ $k }}-hooks
       {{- end }}
+      {{- end }}
+      {{- if $.Values.workloadIdentity.gcp.enabled }}
+        - name: gcp-wif-config
+          configMap:
+            name: {{ include "backendService.fullname" $ }}-gcp-wif-hooks
+        - name: gcp-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  audience: "//iam.googleapis.com/projects/{{ $.Values.workloadIdentity.gcp.projectId }}/locations/global/workloadIdentityPools/{{ $.Values.workloadIdentity.gcp.workloadIdentityPool }}/providers/{{ $.Values.workloadIdentity.gcp.provider }}"
+                  expirationSeconds: {{ $.Values.workloadIdentity.gcp.tokenExpirationSeconds | default 3600 }}
+                  path: gcp-token
       {{- end }}
 {{- end }}
 {{- end }}
