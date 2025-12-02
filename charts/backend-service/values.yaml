@@ -639,7 +639,9 @@ service:
   annotations: {}
 
 serviceAccount:
-  enabled: false
+  enabled: true
+  # -- Specifies whether to automount the service account token
+  automountServiceAccountToken: true
   annotations: {}
   # name: ""
 

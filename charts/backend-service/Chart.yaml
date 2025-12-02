@@ -23,3 +23,7 @@ annotations:
       description: "⚠️ BREAKING: Azure Workload Identity is now defined in .Values.workloadIdentity.azure instead of .Values.serviceAccount.workloadIdentity"
     - kind: changed
       description: "Pod security context now defines runAsNonRoot and runAsUser by default"
+    - kind: changed
+      description: "Service account now created by default"
+    - kind: added
+      description: "It's now possible to disable the service account token automount"

@@ -1515,6 +1515,11 @@
         "name": {
           "type": "string",
           "description": "Service account name"
+        },
+        "automountServiceAccountToken": {
+          "type": "boolean",
+          "description": "Automount the service account token",
+          "examples": [true]
         }
       }
     },
