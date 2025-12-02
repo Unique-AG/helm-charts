@@ -378,6 +378,10 @@ podLabels:
 
 # -- PodSecurityContext for the pod(s)
 podSecurityContext:
+  # -- runAsNonRoot, controls if the container must run as a non-root user, defaults to 'true'
+  runAsNonRoot: true
+  # -- runAsUser, controls the user ID that runs the container, defaults to '1000'
+  runAsUser: 1000
   # -- seccompProfile, controls the seccomp profile for the container, defaults to 'RuntimeDefault'
   seccompProfile:
     ## -- type, the type of seccomp profile to use, defaults to 'RuntimeDefault'
