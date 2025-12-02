@@ -174,9 +174,6 @@ serviceAccount:
 
 **To:**
 ```yaml
-serviceAccount:
-  enabled: true
-
 workloadIdentity:
   azure:
     enabled: true
