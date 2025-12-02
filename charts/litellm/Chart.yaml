@@ -16,5 +16,5 @@ description: |
   The chart version is synced with the app version.
 annotations:
   artifacthub.io/changes: |
-    - kind: changed
-      description: bump to 1.72.2
+    - kind: removed
+      description: support for chart
