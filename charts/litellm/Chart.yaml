@@ -5,7 +5,8 @@ maintainers:
   - name: unique-ag
     url: https://unique.ch/
 type: application
-version: 1.72.2
+version: 1.72.999
+deprecated: true # trigger artifacthub deprecation
 appVersion: v1.72.2-stable
 description: |
   The 'litellm' chart provides a solution for deploying LiteLLM proxy with helm.
@@ -15,5 +16,5 @@ description: |
   The chart version is synced with the app version.
 annotations:
   artifacthub.io/changes: |
-    - kind: changed
-      description: bump to 1.72.2
+    - kind: removed
+      description: support for chart
