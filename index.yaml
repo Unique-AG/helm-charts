@@ -419,6 +419,30 @@ entries:
   backend-service:
   - annotations:
       artifacthub.io/changes: |
+        - kind: changed
+          description: "Update chart-testing-service to v1.1.0"
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    appVersion: latest
+    created: "2025-12-03T13:43:48.947350603Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: 9006384de4dccf2403d7edbcdb3b6845d6c60a6d31e12c80f2c4ce3805f4c2f6
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-8.1.0/backend-service-8.1.0.tgz
+    version: 8.1.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: added
           description: "Support for GCP Workload Identity Federation"
         - kind: changed
@@ -2418,6 +2442,28 @@ entries:
   web-app:
   - annotations:
       artifacthub.io/changes: |
+        - kind: changed
+          description: "Update chart-testing-service to v1.1.0"
+    apiVersion: v2
+    created: "2025-12-03T13:43:49.22383327Z"
+    description: 'The ''web-app'' chart is a "convenience" chart from Unique AG that
+      can generically be used to deploy web-content serving workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: f6977564e8d4756ce4452ddee450d16051834cb53ed565b7cf7321bb0ff0ddfb
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: web-app
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/web-app
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/web-app-5.1.0/web-app-5.1.0.tgz
+    version: 5.1.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: removed
           description: "BREAKING: Pod identity support. The aadPodIdBinding annotation and usePodIdentity parameter have been removed."
         - kind: changed
@@ -2862,4 +2908,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-12-02T15:41:58.051406863Z"
+generated: "2025-12-03T13:43:49.224625301Z"
