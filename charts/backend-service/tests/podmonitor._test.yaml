@@ -1,0 +1,98 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: Regression Test PodMonitor
+templates:
+  - podmonitor.yaml
+  - deployment.yaml
+  - deployment-env.yaml
+release:
+  name: ut
+tests:
+  - it: When given port for metrics
+    set:
+      image.tag: pinned-version
+      ports.metrics: 9003
+      service.enabled: false
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    template: podmonitor.yaml
+    asserts:
+      - equal:
+          path: spec.podMetricsEndpoints[0].port
+          value: metrics
+
+  - it: When not given port for metrics
+    set:
+      image.tag: pinned-version
+      service.enabled: false
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    template: podmonitor.yaml
+    asserts:
+      - equal:
+          path: spec.podMetricsEndpoints[0].port
+          value: http
+
+  - it: PodMonitor matchLabels should match Deployment selector labels
+    set:
+      image.tag: pinned-version
+      service.enabled: false
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - template: deployment.yaml
+        hasDocuments:
+          count: 1
+      - template: deployment.yaml
+        equal:
+          path: spec.selector.matchLabels
+          value:
+            app.kubernetes.io/name: ut
+            app.kubernetes.io/instance: ut
+            app.kubernetes.io/component: server
+      - template: podmonitor.yaml
+        hasDocuments:
+          count: 1
+      - template: podmonitor.yaml
+        equal:
+          path: spec.selector.matchLabels
+          value:
+            app.kubernetes.io/name: ut
+            app.kubernetes.io/instance: ut
+            app.kubernetes.io/component: server
+
+  - it: PodMonitor should not be created when service is enabled
+    set:
+      image.tag: pinned-version
+      service.enabled: true
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    template: podmonitor.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: PodMonitor should not be created when prometheus is disabled
+    set:
+      image.tag: pinned-version
+      service.enabled: false
+      prometheus.enabled: false
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    template: podmonitor.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: PodMonitor should not be created when monitoring API is not available
+    set:
+      image.tag: pinned-version
+      service.enabled: false
+    template: podmonitor.yaml
+    asserts:
+      - hasDocuments:
+          count: 0

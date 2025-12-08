@@ -4,7 +4,7 @@ The 'backend-service' chart is a "convenience" chart from Unique AG that can gen
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 5.0.0](https://img.shields.io/badge/Version-5.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
+![Version: 8.1.0](https://img.shields.io/badge/Version-8.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 5.0.0
+helm install my-backend-service unique/backend-service --version 8.1.0
 
 # or
-helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 5.0.0
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 8.1.0
 ```
 
 ### Docker Images
@@ -147,7 +147,132 @@ The chart provides a JSON schema for validating `values.yaml` files. This schema
 
 The schema is available in the `values.schema.json` file in the chart.
 
+## Azure Key Vault Access
+
+The chart natively supports VM Managed Identity for Azure Key Vault access via the Secrets Store CSI Driver via the `secretProvider` values object. Supported modes:
+- [System-assigned Managed Identity](https://azure.github.io/secrets-store-csi-driver-provider-azure/docs/configurations/identity-access-modes/system-assigned-msi-mode/)
+- [User-assigned Managed Identity](https://azure.github.io/secrets-store-csi-driver-provider-azure/docs/configurations/identity-access-modes/user-assigned-msi-mode/)
+
+Workload Identity support might be added in the future. If you need it sooner, [open an issue](https://github.com/Unique-AG/helm-charts/issues).
+
+Other authentication methods (service principals, pod identity) are not supported due to the variety of Azure Key Vault access patterns, security policies, and governance requirements across different organizations. The chart provides a stable foundation; extend it using `extraObjects` for custom authentication setups.
+
 ## Upgrade Guides
+
+### ~> `8.0.0`
+
+**Breaking change:** Azure Workload Identity moved from `.Values.serviceAccount.workloadIdentity` to `.Values.workloadIdentity.azure`.
+
+**From:**
+```yaml
+serviceAccount:
+  enabled: true
+  workloadIdentity:
+    enabled: true
+    clientId: "00000000-0000-0000-0000-000000000000"
+```
+
+**To:**
+```yaml
+workloadIdentity:
+  azure:
+    enabled: true
+    clientId: "00000000-0000-0000-0000-000000000000"
+```
+
+### ~> `7.0.0`
+
+**Breaking changes:** Pod identity and external-secrets support have been removed.
+
+**Who is affected:**
+Most users are not affected, [AKS ~1.30](https://learn.microsoft.com/en-us/azure/aks/supported-kubernetes-versions?tabs=azure-cli#kubernetes-130) was the last version with native pod identity support, and external-secrets usage was only Unique-internal but removed.
+
+**What was changed:**
+- Pod identity annotations were removed (`aadPodIdBinding`) as well as its use in the `SecretProviderClass`
+- The `useVMManagedIdentity` parameter (now always `"true"` internally)
+- The `externalSecrets` parameter and template
+
+**Migration:**
+
+If you were using **pod identity**, migrate to `secretProvider` with VM Managed Identity:
+
+```yaml
+secretProvider:
+  tenantId: your-tenant-id
+  userAssignedIdentityID: your-client-id
+  vaults:
+    your-vault-name:
+      ENV_VAR_NAME: secret-name
+```
+
+If you were using **external-secrets**, either:
+- Use `extraObjects` to include your existing ExternalSecret manifests
+- Manage secrets outside the chart using your existing external-secrets operator setup
+
+### ~> `6.0.0`
+
+#### KEDA
+The KEDA configuration has been restructured to use a map instead of a list for better overlay support. This allows users to overlay specific triggers without having to redefine the entire list.
+
+**Migration Steps:**
+
+**From (5.x):**
+```yaml
+keda:
+  enabled: true
+  scalers:
+    - type: rabbitmq
+      metadata:
+        protocol: amqp
+        queueName: testqueue
+        mode: QueueLength
+        value: "20"
+      authenticationRef:
+        name: keda-trigger-auth-rabbitmq-conn
+    - type: cron
+      metadata:
+        timezone: Europe/Zurich
+        start: 0 6 * * *
+        end: 0 20 * * *
+        desiredReplicas: "10"
+```
+
+**To (6.x):**
+```yaml
+keda:
+  enabled: true
+  triggers:
+    rabbitmq-trigger:  # arbitrary key name for overlay purposes
+      type: rabbitmq
+      metadata:
+        protocol: amqp
+        queueName: testqueue
+        mode: QueueLength
+        value: "20"
+      authenticationRef:
+        name: keda-trigger-auth-rabbitmq-conn
+    cron-trigger:  # arbitrary key name for overlay purposes
+      type: cron
+      metadata:
+        timezone: Europe/Zurich
+        start: 0 6 * * *
+        end: 0 20 * * *
+        desiredReplicas: "10"
+```
+
+**Benefits:**
+- Easier to overlay specific triggers without redefining the entire configuration
+- Better support for GitOps workflows where different environments may need different triggers
+- The map keys are arbitrary and only used for identification during overlays
+
+#### Rationale on circling back to `~4` version like support
+
+Version `~5` removed the previous ScaledObject implementation in favor of a CRD-compliant version that aligns with native KEDA scaler syntax.
+
+Our clients and internal deployments rely heavily on GitOps workflows with ArgoCD. Value overlay capabilities are essential for these use cases. Based on this feedback, we addressed the list structure limitations in this major release.
+
+#### External Secrets
+**Note:** External Secrets support has been completely removed in version 7.0.0. See the [7.0.0 upgrade guide](#-700) for migration instructions.
 
 ### ~> `5.0.0`
 

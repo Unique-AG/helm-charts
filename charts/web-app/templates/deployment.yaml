@@ -41,9 +41,6 @@ spec:
         {{- end }}
       {{- end }}
         {{- include "common.selectorLabels" . | nindent 8 }}
-        {{- if .Values.secretProvider }}
-        aadpodidbinding: {{ default "keyvault" (.Values.secretProvider).aadPodIdBinding }}
-        {{- end }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -109,16 +106,25 @@ spec:
             {{- end }}
             {{- end }}
             {{- end }}
-          {{- if .Values.secretProvider }}
+          {{- if or .Values.volumeMounts .Values.secretProvider }}
           volumeMounts:
+          {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if .Values.secretProvider }}
           {{- range $k, $v := .Values.secretProvider.vaults }}
             - name: {{ $fullName }}-{{ $k }}
               mountPath: "/mnt/{{ $fullName }}-{{ $k }}"
               readOnly: true
           {{- end }}
           {{- end }}
-        {{- if .Values.secretProvider }}
+          {{- end }}
+        {{- if or .Values.volumes .Values.secretProvider }}
       volumes:
+      {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.secretProvider }}
       {{- range $k, $v := .Values.secretProvider.vaults }}
         - name: {{ $fullName }}-{{ $k }}
           csi:
@@ -126,6 +132,7 @@ spec:
             readOnly: true
             volumeAttributes:
               secretProviderClass: {{ $fullName }}-{{ $k }}
+      {{- end }}
       {{- end }}
       {{- end }}
       {{- with .Values.nodeSelector }}

@@ -112,6 +112,10 @@
       "type": "object",
       "description": "Annotations to add to the pod"
     },
+    "podLabels": {
+      "type": "object",
+      "description": "Labels to add to the pod"
+    },
     "podSecurityContext": {
       "type": "object",
       "description": "Pod security context configuration",
@@ -659,46 +663,28 @@
     },
     "secretProvider": {
       "type": "object",
-      "description": "Secret provider configuration for Azure Key Vault",
+      "description": "Secret provider configuration for Azure Key Vault using VM Managed Identity. When enabled, tenantId, userAssignedIdentityID, and vaults are required.",
       "properties": {
         "tenantId": {
           "type": "string",
-          "description": "Azure tenant ID"
-        },
-        "aadPodIdBinding": {
-          "type": "string",
-          "description": "AAD Pod Identity binding name",
-          "examples": ["keyvault"]
-        },
-        "useVMManagedIdentity": {
-          "type": "string",
-          "description": "Use VM managed identity",
-          "examples": ["true"]
+          "description": "Azure tenant ID for the Key Vault (required when secretProvider is used)",
+          "examples": ["00000000-0000-0000-0000-000000000000"]
         },
         "userAssignedIdentityID": {
           "type": "string",
-          "description": "User assigned identity client ID"
+          "description": "Client ID of the user-assigned managed identity (required when secretProvider is used)",
+          "examples": ["00000000-0000-0000-0000-000000000000"]
         },
         "vaults": {
           "type": "object",
-          "description": "Azure Key Vault configuration",
+          "description": "Map of Key Vault names to environment variable mappings (required when secretProvider is used)",
           "additionalProperties": {
             "type": "object",
-            "description": "Key-value pairs of environment variable name to secret name",
+            "description": "Map of environment variable names to Key Vault secret names",
             "additionalProperties": {
               "type": "string"
             }
-          },
-          "examples": [
-            {
-              "vault-name-1": {
-                "MY_ENV_VARIABLE_1": "keyvault-secret-name-a"
-              },
-              "vault-name-2": {
-                "MY_ENV_VARIABLE_2": "keyvault-secret-name-b"
-              }
-            }
-          ]
+          }
         }
       }
     },

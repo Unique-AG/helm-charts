@@ -1,8 +1,15 @@
-{{- if .Values.hooks.migration.enabled -}}
+{{- if .Values.hooks }}
+  {{- $hasEnabledHook := false }}
+  {{- range $hookName, $hookConfig := .Values.hooks }}
+    {{- if and $hookConfig $hookConfig.enabled }}
+      {{- $hasEnabledHook = true }}
+    {{- end }}
+  {{- end }}
+  {{- if $hasEnabledHook -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "backendService.fullname" . }}-migration-env
+  name: {{ include "backendService.fullname" . }}-hooks-env
   namespace: {{ .Release.Namespace  }}
   labels:
     {{- include "backendService.labels" . | nindent 4 }}
@@ -12,9 +19,8 @@ metadata:
     helm.sh/hook-delete-policy: before-hook-creation
 data:
   VERSION: "{{ include "backendService.imageTag" . }}"
-  {{- if .Values.service.enabled }}
-  {{- end }}
-  {{- range $key, $value := .Values.env }}
+    {{- range $key, $value := .Values.env }}
   {{ $key }}: {{ $value | quote }}
+    {{- end }}
   {{- end }}
 {{- end }}

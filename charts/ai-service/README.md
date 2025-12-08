@@ -1,11 +1,11 @@
 # ai-service
 
-Version 2.1.1 is the last supported iteration of this chart. Subsequent changes will only be supplied to https://artifacthub.io/packages/helm/unique/backend-service. Refer to End of Life Notice in README.md.
+Version 3.0.0 is the last supported iteration of this chart. Subsequent changes will only be supplied to https://artifacthub.io/packages/helm/unique/backend-service. Refer to End of Life Notice in README.md.
 
 > [!IMPORTANT]
-> Version `2.1.1` is the last supported iteration of this chart. Subsequent changes will only be supplied to [`unique/backend-service`](https://artifacthub.io/packages/helm/unique/backend-service). Refer to [**End of Life Notice**](#End-of-Life-Notice).
+> Version `2.2.0` is the last supported iteration of this chart. Subsequent changes will only be supplied to [`unique/backend-service`](https://artifacthub.io/packages/helm/unique/backend-service). Refer to [**End of Life Notice**](#End-of-Life-Notice).
 
-![Version: 2.1.1](https://img.shields.io/badge/Version-2.1.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 3.0.0](https://img.shields.io/badge/Version-3.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -13,10 +13,10 @@ Version 2.1.1 is the last supported iteration of this chart. Subsequent changes 
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-ai-service unique/ai-service --version 2.1.1
+helm install my-ai-service unique/ai-service --version 3.0.0
 
 # or
-helm install my-ai-service oci://ghcr.io/unique-ag/helm-charts/ai-service --version 2.1.1
+helm install my-ai-service oci://ghcr.io/unique-ag/helm-charts/ai-service --version 3.0.0
 ```
 
 ### Docker Images
@@ -216,6 +216,7 @@ Common uses include:
 | nodeSelector | object | `{}` |  |
 | pdb.maxUnavailable | string | `"30%"` |  |
 | podAnnotations | object | `{}` |  |
+| podLabels | object | `{}` | Define additional pod labels for all the pods |
 | podSecurityContext | object | `{"seccompProfile":{"type":"RuntimeDefault"}}` | PodSecurityContext for the pod(s) |
 | podSecurityContext.seccompProfile | object | `{"type":"RuntimeDefault"}` | seccompProfile, controls the seccomp profile for the container, defaults to 'RuntimeDefault' |
 | probes.enabled | bool | `false` |  |
@@ -265,7 +266,7 @@ Common uses include:
 
 Unique has historically maintained two distinct Helm charts for backend services: [`unique/backend-service`](https://artifacthub.io/packages/helm/unique/backend-service) and the current `ai-service` chart. While `backend-service` has been actively maintained and regularly updated, the `ai-service` chart has seen limited maintenance due to its lower adoption rate. Analysis shows that `ai-service` provides minimal additional functionality beyond `backend-service`, with its primary distinguishing feature being the `artifactsCache` component, which has seen minimal utilization in production environments.
 
-⚠️ Version `2.1.1` represents the final supported release of this chart.
+⚠️ Version `2.2.0` represents the final supported release of this chart.
 
 ### Migration Considerations
 

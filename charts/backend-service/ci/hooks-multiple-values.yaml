@@ -1,0 +1,49 @@
+# CI test for multiple hooks configuration
+# This file tests the multi-hook functionality where multiple hooks can be defined
+# and they share common resources (ConfigMap, Secret, ServiceAccount, SecretProviderClass)
+
+# Configure multiple hooks
+hooks:
+  # Database migration hook - uses default annotations (pre-install,pre-upgrade)
+  migration:
+    enabled: true
+    backoffLimit: 2
+    command: echo "migration"
+    # No need to specify annotations - defaults will be used
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 256Mi
+
+  # Database seeding hook - overrides timing to run after install/upgrade
+  seed:
+    enabled: true
+    backoffLimit: 1
+    command: echo "seed"
+    # Override only the hook timing, keep other defaults
+    helm:
+      weight: "11"
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        memory: 128Mi
+
+# Environment variables (shared across all hooks)
+env:
+  NODE_ENV: production
+  DATABASE_URL: postgres://localhost:5432/mydb
+  LOG_LEVEL: info
+
+# Service account for hooks
+serviceAccount:
+  enabled: true
+  annotations:
+    azure.workload.identity/client-id: 12345678-1234-1234-1234-123456789abc
+
+# Enable deployment for full chart rendering
+deployment:
+  enabled: true

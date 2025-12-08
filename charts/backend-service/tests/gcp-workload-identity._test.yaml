@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: GCP Workload Identity Federation
+templates:
+  - deployment.yaml
+  - deployment-env.yaml
+  - gcp-wif-cm.yaml
+release:
+  name: ut
+tests:
+  - it: When GCP workload identity is enabled, should render ConfigMap, volumes, volumeMounts, and env vars
+    set:
+      image.tag: pinned-version
+      workloadIdentity.gcp.enabled: true
+      workloadIdentity.gcp.projectId: "123456789"
+      workloadIdentity.gcp.workloadIdentityPool: my-pool
+      workloadIdentity.gcp.provider: my-provider
+      workloadIdentity.gcp.serviceAccountEmail: sa@my-project.iam.gserviceaccount.com
+    asserts:
+      # ConfigMap is created
+      - template: gcp-wif-cm.yaml
+        isKind:
+          of: ConfigMap
+      - template: gcp-wif-cm.yaml
+        equal:
+          path: metadata.name
+          value: ut-gcp-wif
+      - template: gcp-wif-cm.yaml
+        matchRegex:
+          path: data["config.json"]
+          pattern: "123456789.*my-pool.*my-provider"
+      - template: gcp-wif-cm.yaml
+        matchRegex:
+          path: data["config.json"]
+          pattern: "sa@my-project.iam.gserviceaccount.com"
+      # Deployment has the volumes
+      - template: deployment.yaml
+        isNotNullOrEmpty:
+          path: spec.template.spec.volumes[?(@.name == "gcp-wif-config")]
+      - template: deployment.yaml
+        isNotNullOrEmpty:
+          path: spec.template.spec.volumes[?(@.name == "gcp-token")]
+      # Deployment has the volumeMounts
+      - template: deployment.yaml
+        isNotNullOrEmpty:
+          path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.name == "gcp-wif-config")]
+      - template: deployment.yaml
+        isNotNullOrEmpty:
+          path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.name == "gcp-token")]
+      # Deployment has the GOOGLE_APPLICATION_CREDENTIALS env var
+      - template: deployment.yaml
+        contains:
+          path: spec.template.spec.containers[?(@.name == "ut")].env
+          content:
+            name: GOOGLE_APPLICATION_CREDENTIALS
+            value: /var/run/secrets/gcp-wif/config.json
+          count: 1
+          any: true

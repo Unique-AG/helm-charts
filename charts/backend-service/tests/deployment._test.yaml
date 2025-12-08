@@ -10,6 +10,7 @@ tests:
     set:
       image.tag: pinned-version
       secretProvider.tenantId: 99330c76-81d2-460e-861e-35af8e2a4266
+      secretProvider.userAssignedIdentityID: test-identity-id
       secretProvider.vaults.qa-app-common.AMQP_URL: RABBITMQ-ORANGE-WOLF-URL
 
     template: deployment.yaml
@@ -125,8 +126,9 @@ tests:
         enabled: true
         minReplicaCount: 0
         maxReplicaCount: 4
-        scalers:
-          - type: rabbitmq
+        triggers:
+          rabbitmq-test:
+            type: rabbitmq
             metadata:
               protocol: amqp
               queueName: example.queue
@@ -159,3 +161,38 @@ tests:
       - equal:
           path: spec.template.metadata.annotations.test
           value: true
+
+  - it: When given a revisionHistoryLimit in deployment
+    set:
+      image.tag: pinned-version
+      deployment.enabled: true
+      deployment.revisionHistoryLimit: 22
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 22
+
+  - it: When given annotations, renders properly
+    set:
+      image.tag: pinned-version
+      deployment.metadata.annotations:
+        reloader.stakater.com/auto: "true"
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+
+  - it: When given priorityClassName, renders properly
+    set:
+      image.tag: pinned-version
+      priorityClassName: high-priority
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.spec.priorityClassName
+          value: high-priority

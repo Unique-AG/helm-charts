@@ -36,14 +36,23 @@ spec:
   {{- else }}
   maxReplicaCount: 4
   {{- end }}
-
   # fallback and advanced are for now defaulting/omitted
   triggers:
-  {{- if not .Values.keda.scalers }}
-  {{- fail "You must specify at least one scaler in .Values.keda.scalers" }}
+  {{- if not .Values.keda.triggers }}
+  {{- fail "You must specify at least one trigger in .Values.keda.triggers" }}
   {{- end }}
-  {{- with .Values.keda.scalers }}
-  {{- toYaml . | nindent 2 }}
+  {{- if eq (len .Values.keda.triggers) 0 }}
+  {{- fail "You must specify at least one trigger in .Values.keda.triggers" }}
+  {{- end }}
+  {{- $hasValidTriggers := false }}
+  {{- range $name, $trigger := .Values.keda.triggers }}
+  {{- if not (empty $trigger) }}
+  {{- $hasValidTriggers = true }}
+  - {{ toYaml $trigger | nindent 4  | trim }}
+  {{- end }}
+  {{- end }}
+  {{- if not $hasValidTriggers }}
+  {{- fail "You must specify at least one valid (non-null) trigger in .Values.keda.triggers" }}
   {{- end }}
 {{- else }}
 {{- fail "You can't use keda without CRDs installed. Install CRDs first."}}

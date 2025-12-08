@@ -4,7 +4,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   {{- if .Values.cronJob.name }}
-  name: {{ $fullName }}-{{ .Values.cronJob.name }}
+  name: {{ .Values.cronJob.name }}
   {{- else }}
   name: {{ $fullName }}
   {{- end }}
@@ -29,9 +29,6 @@ spec:
               {{- end }}
             {{- end }}
             {{- include "backendService.labelsCronJob" . | nindent 12 }}
-            {{- if .Values.secretProvider }}
-            aadpodidbinding: {{ default "keyvault" (.Values.secretProvider).aadPodIdBinding }}
-            {{- end }}
           annotations:
             {{- if .Values.podAnnotations }}
               {{- with .Values.podAnnotations }}

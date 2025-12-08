@@ -1,0 +1,65 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: Regression Test Servicemonitor
+templates:
+  - servicemonitor.yaml
+  - service.yaml
+release:
+  name: ut
+tests:
+  - it: When given port for metrics
+    set:
+      image.tag: pinned-version
+      ports.metrics: 9003
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    template: servicemonitor.yaml
+    asserts:
+      - equal:
+          path: spec.endpoints[0].port
+          value: metrics
+
+  - it: When not given port for metrics
+    set:
+      image.tag: pinned-version
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    template: servicemonitor.yaml
+    asserts:
+      - equal:
+          path: spec.endpoints[0].port
+          value: http
+
+  - it: ServiceMonitor matchLabels should match Service labels
+    set:
+      image.tag: pinned-version
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - template: service.yaml
+        hasDocuments:
+          count: 1
+      - template: service.yaml
+        equal:
+          path: spec.selector
+          value:
+            app.kubernetes.io/name: ut
+            app.kubernetes.io/instance: ut
+            app.kubernetes.io/component: server
+      - template: service.yaml
+        equal:
+          path: metadata.labels
+          value:
+            app.kubernetes.io/name: ut
+            app.kubernetes.io/instance: ut
+      - template: servicemonitor.yaml
+        hasDocuments:
+          count: 1
+      - template: servicemonitor.yaml
+        equal:
+          path: spec.selector.matchLabels
+          value:
+            app.kubernetes.io/name: ut
+            app.kubernetes.io/instance: ut

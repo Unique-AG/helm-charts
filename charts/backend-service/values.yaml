@@ -33,10 +33,10 @@ cronJob:
   failedJobsHistoryLimit: 1
   jobTemplate:
     containers:
-      name: ''
+      name: ""
     restartPolicy: OnFailure
-  name: ''
-  schedule: ''
+  name: ""
+  schedule: ""
   startingDeadlineSeconds: 60
   successfulJobsHistoryLimit: 1
   suspend: false
@@ -46,6 +46,14 @@ cronJob:
 # since this chart allows to also deploy as a CronJob or both, all deployment related values are in this section
 deployment:
   enabled: true
+  # -- Specify the metadata for the deployment
+  metadata:
+    # -- Specify the annotations for the deployment
+    annotations: {}
+    # -- Specify the labels for the deployment
+    labels: {}
+  # -- Specify how many old ReplicaSets for this Deployment you want to retain.
+  revisionHistoryLimit: 3
   # metadata:
   #   labels:
   #     app: backend-service
@@ -72,28 +80,6 @@ envSecrets: {}
 # envVars is a list of ENV_NAME: $VALUE which will be added to the pods where the $VALUE supports the same syntax as the native pod spec
 # https://kubernetes.io/docs/tasks/inject-data-application/define-environment-variable-container/
 envVars: []
-
-externalSecrets:
-  []
-  # - keyvaultName: my-keyvault
-  #   keyvaultURL: "https://my-keyvault:8989" # private keyvault
-  #   identityId: "xxx-xxxxxx-xxx-xxxx"
-  #   tenantId: "yyyy-yyy-yyyy-yyyy-yy"
-  #   secrets:
-  #     - name: golden-secret
-  #       type: Opaque
-  #       metadata:
-  #         labels:
-  #           app: my-app
-  #           environment: production
-  #         annotations:
-  #           description: "This secret created by external-secrets.io from kv my-keyvault "
-  #       data:
-  #         - objectName: my-secret-in-kv-1
-  #           key: my-secret-in-kv-1
-
-  #         - objectName: my-secret-in-kv-2
-  #           key: my-secret-in-kv-2
 
 # extraEnvCM is a list of existing ConfigMaps to be loaded using the envFrom syntax
 extraEnvCM: []
@@ -139,25 +125,58 @@ extraRoutes:
     additionalRules: []
 
 # -- extraCronJobs allows you to define additional cron jobs besides 'cronJob' itself.
-extraCronJobs: {}
-  #   - foo
-  #   suspend: false
-  #   schedule: "0 0 1 1 *"
-  #   timeZone: "Europe/Zurich"
+extraCronJobs:
+  {}
+  # foo:
   #   concurrencyPolicy: Forbid
-  #   restartPolicy: Never
-  #   successfulJobsHistoryLimit: 3
-  #   failedJobsHistoryLimit: 3
-  #   startingDeadlineSeconds: 10
+  #   env:
+  #     FOO: BAR
   #   envVars:
-  #     - name: RUNNING_MODE
-  #       value: "bar"
+  #     - name: BAZ
+  #       value: qux
+  #   failedJobsHistoryLimit: 3
+  #   restartPolicy: Never
+  #   schedule: 0 0 1 1 *
+  #   startingDeadlineSeconds: 600
+  #   successfulJobsHistoryLimit: 3
+  #   suspend: false
+  #   timeZone: Europe/Zurich
+  #   resources:
+  #     requests:
+  #       cpu: 100m
+  #       memory: 100Mi
+  #     limits:
+  #       cpu: 200m
+  #       memory: 200Mi
 
 hooks:
+  # -- Hooks are defined as a map where each key is the hook name
+  # The "migration" hook is the default and most common hook
+  # Additional hooks can be added by adding new map entries
+  #
+  # By default, both ArgoCD and Helm hooks are enabled with sensible defaults
+  # You can disable either one or customize their behavior per hook
   migration:
     enabled: false
-    # name: "" defaults to db-migration
+    # -- Number of retries before the migration job is considered failed (default: 2)
+    backoffLimit: 2
+    # name: "" defaults to the hook name (e.g., "migration")
+    # For backwards compatibility, the migration hook defaults to "db-migration"
     command: ""
+    # -- Configure hook annotations for ArgoCD and Helm
+    # helm:
+    #   enabled: true  # default: true
+    #   hook: "pre-install,pre-upgrade"  # default: "pre-install,pre-upgrade"
+    #   weight: "10"  # default: "10"
+    #   deletePolicy: "before-hook-creation"  # default: "before-hook-creation"
+    # -- Optional resource requirements for the migration job
+    # If not set, will use the global resources configuration
+    # resources:
+    #   requests:
+    #     cpu: 100m
+    #     memory: 128Mi
+    #   limits:
+    #     memory: 128Mi
     # initContainers:
     #   - command:
     #       - sh
@@ -168,6 +187,19 @@ hooks:
     #         mountPath: /opt
     #         mountPathJob: /opt/folder
     #         readOnly: true
+  # -- Example of an additional hook (commented out by default)
+  # seed:
+  #   enabled: false
+  #   backoffLimit: 1
+  #   command: "npm run seed"
+  #   # Example: Disable ArgoCD hooks, only use Helm hooks with custom timing
+  #   hooks:
+  #     argocd:
+  #       enabled: false
+  #     helm:
+  #       enabled: true
+  #       hook: "post-install,post-upgrade"
+  #       weight: "11"
 
 # -- networkPolicy allows you to define network policies for the deployed pods
 # Network policies are used to control traffic flow to and from pods
@@ -269,7 +301,7 @@ image:
   repository: "ghcr.io/unique-ag/chart-testing-service"
   # -- tag, most often will refer one of the latest release of the Unique service
   # Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image
-  tag: "1.0.3"
+  tag: "1.1.0"
   # -- pullPolicy, Unique recommends to never use 'Always'
   pullPolicy: IfNotPresent
 
@@ -297,11 +329,16 @@ keda:
   minReplicaCount: 1
   # -- max replica count for the ScaledObject
   maxReplicaCount: 4
-  # -- scalers for the ScaledObject
-  # You can specify multiple scalers for the ScaledObject as outlined in https://keda.sh/docs/2.14/scalers/
-  scalers: []
+  # -- triggers for the ScaledObject
+  # You can specify multiple triggers for the ScaledObject as outlined in https://keda.sh/docs/2.14/scalers/
+  # The key names are arbitrary and used only for overlay purposes
+  # Note that when disabling/overriding a trigger with `null` to unset it, helm will issue a warning as its cautious about merging types.
+  # For that case, the warning can be ignored.
+  triggers:
+    {}
     # # -- rabbitmq example
-    # - type: rabbitmq
+    # rabbitmq-trigger:
+    #   type: rabbitmq
     #   metadata:
     #     protocol: amqp
     #     queueName: testqueue
@@ -312,7 +349,8 @@ keda:
     #   authenticationRef:
     #     name: keda-trigger-auth-rabbitmq-conn
     # # -- cron example
-    # - type: cron
+    # cron-trigger:
+    #   type: cron
     #   metadata:
     #     # -- The acceptable values would be a value from the IANA Time Zone Database.
     #     timezone: Europe/Zurich
@@ -321,21 +359,37 @@ keda:
     #     # -- desired replicas for the ScaledObject
     #     desiredReplicas: "10"
 
+# -- PodDisruptionBudget configuration
+# Note: If both maxUnavailable and minAvailable are set, minAvailable takes precedence
 pdb:
+  # -- Maximum number of pods that can be unavailable during a disruption
+  # Can be either a percentage (e.g., "30%") or an absolute number (e.g., "2")
   maxUnavailable: 30%
+  # -- Minimum number of pods that must be available during a disruption
+  # Can be either a percentage (e.g., "50%") or an absolute number (e.g., "1")
+  # minAvailable: 1
 
 # -- Define additional pod annotations for all the pods
 podAnnotations: {}
 
 # -- Define additional pod labels for all the pods
-podLabels: {}
+podLabels:
+  logging.unique.app/format: "pino-json"
 
 # -- PodSecurityContext for the pod(s)
 podSecurityContext:
+  # -- runAsNonRoot, controls if the container must run as a non-root user, defaults to 'true'
+  runAsNonRoot: true
+  # -- runAsUser, controls the user ID that runs the container, defaults to '1000'
+  runAsUser: 1000
   # -- seccompProfile, controls the seccomp profile for the container, defaults to 'RuntimeDefault'
   seccompProfile:
     ## -- type, the type of seccomp profile to use, defaults to 'RuntimeDefault'
     type: RuntimeDefault
+
+# -- priorityClassName sets the priority class for pod scheduling priority
+# This can be used to ensure critical workloads are scheduled before less important ones
+# priorityClassName: high-priority
 
 # -- the ports section allows specify ports used for different purposes
 ports:
@@ -343,6 +397,8 @@ ports:
   # ℹ You may not be able to use ports below 1024 as non-root user which is the default securityContext of this chart
   # If you need to use a port below 1024, you can override the securityContext of the deployment (discouraged) or get the `NET_BIND_SERVICE` capability added to the container (also discouraged but preferred if absolutely needed, at your own risk/liability)
   application: 8080
+  # -- optional metrics port, does not default and is disabled when not set. Basic uses cases use the application port.
+  # metrics: 8081
   # -- service port, this is the port that the service will be exposed on
   service: 80
 
@@ -412,7 +468,8 @@ prometheus:
     kubernetesApplication:
       enabled: true
       # -- Disable specific alerts by setting them to true
-      disabled: {}
+      disabled:
+        {}
         # KubePodCrashLooping: false
         # KubePodNotReady: false
         # KubeDeploymentGenerationMismatch: false
@@ -433,7 +490,8 @@ prometheus:
         # KubePersistentVolumeClaimPending: false
         # KubePdbNotEnoughHealthyPods: false
       # -- Override alert rules with custom values (for duration, severity, etc.)
-      customRules: {}
+      customRules:
+        {}
         # KubePodCrashLooping:
         #   for: "10m"
         #   severity: "critical"
@@ -447,7 +505,8 @@ prometheus:
     kubernetesResources:
       enabled: true
       # -- Disable specific alerts by setting them to true
-      disabled: {}
+      disabled:
+        {}
         # KubernetesPodHighCPUUsage: false
         # KubernetesPodHighMemoryUsage: false
         # KubernetesPodNearMemoryLimit: false
@@ -459,7 +518,8 @@ prometheus:
         # KubernetesHPAScalingEvent: false
         # KubernetesHPAMaxReplicasReached: false
       # -- Override alert rules with custom values (for duration, severity, etc.)
-      customRules: {}
+      customRules:
+        {}
         # KubernetesPodHighCPUUsage:
         #   for: "15m"
         #   severity: "critical"
@@ -468,7 +528,8 @@ prometheus:
         # KubernetesContainerOOMKilled:
         #   for: "1m"
     # -- Additional labels to add to all default alerts
-    additionalLabels: {}
+    additionalLabels:
+      {}
       # environment: production
       # team: backend
 
@@ -503,7 +564,8 @@ routes:
       # -- explicitly list paths to block
       blockList:
         - /metrics
-      extraAnnotations: []
+      extraAnnotations:
+        []
         # konghq.com/request-buffering: "false"
         # konghq.com/read-timeout: "120s"
     versioned:
@@ -512,7 +574,8 @@ routes:
       # ⚠️ Customizing this value requires also changing the default url in multiple places including all SDK or integration use cases
       # @default -- the chart will default to 'public' to stay backward compatible
       pathOverride: /public
-      extraAnnotations: []
+      extraAnnotations:
+        []
         # konghq.com/request-buffering: "false"
     scoped:
       enabled: false
@@ -533,11 +596,11 @@ routes:
       enabled: false
       # -- path to the probe endpoint
       probePath: /probe
-      extraAnnotations: []
+      extraAnnotations:
+        []
         # konghq.com/strip-path: "true"
 
-# !!! usePodIdentity will be deprecated in the future please use useVMManagedIdentity with the clientID
-# .Values.secretProvider lets you mount secrets from Azure Key Vault into the pod
+# .Values.secretProvider lets you mount secrets from Azure Key Vault into the pod using VM Managed Identity
 # Note that 'vault-1' is the literal vault name from azure
 # The line format is 'make <ENV>: from <KEY_VAULT_SECRET_NAME>'
 # The conversion from - to _ is done automatically
@@ -545,9 +608,7 @@ secretProvider: {}
 # Example
 # secretProvider:
 #   tenantId: 99330c76-81d2-460e-861e-35af8e2a4266
-#   aadPodIdBinding: binding-21 # optional, defaults to 'keyvault'
-#   useVMManagedIdentity: "true" # optional, if not present usePodIdentity is set to "true" useVMManagedIdentity to "false"
-#   userAssignedIdentityID: "xx-pls-provide-client-id-xx"   # Should not be empty if useVMManagedIdentity is present and has the value "true"
+#   userAssignedIdentityID: "xx-pls-provide-client-id-xx"   # Required - the client ID of the managed identity
 #   vaults:
 #     vault-name-1:
 #       MY_ENV_VARIABLE_1: keyvault-secret-name-a
@@ -567,7 +628,7 @@ securityContext:
   # -- capabilities section controls the Linux capabilities for the container
   capabilities:
     drop:
-    - ALL
+      - ALL
 
 service:
   enabled: true
@@ -575,14 +636,26 @@ service:
   port: 80
   # -- extraLabels allows you to add additional labels to the service e.g. {"foo": "bar"}
   extraLabels: {}
+  annotations: {}
 
 serviceAccount:
-  enabled: false
+  enabled: true
+  # -- Specifies whether to automount the service account token
+  automountServiceAccountToken: true
   annotations: {}
   # name: ""
-  workloadIdentity: {}
 
 tolerations: []
+
+workloadIdentity:
+  azure: {}
+  gcp:
+    enabled: false
+    # projectId: "123456789"                        # GCP project number
+    # workloadIdentityPool: my-pool                 # Workload identity pool name
+    # provider: my-provider                         # Workload identity pool provider name
+    # serviceAccountEmail: sa@project.iam.gserviceaccount.com  # GCP service account to impersonate
+    # tokenExpirationSeconds: 3600                  # Optional, defaults to 3600
 
 volumeMounts: []
 

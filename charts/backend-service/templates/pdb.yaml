@@ -3,9 +3,6 @@
 {{- if and (not .Values.pdb.maxUnavailable) (not .Values.pdb.minAvailable) }}
 {{- fail "You must either set `.Values.pdb.maxUnavailable` or `.Values.pdb.minAvailable` when there is more than 1 replica configured." }}
 {{- else }}
-{{- if and .Values.pdb.maxUnavailable .Values.pdb.minAvailable }}
-{{- fail "You cannot set both `.Values.pdb.maxUnavailable` and `.Values.pdb.minAvailable` at the same time." }}
-{{- else }}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
@@ -13,11 +10,14 @@ metadata:
   labels:
     {{- include "backendService.labels" . | nindent 4 }}
 spec:
+  {{- if .Values.pdb.minAvailable }}
+  minAvailable: {{ .Values.pdb.minAvailable }}
+  {{- else }}
+  maxUnavailable: {{ .Values.pdb.maxUnavailable }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "backendService.selectorLabels" . | nindent 6 }}
-  {{- toYaml .Values.pdb | nindent 2 }}
-{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

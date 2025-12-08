@@ -4,10 +4,11 @@ kind: Service
 metadata:
   name: {{ include "backendService.fullname" . }}
   labels:
-    {{- include "backendService.labels" . | nindent 4 }}
-    {{- with .Values.service.extraLabels }}
+    {{- include "backendService.serviceLabels" . | nindent 4 }}
+  {{- with .Values.service.annotations }}
+  annotations:
     {{- toYaml . | nindent 4 }}
-    {{- end }}
+  {{- end }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -15,6 +16,12 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+    {{- if .Values.ports.metrics }}
+    - port: {{ .Values.ports.metrics }}
+      targetPort: metrics
+      protocol: TCP
+      name: metrics
+    {{- end }}
   selector:
     {{- include "backendService.selectorLabels" . | nindent 4 }}
 {{- end }}

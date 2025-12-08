@@ -1,0 +1,198 @@
+{{- include "backendService.validateGcpWorkloadIdentity" . -}}
+{{- if .Values.hooks }}
+{{- range $hookName, $hookConfig := .Values.hooks }}
+{{- if and $hookConfig $hookConfig.enabled }}
+{{- $fullName := include "backendService.fullname" $ }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $fullName }}-{{ $hookName }}
+  labels:
+    {{- include "backendService.labelsHooks" $ | nindent 4 }}
+  annotations:
+    helm.sh/hook: {{ dig "helm" "hook" "pre-install,pre-upgrade" $hookConfig | quote }}
+    helm.sh/hook-delete-policy: {{ dig "helm" "deletePolicy" "before-hook-creation" $hookConfig | quote }}
+    helm.sh/hook-weight: {{ dig "helm" "weight" "10" $hookConfig | quote }}
+spec:
+  backoffLimit: {{ default 2 $hookConfig.backoffLimit }}
+  template:
+    metadata:
+      name: "{{ $.Release.Name }}"
+      {{- with $.Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- if $.Values.podLabels }}
+          {{- with $.Values.podLabels }}
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+        {{- end }}
+        {{- include "backendService.labelsHooks" $ | nindent 8 }}
+        {{- if $.Values.workloadIdentity.azure.enabled }}
+        azure.workload.identity/use: 'true'
+        {{- end }}
+    spec:
+      {{- with $.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if $.Values.serviceAccount.enabled }}
+      serviceAccountName: {{ include "backendService.serviceAccountName" $ }}-hooks
+      {{- end }}
+      restartPolicy: Never
+      {{- if $hookConfig.initContainers }}
+      initContainers:
+      {{- range $hookConfig.initContainers }}
+        - name: {{ .name | default (printf "init-%s" $fullName) }}
+          image: "{{ .image | default "busybox:1.28" }}"
+          restartPolicy: "{{ .restartPolicy | default "Always" }}"
+          command: {{ .command | toYaml | nindent 10 }}
+          {{- if .volumeMounts }}
+          volumeMounts:
+          {{- range .volumeMounts }}
+            - name: {{ .name}}
+              mountPath: {{ .mountPath }}
+              readOnly: {{ .readOnly | default false }}
+          {{- end }}
+          {{- end }}
+      {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ default (ternary "db-migration" $hookName (eq $hookName "migration")) $hookConfig.name | quote }}
+          image: "{{ $.Values.image.repository }}:{{ include "backendService.imageTag" $ }}"
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - {{ $hookConfig.command | quote }}
+          {{- if hasKey $hookConfig "resources" }}
+          {{- with $hookConfig.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- else if $.Values.resources }}
+          resources:
+            {{- toYaml $.Values.resources | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+          {{- with $.Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if $.Values.secretProvider }}
+          {{- range $k, $v := $.Values.secretProvider.vaults }}
+            - name: {{ $fullName }}-{{ $k }}
+              mountPath: "/mnt/{{ $fullName }}-{{ $k }}"
+              readOnly: true
+           {{- end }}
+           {{- end }}
+          {{- if $.Values.workloadIdentity.gcp.enabled }}
+            - name: gcp-wif-config
+              mountPath: /var/run/secrets/gcp-wif
+              readOnly: true
+            - name: gcp-token
+              mountPath: /var/run/secrets/gcp-token
+              readOnly: true
+          {{- end }}
+          {{- if $hookConfig.initContainers }}
+          {{- range $hookConfig.initContainers }}
+          {{- if .volumeMounts }}
+          {{- range .volumeMounts }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPathJob | default .mountPath }}
+              readOnly: {{ .readOnly | default false }}
+          {{- end }}
+          {{- end }}
+          {{- end }}
+          {{- end }}
+          securityContext: {{- toYaml $.Values.securityContext | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: {{ $fullName }}-hooks-env
+            {{- if $.Values.envSecrets }}
+            - secretRef:
+                name: {{ $fullName }}-hooks-secrets
+            {{- end }}
+            {{- if $.Values.extraEnvCM }}
+            {{- range $v := $.Values.extraEnvCM }}
+            - configMapRef:
+                name: {{ $v }}
+            {{- end }}
+            {{- end }}
+            {{- if $.Values.extraEnvSecrets }}
+            {{- range $v := $.Values.extraEnvSecrets }}
+            - secretRef:
+                name: {{ $v }}
+            {{- end }}
+            {{- end }}
+          env:
+            {{- with $.Values.envVars }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- if $.Values.workloadIdentity.gcp.enabled }}
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /var/run/secrets/gcp-wif/config.json
+            {{- end }}
+            {{- if $.Values.secretProvider }}
+            {{- range $k, $v := $.Values.secretProvider.vaults }}
+            {{- range $key, $value := $v }}
+            - name: {{ $key }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $fullName }}-{{ $k }}-hooks
+                  key: {{ $value }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
+      {{- with $.Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+      {{- with $.Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if $hookConfig.initContainers }}
+      {{- range $hookConfig.initContainers }}
+      {{- if .volumeMounts }}
+      {{- range .volumeMounts }}
+        - name: {{ .name }}
+          emptyDir: {}
+      {{- end }}
+      {{- end }}
+      {{- end }}
+      {{- end }}
+      {{- if $.Values.secretProvider }}
+      {{- range $k, $v := $.Values.secretProvider.vaults }}
+        - name: {{ $fullName }}-{{ $k }}
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ $fullName }}-{{ $k }}-hooks
+      {{- end }}
+      {{- end }}
+      {{- if $.Values.workloadIdentity.gcp.enabled }}
+        - name: gcp-wif-config
+          configMap:
+            name: {{ include "backendService.fullname" $ }}-gcp-wif-hooks
+        - name: gcp-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  audience: "//iam.googleapis.com/projects/{{ $.Values.workloadIdentity.gcp.projectId }}/locations/global/workloadIdentityPools/{{ $.Values.workloadIdentity.gcp.workloadIdentityPool }}/providers/{{ $.Values.workloadIdentity.gcp.provider }}"
+                  expirationSeconds: {{ $.Values.workloadIdentity.gcp.tokenExpirationSeconds | default 3600 }}
+                  path: gcp-token
+      {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

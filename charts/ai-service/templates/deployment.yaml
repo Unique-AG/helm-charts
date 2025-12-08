@@ -29,10 +29,12 @@ spec:
         checksum/secrets: {{ include (print $.Chart.Name "/templates/secrets.yaml") . | sha256sum | trunc 8 | quote }}
         {{- end }}
       labels:
-        {{- include "common.selectorLabels" . | nindent 8 }}
-       {{- if and (.Values.secretProvider) (not .Values.secretProvider.useVMManagedIdentity) }}
-        aadpodidbinding: {{ default "keyvault" (.Values.secretProvider).aadPodIdBinding }}
+      {{- if .Values.podLabels }}
+        {{- with .Values.podLabels }}
+          {{- toYaml . | nindent 8 }}
         {{- end }}
+      {{- end }}
+        {{- include "common.selectorLabels" . | nindent 8 }}
         {{- if .Values.serviceAccount.workloadIdentity.enabled }}
         azure.workload.identity/use: 'true'
         {{- end }}
@@ -212,8 +214,8 @@ spec:
             - name: {{ $fullName }}-{{ $k }}
               mountPath: "/mnt/{{ $fullName }}-{{ $k }}"
               readOnly: true
-           {{- end }}
-           {{- end }}
+          {{- end }}
+          {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

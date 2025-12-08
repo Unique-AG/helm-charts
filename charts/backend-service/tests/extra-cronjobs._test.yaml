@@ -11,7 +11,7 @@ tests:
     template: extra-cronjobs.yaml
     documentSelector:
       path: metadata.name
-      value: ecj-foo
+      value: foo
     asserts:
       - isKind:
           of: CronJob

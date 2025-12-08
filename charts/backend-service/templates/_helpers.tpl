@@ -48,6 +48,13 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/component: server
 {{- end }}
 
+{{- define "backendService.serviceLabels" -}}
+{{- include "backendService.labels" . }}
+{{ with .Values.service.extraLabels }}
+{{- toYaml . }}
+{{- end }}
+{{- end }}
+
 {{/* These labels are shared between all components (or shared resources) and have no component awareness */}}
 {{- define "backendService.mutableLabels" -}}
 {{- include "backendService.immutableLabels" . }}
@@ -65,9 +72,9 @@ app.kubernetes.io/component: cron-job
 {{- end }}
 
 {{/* These labels identify db migration job specific resources */}}
-{{- define "backendService.labelsHooksDbMigrations" -}}
+{{- define "backendService.labelsHooks" -}}
 {{- include "backendService.mutableLabels" . }}
-app.kubernetes.io/component: hooks-db-migration
+app.kubernetes.io/component: hook
 {{- end }}
 
 {{/* Helper to get the prefix */}}
@@ -105,5 +112,23 @@ app.kubernetes.io/component: hooks-db-migration
 {{- .Values.image.tag -}}
 {{- else -}}
 {{- .Chart.AppVersion -}}
+{{- end -}}
+{{- end -}}
+
+{{/* Validate GCP workload identity configuration */}}
+{{- define "backendService.validateGcpWorkloadIdentity" -}}
+{{- if .Values.workloadIdentity.gcp.enabled -}}
+{{- if not .Values.workloadIdentity.gcp.projectId -}}
+{{- fail "workloadIdentity.gcp.projectId is required when workloadIdentity.gcp.enabled is true" -}}
+{{- end -}}
+{{- if not .Values.workloadIdentity.gcp.workloadIdentityPool -}}
+{{- fail "workloadIdentity.gcp.workloadIdentityPool is required when workloadIdentity.gcp.enabled is true" -}}
+{{- end -}}
+{{- if not .Values.workloadIdentity.gcp.provider -}}
+{{- fail "workloadIdentity.gcp.provider is required when workloadIdentity.gcp.enabled is true" -}}
+{{- end -}}
+{{- if not .Values.workloadIdentity.gcp.serviceAccountEmail -}}
+{{- fail "workloadIdentity.gcp.serviceAccountEmail is required when workloadIdentity.gcp.enabled is true" -}}
+{{- end -}}
 {{- end -}}
 {{- end -}}

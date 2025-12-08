@@ -211,7 +211,7 @@
         "tag": {
           "type": "string",
           "description": "Tag for the image",
-          "examples": ["1.0.2"]
+          "examples": ["1.1.0"]
         },
         "pullPolicy": {
           "type": "string",
@@ -803,23 +803,24 @@
     },
     "secretProvider": {
       "type": "object",
-      "description": "Secret provider configuration for Azure Key Vault",
+      "description": "Secret provider configuration for Azure Key Vault using VM Managed Identity. When enabled, tenantId, userAssignedIdentityID, and vaults are required.",
       "properties": {
         "tenantId": {
           "type": "string",
-          "description": "Azure tenant ID"
+          "description": "Azure tenant ID for the Key Vault (required when secretProvider is used)",
+          "examples": ["00000000-0000-0000-0000-000000000000"]
         },
-        "aadPodIdBinding": {
+        "userAssignedIdentityID": {
           "type": "string",
-          "description": "AAD Pod Identity binding name",
-          "examples": ["keyvault"]
+          "description": "Client ID of the user-assigned managed identity (required when secretProvider is used)",
+          "examples": ["00000000-0000-0000-0000-000000000000"]
         },
         "vaults": {
           "type": "object",
-          "description": "Azure Key Vault configuration",
+          "description": "Map of Key Vault names to environment variable mappings (required when secretProvider is used)",
           "additionalProperties": {
             "type": "object",
-            "description": "Key-value pairs of environment variable name to secret name",
+            "description": "Map of environment variable names to Key Vault secret names",
             "additionalProperties": {
               "type": "string"
             }
@@ -852,6 +853,20 @@
     "tolerations": {
       "type": "array",
       "description": "Tolerations for pod placement",
+      "items": {
+        "type": "object"
+      }
+    },
+    "volumeMounts": {
+      "type": "array",
+      "description": "Volume mounts for the pod",
+      "items": {
+        "type": "object"
+      }
+    },
+    "volumes": {
+      "type": "array",
+      "description": "Volumes for the pod",
       "items": {
         "type": "object"
       }
