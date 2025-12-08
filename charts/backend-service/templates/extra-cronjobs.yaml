@@ -94,20 +94,15 @@ spec:
                 {{- with $globalValues.envVars }}
                   {{- toYaml . | nindent 16 }}
                 {{- end }}
-                {{- range $key, $value := $globalValues.env }}
+                {{- /* Merge global env with local env - local takes precedence */}}
+                {{- $mergedEnv := merge (.env | default dict) ($globalValues.env | default dict) }}
+                {{- range $key, $value := $mergedEnv }}
                 - name: {{ $key }}
                   value: {{ $value | quote }}
                 {{- end }}
                 {{- /* local envVars will take precedence over global envVars as they are specified last */}}
                 {{- with .envVars }}
                   {{- toYaml . | nindent 16 }}
-                {{- end }}
-                {{- with .envVars }}
-                  {{- toYaml . | nindent 16 }}
-                {{- end }}
-                {{- range $key, $value := .env }}
-                - name: {{ $key }}
-                  value: {{ $value | quote }}
                 {{- end }}
                 {{- if $globalValues.secretProvider }}
                 {{- range $k, $v := $globalValues.secretProvider.vaults }}

@@ -59,3 +59,41 @@ tests:
       - equal:
           path: spec.jobTemplate.spec.template.metadata.annotations.test
           value: true
+
+  - it: When local env overrides global env, local value takes precedence without duplicates
+    values:
+      - ../ci/extra-cronjobs-values.yaml
+    set:
+      env:
+        GLOBAL_ONLY: "global-value"
+        SHARED_VAR: "global-shared"
+      extraCronJobs:
+        foo:
+          schedule: "0 0 1 1 *"
+          env:
+            SHARED_VAR: "local-override"
+            LOCAL_ONLY: "local-value"
+    template: extra-cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: foo
+    asserts:
+      - isKind:
+          of: CronJob
+      # Local env overrides global env (merge ensures no duplicate)
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "SHARED_VAR")].value
+          value: "local-override"
+      # Global-only env var is still present
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "GLOBAL_ONLY")].value
+          value: "global-value"
+      # Local-only env var is present
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "LOCAL_ONLY")].value
+          value: "local-value"
+      # Total env count: VERSION + FOO + GLOBAL_ONLY + LOCAL_ONLY + SHARED_VAR + BAZ(envVars) = 6
+      # If there were duplicates from both global and local env, count would be higher
+      - lengthEqual:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          count: 6
