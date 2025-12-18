@@ -96,3 +96,28 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
+  - it: PodMonitor should not be created when scraping is disabled
+    set:
+      image.tag: pinned-version
+      service.enabled: false
+      prometheus.scraping.enabled: false
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    template: podmonitor.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: PodMonitor should be created when scraping is not set (backward compatibility)
+    set:
+      image.tag: pinned-version
+      service.enabled: false
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    template: podmonitor.yaml
+    asserts:
+      - hasDocuments:
+          count: 1

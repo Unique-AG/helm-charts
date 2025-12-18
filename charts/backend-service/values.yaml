@@ -430,6 +430,10 @@ nodeSelector: {}
 
 prometheus:
   enabled: true
+  # -- scraping controls ServiceMonitor/PodMonitor creation
+  # Set to false if your service has no /metrics endpoint but you still want default alerts
+  scraping:
+    enabled: true
   # -- Additional custom alert rules that will be rendered using the alerts-custom.yaml template
   # The alerts are rendered directly using toYaml, giving you complete control over the alert structure
   # Labels from defaultAlerts.additionalLabels are automatically merged into each alert's labels
