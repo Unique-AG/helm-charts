@@ -420,6 +420,32 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: changed
+          description: "Scraping can now be disabled in prometheus.scraping for services that expose no metrics."
+        - kind: fixed
+          description: "Wrong Chart.yaml note on already released external-secrets."
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    appVersion: latest
+    created: "2025-12-18T11:51:38.385682878Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: 7f0e126352e8b9f7b85af5f73cccadb8fb88597f61379a1ab076890dba09eea2
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-8.2.0/backend-service-8.2.0.tgz
+    version: 8.2.0
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: changed
           description: "Update chart-testing-service to v1.1.0"
       artifacthub.io/license: Apache-2.0
     apiVersion: v2
@@ -2908,4 +2934,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-12-03T13:43:49.224625301Z"
+generated: "2025-12-18T11:51:38.386039824Z"
