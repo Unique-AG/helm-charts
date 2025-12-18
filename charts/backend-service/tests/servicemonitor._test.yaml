@@ -63,3 +63,26 @@ tests:
           value:
             app.kubernetes.io/name: ut
             app.kubernetes.io/instance: ut
+
+  - it: ServiceMonitor should not be created when scraping is disabled
+    set:
+      image.tag: pinned-version
+      prometheus.scraping.enabled: false
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    template: servicemonitor.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: ServiceMonitor should be created when scraping is not set (backward compatibility)
+    set:
+      image.tag: pinned-version
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    template: servicemonitor.yaml
+    asserts:
+      - hasDocuments:
+          count: 1

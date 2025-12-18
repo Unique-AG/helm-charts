@@ -1,4 +1,4 @@
-{{- if and (not .Values.service.enabled) .Values.prometheus.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
+{{- if and (not .Values.service.enabled) .Values.prometheus.enabled (ne (.Values.prometheus.scraping).enabled false) (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:

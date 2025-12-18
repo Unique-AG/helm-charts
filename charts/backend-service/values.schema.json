@@ -1028,6 +1028,18 @@
           "description": "Enable Prometheus",
           "examples": [false]
         },
+        "scraping": {
+          "type": "object",
+          "description": "Controls ServiceMonitor/PodMonitor creation for metrics scraping",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable ServiceMonitor/PodMonitor creation. Set to false if your service has no /metrics endpoint but you still want default alerts",
+              "default": true,
+              "examples": [true, false]
+            }
+          }
+        },
         "team": {
           "type": "string",
           "description": "Team for alert routing"
