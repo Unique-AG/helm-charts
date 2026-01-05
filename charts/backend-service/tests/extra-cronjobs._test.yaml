@@ -11,7 +11,7 @@ tests:
     template: extra-cronjobs.yaml
     documentSelector:
       path: metadata.name
-      value: ecj-foo
+      value: foo
     asserts:
       - isKind:
           of: CronJob
@@ -26,3 +26,36 @@ tests:
       - equal:
           path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "foo")].env[?(@.name == "BAZ")].value
           value: qux
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "foo")].resources.requests.cpu
+          value: 100m
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "foo")].resources.requests.memory
+          value: 100Mi
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "foo")].resources.limits.cpu
+          value: 200m
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "foo")].resources.limits.memory
+          value: 200Mi
+
+  - it: When given pod labels and annotations
+    values:
+    - ../ci/extra-cronjobs-values.yaml
+    set:
+      podLabels.app: test
+      podAnnotations.test: true
+    template: extra-cronjobs.yaml
+    asserts:
+      - isKind:
+          of: CronJob
+      - isNotNullOrEmpty:
+          path: spec.jobTemplate.spec.template.metadata.labels.app
+      - isNotNullOrEmpty:
+          path: spec.jobTemplate.spec.template.metadata.annotations.test
+      - equal:
+          path: spec.jobTemplate.spec.template.metadata.labels.app
+          value: test
+      - equal:
+          path: spec.jobTemplate.spec.template.metadata.annotations.test
+          value: true

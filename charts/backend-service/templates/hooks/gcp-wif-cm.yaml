@@ -1,0 +1,35 @@
+{{- if and .Values.workloadIdentity.gcp.enabled .Values.hooks }}
+{{- $hasEnabledHook := false }}
+{{- range $hookName, $hookConfig := .Values.hooks }}
+{{- if and $hookConfig $hookConfig.enabled }}
+{{- $hasEnabledHook = true }}
+{{- end }}
+{{- end }}
+{{- if $hasEnabledHook }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "backendService.fullname" . }}-gcp-wif-hooks
+  labels:
+    {{- include "backendService.mutableLabels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "1"
+    helm.sh/hook-delete-policy: before-hook-creation
+data:
+  config.json: |
+    {
+      "type": "external_account",
+      "audience": "//iam.googleapis.com/projects/{{ .Values.workloadIdentity.gcp.projectId }}/locations/global/workloadIdentityPools/{{ .Values.workloadIdentity.gcp.workloadIdentityPool }}/providers/{{ .Values.workloadIdentity.gcp.provider }}",
+      "subject_token_type": "urn:ietf:params:oauth:token-type:jwt",
+      "token_url": "https://sts.googleapis.com/v1/token",
+      "credential_source": {
+        "file": "/var/run/secrets/gcp-token/gcp-token",
+        "format": {
+          "type": "text"
+        }
+      },
+      "service_account_impersonation_url": "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/{{ .Values.workloadIdentity.gcp.serviceAccountEmail }}:generateAccessToken"
+    }
+{{- end }}
+{{- end }}

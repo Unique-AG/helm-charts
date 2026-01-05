@@ -1,0 +1,38 @@
+name: "🚧 Gatekeeper"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  conventional-pr-title:
+    runs-on: ubuntu-latest
+    name: Validate PR title against conventional commit format
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 #v6.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # See https://github.com/amannn/action-semantic-pull-request#configuration for all configuration options
+          requireScope: true
+
+  gatekeeper:
+    runs-on: ubuntu-latest
+    permissions:
+      checks: read
+      statuses: read
+      pull-requests: read
+    steps:
+      - name: Run Merge Gatekeeper
+        uses: upsidr/merge-gatekeeper@09af7a82c1666d0e64d2bd8c01797a0bcfd3bb5d #v1.2.1
+        timeout-minutes: 15
+        with:
+          self: gatekeeper
+          token: ${{ secrets.GITHUB_TOKEN }}

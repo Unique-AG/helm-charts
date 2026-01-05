@@ -19,9 +19,16 @@ extraCronJobs:
     successfulJobsHistoryLimit: 3
     suspend: false
     timeZone: Europe/Zurich
+    resources:
+      requests:
+        cpu: 100m
+        memory: 100Mi
+      limits:
+        cpu: 200m
+        memory: 200Mi
 image:
   repository: "ghcr.io/unique-ag/chart-testing-service"
-  tag: "1.0.3"
+  tag: "1.1.0"
 securityContext:
   allowPrivilegeEscalation: false
   seccompProfile:

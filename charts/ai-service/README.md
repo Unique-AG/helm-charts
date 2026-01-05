@@ -1,10 +1,11 @@
 # ai-service
 
-The 'ai-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy simple AI workloads to Kubernetes.
+Version 3.0.0 is the last supported iteration of this chart. Subsequent changes will only be supplied to https://artifacthub.io/packages/helm/unique/backend-service. Refer to End of Life Notice in README.md.
 
-Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
+> [!IMPORTANT]
+> Version `2.2.0` is the last supported iteration of this chart. Subsequent changes will only be supplied to [`unique/backend-service`](https://artifacthub.io/packages/helm/unique/backend-service). Refer to [**End of Life Notice**](#End-of-Life-Notice).
 
-![Version: 1.2.7](https://img.shields.io/badge/Version-1.2.7-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 3.0.0](https://img.shields.io/badge/Version-3.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +13,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-ai-service unique/ai-service --version 1.2.7
+helm install my-ai-service unique/ai-service --version 3.0.0
 
 # or
-helm install my-ai-service oci://ghcr.io/unique-ag/helm-charts/ai-service --version 1.2.7
+helm install my-ai-service oci://ghcr.io/unique-ag/helm-charts/ai-service --version 3.0.0
 ```
 
 ### Docker Images
@@ -56,7 +57,7 @@ This example:
 
 <details>
   <summary><code>values.yaml</code></summary>
- 
+
   ```yaml
   …
   env:
@@ -196,19 +197,9 @@ Common uses include:
 | deployment | object | `{}` |  |
 | env | object | `{}` |  |
 | envSecrets | object | `{}` |  |
-| eventBasedAutoscaling.cron.desiredReplicas | string | `"1"` |  |
-| eventBasedAutoscaling.cron.end | string | `"0 19 * * 1-5"` |  |
-| eventBasedAutoscaling.cron.start | string | `"0 8 * * 1-5"` |  |
-| eventBasedAutoscaling.cron.timezone | string | `"Europe/Zurich"` |  |
-| eventBasedAutoscaling.customTriggers | list | `[]` |  |
-| eventBasedAutoscaling.enabled | bool | `true` |  |
+| eventBasedAutoscaling.enabled | bool | `false` |  |
 | eventBasedAutoscaling.maxReplicaCount | int | `8` |  |
 | eventBasedAutoscaling.minReplicaCount | int | `0` |  |
-| eventBasedAutoscaling.rabbitmq.hostFromEnv | string | `"AMQP_URL"` |  |
-| eventBasedAutoscaling.rabbitmq.mode | string | `"QueueLength"` |  |
-| eventBasedAutoscaling.rabbitmq.protocol | string | `"auto"` |  |
-| eventBasedAutoscaling.rabbitmq.queueName | string | `""` |  |
-| eventBasedAutoscaling.rabbitmq.value | string | `"1"` |  |
 | extraEnvCM | list | `[]` |  |
 | extraEnvSecrets | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
@@ -225,7 +216,9 @@ Common uses include:
 | nodeSelector | object | `{}` |  |
 | pdb.maxUnavailable | string | `"30%"` |  |
 | podAnnotations | object | `{}` |  |
-| podSecurityContext | object | `{}` |  |
+| podLabels | object | `{}` | Define additional pod labels for all the pods |
+| podSecurityContext | object | `{"seccompProfile":{"type":"RuntimeDefault"}}` | PodSecurityContext for the pod(s) |
+| podSecurityContext.seccompProfile | object | `{"type":"RuntimeDefault"}` | seccompProfile, controls the seccomp profile for the container, defaults to 'RuntimeDefault' |
 | probes.enabled | bool | `false` |  |
 | probes.liveness.failureThreshold | int | `6` |  |
 | probes.liveness.httpGet.path | string | `"/probe"` |  |
@@ -253,7 +246,12 @@ Common uses include:
 | rollingUpdate.maxSurge | int | `1` |  |
 | rollingUpdate.maxUnavailable | int | `0` |  |
 | secretProvider | object | `{}` |  |
-| securityContext | object | `{}` |  |
+| securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":1000}` | securityContext for the container(s) |
+| securityContext.allowPrivilegeEscalation | bool | `false` | AllowPrivilegeEscalation, controls if the container can gain more privileges than its parent process, defaults to 'false' |
+| securityContext.capabilities | object | `{"drop":["ALL"]}` | capabilities section controls the Linux capabilities for the container |
+| securityContext.readOnlyRootFilesystem | bool | `true` | readOnlyRootFilesystem, controls if the container has a read-only root filesystem, defaults to 'true' |
+| securityContext.runAsNonRoot | bool | `true` | runAsNonRoot, controls if the container must run as a non-root user, defaults to 'true' |
+| securityContext.runAsUser | int | `1000` | runAsUser, controls the user ID that runs the container, defaults to '1000' |
 | service.port | int | `8081` |  |
 | service.type | string | `"ClusterIP"` |  |
 | serviceAccount.annotations | object | `{}` |  |
@@ -263,6 +261,16 @@ Common uses include:
 | tolerations | list | `[]` |  |
 | volumeMounts | list | `[]` |  |
 | volumes | list | `[]` |  |
+
+## End of Life Notice
+
+Unique has historically maintained two distinct Helm charts for backend services: [`unique/backend-service`](https://artifacthub.io/packages/helm/unique/backend-service) and the current `ai-service` chart. While `backend-service` has been actively maintained and regularly updated, the `ai-service` chart has seen limited maintenance due to its lower adoption rate. Analysis shows that `ai-service` provides minimal additional functionality beyond `backend-service`, with its primary distinguishing feature being the `artifactsCache` component, which has seen minimal utilization in production environments.
+
+⚠️ Version `2.2.0` represents the final supported release of this chart.
+
+### Migration Considerations
+
+The primary migration consideration involves the `artifactsCache` functionality. While it is possible to migrate this feature by analyzing the existing implementation, we recommend against a direct 1:1 migration. Instead, we suggest adapting the caching mechanism to your specific infrastructure requirements, as the original implementation was designed for highly customized environments that rarely aligned with typical deployment scenarios.
 
 ----------------------------------------------
 Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)

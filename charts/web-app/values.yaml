@@ -63,7 +63,7 @@ image:
   repository: "ghcr.io/unique-ag/chart-testing-service"
   # -- tag, most often will refer one of the latest release of the Unique service
   # Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image
-  tag: "1.0.2"
+  tag: "1.1.0"
   # -- pullPolicy, Unique recommends to never use 'Always'
   pullPolicy: IfNotPresent
 
@@ -71,15 +71,114 @@ imagePullSecrets: []
 
 nodeSelector: {}
 
+# -- networkPolicy allows you to define network policies for the deployed pods
+# Network policies are used to control traffic flow to and from pods
+networkPolicy:
+  # -- Enable or disable network policy creation
+  enabled: false
+  # -- Network policy flavor - "kubernetes" for standard NetworkPolicy or "cilium" for CiliumNetworkPolicy
+  flavor: kubernetes
+  # -- Policy types to apply (Ingress, Egress, or both)
+  # policyTypes:
+  #   - Ingress
+  #   - Egress
+  # -- Description of the network policy (Cilium only)
+  # description: "Network policy for web app"
+  # -- Enable default deny for all traffic (Cilium only)
+  # enableDefaultDeny:
+  #   ingress: true
+  #   egress: true
+  # -- Labels to be applied to the network policy spec (Cilium only)
+  # labels:
+  #   component: frontend
+  #   tier: web
+  # -- Labels to be applied to the network policy spec (Cilium only)
+  # ciliumPolicylabels:
+  #   - key: component
+  #     value: frontend
+  #   - key: tier
+  #     value: web
+  # -- Ingress rules configuration
+  ingress:
+    # -- Default ingress rules applied to all pods
+    # Allow ingress from pods in the same namespace
+    - from:
+        - podSelector: {}
+    # Example ingress rules:
+    # - from:
+    #     - namespaceSelector:
+    #         matchLabels:
+    #           name: monitoring
+    #   ports:
+    #     - protocol: TCP
+    #       port: 3000
+    # - from:
+    #     - podSelector:
+    #         matchLabels:
+    #           app: load-balancer
+    #   ports:
+    #     - protocol: TCP
+    #       port: 3000
+  # -- Ingress deny rules configuration (Cilium only)
+  # ingressDeny:
+  #   - from:
+  #       - podSelector:
+  #           matchLabels:
+  #             app: untrusted
+  # -- Egress rules configuration
+  egress:
+    # -- Default egress rules applied to all pods
+    # Allow egress to pods in the same namespace
+    - to:
+        - podSelector: {}
+    # Allow DNS resolution
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
+    # Example egress rules:
+    # - to:
+    #     - namespaceSelector:
+    #         matchLabels:
+    #           name: backend
+    #   ports:
+    #     - protocol: TCP
+    #       port: 8080
+    # - to: []
+    #   ports:
+    #     - protocol: TCP
+    #       port: 443
+    #     - protocol: TCP
+    #       port: 80
+  # -- Egress deny rules configuration (Cilium only)
+  # egressDeny:
+  #   - to:
+  #       - namespaceSelector:
+  #           matchLabels:
+  #             name: restricted
+  # -- Additional labels to add to the network policy
+  labels: {}
+  # -- Additional annotations to add to the network policy
+  annotations: {}
+
 # -- Define the pod disruption budget for this deployment
 # Is templated as YAML so all kuberentes native types are supported
 pdb:
   # -- This setting matches the charts default replica count, make sure to adapt your PDB if you chose a different sizing of your deployment
   minAvailable: 1
 
+# -- Define additional pod annotations for all the pods
 podAnnotations: {}
 
-podSecurityContext: {}
+# -- Define additional pod labels for all the pods
+podLabels: {}
+
+# -- PodSecurityContext for the pod(s)
+podSecurityContext:
+  # -- seccompProfile, controls the seccomp profile for the container, defaults to 'RuntimeDefault'
+  seccompProfile:
+    ## -- type, the type of seccomp profile to use, defaults to 'RuntimeDefault'
+    type: RuntimeDefault
 
 probes:
   enabled: true
@@ -100,12 +199,21 @@ rollingUpdate:
   maxSurge: 1
   maxUnavailable: 0
 
+
+# -- securityContext for the container(s)
 securityContext:
+  # -- AllowPrivilegeEscalation, controls if the container can gain more privileges than its parent process, defaults to 'false'
   allowPrivilegeEscalation: false
+  # -- readOnlyRootFilesystem, controls if the container has a read-only root filesystem, defaults to 'true'
+  readOnlyRootFilesystem: true
+  # -- runAsNonRoot, controls if the container must run as a non-root user, defaults to 'true'
   runAsNonRoot: true
+  # -- runAsUser, controls the user ID that runs the container, defaults to '1000'
   runAsUser: 1000
-  seccompProfile:
-    type: RuntimeDefault
+  # -- capabilities section controls the Linux capabilities for the container
+  capabilities:
+    drop:
+    - ALL
 
 service:
   type: ClusterIP
@@ -143,7 +251,7 @@ routes:
       # -- explicitly list paths to block
       blockList:
         - /metrics
-      extraAnnotations: []
+      extraAnnotations: {}
       #   konghq.com/request-buffering: "false"
       #   konghq.com/read-timeout: "120s"
     # -- The root route is a convenience route that routes all traffic from the root of the domain to a specific path
@@ -157,7 +265,7 @@ routes:
       # @default -- defaults to the `pathPrefix` if enabled and omitted
       redirectPath: /chart-testing
 
-# .Values.secretProvider lets you mount secrets from Azure Key Vault into the pod
+# .Values.secretProvider lets you mount secrets from Azure Key Vault into the pod using VM Managed Identity
 # Note that 'vault-1' is the literal vault name from azure
 # The line format is 'make <ENV>: from <KEY_VAULT_SECRET_NAME>'
 # The conversion from - to _ is done automatically
@@ -165,7 +273,7 @@ secretProvider: {}
 # Example
 # secretProvider:
 #   tenantId: 99330c76-81d2-460e-861e-35af8e2a4266
-#   aadPodIdBinding: binding-21 # optional, defaults to 'keyvault'
+#   userAssignedIdentityID: "xx-pls-provide-client-id-xx"   # Required - the client ID of the managed identity
 #   vaults:
 #     vault-name-1:
 #       MY_ENV_VARIABLE_1: keyvault-secret-name-a
@@ -177,3 +285,7 @@ strategy:
   type: RollingUpdate # or `Recreate`
 
 tolerations: []
+
+volumeMounts: []
+
+volumes: []

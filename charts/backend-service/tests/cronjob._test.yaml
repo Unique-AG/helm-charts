@@ -8,9 +8,9 @@ release:
 tests:
   - it: When given a secretProvider, should always render volumeMounts and volumes for them
     set:
-      tyk.listenPath: /unit-test
       image.tag: pinned-version
       secretProvider.tenantId: 99330c76-81d2-460e-861e-35af8e2a4266
+      secretProvider.userAssignedIdentityID: test-identity-id
       secretProvider.vaults.qa-app-common.AMQP_URL: RABBITMQ-ORANGE-WOLF-URL
       cronJob.enabled: true
       cronJob.jobTemplate.containers.name: ut
@@ -27,11 +27,10 @@ tests:
       - isNotNullOrEmpty:
           path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.name == "ut-qa-app-common")]
 
-      
+
 
   - it: When given initContainers in cronjob
     set:
-      tyk.listenPath: /unit-test
       image.tag: pinned-version
       cronJob.enabled: true
       cronJob.initContainers[0].command:
@@ -50,7 +49,6 @@ tests:
 
   - it: When given envVars, renders them to the JobSpec
     set:
-      tyk.listenPath: /unit-test
       image.tag: pinned-version
       cronJob.enabled: true
       cronJob.jobTemplate.containers.name: ut
@@ -74,7 +72,6 @@ tests:
 
   - it: When given an initContainer, should always render volumeMounts and volumes for them
     set:
-      tyk.listenPath: /unit-test
       image.tag: pinned-version
       cronJob.enabled: true
       cronJob.jobTemplate.containers.name: ut
@@ -104,3 +101,25 @@ tests:
           path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.mountPath == "/opt/folder")]
       - isNotNullOrEmpty:
           path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.readOnly == false)]
+
+  - it: When given pod labels and annotations
+    set:
+      cronJob.enabled: true
+      cronJob.jobTemplate.containers.name: ut
+      image.tag: pinned-version
+      podLabels.app: test
+      podAnnotations.test: true
+    template: cronjob.yaml
+    asserts:
+      - isKind:
+          of: CronJob
+      - isNotNullOrEmpty:
+          path: spec.jobTemplate.spec.template.metadata.labels.app
+      - isNotNullOrEmpty:
+          path: spec.jobTemplate.spec.template.metadata.annotations.test
+      - equal:
+          path: spec.jobTemplate.spec.template.metadata.labels.app
+          value: test
+      - equal:
+          path: spec.jobTemplate.spec.template.metadata.annotations.test
+          value: true

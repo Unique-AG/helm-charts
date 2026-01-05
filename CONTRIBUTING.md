@@ -80,6 +80,9 @@ Each change requires a new bullet point following the pattern. See more informat
   description: {description}
 ```
 
+> [!WARNING]
+> Do not repeat the `{type}` as verb in the `description`! `fixed: fix bug ………`.
+
 You can use the following template:
 
 ```yaml
@@ -91,9 +94,9 @@ annotations:
     - kind: added
       description: Something New was added
     - kind: changed
-      description: Changed Something within this chart
+      description: Something within this chart
     - kind: changed
-      description: Changed Something else within this chart
+      description: Something else within this chart
     - kind: deprecated
       description: Something deprecated
     - kind: removed
@@ -103,6 +106,10 @@ annotations:
     - kind: security
       description: Some Security Patch was included
 ```
+
+## Values schema
+All charts feature [value schemas](https://helm.sh/docs/topics/charts/#the-chart-file-structure). Ensure you adapt it in your changes or the chart will fail to template.
+Write a [test](#testing) to ensure your change works end to end.
 
 ## Testing
 
@@ -123,6 +130,19 @@ The linting can be invoked manually with the following command:
 ### Locally installing charts
 
 Refer to [LOCAL.md](./LOCAL.md) for instructions on how to test charts locally as this is not mandatory for a Contribution. The CI will take care that the charts in their default version are always installable.
+
+### Testing charts in ArgoCD
+If you are running ArgoCD and want to test changes from a particular branch in your running infrastructure, you can point ArgoCD directly to the repository, e.g. for `ai-service` chart
+```
+spec:
+  sources:
+    - repoURL: https://github.com/Unique-AG/helm-charts.git
+      path: charts/ai-service/
+      targetRevision: feat/UN-11292-security-hardening
+```
+
+## Pull Request Template
+Dobule check this contribution guide vs. the Pull Reqeust Checklist to ensure you forgot no steps to make a sparkling contribution ✨ Thank you 🎉
 
 ## Publishing Changes
 

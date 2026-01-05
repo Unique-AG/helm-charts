@@ -8,9 +8,9 @@ release:
 tests:
   - it: When given a secretProvider, should always render volumeMounts and volumes for them
     set:
-      tyk.listenPath: /unit-test
       image.tag: pinned-version
       secretProvider.tenantId: 99330c76-81d2-460e-861e-35af8e2a4266
+      secretProvider.userAssignedIdentityID: test-identity-id
       secretProvider.vaults.qa-app-common.AMQP_URL: RABBITMQ-ORANGE-WOLF-URL
     template: deployment.yaml
     asserts:
@@ -20,15 +20,12 @@ tests:
           path: spec.template.spec.volumes[?(@.name == "ut-qa-app-common")]
       - isNotNullOrEmpty:
           path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.name == "ut-qa-app-common")]
-      - isNotNullOrEmpty:
-          path: spec.template.metadata.labels.aadpodidbinding
 
-  - it: When given a secretProvider and useVMManagedIdentity, should not render the keyvault label
+  - it: When given a secretProvider with VM Managed Identity, should render correctly
     set:
-      tyk.listenPath: /unit-test
       image.tag: pinned-version
       secretProvider.tenantId: 99330c76-81d2-460e-861e-35af8e2a4266
-      secretProvider.useVMManagedIdentity: "true"
+      secretProvider.userAssignedIdentityID: test-identity-id
       secretProvider.vaults.qa-app-common.AMQP_URL: RABBITMQ-ORANGE-WOLF-URL
     template: deployment.yaml
     asserts:
@@ -67,3 +64,99 @@ tests:
           path: spec.template.spec.containers[?(@.name == "ut")].volumeMounts[?(@.readOnly == true)]
       - isNotNullOrEmpty:
           path: spec.template.spec.volumes[?(@.name == "data")]
+
+  - it: When given pod labels and annotations, should render them correctly
+    set:
+      image.tag: pinned-version
+      podLabels:
+        app: test-app
+        environment: testing
+        custom.label/key: custom-value
+      podAnnotations:
+        example.com/annotation: test-value
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8081"
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.metadata.labels.app
+          value: test-app
+      - equal:
+          path: spec.template.metadata.labels.environment
+          value: testing
+      - equal:
+          path: spec.template.metadata.labels["custom.label/key"]
+          value: custom-value
+      - equal:
+          path: spec.template.metadata.annotations["example.com/annotation"]
+          value: test-value
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/scrape"]
+          value: "true"
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/port"]
+          value: "8081"
+
+  - it: When no extra pod labels or annotations are given, should only have default labels
+    set:
+      image.tag: pinned-version
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - isNotNullOrEmpty:
+          path: spec.template.metadata.labels["app.kubernetes.io/name"]
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/name"]
+          value: ut
+      - isNotNullOrEmpty:
+          path: spec.template.metadata.annotations.checksum/deployment-env
+
+  - it: When using CI values with pod labels and annotations, should render all values correctly
+    values:
+      - ../ci/pod-annotations-labels-values.yaml
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.metadata.labels.app
+          value: test-application
+      - equal:
+          path: spec.template.metadata.labels.environment
+          value: ci-testing
+      - equal:
+          path: spec.template.metadata.labels.version
+          value: v1.0.0
+      - equal:
+          path: spec.template.metadata.labels.team
+          value: platform
+      - equal:
+          path: spec.template.metadata.labels["custom.domain/label"]
+          value: custom-value
+      - equal:
+          path: spec.template.metadata.labels["kubernetes.io/managed-by"]
+          value: helm
+      - equal:
+          path: spec.template.metadata.annotations["example.com/annotation"]
+          value: test-annotation-value
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/scrape"]
+          value: "true"
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/port"]
+          value: "8081"
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/path"]
+          value: "/metrics"
+      - equal:
+          path: spec.template.metadata.annotations["fluentd.org/exclude"]
+          value: "false"
+      - equal:
+          path: spec.template.metadata.annotations["custom.domain/annotation"]
+          value: custom-annotation-value
+      - equal:
+          path: spec.template.metadata.annotations["deployment.kubernetes.io/revision"]
+          value: "1"

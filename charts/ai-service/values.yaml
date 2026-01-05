@@ -30,9 +30,30 @@ serviceAccount:
 
 podAnnotations: {}
 
-podSecurityContext: {}
+# -- Define additional pod labels for all the pods
+podLabels: {}
 
-securityContext: {}
+# -- PodSecurityContext for the pod(s)
+podSecurityContext:
+  # -- seccompProfile, controls the seccomp profile for the container, defaults to 'RuntimeDefault'
+  seccompProfile:
+    ## -- type, the type of seccomp profile to use, defaults to 'RuntimeDefault'
+    type: RuntimeDefault
+
+# -- securityContext for the container(s)
+securityContext:
+  # -- AllowPrivilegeEscalation, controls if the container can gain more privileges than its parent process, defaults to 'false'
+  allowPrivilegeEscalation: false
+  # -- readOnlyRootFilesystem, controls if the container has a read-only root filesystem, defaults to 'true'
+  readOnlyRootFilesystem: true
+  # -- runAsNonRoot, controls if the container must run as a non-root user, defaults to 'true'
+  runAsNonRoot: true
+  # -- runAsUser, controls the user ID that runs the container, defaults to '1000'
+  runAsUser: 1000
+  # -- capabilities section controls the Linux capabilities for the container
+  capabilities:
+    drop:
+    - ALL
 
 service:
   type: ClusterIP
@@ -130,21 +151,21 @@ autoscaling:
   targetMemoryUtilizationPercentage: 80
 
 eventBasedAutoscaling:
-  enabled: true
+  enabled: false
   minReplicaCount: 0
   maxReplicaCount: 8
-  cron:
-    timezone: Europe/Zurich
-    start: 0 8 * * 1-5
-    end: 0 19 * * 1-5
-    desiredReplicas: "1"
-  rabbitmq:
-    protocol: auto
-    queueName: ""
-    mode: QueueLength
-    value: "1"
-    hostFromEnv: AMQP_URL
-  customTriggers: []
+  # cron:
+  #   timezone: Europe/Zurich
+  #   start: 0 8 * * 1-5
+  #   end: 0 19 * * 1-5
+  #   desiredReplicas: "1"
+  # rabbitmq:
+  #   protocol: auto
+  #   queueName: testqueue
+  #   mode: QueueLength
+  #   value: "1"
+  #   hostFromEnv: AMQP_URL
+  # customTriggers: []
 
 nodeSelector: {}
 
@@ -164,8 +185,7 @@ lifecycle:
       path: can_shutdown
       port: 8081
 
-# !!! usePodIdentity will be deprecated in the future please use useVMManagedIdentity with the clientID
-# .Values.secretProvider lets you mount secrets from Azure Key Vault into the pod
+# .Values.secretProvider lets you mount secrets from Azure Key Vault into the pod using VM Managed Identity
 # Note that 'vault-1' is the literal vault name from azure
 # The line format is 'make <ENV>: from <KEY_VAULT_SECRET_NAME>'
 # The conversion from - to _ is done automatically
@@ -173,9 +193,7 @@ secretProvider: {}
 # Example
 # secretProvider:
 #   tenantId: 99330c76-81d2-460e-861e-35af8e2a4266
-#   aadPodIdBinding: binding-21 # optional, defaults to 'keyvault'
-#   useVMManagedIdentity: "true" # optional, if not present usePodIdentity is set to "true" useVMManagedIdentity to "false"
-#   userAssignedIdentityID: "xx-pls-provide-client-id-xx"   # Should not be empty if useVMManagedIdentity is present and has the value "true"
+#   userAssignedIdentityID: "xx-pls-provide-client-id-xx"   # Required - the client ID of the managed identity
 #   vaults:
 #     vault-name-1:
 #       MY_ENV_VARIABLE_1: keyvault-secret-name-a

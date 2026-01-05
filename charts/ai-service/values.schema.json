@@ -1,0 +1,753 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "AI Service Helm Chart Values",
+  "description": "Schema for the ai-service Helm chart values.yaml",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "replicaCount": {
+      "type": "integer",
+      "description": "Number of replicas for the deployment",
+      "minimum": 0,
+      "examples": [1]
+    },
+    "rollingUpdate": {
+      "type": "object",
+      "description": "Rolling update configuration for the deployment",
+      "properties": {
+        "maxSurge": {
+          "description": "Maximum number of pods that can be created over the desired number",
+          "oneOf": [{ "type": "string" }, { "type": "integer", "minimum": 0 }],
+          "examples": [1]
+        },
+        "maxUnavailable": {
+          "description": "Maximum number of pods that can be unavailable during the update",
+          "oneOf": [{ "type": "string" }, { "type": "integer", "minimum": 0 }],
+          "examples": [0]
+        }
+      }
+    },
+    "minReadySeconds": {
+      "type": "integer",
+      "description": "Minimum number of seconds for which a newly created pod should be ready without any of its containers crashing",
+      "minimum": 0,
+      "examples": [0]
+    },
+    "image": {
+      "type": "object",
+      "description": "Container image configuration",
+      "properties": {
+        "repository": {
+          "type": "string",
+          "description": "Repository for the image",
+          "examples": ["ghcr.io/unique-ag/chart-testing-service"]
+        },
+        "tag": {
+          "type": "string",
+          "description": "Tag for the image",
+          "examples": ["1.0.2"]
+        },
+        "pullPolicy": {
+          "type": "string",
+          "enum": ["Always", "IfNotPresent", "Never"],
+          "description": "Image pull policy",
+          "examples": ["IfNotPresent"]
+        }
+      },
+      "required": ["repository", "tag"]
+    },
+    "imagePullSecrets": {
+      "type": "array",
+      "description": "List of image pull secrets",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the image pull secret"
+          }
+        }
+      },
+      "examples": [[{ "name": "registry-credentials" }]]
+    },
+    "nameOverride": {
+      "type": "string",
+      "description": "Override the name of the chart"
+    },
+    "fullnameOverride": {
+      "type": "string",
+      "description": "Override the full name of the chart"
+    },
+    "serviceAccount": {
+      "type": "object",
+      "description": "Service account configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable service account creation",
+          "examples": [false]
+        },
+        "annotations": {
+          "type": "object",
+          "description": "Annotations to add to the service account"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the service account to use"
+        },
+        "workloadIdentity": {
+          "type": "object",
+          "description": "Workload identity configuration",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable workload identity",
+              "examples": [false]
+            }
+          }
+        }
+      }
+    },
+    "podAnnotations": {
+      "type": "object",
+      "description": "Annotations to add to the pod"
+    },
+    "podLabels": {
+      "type": "object",
+      "description": "Labels to add to the pod"
+    },
+    "podSecurityContext": {
+      "type": "object",
+      "description": "Pod security context configuration",
+      "properties": {
+        "seccompProfile": {
+          "type": "object",
+          "description": "Seccomp profile configuration",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Type of seccomp profile",
+              "enum": ["RuntimeDefault", "Localhost", "Unconfined"],
+              "examples": ["RuntimeDefault"]
+            }
+          }
+        }
+      },
+      "examples": [
+        {
+          "seccompProfile": {
+            "type": "RuntimeDefault"
+          }
+        }
+      ]
+    },
+    "securityContext": {
+      "type": "object",
+      "description": "Container security context configuration",
+      "properties": {
+        "allowPrivilegeEscalation": {
+          "type": "boolean",
+          "description": "Allow privilege escalation",
+          "examples": [false]
+        },
+        "readOnlyRootFilesystem": {
+          "type": "boolean",
+          "description": "Read-only root filesystem",
+          "examples": [true]
+        },
+        "runAsNonRoot": {
+          "type": "boolean",
+          "description": "Run as non-root user",
+          "examples": [true]
+        },
+        "runAsUser": {
+          "type": "integer",
+          "description": "User ID to run as",
+          "minimum": 0,
+          "examples": [1000]
+        },
+        "capabilities": {
+          "type": "object",
+          "description": "Container capabilities configuration",
+          "properties": {
+            "drop": {
+              "type": "array",
+              "description": "Capabilities to drop",
+              "items": {
+                "type": "string"
+              },
+              "examples": [["ALL"]]
+            }
+          }
+        }
+      }
+    },
+    "service": {
+      "type": "object",
+      "description": "Kubernetes service configuration",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["ClusterIP", "NodePort", "LoadBalancer", "ExternalName"],
+          "description": "Service type",
+          "examples": ["ClusterIP"]
+        },
+        "port": {
+          "type": "integer",
+          "description": "Service port",
+          "minimum": 1,
+          "maximum": 65535,
+          "examples": [8081]
+        }
+      }
+    },
+    "ingress": {
+      "type": "object",
+      "description": "Ingress configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable ingress",
+          "examples": [false]
+        },
+        "tls": {
+          "type": "object",
+          "description": "TLS configuration",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable TLS",
+              "examples": [false]
+            }
+          }
+        }
+      }
+    },
+    "env": {
+      "type": "object",
+      "description": "Environment variables as key-value pairs"
+    },
+    "extraEnvCM": {
+      "type": "array",
+      "description": "List of existing ConfigMaps to be used as environment variables",
+      "items": {
+        "type": "string"
+      },
+      "examples": [["existing-configmap"]]
+    },
+    "envSecrets": {
+      "type": "object",
+      "description": "Environment variables from secrets as key-value pairs"
+    },
+    "extraEnvSecrets": {
+      "type": "array",
+      "description": "List of existing Secrets to be used as environment variables",
+      "items": {
+        "type": "string"
+      },
+      "examples": [["existing-secret"]]
+    },
+    "probes": {
+      "type": "object",
+      "description": "Health check probes configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable probes",
+          "examples": [false]
+        },
+        "liveness": {
+          "type": "object",
+          "description": "Liveness probe configuration",
+          "examples": [
+            {
+              "httpGet": {
+                "path": "/probe",
+                "port": "http"
+              },
+              "initialDelaySeconds": 10,
+              "periodSeconds": 5,
+              "failureThreshold": 6
+            }
+          ]
+        },
+        "readiness": {
+          "type": "object",
+          "description": "Readiness probe configuration",
+          "examples": [
+            {
+              "httpGet": {
+                "path": "/probe",
+                "port": "http"
+              },
+              "initialDelaySeconds": 10,
+              "periodSeconds": 5,
+              "failureThreshold": 6
+            }
+          ]
+        },
+        "startup": {
+          "type": "object",
+          "description": "Startup probe configuration",
+          "examples": [
+            {
+              "httpGet": {
+                "path": "/probe",
+                "port": "http"
+              },
+              "initialDelaySeconds": 10,
+              "failureThreshold": 30,
+              "periodSeconds": 10
+            }
+          ]
+        }
+      }
+    },
+    "pdb": {
+      "type": "object",
+      "description": "Pod Disruption Budget configuration",
+      "properties": {
+        "maxUnavailable": {
+          "description": "Maximum number of unavailable pods",
+          "oneOf": [{ "type": "string" }, { "type": "integer", "minimum": 0 }],
+          "examples": ["30%"]
+        }
+      }
+    },
+    "pvc": {
+      "type": "object",
+      "description": "Persistent Volume Claim configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable persistent volume claim",
+          "examples": [false]
+        },
+        "storage": {
+          "type": "string",
+          "description": "Storage size for PVC",
+          "examples": ["32Gi"]
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the PVC, defaults to the fullname of the deployment"
+        },
+        "storageClassName": {
+          "type": "string",
+          "description": "Storage class name for PVC",
+          "examples": ["azurefile"]
+        },
+        "storageClassCreationEnabled": {
+          "type": "boolean",
+          "description": "Creating a new storage class for the PVC",
+          "examples": [true]
+        },
+        "accessMode": {
+          "type": "string",
+          "description": "Access mode for PVC",
+          "enum": ["ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany"],
+          "examples": ["ReadWriteMany"]
+        }
+      }
+    },
+    "artifactsCache": {
+      "type": "object",
+      "description": "Configuration for artifacts cache",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable artifacts cache PVC",
+          "examples": [false]
+        },
+        "storage": {
+          "type": "string",
+          "description": "Storage size for artifacts cache",
+          "examples": ["32Gi"]
+        },
+        "storageClassName": {
+          "type": "string",
+          "description": "Storage class name for artifacts cache",
+          "examples": ["azurefile"]
+        },
+        "readOnly": {
+          "type": "boolean",
+          "description": "By secure default, the artifacts cache is read only, allows writes if needed",
+          "examples": [true]
+        },
+        "accessModes": {
+          "type": "array",
+          "description": "Access modes for artifacts cache",
+          "items": {
+            "type": "string",
+            "enum": ["ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany"]
+          },
+          "examples": [["ReadWriteMany"]]
+        },
+        "finalizers": {
+          "type": "array",
+          "description": "Finalizers for the PVC",
+          "items": {
+            "type": "string"
+          }
+        },
+        "artifacts": {
+          "type": "array",
+          "description": "List of artifacts to download",
+          "items": {
+            "type": "object",
+            "properties": {
+              "blobUrl": {
+                "type": "string",
+                "description": "URL of the blob to download"
+              },
+              "path": {
+                "type": "string",
+                "description": "Path where to store the downloaded artifact"
+              }
+            },
+            "required": ["blobUrl", "path"]
+          }
+        },
+        "downloader": {
+          "type": "object",
+          "description": "Configuration for the artifacts downloader init container",
+          "properties": {
+            "image": {
+              "type": "string",
+              "description": "Image to use for the artifacts downloader init container",
+              "examples": ["curlimages/curl:8.12.0"]
+            },
+            "insecure": {
+              "type": "boolean",
+              "description": "This option explicitly allows curl to perform insecure SSL connections and transfers",
+              "examples": [false]
+            }
+          }
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "description": "CPU/Memory resource requests/limits",
+      "properties": {
+        "limits": {
+          "type": "object",
+          "description": "Resource limits",
+          "properties": {
+            "cpu": {
+              "oneOf": [
+                { "type": "string" },
+                { "type": "integer", "minimum": 0 }
+              ],
+              "description": "CPU limit",
+              "examples": [2, "1000m"]
+            },
+            "memory": {
+              "type": "string",
+              "description": "Memory limit",
+              "examples": ["1Gi"]
+            }
+          }
+        },
+        "requests": {
+          "type": "object",
+          "description": "Resource requests",
+          "properties": {
+            "cpu": {
+              "oneOf": [
+                { "type": "string" },
+                { "type": "integer", "minimum": 0 }
+              ],
+              "description": "CPU request",
+              "examples": [1, "100m"]
+            },
+            "memory": {
+              "type": "string",
+              "description": "Memory request",
+              "examples": ["128Mi"]
+            }
+          }
+        }
+      }
+    },
+    "autoscaling": {
+      "type": "object",
+      "description": "Horizontal Pod Autoscaler configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable autoscaling",
+          "examples": [false]
+        },
+        "minReplicas": {
+          "type": "integer",
+          "description": "Minimum number of replicas",
+          "minimum": 0,
+          "examples": [0]
+        },
+        "maxReplicas": {
+          "type": "integer",
+          "description": "Maximum number of replicas",
+          "minimum": 1,
+          "examples": [10]
+        },
+        "targetCPUUtilizationPercentage": {
+          "type": "integer",
+          "description": "Target CPU utilization percentage",
+          "minimum": 1,
+          "maximum": 100,
+          "examples": [80]
+        },
+        "targetMemoryUtilizationPercentage": {
+          "type": "integer",
+          "description": "Target memory utilization percentage",
+          "minimum": 1,
+          "maximum": 100,
+          "examples": [80]
+        }
+      }
+    },
+    "eventBasedAutoscaling": {
+      "type": "object",
+      "description": "Event-based autoscaling configuration using KEDA",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable event-based autoscaling",
+          "examples": [true]
+        },
+        "minReplicaCount": {
+          "type": "integer",
+          "description": "Minimum number of replicas",
+          "minimum": 0,
+          "examples": [0]
+        },
+        "maxReplicaCount": {
+          "type": "integer",
+          "description": "Maximum number of replicas",
+          "minimum": 1,
+          "examples": [8]
+        },
+        "cron": {
+          "type": "object",
+          "description": "Cron-based scaling configuration",
+          "properties": {
+            "timezone": {
+              "type": "string",
+              "description": "Timezone for the cron schedule",
+              "examples": ["Europe/Zurich"]
+            },
+            "start": {
+              "type": "string",
+              "description": "Cron schedule for scaling up",
+              "examples": ["0 8 * * 1-5"]
+            },
+            "end": {
+              "type": "string",
+              "description": "Cron schedule for scaling down",
+              "examples": ["0 19 * * 1-5"]
+            },
+            "desiredReplicas": {
+              "type": "string",
+              "description": "Desired number of replicas during schedule",
+              "examples": ["1"]
+            }
+          }
+        },
+        "rabbitmq": {
+          "type": "object",
+          "description": "RabbitMQ-based scaling configuration",
+          "properties": {
+            "protocol": {
+              "type": "string",
+              "description": "Protocol for RabbitMQ connection",
+              "examples": ["auto"]
+            },
+            "queueName": {
+              "type": "string",
+              "description": "Name of the RabbitMQ queue to monitor"
+            },
+            "mode": {
+              "type": "string",
+              "description": "Scaling mode for RabbitMQ",
+              "examples": ["QueueLength"]
+            },
+            "value": {
+              "type": "string",
+              "description": "Threshold value for scaling",
+              "examples": ["1"]
+            },
+            "hostFromEnv": {
+              "type": "string",
+              "description": "Environment variable containing the RabbitMQ host",
+              "examples": ["AMQP_URL"]
+            }
+          }
+        },
+        "customTriggers": {
+          "type": "array",
+          "description": "Custom KEDA triggers",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "nodeSelector": {
+      "type": "object",
+      "description": "Node selector for pod assignment"
+    },
+    "tolerations": {
+      "type": "array",
+      "description": "Tolerations for pod placement",
+      "items": {
+        "type": "object"
+      }
+    },
+    "affinity": {
+      "type": "object",
+      "description": "Affinity rules for pod placement"
+    },
+    "volumeMounts": {
+      "type": "array",
+      "description": "Volume mounts for the container",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the volume"
+          },
+          "mountPath": {
+            "type": "string",
+            "description": "Path in the container to mount the volume"
+          },
+          "readOnly": {
+            "type": "boolean",
+            "description": "Mount the volume as read-only"
+          }
+        },
+        "required": ["name", "mountPath"]
+      }
+    },
+    "volumes": {
+      "type": "array",
+      "description": "Volumes for the pod",
+      "items": {
+        "type": "object"
+      }
+    },
+    "terminationGracePeriodSeconds": {
+      "type": "integer",
+      "description": "Termination grace period in seconds",
+      "minimum": 0,
+      "examples": [3600]
+    },
+    "lifecycle": {
+      "type": "object",
+      "description": "Lifecycle hooks",
+      "properties": {
+        "preStop": {
+          "type": "object",
+          "description": "Pre-stop hook",
+          "examples": [
+            {
+              "httpGet": {
+                "path": "can_shutdown",
+                "port": 8081
+              }
+            }
+          ]
+        }
+      }
+    },
+    "secretProvider": {
+      "type": "object",
+      "description": "Secret provider configuration for Azure Key Vault using VM Managed Identity. When enabled, tenantId, userAssignedIdentityID, and vaults are required.",
+      "properties": {
+        "tenantId": {
+          "type": "string",
+          "description": "Azure tenant ID for the Key Vault (required when secretProvider is used)",
+          "examples": ["00000000-0000-0000-0000-000000000000"]
+        },
+        "userAssignedIdentityID": {
+          "type": "string",
+          "description": "Client ID of the user-assigned managed identity (required when secretProvider is used)",
+          "examples": ["00000000-0000-0000-0000-000000000000"]
+        },
+        "vaults": {
+          "type": "object",
+          "description": "Map of Key Vault names to environment variable mappings (required when secretProvider is used)",
+          "additionalProperties": {
+            "type": "object",
+            "description": "Map of environment variable names to Key Vault secret names",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "deployment": {
+      "type": "object",
+      "description": "Additional deployment configuration",
+      "properties": {
+        "initContainers": {
+          "type": "array",
+          "description": "Init containers for the deployment",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the init container"
+              },
+              "image": {
+                "type": "string",
+                "description": "Image for the init container"
+              },
+              "command": {
+                "type": "array",
+                "description": "Command to run in the init container",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "args": {
+                "type": "array",
+                "description": "Arguments for the command",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "securityContext": {
+                "type": "object",
+                "description": "Security context for the init container"
+              },
+              "volumeMounts": {
+                "type": "array",
+                "description": "Volume mounts for the init container",
+                "items": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "examples": [
+            [
+              {
+                "name": "model-downloader",
+                "image": "python:3.9",
+                "command": [
+                  "sh",
+                  "-c",
+                  "pip install huggingface-hub transformers; huggingface-cli download bert-base-uncased --cache-dir /models/bert"
+                ]
+              }
+            ]
+          ]
+        }
+      }
+    }
+  }
+}

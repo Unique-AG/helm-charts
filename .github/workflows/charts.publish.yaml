@@ -20,19 +20,19 @@ jobs:
   publish:
     if: github.repository == 'unique-ag/helm-charts'
     permissions:
-      contents: write  # for helm/chart-releaser-action to push chart release and create a release
-      packages: write  # to push OCI chart package to GitHub Registry
+      contents: write # for helm/chart-releaser-action to push chart release and create a release
+      packages: write # to push OCI chart package to GitHub Registry
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
 
       - name: Install Helm
-        uses: azure/setup-helm@fe7b79cd5ee1e45176fcad797de68ecaf3ca4814 # v4.2.0
+        uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1
         with:
-          version: v3.10.1 # Also update in lint-and-test.yaml
+          version: v3.19.4 # Also update in lint-and-test.yaml
 
       - name: Configure Git
         run: |
@@ -56,7 +56,7 @@ jobs:
       #     PGP_PASSPHRASE: "${{ secrets.PGP_PASSPHRASE }}"
 
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@a917fd15b20e8b64b94d9158ad54cd6345335584 # v1.6.0
+        uses: helm/chart-releaser-action@cae68fefc6b5f367a0275617c9f83181ba54714f # v1.7.0
         with:
           config: "./.github/configs/cr.yaml"
           skip_existing: true # immutable artifacts

@@ -1,4 +1,5 @@
 {{- $fullName := include "backendService.fullname" . -}}
+{{- include "backendService.validateGcpWorkloadIdentity" . -}}
 {{- if .Values.deployment.enabled -}}
 apiVersion: apps/v1
 kind: Deployment
@@ -6,20 +7,18 @@ metadata:
   name: {{ $fullName }}
   labels:
     {{- include "backendService.labels" . | nindent 4 }}
-    {{- if .Values.deployment.metadata}}
-    {{- toYaml .Values.deployment.metadata.labels | nindent 4 }}
+    {{- with .Values.deployment.metadata.labels }}
+    {{- toYaml . | nindent 4 }}
     {{- end }}
     helm.sh/chart: {{ include "backendService.chart" . }}
-    {{- if .Values.image.tag }}
-    app.kubernetes.io/version: {{ .Values.image.tag | quote }}
-    {{- end }}
-  {{- if .Values.deployment.metadata }}
+    app.kubernetes.io/version: {{ include "backendService.imageTag" . | quote }}
+  {{- with .Values.deployment.metadata.annotations }}
   annotations:
-    {{- toYaml .Values.deployment.metadata.annotations | nindent 4 }}
+  {{- toYaml . | nindent 4 }}
   {{- end }}
-
 spec:
-  {{- if not (or .Values.autoscaling.enabled .Values.eventBasedAutoscaling.enabled .Values.keda.enabled) }}
+  revisionHistoryLimit: {{ .Values.deployment.revisionHistoryLimit }}
+  {{- if not (or .Values.autoscaling.enabled .Values.keda.enabled) }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
@@ -34,23 +33,30 @@ spec:
   template:
     metadata:
       annotations:
-      {{- with .Values.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
+      {{- if .Values.podAnnotations }}
+        {{- with .Values.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
       {{- end }}
-        checksum/deployment-env: {{ include (print $.Chart.Name "/templates/deployment-env.yaml") . | sha256sum | trunc 8 | quote }}
+        checksum/deployment-env: {{ include (print $.Template.BasePath "/deployment-env.yaml") . | sha256sum | trunc 8 | quote }}
         {{- if .Values.envSecrets }}
-        checksum/secrets: {{ include (print $.Chart.Name "/templates/secrets.yaml") . | sha256sum | trunc 8 | quote }}
+        checksum/secrets: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum | trunc 8 | quote }}
         {{- end }}
       labels:
+      {{- if .Values.podLabels }}
+        {{- with .Values.podLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
         app.kubernetes.io/component: server
         {{- include "backendService.labels" . | nindent 8 }}
-        {{- if and (.Values.secretProvider) (not .Values.secretProvider.useVMManagedIdentity) }}
-        aadpodidbinding: {{ default "keyvault" (.Values.secretProvider).aadPodIdBinding }}
-        {{- end }}
-        {{- if .Values.serviceAccount.workloadIdentity.enabled }}
+        {{- if .Values.workloadIdentity.azure.enabled }}
         azure.workload.identity/use: 'true'
         {{- end }}
     spec:
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName }}
+      {{- end }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -78,12 +84,21 @@ spec:
       {{- end }}
       containers:
         - name: {{ $fullName }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.repository }}:{{ include "backendService.imageTag" . }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
               containerPort: {{ include "backendService.applicationPort" $ }}
               protocol: TCP
+            {{- if .Values.ports.metrics }}
+            - name: metrics
+              containerPort: {{ .Values.ports.metrics }}
+              protocol: TCP
+            {{- end }}
+          {{- if .Values.lifecycle }}
+          lifecycle:
+            {{- toYaml .Values.lifecycle | nindent 12 }}
+          {{- end }}
           {{- if .Values.probes.enabled }}
           {{- if .Values.probes.liveness }}
           livenessProbe:
@@ -125,6 +140,10 @@ spec:
             {{- with .Values.envVars }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
+            {{- if .Values.workloadIdentity.gcp.enabled }}
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /var/run/secrets/gcp-wif/config.json
+            {{- end }}
             {{- if .Values.secretProvider }}
             {{- range $k, $v := .Values.secretProvider.vaults }}
             {{- range $key, $value := $v }}
@@ -133,19 +152,6 @@ spec:
                 secretKeyRef:
                   name: {{ $fullName }}-{{ $k }}
                   key: {{ $value }}
-            {{- end }}
-            {{- end }}
-            {{- end }}
-            {{- if .Values.externalSecrets }}
-            {{- range $k, $v := .Values.externalSecrets }}
-            {{- range $key := $v.secrets }}
-            {{- range $d := $key.data }}
-            - name: {{ $key.name }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $v.keyvaultName }}
-                  key: {{ $d.key }}
-            {{- end }}
             {{- end }}
             {{- end }}
             {{- end }}
@@ -175,6 +181,14 @@ spec:
               readOnly: true
            {{- end }}
            {{- end }}
+          {{- if .Values.workloadIdentity.gcp.enabled }}
+            - name: gcp-wif-config
+              mountPath: /var/run/secrets/gcp-wif
+              readOnly: true
+            - name: gcp-token
+              mountPath: /var/run/secrets/gcp-token
+              readOnly: true
+          {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -218,5 +232,17 @@ spec:
             volumeAttributes:
               secretProviderClass: {{ $fullName }}-{{ $k }}
       {{- end }}
+      {{- end }}
+      {{- if .Values.workloadIdentity.gcp.enabled }}
+        - name: gcp-wif-config
+          configMap:
+            name: {{ include "backendService.fullname" . }}-gcp-wif
+        - name: gcp-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  audience: "//iam.googleapis.com/projects/{{ .Values.workloadIdentity.gcp.projectId }}/locations/global/workloadIdentityPools/{{ .Values.workloadIdentity.gcp.workloadIdentityPool }}/providers/{{ .Values.workloadIdentity.gcp.provider }}"
+                  expirationSeconds: {{ .Values.workloadIdentity.gcp.tokenExpirationSeconds | default 3600 }}
+                  path: gcp-token
       {{- end }}
 {{- end }}

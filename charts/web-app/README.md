@@ -4,7 +4,7 @@ The 'web-app' chart is a "convenience" chart from Unique AG that can generically
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 3.2.0](https://img.shields.io/badge/Version-3.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 5.1.0](https://img.shields.io/badge/Version-5.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-web-app unique/web-app --version 3.2.0
+helm install my-web-app unique/web-app --version 5.1.0
 
 # or
-helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 3.2.0
+helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 5.1.0
 ```
 
 ### Docker Images
@@ -45,6 +45,72 @@ The Root Route is a convenience Ingress/Gateway that routes all traffic from the
 
 Only one root route per cluster (technically per hostname) should be deployed to avoid conflicts or race conditions respectively.
 
+### Network Policies
+
+The chart supports Kubernetes Network Policies to control traffic flow to and from pods. Network Policies are a Kubernetes-native way to implement network segmentation and can help improve security by restricting network communication.
+
+#### Network Policy Flavors
+
+The chart supports two network policy flavors:
+
+- **`kubernetes`** (default): Standard Kubernetes NetworkPolicy resources
+- **`cilium`**: Cilium's CiliumNetworkPolicy resources with enhanced features
+
+```yaml
+networkPolicy:
+  enabled: true
+  flavor: kubernetes  # or "cilium"
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow ingress from monitoring namespace
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+      ports:
+        - protocol: TCP
+          port: 3000
+  egress:
+    # Allow egress to backend namespace
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: backend
+      ports:
+        - protocol: TCP
+          port: 8080
+    # Allow external HTTPS/HTTP access
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+```
+
+#### Kubernetes vs Cilium Differences
+
+When using `flavor: cilium`, the chart will:
+- Use `apiVersion: cilium.io/v2` and `kind: CiliumNetworkPolicy`
+- Use `endpointSelector` instead of `podSelector` in the spec
+- Support advanced Cilium-specific features in your rules
+
+When using `flavor: kubernetes` (default), the chart will:
+- Use `apiVersion: networking.k8s.io/v1` and `kind: NetworkPolicy`
+- Use standard `podSelector` in the spec
+- Maintain compatibility with any Kubernetes CNI that supports NetworkPolicy
+
+**Important Notes:**
+- Network Policies require a CNI (Container Network Interface) that supports them, such as Calico, Cilium, or Weave Net
+- For Cilium flavor, you must have Cilium CNI installed with CiliumNetworkPolicy CRDs
+- Once a Network Policy is applied to a pod, it becomes "isolated" and only allowed traffic will be permitted
+- Always include DNS resolution (port 53/UDP) in your egress rules if pods need to resolve hostnames
+- Test your network policies thoroughly to avoid inadvertently blocking required traffic
+
+You can find Network Policy examples in the [`ci/networkpolicy-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/web-app/ci/networkpolicy-values.yaml) (Kubernetes) and [`ci/networkpolicy-cilium-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/web-app/ci/networkpolicy-cilium-values.yaml) (Cilium) files.
+
 ## Values
 
 | Key | Type | Default | Description |
@@ -70,17 +136,28 @@ Only one root route per cluster (technically per hostname) should be deployed to
 | extraRoutes.extra-route-1.matches | list | `[{"path":{"type":"PathPrefix","value":"/"}}]` | which match conditions should be applied to the route |
 | extraRoutes.extra-route-1.parentRefs | list | `[{"group":"gateway.networking.k8s.io","kind":"Gateway","name":"kong","namespace":"kong-system"}]` | parentRefs define the parent gateway(s) that the route will be associated with |
 | fullnameOverride | string | `""` |  |
-| image | object | `{"pullPolicy":"IfNotPresent","repository":"ghcr.io/unique-ag/chart-testing-service","tag":"1.0.2"}` | The image to use for this specific deployment and its cron jobs |
+| image | object | `{"pullPolicy":"IfNotPresent","repository":"ghcr.io/unique-ag/chart-testing-service","tag":"1.1.0"}` | The image to use for this specific deployment and its cron jobs |
 | image.pullPolicy | string | `"IfNotPresent"` | pullPolicy, Unique recommends to never use 'Always' |
 | image.repository | string | `"ghcr.io/unique-ag/chart-testing-service"` | Repository, where the Unique service image is pulled from - for Unique internal deployments, these is the internal release repository - for client deployments, this will refer to the client's repository where the images have been mirrored too Note that it is bad practice and not advised to directly pull from Uniques release repository Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image |
-| image.tag | string | `"1.0.2"` | tag, most often will refer one of the latest release of the Unique service Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image |
+| image.tag | string | `"1.1.0"` | tag, most often will refer one of the latest release of the Unique service Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image |
 | imagePullSecrets | list | `[]` |  |
 | nameOverride | string | `""` |  |
+| networkPolicy | object | `{"annotations":{},"egress":[{"to":[{"podSelector":{}}]},{"ports":[{"port":53,"protocol":"UDP"}],"to":[]}],"enabled":false,"flavor":"kubernetes","ingress":[{"from":[{"podSelector":{}}]}],"labels":{}}` | networkPolicy allows you to define network policies for the deployed pods Network policies are used to control traffic flow to and from pods |
+| networkPolicy.annotations | object | `{}` | Additional annotations to add to the network policy |
+| networkPolicy.egress | list | `[{"to":[{"podSelector":{}}]},{"ports":[{"port":53,"protocol":"UDP"}],"to":[]}]` | Egress rules configuration |
+| networkPolicy.egress[0] | object | `{"to":[{"podSelector":{}}]}` | Default egress rules applied to all pods Allow egress to pods in the same namespace |
+| networkPolicy.enabled | bool | `false` | Enable or disable network policy creation |
+| networkPolicy.flavor | string | `"kubernetes"` | Network policy flavor - "kubernetes" for standard NetworkPolicy or "cilium" for CiliumNetworkPolicy |
+| networkPolicy.ingress | list | `[{"from":[{"podSelector":{}}]}]` | Ingress rules configuration |
+| networkPolicy.ingress[0] | object | `{"from":[{"podSelector":{}}]}` | Default ingress rules applied to all pods Allow ingress from pods in the same namespace |
+| networkPolicy.labels | object | `{}` | Additional labels to add to the network policy |
 | nodeSelector | object | `{}` |  |
 | pdb | object | `{"minAvailable":1}` | Define the pod disruption budget for this deployment Is templated as YAML so all kuberentes native types are supported |
 | pdb.minAvailable | int | `1` | This setting matches the charts default replica count, make sure to adapt your PDB if you chose a different sizing of your deployment |
-| podAnnotations | object | `{}` |  |
-| podSecurityContext | object | `{}` |  |
+| podAnnotations | object | `{}` | Define additional pod annotations for all the pods |
+| podLabels | object | `{}` | Define additional pod labels for all the pods |
+| podSecurityContext | object | `{"seccompProfile":{"type":"RuntimeDefault"}}` | PodSecurityContext for the pod(s) |
+| podSecurityContext.seccompProfile | object | `{"type":"RuntimeDefault"}` | seccompProfile, controls the seccomp profile for the container, defaults to 'RuntimeDefault' |
 | probes.enabled | bool | `true` |  |
 | probes.liveness.httpGet.path | string | `"/api/health"` |  |
 | probes.liveness.httpGet.port | string | `"http"` |  |
@@ -92,7 +169,7 @@ Only one root route per cluster (technically per hostname) should be deployed to
 | resources | object | `{}` |  |
 | rollingUpdate.maxSurge | int | `1` |  |
 | rollingUpdate.maxUnavailable | int | `0` |  |
-| routes | object | `{"gateway":{"name":"kong","namespace":"system"},"hostname":"chart-testing-web-app.example.com","pathPrefix":"","paths":{"default":{"blockList":["/metrics"],"enabled":true,"extraAnnotations":[]},"root":{"enabled":false,"redirectPath":"/chart-testing"}}}` | routes is a special object designed for Unique web-apps. It abstracts a lot of complexity and allows for a simple configuration of routes. ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong. If you are using a different API Gateway, you will need to use `extraRoutes`. |
+| routes | object | `{"gateway":{"name":"kong","namespace":"system"},"hostname":"chart-testing-web-app.example.com","pathPrefix":"","paths":{"default":{"blockList":["/metrics"],"enabled":true,"extraAnnotations":{}},"root":{"enabled":false,"redirectPath":"/chart-testing"}}}` | routes is a special object designed for Unique web-apps. It abstracts a lot of complexity and allows for a simple configuration of routes. ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong. If you are using a different API Gateway, you will need to use `extraRoutes`. |
 | routes.gateway | object | `{"name":"kong","namespace":"system"}` | gateway to use |
 | routes.gateway.name | string | kong | name of the gateway |
 | routes.gateway.namespace | string | system | namespace of the gateway |
@@ -102,10 +179,12 @@ Only one root route per cluster (technically per hostname) should be deployed to
 | routes.paths.root.enabled | bool | `false` | Whether the root route should be enabled |
 | routes.paths.root.redirectPath | string | defaults to the `pathPrefix` if enabled and omitted | The path to which the root should be redirected to ⚠️ This value must be a valid full path, not only the sub-path. A 302 redirect will be issued to this path (using full path replacement). |
 | secretProvider | object | `{}` |  |
-| securityContext.allowPrivilegeEscalation | bool | `false` |  |
-| securityContext.runAsNonRoot | bool | `true` |  |
-| securityContext.runAsUser | int | `1000` |  |
-| securityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
+| securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":1000}` | securityContext for the container(s) |
+| securityContext.allowPrivilegeEscalation | bool | `false` | AllowPrivilegeEscalation, controls if the container can gain more privileges than its parent process, defaults to 'false' |
+| securityContext.capabilities | object | `{"drop":["ALL"]}` | capabilities section controls the Linux capabilities for the container |
+| securityContext.readOnlyRootFilesystem | bool | `true` | readOnlyRootFilesystem, controls if the container has a read-only root filesystem, defaults to 'true' |
+| securityContext.runAsNonRoot | bool | `true` | runAsNonRoot, controls if the container must run as a non-root user, defaults to 'true' |
+| securityContext.runAsUser | int | `1000` | runAsUser, controls the user ID that runs the container, defaults to '1000' |
 | service.port | int | `3000` |  |
 | service.type | string | `"ClusterIP"` |  |
 | serviceAccount.annotations | object | `{}` |  |
@@ -113,6 +192,8 @@ Only one root route per cluster (technically per hostname) should be deployed to
 | serviceAccount.name | string | `""` |  |
 | strategy.type | string | `"RollingUpdate"` |  |
 | tolerations | list | `[]` |  |
+| volumeMounts | list | `[]` |  |
+| volumes | list | `[]` |  |
 
 ## Upgrade Guides
 

@@ -1,0 +1,14 @@
+{{- if and (not .Values.service.enabled) .Values.prometheus.enabled (ne (.Values.prometheus.scraping).enabled false) (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ include "backendService.fullname" . }}
+  labels:
+    {{- include "backendService.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "backendService.selectorLabels" . | nindent 6 }}
+  podMetricsEndpoints:
+  - port: {{ hasKey .Values.ports "metrics" | ternary "metrics" "http" }}
+{{- end }}
