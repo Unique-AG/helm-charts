@@ -12,7 +12,7 @@ metadata:
     {{- include "backendService.mutableLabels" $ | nindent 4 }}
     audit-volume: {{ $name }}
   annotations:
-    {{- if eq $volume.flavor "azure" }}
+    {{- if $volume.azure }}
     pv.kubernetes.io/provisioned-by: blob.csi.azure.com
     {{- end }}
 spec:
@@ -22,7 +22,7 @@ spec:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
   storageClassName: ""
-  {{- if eq $volume.flavor "azure" }}
+  {{- if $volume.azure }}
   csi:
     driver: blob.csi.azure.com
     readOnly: false

@@ -38,7 +38,7 @@
         },
         "volumes": {
           "type": "object",
-          "description": "Map of named audit storage volumes. Each creates a PV/PVC pair.",
+          "description": "Map of named audit storage volumes. Cloud provider is detected by presence of azure/aws/gcp field.",
           "additionalProperties": {
             "type": "object",
             "description": "Audit volume configuration",
@@ -47,12 +47,6 @@
                 "type": "boolean",
                 "description": "Enable this audit volume",
                 "examples": [true]
-              },
-              "flavor": {
-                "type": "string",
-                "description": "Cloud provider flavor for the volume",
-                "enum": ["azure"],
-                "examples": ["azure"]
               },
               "name": {
                 "type": "string",
@@ -72,7 +66,7 @@
               },
               "azure": {
                 "type": "object",
-                "description": "Azure Blob NFS storage configuration (required when flavor is 'azure')",
+                "description": "Azure Blob NFS storage configuration. Presence of this field enables Azure provider.",
                 "properties": {
                   "resourceGroup": {
                     "type": "string",
@@ -93,7 +87,7 @@
                 "required": ["resourceGroup", "storageAccount"]
               }
             },
-            "required": ["enabled", "flavor"]
+            "required": ["enabled"]
           }
         }
       },
@@ -103,22 +97,10 @@
           "volumes": {
             "blue": {
               "enabled": true,
-              "flavor": "azure",
               "capacity": "1Ti",
               "azure": {
                 "resourceGroup": "rg-blue",
-                "storageAccount": "stblue",
-                "containerName": "audit-logs"
-              }
-            },
-            "green": {
-              "enabled": true,
-              "flavor": "azure",
-              "capacity": "1Ti",
-              "azure": {
-                "resourceGroup": "rg-green",
-                "storageAccount": "stgreen",
-                "containerName": "audit-logs"
+                "storageAccount": "stblue"
               }
             }
           }

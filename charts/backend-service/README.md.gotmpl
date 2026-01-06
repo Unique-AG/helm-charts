@@ -137,6 +137,85 @@ You can find Network Policy examples in the [`ci/networkpolicy-values.yaml`](htt
 
 You can find a `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/extra-cronjobs-values.yaml) file.
 
+### Audit Volumes
+<small>added in `9.0.0`</small>
+
+The chart provides cloud-agnostic audit log storage with blue-green migration support via `auditVolumes`.
+
+#### Structure
+
+```yaml
+auditVolumes:
+  target: blue  # Volume key or direct path (e.g., "/dev/stdout")
+  volumes:
+    blue:
+      enabled: true
+      capacity: 1Ti
+      azure:  # Cloud provider detected by presence of this field
+        resourceGroup: my-rg
+        storageAccount: mystorageaccount
+        containerName: audit-logs  # Optional, defaults to release fullname
+```
+
+#### Key Concepts
+
+| Field | Description |
+|-------|-------------|
+| `target` | Where audit logs go. Can be a volume key (`blue`) or direct path (`/dev/stdout`) |
+| `volumes` | Map of named volumes. Each creates a PV/PVC pair named `{fullname}-audit-{key}` |
+| `azure` | Azure Blob NFS config. Presence of this field enables Azure provider |
+| `name` | Optional explicit PV/PVC name for backward compatibility |
+| `mountPath` | Optional, defaults to `/audit-{key}` |
+
+#### AUDIT_LOG_DIR Environment Variable
+
+The `AUDIT_LOG_DIR` environment variable is automatically set based on `auditVolumes.target`:
+
+| `target` value | Condition | `AUDIT_LOG_DIR` value |
+|----------------|-----------|----------------------|
+| Volume key (e.g., `blue`) | Volume exists and `enabled: true` | Volume's `mountPath` (or `/audit-{key}` if not set) |
+| Volume key (e.g., `blue`) | Volume missing or `enabled: false` | **Not set** (env var omitted) |
+| Direct path (e.g., `/dev/stdout`) | Always | The path directly (e.g., `/dev/stdout`) |
+| Not specified | Always | **Not set** (env var omitted) |
+
+> ⚠️ If `target` references a volume that doesn't exist or is disabled, `AUDIT_LOG_DIR` will **not** be set to prevent invalid paths.
+
+#### Blue-Green Migration
+
+The blue-green pattern allows zero-downtime migration between storage accounts:
+
+1. **Add new volume** under a new key (e.g., `green`)
+2. **Deploy** - both volumes will be mounted at different paths
+3. **Migrate data** from old to new mount path
+4. **Switch target** to new volume key
+5. **Disable old volume** (`enabled: false`)
+
+```yaml
+auditVolumes:
+  target: green  # Switch to new volume
+  volumes:
+    blue:
+      enabled: true  # Keep mounted during migration
+      name: my-release-audit  # Existing PV name
+      azure:
+        resourceGroup: old-rg
+        storageAccount: oldaccount
+    green:
+      enabled: true
+      azure:
+        resourceGroup: new-rg
+        storageAccount: newaccount
+```
+
+#### Stdout Logging
+
+For containerized logging without persistent storage:
+
+```yaml
+auditVolumes:
+  target: /dev/stdout  # AUDIT_LOG_DIR="/dev/stdout", no PV/PVC created
+```
+
 ## JSON Schema
 
 The chart provides a JSON schema for validating `values.yaml` files. This schema helps with:
@@ -166,8 +245,10 @@ Other authentication methods (service principals, pod identity) are not supporte
 - Removed: `.Values.auditVolume` (singular)
 - Added: `.Values.auditVolumes` with `target` and `volumes` structure
 - Added: `AUDIT_LOG_DIR` environment variable automatically set based on `target`
-- Added: `flavor` field for cloud provider selection (`azure`, with `aws`/`gcp` planned)
+- Added: Cloud provider detected by presence of `azure` field (no separate `flavor` needed)
 - Added: Explicit `name` field for backward-compatible PV/PVC naming
+
+See [Audit Volumes](#audit-volumes) for full documentation.
 
 **Migration:**
 
@@ -190,39 +271,12 @@ auditVolumes:
   volumes:
     blue:
       enabled: true
-      flavor: azure
       # name: my-release-audit  # Optional: use existing PV name for zero-downtime migration
       capacity: 1Ti
-      azure:
+      azure:  # Cloud provider detected by presence of this field
         resourceGroup: my-resource-group
         storageAccount: mystorageaccount
         containerName: audit-logs
-```
-
-**For stdout logging (no volume):**
-```yaml
-auditVolumes:
-  target: /dev/stdout  # AUDIT_LOG_DIR="/dev/stdout", no PV/PVC created
-```
-
-**Blue-green migration example:**
-```yaml
-auditVolumes:
-  target: green  # Switch active volume
-  volumes:
-    blue:
-      enabled: true
-      flavor: azure
-      name: my-release-audit  # Keep existing PV name
-      azure:
-        resourceGroup: old-rg
-        storageAccount: oldaccount
-    green:
-      enabled: true
-      flavor: azure
-      azure:
-        resourceGroup: new-rg
-        storageAccount: newaccount
 ```
 
 ### ~> `8.0.0`

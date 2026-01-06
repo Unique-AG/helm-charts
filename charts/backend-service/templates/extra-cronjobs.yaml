@@ -95,18 +95,21 @@ spec:
                   value: {{ ($globalValues.image.tag | default $.Chart.AppVersion) | quote}}
                 {{- if $globalValues.auditVolumes.target }}
                 {{- $target := $globalValues.auditVolumes.target }}
+                {{- $isPath := hasPrefix "/" $target }}
                 {{- $targetVolume := dict }}
-                {{- if $globalValues.auditVolumes.volumes }}
+                {{- if and (not $isPath) $globalValues.auditVolumes.volumes }}
                 {{- $targetVolume = index $globalValues.auditVolumes.volumes $target | default dict }}
                 {{- end }}
+                {{- if or $isPath $targetVolume.enabled }}
                 - name: AUDIT_LOG_DIR
-                  {{- if $targetVolume.mountPath }}
-                  value: {{ $targetVolume.mountPath | quote }}
-                  {{- else if $targetVolume.enabled }}
-                  value: {{ printf "/audit-%s" $target | quote }}
-                  {{- else }}
+                  {{- if $isPath }}
                   value: {{ $target | quote }}
+                  {{- else if $targetVolume.mountPath }}
+                  value: {{ $targetVolume.mountPath | quote }}
+                  {{- else }}
+                  value: {{ printf "/audit-%s" $target | quote }}
                   {{- end }}
+                {{- end }}
                 {{- end }}
                 {{- with $globalValues.envVars }}
                   {{- toYaml . | nindent 16 }}

@@ -22,7 +22,7 @@ annotations:
     - kind: added
       description: "Added AUDIT_LOG_DIR environment variable, automatically set based on auditVolumes.target."
     - kind: added
-      description: "Added flavor field for cloud provider selection (azure now, aws/gcp ideated)."
+      description: "Cloud provider auto-detected by presence of azure field (aws/gcp planned)."
     - kind: added
       description: "Added explicit name field for backward-compatible PV/PVC naming."
     - kind: added
