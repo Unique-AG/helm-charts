@@ -1,9 +1,12 @@
-{{- if .Values.auditVolume.enabled }}
 {{- $fullName := include "backendService.fullname" . -}}
+{{/*
+  Legacy auditVolume support (deprecated but maintained for backward compatibility)
+*/}}
+{{- if .Values.auditVolume.enabled }}
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: {{ include "backendService.fullname" . }}-audit
+  name: {{ $fullName }}-audit
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "backendService.mutableLabels" . | nindent 4 }}
@@ -29,7 +32,7 @@ spec:
 apiVersion: v1        
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "backendService.fullname" . }}-audit
+  name: {{ $fullName }}-audit
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "backendService.mutableLabels" . | nindent 4 }}
@@ -39,6 +42,57 @@ spec:
   resources:
     requests:
       storage: {{ default "1Ti" .Values.auditVolume.capacity }}
-  volumeName: {{ include "backendService.fullname" . }}-audit
+  volumeName: {{ $fullName }}-audit
   storageClassName: azureblob-nfs-premium # storage class gets installed via terraform property blob_driver_enabled
+{{- end }}
+{{/*
+  New auditVolumes map support for multiple volumes (migration scenarios)
+*/}}
+{{- range $name, $volume := .Values.auditVolumes }}
+{{- if $volume.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ $fullName }}-audit-{{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "backendService.mutableLabels" $ | nindent 4 }}
+    audit-volume: {{ $name }}
+  annotations:
+    pv.kubernetes.io/provisioned-by: blob.csi.azure.com
+spec:
+  capacity:
+    storage: {{ default "1Ti" $volume.capacity }}
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain 
+  storageClassName: azureblob-nfs-premium
+  csi:
+    driver: blob.csi.azure.com
+    readOnly: false
+    volumeHandle: {{ printf "%s-%s" $volume.attributes.storageAccount (default $fullName $volume.attributes.containerName) }}
+    volumeAttributes:
+      resourceGroup: {{ $volume.attributes.resourceGroup }}
+      storageAccount: {{ $volume.attributes.storageAccount }}
+      containerName: {{ default $fullName $volume.attributes.containerName }}
+      protocol: nfs
+---
+apiVersion: v1        
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $fullName }}-audit-{{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "backendService.mutableLabels" $ | nindent 4 }}
+    audit-volume: {{ $name }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: {{ default "1Ti" $volume.capacity }}
+  volumeName: {{ $fullName }}-audit-{{ $name }}
+  storageClassName: azureblob-nfs-premium
+{{- end }}
 {{- end }}

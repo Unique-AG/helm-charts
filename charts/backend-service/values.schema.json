@@ -29,7 +29,7 @@
     },
     "auditVolume": {
       "type": "object",
-      "description": "Configuration for audit volume",
+      "description": "DEPRECATED: Use auditVolumes instead. Configuration for a single audit volume (kept for backward compatibility)",
       "properties": {
         "enabled": {
           "type": "boolean",
@@ -70,6 +70,79 @@
           "required": ["resourceGroup", "storageAccount"]
         }
       }
+    },
+    "auditVolumes": {
+      "type": "object",
+      "description": "Multiple Azure Blob NFS volumes for audit logging. Useful for migration scenarios where you need to switch storage accounts without downtime.",
+      "additionalProperties": {
+        "type": "object",
+        "description": "Audit volume configuration",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Enable this audit volume",
+            "examples": [true]
+          },
+          "mountPath": {
+            "type": "string",
+            "description": "Mount path for this audit volume (must be unique per enabled volume)",
+            "default": "/audit",
+            "examples": ["/audit", "/audit-legacy", "/audit-new"]
+          },
+          "capacity": {
+            "type": "string",
+            "description": "Capacity for audit volume",
+            "default": "1Ti",
+            "examples": ["1Ti", "500Gi"]
+          },
+          "attributes": {
+            "type": "object",
+            "description": "Azure Blob storage attributes",
+            "properties": {
+              "resourceGroup": {
+                "type": "string",
+                "description": "Azure resource group containing the storage account",
+                "examples": ["my-azure-resource-group"]
+              },
+              "storageAccount": {
+                "type": "string",
+                "description": "Azure storage account name",
+                "examples": ["mystorageaccount"]
+              },
+              "containerName": {
+                "type": "string",
+                "description": "Azure blob container name (defaults to release fullname if not set)"
+              }
+            },
+            "required": ["resourceGroup", "storageAccount"]
+          }
+        },
+        "required": ["enabled", "attributes"]
+      },
+      "examples": [
+        {
+          "blue": {
+            "enabled": true,
+            "mountPath": "/audit-blue",
+            "capacity": "1Ti",
+            "attributes": {
+              "resourceGroup": "rg-blue",
+              "storageAccount": "stblue",
+              "containerName": "audit-logs"
+            }
+          },
+          "green": {
+            "enabled": true,
+            "mountPath": "/audit-green",
+            "capacity": "1Ti",
+            "attributes": {
+              "resourceGroup": "rg-green",
+              "storageAccount": "stgreen",
+              "containerName": "audit-logs"
+            }
+          }
+        }
+      ]
     },
     "autoscaling": {
       "type": "object",

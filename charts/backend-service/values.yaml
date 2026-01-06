@@ -4,6 +4,9 @@ replicaCount: 1
 
 affinity: {}
 
+# -- DEPRECATED: Use auditVolumes instead. auditVolume is kept for backward compatibility.
+# auditVolume creates a single Azure Blob NFS PersistentVolume and PersistentVolumeClaim for audit logging.
+# For migration scenarios (changing storage accounts), use auditVolumes which supports multiple volumes.
 auditVolume:
   enabled: false
   mountPath: /audit # defaults to /audit
@@ -12,6 +15,34 @@ auditVolume:
     resourceGroup: my-azure-resource-group
     storageAccount: my-azure-storage-account
     # containerName: my-azure-container-in-my-azure-storage-account # defaults to release name
+
+# -- auditVolumes allows you to define multiple Azure Blob NFS volumes for audit logging.
+# This is useful for blue-green migration scenarios where you need to switch from one storage account to another.
+# Each volume creates a separate PV/PVC pair with a unique name based on the key.
+# Migration workflow (works both ways - blue→green or green→blue):
+#   1. Add your new volume configuration under a new key (e.g., "green" if currently using "blue")
+#   2. Deploy - both PV/PVC pairs will exist with different mount paths
+#   3. Migrate from old mount path to new mount path, deploy
+#   4. Disable the old volume (set enabled: false)
+#   5. Remove the old volume configuration
+auditVolumes: {}
+  # Example blue-green migration configuration:
+  # blue:
+  #   enabled: true
+  #   mountPath: /audit-blue
+  #   capacity: 1Ti
+  #   attributes:
+  #     resourceGroup: rg-blue
+  #     storageAccount: stblue
+  #     containerName: configuration-backend
+  # green:
+  #   enabled: true
+  #   mountPath: /audit-green
+  #   capacity: 1Ti
+  #   attributes:
+  #     resourceGroup: rg-green
+  #     storageAccount: stgreen
+  #     containerName: configuration-backend
 
 autoscaling:
   enabled: false
@@ -125,8 +156,7 @@ extraRoutes:
     additionalRules: []
 
 # -- extraCronJobs allows you to define additional cron jobs besides 'cronJob' itself.
-extraCronJobs:
-  {}
+extraCronJobs: {}
   # foo:
   #   concurrencyPolicy: Forbid
   #   env:
@@ -334,8 +364,7 @@ keda:
   # The key names are arbitrary and used only for overlay purposes
   # Note that when disabling/overriding a trigger with `null` to unset it, helm will issue a warning as its cautious about merging types.
   # For that case, the warning can be ignored.
-  triggers:
-    {}
+  triggers: {}
     # # -- rabbitmq example
     # rabbitmq-trigger:
     #   type: rabbitmq
@@ -472,8 +501,7 @@ prometheus:
     kubernetesApplication:
       enabled: true
       # -- Disable specific alerts by setting them to true
-      disabled:
-        {}
+      disabled: {}
         # KubePodCrashLooping: false
         # KubePodNotReady: false
         # KubeDeploymentGenerationMismatch: false
@@ -494,8 +522,7 @@ prometheus:
         # KubePersistentVolumeClaimPending: false
         # KubePdbNotEnoughHealthyPods: false
       # -- Override alert rules with custom values (for duration, severity, etc.)
-      customRules:
-        {}
+      customRules: {}
         # KubePodCrashLooping:
         #   for: "10m"
         #   severity: "critical"
@@ -509,8 +536,7 @@ prometheus:
     kubernetesResources:
       enabled: true
       # -- Disable specific alerts by setting them to true
-      disabled:
-        {}
+      disabled: {}
         # KubernetesPodHighCPUUsage: false
         # KubernetesPodHighMemoryUsage: false
         # KubernetesPodNearMemoryLimit: false
@@ -522,8 +548,7 @@ prometheus:
         # KubernetesHPAScalingEvent: false
         # KubernetesHPAMaxReplicasReached: false
       # -- Override alert rules with custom values (for duration, severity, etc.)
-      customRules:
-        {}
+      customRules: {}
         # KubernetesPodHighCPUUsage:
         #   for: "15m"
         #   severity: "critical"
@@ -532,8 +557,7 @@ prometheus:
         # KubernetesContainerOOMKilled:
         #   for: "1m"
     # -- Additional labels to add to all default alerts
-    additionalLabels:
-      {}
+    additionalLabels: {}
       # environment: production
       # team: backend
 
@@ -568,8 +592,7 @@ routes:
       # -- explicitly list paths to block
       blockList:
         - /metrics
-      extraAnnotations:
-        []
+      extraAnnotations: []
         # konghq.com/request-buffering: "false"
         # konghq.com/read-timeout: "120s"
     versioned:
@@ -578,8 +601,7 @@ routes:
       # ⚠️ Customizing this value requires also changing the default url in multiple places including all SDK or integration use cases
       # @default -- the chart will default to 'public' to stay backward compatible
       pathOverride: /public
-      extraAnnotations:
-        []
+      extraAnnotations: []
         # konghq.com/request-buffering: "false"
     scoped:
       enabled: false
@@ -600,8 +622,7 @@ routes:
       enabled: false
       # -- path to the probe endpoint
       probePath: /probe
-      extraAnnotations:
-        []
+      extraAnnotations: []
         # konghq.com/strip-path: "true"
 
 # .Values.secretProvider lets you mount secrets from Azure Key Vault into the pod using VM Managed Identity

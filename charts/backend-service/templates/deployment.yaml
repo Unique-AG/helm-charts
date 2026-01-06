@@ -163,6 +163,12 @@ spec:
             - name: audit
               mountPath: {{ default "/audit" .Values.auditVolume.mountPath }}
           {{- end }}
+          {{- range $name, $volume := .Values.auditVolumes }}
+          {{- if $volume.enabled }}
+            - name: audit-{{ $name }}
+              mountPath: {{ default "/audit" $volume.mountPath }}
+          {{- end }}
+          {{- end }}
           {{- if .Values.deployment.initContainers }}
           {{- range .Values.deployment.initContainers }}
           {{- if .volumeMounts }}
@@ -212,6 +218,13 @@ spec:
         - name: audit
           persistentVolumeClaim:
             claimName: {{ $fullName }}-audit
+      {{- end }}
+      {{- range $name, $volume := .Values.auditVolumes }}
+      {{- if $volume.enabled }}
+        - name: audit-{{ $name }}
+          persistentVolumeClaim:
+            claimName: {{ $fullName }}-audit-{{ $name }}
+      {{- end }}
       {{- end }}
       {{- if .Values.deployment.initContainers }}
       {{- range .Values.deployment.initContainers }}
