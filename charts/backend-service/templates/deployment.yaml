@@ -155,15 +155,26 @@ spec:
             {{- end }}
             {{- end }}
             {{- end }}
+            {{- if .Values.auditVolumes.target }}
+            {{- $target := .Values.auditVolumes.target }}
+            {{- $targetVolume := dict }}
+            {{- if .Values.auditVolumes.volumes }}
+            {{- $targetVolume = index .Values.auditVolumes.volumes $target | default dict }}
+            {{- end }}
+            - name: AUDIT_LOG_DIR
+              {{- if $targetVolume.mountPath }}
+              value: {{ $targetVolume.mountPath | quote }}
+              {{- else if $targetVolume.enabled }}
+              value: {{ printf "/audit-%s" $target | quote }}
+              {{- else }}
+              value: {{ $target | quote }}
+              {{- end }}
+            {{- end }}
           volumeMounts:
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if .Values.auditVolume.enabled }}
-            - name: audit
-              mountPath: {{ default "/audit" .Values.auditVolume.mountPath }}
-          {{- end }}
-          {{- range $name, $volume := .Values.auditVolumes }}
+          {{- range $name, $volume := .Values.auditVolumes.volumes }}
           {{- if $volume.enabled }}
             - name: audit-{{ $name }}
               mountPath: {{ default (printf "/audit-%s" $name) $volume.mountPath }}
@@ -214,16 +225,11 @@ spec:
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.auditVolume.enabled }}
-        - name: audit
-          persistentVolumeClaim:
-            claimName: {{ $fullName }}-audit
-      {{- end }}
-      {{- range $name, $volume := .Values.auditVolumes }}
+      {{- range $name, $volume := .Values.auditVolumes.volumes }}
       {{- if $volume.enabled }}
         - name: audit-{{ $name }}
           persistentVolumeClaim:
-            claimName: {{ $fullName }}-audit-{{ $name }}
+            claimName: {{ default (printf "%s-audit-%s" $fullName $name) $volume.name }}
       {{- end }}
       {{- end }}
       {{- if .Values.deployment.initContainers }}

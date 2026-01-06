@@ -4,45 +4,50 @@ replicaCount: 1
 
 affinity: {}
 
-# -- DEPRECATED: Use auditVolumes instead. auditVolume is kept for backward compatibility.
-# auditVolume creates a single Azure Blob NFS PersistentVolume and PersistentVolumeClaim for audit logging.
-# For migration scenarios (changing storage accounts), use auditVolumes which supports multiple volumes.
-auditVolume:
-  enabled: false
-  mountPath: /audit # defaults to /audit
-  capacity: 1Ti # defaults to 1Ti
-  attributes:
-    resourceGroup: my-azure-resource-group
-    storageAccount: my-azure-storage-account
-    # containerName: my-azure-container-in-my-azure-storage-account # defaults to release name
-
-# -- auditVolumes allows you to define multiple Azure Blob NFS volumes for audit logging.
-# This is useful for blue-green migration scenarios where you need to switch from one storage account to another.
-# Each volume creates a separate PV/PVC pair with a unique name based on the key.
+# -- auditVolumes configures audit log storage with cloud-agnostic volume provisioning.
+# Supports blue-green migration scenarios and multiple cloud providers.
+#
+# Structure:
+#   target: Specifies where AUDIT_LOG_DIR env var points to.
+#           Can be a volume key (e.g., "blue") or a direct path (e.g., "/dev/stdout").
+#   volumes: Map of named volume configurations for PV/PVC creation.
+#
 # Migration workflow (works both ways - blue→green or green→blue):
-#   1. Add your new volume configuration under a new key (e.g., "green" if currently using "blue")
+#   1. Add new volume under a new key (e.g., "green" if currently using "blue")
 #   2. Deploy - both PV/PVC pairs will exist with different mount paths
-#   3. Migrate from old mount path to new mount path, deploy
+#   3. Update target to new volume key, deploy
 #   4. Disable the old volume (set enabled: false)
 #   5. Remove the old volume configuration
-auditVolumes: {}
-  # Example blue-green migration configuration:
-  # blue:
-  #   enabled: true
-  #   # mountPath: /audit-blue  # defaults to /audit-{name}, i.e. /audit-blue
-  #   capacity: 1Ti
-  #   attributes:
-  #     resourceGroup: rg-blue
-  #     storageAccount: stblue
-  #     containerName: configuration-backend
-  # green:
-  #   enabled: true
-  #   # mountPath: /audit-green  # defaults to /audit-{name}, i.e. /audit-green
-  #   capacity: 1Ti
-  #   attributes:
-  #     resourceGroup: rg-green
-  #     storageAccount: stgreen
-  #     containerName: configuration-backend
+auditVolumes:
+  # -- target specifies where audit logs should be written.
+  # Can be a volume key (e.g., "blue", "green") or a direct path (e.g., "/dev/stdout").
+  # Sets AUDIT_LOG_DIR environment variable to the resolved path.
+  # When set to a volume key, uses that volume's mountPath.
+  # When set to a path, uses the path directly (no volume required).
+  # target: blue
+  
+  # -- volumes defines the available audit storage volumes.
+  # Each key becomes part of the PV/PVC name: {fullname}-audit-{key}
+  volumes: {}
+    # Example blue-green configuration with Azure Blob NFS:
+    # blue:
+    #   enabled: true
+    #   flavor: azure
+    #   # name: my-custom-pv-name  # Optional: explicit PV/PVC name (defaults to {fullname}-audit-{key})
+    #   # mountPath: /audit-blue   # Optional: defaults to /audit-{key}
+    #   capacity: 1Ti
+    #   azure:
+    #     resourceGroup: rg-blue
+    #     storageAccount: stblue
+    #     containerName: audit-logs  # defaults to fullname
+    # green:
+    #   enabled: true
+    #   flavor: azure
+    #   capacity: 1Ti
+    #   azure:
+    #     resourceGroup: rg-green
+    #     storageAccount: stgreen
+    #     containerName: audit-logs
 
 autoscaling:
   enabled: false

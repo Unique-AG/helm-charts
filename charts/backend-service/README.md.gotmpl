@@ -158,6 +158,73 @@ Other authentication methods (service principals, pod identity) are not supporte
 
 ## Upgrade Guides
 
+### ~> `9.0.0`
+
+**Breaking change:** The `auditVolume` (singular) configuration has been replaced with `auditVolumes` (plural) - a cloud-agnostic, blue-green migration-ready structure.
+
+**What changed:**
+- Removed: `.Values.auditVolume` (singular)
+- Added: `.Values.auditVolumes` with `target` and `volumes` structure
+- Added: `AUDIT_LOG_DIR` environment variable automatically set based on `target`
+- Added: `flavor` field for cloud provider selection (`azure`, with `aws`/`gcp` planned)
+- Added: Explicit `name` field for backward-compatible PV/PVC naming
+
+**Migration:**
+
+**From (old):**
+```yaml
+auditVolume:
+  enabled: true
+  mountPath: /audit
+  capacity: 1Ti
+  attributes:
+    resourceGroup: my-resource-group
+    storageAccount: mystorageaccount
+    containerName: audit-logs
+```
+
+**To (new):**
+```yaml
+auditVolumes:
+  target: blue  # Sets AUDIT_LOG_DIR env var
+  volumes:
+    blue:
+      enabled: true
+      flavor: azure
+      # name: my-release-audit  # Optional: use existing PV name for zero-downtime migration
+      capacity: 1Ti
+      azure:
+        resourceGroup: my-resource-group
+        storageAccount: mystorageaccount
+        containerName: audit-logs
+```
+
+**For stdout logging (no volume):**
+```yaml
+auditVolumes:
+  target: /dev/stdout  # AUDIT_LOG_DIR="/dev/stdout", no PV/PVC created
+```
+
+**Blue-green migration example:**
+```yaml
+auditVolumes:
+  target: green  # Switch active volume
+  volumes:
+    blue:
+      enabled: true
+      flavor: azure
+      name: my-release-audit  # Keep existing PV name
+      azure:
+        resourceGroup: old-rg
+        storageAccount: oldaccount
+    green:
+      enabled: true
+      flavor: azure
+      azure:
+        resourceGroup: new-rg
+        storageAccount: newaccount
+```
+
 ### ~> `8.0.0`
 
 **Breaking change:** Azure Workload Identity moved from `.Values.serviceAccount.workloadIdentity` to `.Values.workloadIdentity.azure`.

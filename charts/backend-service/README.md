@@ -4,7 +4,7 @@ The 'backend-service' chart is a "convenience" chart from Unique AG that can gen
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 8.3.0](https://img.shields.io/badge/Version-8.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
+![Version: 9.0.0](https://img.shields.io/badge/Version-9.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 8.3.0
+helm install my-backend-service unique/backend-service --version 9.0.0
 
 # or
-helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 8.3.0
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 9.0.0
 ```
 
 ### Docker Images
@@ -158,6 +158,73 @@ Workload Identity support might be added in the future. If you need it sooner, [
 Other authentication methods (service principals, pod identity) are not supported due to the variety of Azure Key Vault access patterns, security policies, and governance requirements across different organizations. The chart provides a stable foundation; extend it using `extraObjects` for custom authentication setups.
 
 ## Upgrade Guides
+
+### ~> `9.0.0`
+
+**Breaking change:** The `auditVolume` (singular) configuration has been replaced with `auditVolumes` (plural) - a cloud-agnostic, blue-green migration-ready structure.
+
+**What changed:**
+- Removed: `.Values.auditVolume` (singular)
+- Added: `.Values.auditVolumes` with `target` and `volumes` structure
+- Added: `AUDIT_LOG_DIR` environment variable automatically set based on `target`
+- Added: `flavor` field for cloud provider selection (`azure`, with `aws`/`gcp` planned)
+- Added: Explicit `name` field for backward-compatible PV/PVC naming
+
+**Migration:**
+
+**From (old):**
+```yaml
+auditVolume:
+  enabled: true
+  mountPath: /audit
+  capacity: 1Ti
+  attributes:
+    resourceGroup: my-resource-group
+    storageAccount: mystorageaccount
+    containerName: audit-logs
+```
+
+**To (new):**
+```yaml
+auditVolumes:
+  target: blue  # Sets AUDIT_LOG_DIR env var
+  volumes:
+    blue:
+      enabled: true
+      flavor: azure
+      # name: my-release-audit  # Optional: use existing PV name for zero-downtime migration
+      capacity: 1Ti
+      azure:
+        resourceGroup: my-resource-group
+        storageAccount: mystorageaccount
+        containerName: audit-logs
+```
+
+**For stdout logging (no volume):**
+```yaml
+auditVolumes:
+  target: /dev/stdout  # AUDIT_LOG_DIR="/dev/stdout", no PV/PVC created
+```
+
+**Blue-green migration example:**
+```yaml
+auditVolumes:
+  target: green  # Switch active volume
+  volumes:
+    blue:
+      enabled: true
+      flavor: azure
+      name: my-release-audit  # Keep existing PV name
+      azure:
+        resourceGroup: old-rg
+        storageAccount: oldaccount
+    green:
+      enabled: true
+      flavor: azure
+      azure:
+        resourceGroup: new-rg
+        storageAccount: newaccount
+```
 
 ### ~> `8.0.0`
 

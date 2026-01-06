@@ -1,87 +1,43 @@
 {{- $fullName := include "backendService.fullname" . -}}
-{{/*
-  Legacy auditVolume support (deprecated but maintained for backward compatibility)
-*/}}
-{{- if .Values.auditVolume.enabled }}
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: {{ $fullName }}-audit
-  namespace: {{ .Release.Namespace }}
-  labels:
-    {{- include "backendService.mutableLabels" . | nindent 4 }}
-  annotations:
-    pv.kubernetes.io/provisioned-by: blob.csi.azure.com
-spec:
-  capacity:
-    storage: {{ default "1Ti" .Values.auditVolume.capacity }}
-  accessModes:
-    - ReadWriteMany
-  persistentVolumeReclaimPolicy: Retain 
-  storageClassName: azureblob-nfs-premium # storage class gets installed via terraform property blob_driver_enabled
-  csi:
-    driver: blob.csi.azure.com
-    readOnly: false
-    volumeHandle: {{ printf "%s-%s" .Values.auditVolume.attributes.storageAccount (default $fullName .Values.auditVolume.attributes.containerName) }}
-    volumeAttributes:
-      resourceGroup: {{ .Values.auditVolume.attributes.resourceGroup }}
-      storageAccount: {{ .Values.auditVolume.attributes.storageAccount }}
-      containerName: {{ default $fullName .Values.auditVolume.attributes.containerName }}
-      protocol: nfs
----
-apiVersion: v1        
-kind: PersistentVolumeClaim
-metadata:
-  name: {{ $fullName }}-audit
-  namespace: {{ .Release.Namespace }}
-  labels:
-    {{- include "backendService.mutableLabels" . | nindent 4 }}
-spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: {{ default "1Ti" .Values.auditVolume.capacity }}
-  volumeName: {{ $fullName }}-audit
-  storageClassName: azureblob-nfs-premium # storage class gets installed via terraform property blob_driver_enabled
-{{- end }}
-{{/*
-  New auditVolumes map support for multiple volumes (migration scenarios)
-*/}}
-{{- range $name, $volume := .Values.auditVolumes }}
+{{- range $name, $volume := .Values.auditVolumes.volumes }}
 {{- if $volume.enabled }}
+{{- $pvName := default (printf "%s-audit-%s" $fullName $name) $volume.name }}
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: {{ $fullName }}-audit-{{ $name }}
+  name: {{ $pvName }}
   namespace: {{ $.Release.Namespace }}
   labels:
     {{- include "backendService.mutableLabels" $ | nindent 4 }}
     audit-volume: {{ $name }}
   annotations:
+    {{- if eq $volume.flavor "azure" }}
     pv.kubernetes.io/provisioned-by: blob.csi.azure.com
+    {{- end }}
 spec:
   capacity:
     storage: {{ default "1Ti" $volume.capacity }}
   accessModes:
     - ReadWriteMany
-  persistentVolumeReclaimPolicy: Retain 
-  storageClassName: azureblob-nfs-premium
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  {{- if eq $volume.flavor "azure" }}
   csi:
     driver: blob.csi.azure.com
     readOnly: false
-    volumeHandle: {{ printf "%s-%s" $volume.attributes.storageAccount (default $fullName $volume.attributes.containerName) }}
+    volumeHandle: {{ printf "%s-%s" $volume.azure.storageAccount (default $fullName $volume.azure.containerName) }}
     volumeAttributes:
-      resourceGroup: {{ $volume.attributes.resourceGroup }}
-      storageAccount: {{ $volume.attributes.storageAccount }}
-      containerName: {{ default $fullName $volume.attributes.containerName }}
+      resourceGroup: {{ $volume.azure.resourceGroup }}
+      storageAccount: {{ $volume.azure.storageAccount }}
+      containerName: {{ default $fullName $volume.azure.containerName }}
       protocol: nfs
+  {{- end }}
 ---
-apiVersion: v1        
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ $fullName }}-audit-{{ $name }}
+  name: {{ $pvName }}
   namespace: {{ $.Release.Namespace }}
   labels:
     {{- include "backendService.mutableLabels" $ | nindent 4 }}
@@ -89,10 +45,10 @@ metadata:
 spec:
   accessModes:
     - ReadWriteMany
+  storageClassName: ""
   resources:
     requests:
       storage: {{ default "1Ti" $volume.capacity }}
-  volumeName: {{ $fullName }}-audit-{{ $name }}
-  storageClassName: azureblob-nfs-premium
+  volumeName: {{ $pvName }}
 {{- end }}
 {{- end }}

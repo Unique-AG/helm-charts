@@ -27,117 +27,99 @@
       "type": "object",
       "description": "Kubernetes affinity rules"
     },
-    "auditVolume": {
-      "type": "object",
-      "description": "DEPRECATED: Use auditVolumes instead. Configuration for a single audit volume (kept for backward compatibility)",
-      "properties": {
-        "enabled": {
-          "type": "boolean",
-          "description": "Enable audit volume",
-          "examples": [false]
-        },
-        "mountPath": {
-          "type": "string",
-          "description": "Mount path for audit volume",
-          "default": "/audit",
-          "examples": ["/audit"]
-        },
-        "capacity": {
-          "type": "string",
-          "description": "Capacity for audit volume",
-          "default": "1Ti",
-          "examples": ["1Ti"]
-        },
-        "attributes": {
-          "type": "object",
-          "description": "Additional attributes for audit volume",
-          "properties": {
-            "resourceGroup": {
-              "type": "string",
-              "description": "Azure resource group",
-              "examples": ["my-azure-resource-group"]
-            },
-            "storageAccount": {
-              "type": "string",
-              "description": "Azure storage account",
-              "examples": ["my-azure-storage-account"]
-            },
-            "containerName": {
-              "type": "string",
-              "description": "Azure container name"
-            }
-          },
-          "required": ["resourceGroup", "storageAccount"]
-        }
-      }
-    },
     "auditVolumes": {
       "type": "object",
-      "description": "Multiple Azure Blob NFS volumes for audit logging. Useful for migration scenarios where you need to switch storage accounts without downtime.",
-      "additionalProperties": {
-        "type": "object",
-        "description": "Audit volume configuration",
-        "properties": {
-          "enabled": {
-            "type": "boolean",
-            "description": "Enable this audit volume",
-            "examples": [true]
-          },
-          "mountPath": {
-            "type": "string",
-            "description": "Mount path for this audit volume. Defaults to /audit-{name} where {name} is the volume key (e.g., /audit-blue for a volume named 'blue')",
-            "examples": ["/audit", "/audit-blue", "/audit-green"]
-          },
-          "capacity": {
-            "type": "string",
-            "description": "Capacity for audit volume",
-            "default": "1Ti",
-            "examples": ["1Ti", "500Gi"]
-          },
-          "attributes": {
+      "description": "Cloud-agnostic audit log storage with blue-green migration support. Sets AUDIT_LOG_DIR env var based on target.",
+      "properties": {
+        "target": {
+          "type": "string",
+          "description": "Specifies where audit logs should be written. Can be a volume key (e.g., 'blue') or a direct path (e.g., '/dev/stdout'). Sets AUDIT_LOG_DIR env var.",
+          "examples": ["blue", "green", "/dev/stdout"]
+        },
+        "volumes": {
+          "type": "object",
+          "description": "Map of named audit storage volumes. Each creates a PV/PVC pair.",
+          "additionalProperties": {
             "type": "object",
-            "description": "Azure Blob storage attributes",
+            "description": "Audit volume configuration",
             "properties": {
-              "resourceGroup": {
-                "type": "string",
-                "description": "Azure resource group containing the storage account",
-                "examples": ["my-azure-resource-group"]
+              "enabled": {
+                "type": "boolean",
+                "description": "Enable this audit volume",
+                "examples": [true]
               },
-              "storageAccount": {
+              "flavor": {
                 "type": "string",
-                "description": "Azure storage account name",
-                "examples": ["mystorageaccount"]
+                "description": "Cloud provider flavor for the volume",
+                "enum": ["azure"],
+                "examples": ["azure"]
               },
-              "containerName": {
+              "name": {
                 "type": "string",
-                "description": "Azure blob container name (defaults to release fullname if not set)"
+                "description": "Explicit PV/PVC name. Defaults to {fullname}-audit-{key}. Useful for backward compatibility with existing volumes.",
+                "examples": ["my-existing-pv-name"]
+              },
+              "mountPath": {
+                "type": "string",
+                "description": "Mount path for this volume. Defaults to /audit-{key}.",
+                "examples": ["/audit-blue", "/audit-green", "/audit"]
+              },
+              "capacity": {
+                "type": "string",
+                "description": "Storage capacity",
+                "default": "1Ti",
+                "examples": ["1Ti", "500Gi"]
+              },
+              "azure": {
+                "type": "object",
+                "description": "Azure Blob NFS storage configuration (required when flavor is 'azure')",
+                "properties": {
+                  "resourceGroup": {
+                    "type": "string",
+                    "description": "Azure resource group containing the storage account",
+                    "examples": ["my-resource-group"]
+                  },
+                  "storageAccount": {
+                    "type": "string",
+                    "description": "Azure storage account name",
+                    "examples": ["mystorageaccount"]
+                  },
+                  "containerName": {
+                    "type": "string",
+                    "description": "Azure blob container name. Defaults to release fullname.",
+                    "examples": ["audit-logs"]
+                  }
+                },
+                "required": ["resourceGroup", "storageAccount"]
               }
             },
-            "required": ["resourceGroup", "storageAccount"]
+            "required": ["enabled", "flavor"]
           }
-        },
-        "required": ["enabled", "attributes"]
+        }
       },
       "examples": [
         {
-          "blue": {
-            "enabled": true,
-            "mountPath": "/audit-blue",
-            "capacity": "1Ti",
-            "attributes": {
-              "resourceGroup": "rg-blue",
-              "storageAccount": "stblue",
-              "containerName": "audit-logs"
-            }
-          },
-          "green": {
-            "enabled": true,
-            "mountPath": "/audit-green",
-            "capacity": "1Ti",
-            "attributes": {
-              "resourceGroup": "rg-green",
-              "storageAccount": "stgreen",
-              "containerName": "audit-logs"
+          "target": "blue",
+          "volumes": {
+            "blue": {
+              "enabled": true,
+              "flavor": "azure",
+              "capacity": "1Ti",
+              "azure": {
+                "resourceGroup": "rg-blue",
+                "storageAccount": "stblue",
+                "containerName": "audit-logs"
+              }
+            },
+            "green": {
+              "enabled": true,
+              "flavor": "azure",
+              "capacity": "1Ti",
+              "azure": {
+                "resourceGroup": "rg-green",
+                "storageAccount": "stgreen",
+                "containerName": "audit-logs"
+              }
             }
           }
         }

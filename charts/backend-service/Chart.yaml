@@ -8,7 +8,7 @@ name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
 # changes to consider on next major: enable netpol by default, deprecate cronJob
-version: 8.3.0
+version: 9.0.0
 appVersion: latest
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
@@ -17,5 +17,13 @@ description: |
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
+    - kind: changed
+      description: "⚠️ BREAKING: Replaced auditVolume with auditVolumes - cloud-agnostic, blue-green migration-ready structure."
     - kind: added
-      description: "Added multiple auditVolumes support for blue-green migration."
+      description: "Added AUDIT_LOG_DIR environment variable, automatically set based on auditVolumes.target."
+    - kind: added
+      description: "Added flavor field for cloud provider selection (azure now, aws/gcp ideated)."
+    - kind: added
+      description: "Added explicit name field for backward-compatible PV/PVC naming."
+    - kind: added
+      description: "Added support for direct paths (e.g., /dev/stdout) as audit target."
