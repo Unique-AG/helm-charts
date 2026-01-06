@@ -60,9 +60,11 @@ spec:
               {{- with $globalValues.volumeMounts }}
                 {{- toYaml . | nindent 16 }}
               {{- end }}
-              {{- if $globalValues.auditVolume.enabled }}
-                - name: audit
-                  mountPath: {{ default "/audit" $globalValues.auditVolume.mountPath }}
+              {{- range $volName, $volume := $globalValues.auditVolumes.volumes }}
+              {{- if $volume.enabled }}
+                - name: audit-{{ $volName }}
+                  mountPath: {{ default (printf "/audit-%s" $volName) $volume.mountPath }}
+              {{- end }}
               {{- end }}
               {{- if $globalValues.secretProvider }}
               {{- range $k, $v := $globalValues.secretProvider.vaults }}
@@ -136,10 +138,12 @@ spec:
           {{- with $globalValues.volumes }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if $globalValues.auditVolume.enabled }}
-            - name: audit
+          {{- range $volName, $volume := $globalValues.auditVolumes.volumes }}
+          {{- if $volume.enabled }}
+            - name: audit-{{ $volName }}
               persistentVolumeClaim:
-                claimName: {{ $fullName }}-audit
+                claimName: {{ default (printf "%s-audit-%s" $fullName $volName) $volume.name }}
+          {{- end }}
           {{- end }}
           {{- if $globalValues.secretProvider }}
           {{- range $k, $v := $globalValues.secretProvider.vaults }}
