@@ -29,7 +29,7 @@ auditVolumes: {}
   # Example blue-green migration configuration:
   # blue:
   #   enabled: true
-  #   mountPath: /audit-blue
+  #   # mountPath: /audit-blue  # defaults to /audit-{name}, i.e. /audit-blue
   #   capacity: 1Ti
   #   attributes:
   #     resourceGroup: rg-blue
@@ -37,7 +37,7 @@ auditVolumes: {}
   #     containerName: configuration-backend
   # green:
   #   enabled: true
-  #   mountPath: /audit-green
+  #   # mountPath: /audit-green  # defaults to /audit-{name}, i.e. /audit-green
   #   capacity: 1Ti
   #   attributes:
   #     resourceGroup: rg-green

@@ -166,7 +166,7 @@ spec:
           {{- range $name, $volume := .Values.auditVolumes }}
           {{- if $volume.enabled }}
             - name: audit-{{ $name }}
-              mountPath: {{ default "/audit" $volume.mountPath }}
+              mountPath: {{ default (printf "/audit-%s" $name) $volume.mountPath }}
           {{- end }}
           {{- end }}
           {{- if .Values.deployment.initContainers }}

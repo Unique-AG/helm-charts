@@ -85,9 +85,8 @@
           },
           "mountPath": {
             "type": "string",
-            "description": "Mount path for this audit volume (must be unique per enabled volume)",
-            "default": "/audit",
-            "examples": ["/audit", "/audit-legacy", "/audit-new"]
+            "description": "Mount path for this audit volume. Defaults to /audit-{name} where {name} is the volume key (e.g., /audit-blue for a volume named 'blue')",
+            "examples": ["/audit", "/audit-blue", "/audit-green"]
           },
           "capacity": {
             "type": "string",
