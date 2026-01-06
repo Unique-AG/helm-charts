@@ -93,6 +93,21 @@ spec:
               env:
                 - name: VERSION
                   value: {{ ($globalValues.image.tag | default $.Chart.AppVersion) | quote}}
+                {{- if $globalValues.auditVolumes.target }}
+                {{- $target := $globalValues.auditVolumes.target }}
+                {{- $targetVolume := dict }}
+                {{- if $globalValues.auditVolumes.volumes }}
+                {{- $targetVolume = index $globalValues.auditVolumes.volumes $target | default dict }}
+                {{- end }}
+                - name: AUDIT_LOG_DIR
+                  {{- if $targetVolume.mountPath }}
+                  value: {{ $targetVolume.mountPath | quote }}
+                  {{- else if $targetVolume.enabled }}
+                  value: {{ printf "/audit-%s" $target | quote }}
+                  {{- else }}
+                  value: {{ $target | quote }}
+                  {{- end }}
+                {{- end }}
                 {{- with $globalValues.envVars }}
                   {{- toYaml . | nindent 16 }}
                 {{- end }}
