@@ -25,7 +25,7 @@ auditVolumes:
   # When set to a volume key, uses that volume's mountPath.
   # When set to a path, uses the path directly (no volume required).
   # target: blue
-  
+
   # -- volumes defines the available audit storage volumes.
   # Each key becomes part of the PV/PVC name: {fullname}-audit-{key}
   volumes: {}
