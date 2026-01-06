@@ -1,6 +1,7 @@
 {{- $fullName := include "backendService.fullname" . -}}
 {{- range $name, $volume := .Values.auditVolumes.volumes }}
-{{- if $volume.enabled }}
+{{- /* Only create PV/PVC if enabled AND a cloud provider is configured */ -}}
+{{- if and $volume.enabled (or $volume.azure) }}
 {{- $pvName := default (printf "%s-audit-%s" $fullName $name) $volume.name }}
 ---
 apiVersion: v1

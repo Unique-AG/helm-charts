@@ -174,12 +174,12 @@ The `AUDIT_LOG_DIR` environment variable is automatically set based on `auditVol
 
 | `target` value | Condition | `AUDIT_LOG_DIR` value |
 |----------------|-----------|----------------------|
-| Volume key (e.g., `blue`) | Volume exists and `enabled: true` | Volume's `mountPath` (or `/audit-{key}` if not set) |
-| Volume key (e.g., `blue`) | Volume missing or `enabled: false` | **Not set** (env var omitted) |
+| Volume key (e.g., `blue`) | Volume `enabled: true` + cloud provider configured | Volume's `mountPath` (or `/audit-{key}` if not set) |
+| Volume key (e.g., `blue`) | Volume missing, disabled, or no cloud provider | **Not set** (env var omitted) |
 | Direct path (e.g., `/dev/stdout`) | Always | The path directly (e.g., `/dev/stdout`) |
 | Not specified | Always | **Not set** (env var omitted) |
 
-> ⚠️ If `target` references a volume that doesn't exist or is disabled, `AUDIT_LOG_DIR` will **not** be set to prevent invalid paths.
+> ⚠️ A volume requires both `enabled: true` **and** a cloud provider configuration (e.g., `azure`) to be created. Without a cloud provider, no PV/PVC is created and `AUDIT_LOG_DIR` is not set.
 
 #### Blue-Green Migration
 

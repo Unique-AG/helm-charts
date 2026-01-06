@@ -162,7 +162,9 @@ spec:
             {{- if and (not $isPath) .Values.auditVolumes.volumes }}
             {{- $targetVolume = index .Values.auditVolumes.volumes $target | default dict }}
             {{- end }}
-            {{- if or $isPath $targetVolume.enabled }}
+            {{- /* Set AUDIT_LOG_DIR if: target is a path, OR target volume is enabled with cloud provider */ -}}
+            {{- $hasCloudProvider := or $targetVolume.azure }}
+            {{- if or $isPath (and $targetVolume.enabled $hasCloudProvider) }}
             - name: AUDIT_LOG_DIR
               {{- if $isPath }}
               value: {{ $target | quote }}
@@ -178,7 +180,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           {{- range $name, $volume := .Values.auditVolumes.volumes }}
-          {{- if $volume.enabled }}
+          {{- if and $volume.enabled (or $volume.azure) }}
             - name: audit-{{ $name }}
               mountPath: {{ default (printf "/audit-%s" $name) $volume.mountPath }}
           {{- end }}
@@ -229,7 +231,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- range $name, $volume := .Values.auditVolumes.volumes }}
-      {{- if $volume.enabled }}
+      {{- if and $volume.enabled (or $volume.azure) }}
         - name: audit-{{ $name }}
           persistentVolumeClaim:
             claimName: {{ default (printf "%s-audit-%s" $fullName $name) $volume.name }}
