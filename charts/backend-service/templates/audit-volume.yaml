@@ -1,4 +1,5 @@
 {{- $fullName := include "backendService.fullname" . -}}
+{{- $labelKey := default "helm.unique.dev/audit-volume-key" .Values.auditVolumes.labelKey -}}
 {{- range $name, $volume := .Values.auditVolumes.volumes }}
 {{- /* Only create PV/PVC if enabled AND a cloud provider is configured */ -}}
 {{- if and $volume.enabled (or $volume.azure) }}
@@ -11,7 +12,7 @@ metadata:
   namespace: {{ $.Release.Namespace }}
   labels:
     {{- include "backendService.mutableLabels" $ | nindent 4 }}
-    audit-volume: {{ $name }}
+    {{ $labelKey }}: {{ $name }}
   annotations:
     {{- if $volume.azure }}
     pv.kubernetes.io/provisioned-by: blob.csi.azure.com
@@ -22,7 +23,7 @@ spec:
   accessModes:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: ""
+  storageClassName: {{ default "azureblob-nfs-premium" $volume.storageClassName | quote }}
   {{- if $volume.azure }}
   csi:
     driver: blob.csi.azure.com
@@ -42,11 +43,11 @@ metadata:
   namespace: {{ $.Release.Namespace }}
   labels:
     {{- include "backendService.mutableLabels" $ | nindent 4 }}
-    audit-volume: {{ $name }}
+    {{ $labelKey }}: {{ $name }}
 spec:
   accessModes:
     - ReadWriteMany
-  storageClassName: ""
+  storageClassName: {{ default "azureblob-nfs-premium" $volume.storageClassName | quote }}
   resources:
     requests:
       storage: {{ default "1Ti" $volume.capacity }}
