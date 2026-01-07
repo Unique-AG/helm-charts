@@ -60,9 +60,11 @@ spec:
               {{- with $globalValues.volumeMounts }}
                 {{- toYaml . | nindent 16 }}
               {{- end }}
-              {{- if $globalValues.auditVolume.enabled }}
-                - name: audit
-                  mountPath: {{ default "/audit" $globalValues.auditVolume.mountPath }}
+              {{- range $volName, $volume := $globalValues.auditVolumes.volumes }}
+              {{- if and $volume.enabled (or $volume.azure) }}
+                - name: audit-{{ $volName }}
+                  mountPath: {{ default (printf "/audit-%s" $volName) $volume.mountPath }}
+              {{- end }}
               {{- end }}
               {{- if $globalValues.secretProvider }}
               {{- range $k, $v := $globalValues.secretProvider.vaults }}
@@ -91,6 +93,26 @@ spec:
               env:
                 - name: VERSION
                   value: {{ ($globalValues.image.tag | default $.Chart.AppVersion) | quote}}
+                {{- if $globalValues.auditVolumes.target }}
+                {{- $target := $globalValues.auditVolumes.target }}
+                {{- $isPath := hasPrefix "/" $target }}
+                {{- $targetVolume := dict }}
+                {{- if and (not $isPath) $globalValues.auditVolumes.volumes }}
+                {{- $targetVolume = index $globalValues.auditVolumes.volumes $target | default dict }}
+                {{- end }}
+                {{- /* Set AUDIT_LOG_DIR if: target is a path, OR target volume is enabled with cloud provider */ -}}
+                {{- $hasCloudProvider := or $targetVolume.azure }}
+                {{- if or $isPath (and $targetVolume.enabled $hasCloudProvider) }}
+                - name: AUDIT_LOG_DIR
+                  {{- if $isPath }}
+                  value: {{ $target | quote }}
+                  {{- else if $targetVolume.mountPath }}
+                  value: {{ $targetVolume.mountPath | quote }}
+                  {{- else }}
+                  value: {{ printf "/audit-%s" $target | quote }}
+                  {{- end }}
+                {{- end }}
+                {{- end }}
                 {{- with $globalValues.envVars }}
                   {{- toYaml . | nindent 16 }}
                 {{- end }}
@@ -136,10 +158,12 @@ spec:
           {{- with $globalValues.volumes }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if $globalValues.auditVolume.enabled }}
-            - name: audit
+          {{- range $volName, $volume := $globalValues.auditVolumes.volumes }}
+          {{- if and $volume.enabled (or $volume.azure) }}
+            - name: audit-{{ $volName }}
               persistentVolumeClaim:
-                claimName: {{ $fullName }}-audit
+                claimName: {{ default (printf "%s-audit-%s" $fullName $volName) $volume.name }}
+          {{- end }}
           {{- end }}
           {{- if $globalValues.secretProvider }}
           {{- range $k, $v := $globalValues.secretProvider.vaults }}

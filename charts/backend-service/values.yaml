@@ -4,14 +4,18 @@ replicaCount: 1
 
 affinity: {}
 
-auditVolume:
-  enabled: false
-  mountPath: /audit # defaults to /audit
-  capacity: 1Ti # defaults to 1Ti
-  attributes:
-    resourceGroup: my-azure-resource-group
-    storageAccount: my-azure-storage-account
-    # containerName: my-azure-container-in-my-azure-storage-account # defaults to release name
+# -- auditVolumes configures audit log storage. See README for detailed documentation.
+auditVolumes:
+  # -- target: volume key (e.g., "blue") or direct path (e.g., "/dev/stdout"). Sets AUDIT_LOG_DIR env var.
+  # target: blue
+  # -- volumes: map of named volume configurations. Cloud provider detected by presence of azure/aws/gcp field.
+  volumes: {}
+    # blue:
+    #   enabled: true
+    #   capacity: 1Ti
+    #   azure:
+    #     resourceGroup: rg-blue
+    #     storageAccount: stblue
 
 autoscaling:
   enabled: false
@@ -125,8 +129,7 @@ extraRoutes:
     additionalRules: []
 
 # -- extraCronJobs allows you to define additional cron jobs besides 'cronJob' itself.
-extraCronJobs:
-  {}
+extraCronJobs: {}
   # foo:
   #   concurrencyPolicy: Forbid
   #   env:
@@ -334,8 +337,7 @@ keda:
   # The key names are arbitrary and used only for overlay purposes
   # Note that when disabling/overriding a trigger with `null` to unset it, helm will issue a warning as its cautious about merging types.
   # For that case, the warning can be ignored.
-  triggers:
-    {}
+  triggers: {}
     # # -- rabbitmq example
     # rabbitmq-trigger:
     #   type: rabbitmq
@@ -472,8 +474,7 @@ prometheus:
     kubernetesApplication:
       enabled: true
       # -- Disable specific alerts by setting them to true
-      disabled:
-        {}
+      disabled: {}
         # KubePodCrashLooping: false
         # KubePodNotReady: false
         # KubeDeploymentGenerationMismatch: false
@@ -494,8 +495,7 @@ prometheus:
         # KubePersistentVolumeClaimPending: false
         # KubePdbNotEnoughHealthyPods: false
       # -- Override alert rules with custom values (for duration, severity, etc.)
-      customRules:
-        {}
+      customRules: {}
         # KubePodCrashLooping:
         #   for: "10m"
         #   severity: "critical"
@@ -509,8 +509,7 @@ prometheus:
     kubernetesResources:
       enabled: true
       # -- Disable specific alerts by setting them to true
-      disabled:
-        {}
+      disabled: {}
         # KubernetesPodHighCPUUsage: false
         # KubernetesPodHighMemoryUsage: false
         # KubernetesPodNearMemoryLimit: false
@@ -522,8 +521,7 @@ prometheus:
         # KubernetesHPAScalingEvent: false
         # KubernetesHPAMaxReplicasReached: false
       # -- Override alert rules with custom values (for duration, severity, etc.)
-      customRules:
-        {}
+      customRules: {}
         # KubernetesPodHighCPUUsage:
         #   for: "15m"
         #   severity: "critical"
@@ -532,8 +530,7 @@ prometheus:
         # KubernetesContainerOOMKilled:
         #   for: "1m"
     # -- Additional labels to add to all default alerts
-    additionalLabels:
-      {}
+    additionalLabels: {}
       # environment: production
       # team: backend
 
@@ -568,8 +565,7 @@ routes:
       # -- explicitly list paths to block
       blockList:
         - /metrics
-      extraAnnotations:
-        []
+      extraAnnotations: []
         # konghq.com/request-buffering: "false"
         # konghq.com/read-timeout: "120s"
     versioned:
@@ -578,8 +574,7 @@ routes:
       # ⚠️ Customizing this value requires also changing the default url in multiple places including all SDK or integration use cases
       # @default -- the chart will default to 'public' to stay backward compatible
       pathOverride: /public
-      extraAnnotations:
-        []
+      extraAnnotations: []
         # konghq.com/request-buffering: "false"
     scoped:
       enabled: false
@@ -600,8 +595,7 @@ routes:
       enabled: false
       # -- path to the probe endpoint
       probePath: /probe
-      extraAnnotations:
-        []
+      extraAnnotations: []
         # konghq.com/strip-path: "true"
 
 # .Values.secretProvider lets you mount secrets from Azure Key Vault into the pod using VM Managed Identity

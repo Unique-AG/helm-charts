@@ -27,49 +27,85 @@
       "type": "object",
       "description": "Kubernetes affinity rules"
     },
-    "auditVolume": {
+    "auditVolumes": {
       "type": "object",
-      "description": "Configuration for audit volume",
+      "description": "Cloud-agnostic audit log storage with blue-green migration support. Sets AUDIT_LOG_DIR env var based on target.",
       "properties": {
-        "enabled": {
-          "type": "boolean",
-          "description": "Enable audit volume",
-          "examples": [false]
-        },
-        "mountPath": {
+        "target": {
           "type": "string",
-          "description": "Mount path for audit volume",
-          "default": "/audit",
-          "examples": ["/audit"]
+          "description": "Specifies where audit logs should be written. Can be a volume key (e.g., 'blue') or a direct path (e.g., '/dev/stdout'). Sets AUDIT_LOG_DIR env var.",
+          "examples": ["blue", "green", "/dev/stdout"]
         },
-        "capacity": {
-          "type": "string",
-          "description": "Capacity for audit volume",
-          "default": "1Ti",
-          "examples": ["1Ti"]
-        },
-        "attributes": {
+        "volumes": {
           "type": "object",
-          "description": "Additional attributes for audit volume",
-          "properties": {
-            "resourceGroup": {
-              "type": "string",
-              "description": "Azure resource group",
-              "examples": ["my-azure-resource-group"]
+          "description": "Map of named audit storage volumes. Cloud provider is detected by presence of azure/aws/gcp field.",
+          "additionalProperties": {
+            "type": "object",
+            "description": "Audit volume configuration",
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "description": "Enable this audit volume",
+                "examples": [true]
+              },
+              "name": {
+                "type": "string",
+                "description": "Explicit PV/PVC name. Defaults to {fullname}-audit-{key}. Useful for backward compatibility with existing volumes.",
+                "examples": ["my-existing-pv-name"]
+              },
+              "mountPath": {
+                "type": "string",
+                "description": "Mount path for this volume. Defaults to /audit-{key}.",
+                "examples": ["/audit-blue", "/audit-green", "/audit"]
+              },
+              "capacity": {
+                "type": "string",
+                "description": "Storage capacity",
+                "default": "1Ti",
+                "examples": ["1Ti", "500Gi"]
+              },
+              "azure": {
+                "type": "object",
+                "description": "Azure Blob NFS storage configuration. Presence of this field enables Azure provider.",
+                "properties": {
+                  "resourceGroup": {
+                    "type": "string",
+                    "description": "Azure resource group containing the storage account",
+                    "examples": ["my-resource-group"]
+                  },
+                  "storageAccount": {
+                    "type": "string",
+                    "description": "Azure storage account name",
+                    "examples": ["mystorageaccount"]
+                  },
+                  "containerName": {
+                    "type": "string",
+                    "description": "Azure blob container name. Defaults to release fullname.",
+                    "examples": ["audit-logs"]
+                  }
+                },
+                "required": ["resourceGroup", "storageAccount"]
+              }
             },
-            "storageAccount": {
-              "type": "string",
-              "description": "Azure storage account",
-              "examples": ["my-azure-storage-account"]
-            },
-            "containerName": {
-              "type": "string",
-              "description": "Azure container name"
-            }
-          },
-          "required": ["resourceGroup", "storageAccount"]
+            "required": ["enabled"]
+          }
         }
-      }
+      },
+      "examples": [
+        {
+          "target": "blue",
+          "volumes": {
+            "blue": {
+              "enabled": true,
+              "capacity": "1Ti",
+              "azure": {
+                "resourceGroup": "rg-blue",
+                "storageAccount": "stblue"
+              }
+            }
+          }
+        }
+      ]
     },
     "autoscaling": {
       "type": "object",
