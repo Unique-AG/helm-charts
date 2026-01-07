@@ -36,6 +36,12 @@
           "description": "Specifies where audit logs should be written. Can be a volume key (e.g., 'blue') or a direct path (e.g., '/dev/stdout'). Sets AUDIT_LOG_DIR env var.",
           "examples": ["blue", "green", "/dev/stdout"]
         },
+        "labelKey": {
+          "type": "string",
+          "description": "Label key used on PV/PVC to identify the volume key.",
+          "default": "audit.unique.app/volume-key",
+          "examples": ["audit.unique.app/volume-key", "app.kubernetes.io/audit-volume"]
+        },
         "volumes": {
           "type": "object",
           "description": "Map of named audit storage volumes. Cloud provider is detected by presence of azure/aws/gcp field.",
@@ -63,6 +69,12 @@
                 "description": "Storage capacity",
                 "default": "1Ti",
                 "examples": ["1Ti", "500Gi"]
+              },
+              "storageClassName": {
+                "type": "string",
+                "description": "Kubernetes storage class name for PV/PVC.",
+                "default": "azureblob-nfs-premium",
+                "examples": ["azureblob-nfs-premium", "azure-blob-nfs"]
               },
               "azure": {
                 "type": "object",

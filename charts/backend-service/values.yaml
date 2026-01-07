@@ -8,11 +8,14 @@ affinity: {}
 auditVolumes:
   # -- target: volume key (e.g., "blue") or direct path (e.g., "/dev/stdout"). Sets AUDIT_LOG_DIR env var.
   # target: blue
+  # -- labelKey: label key used on PV/PVC to identify the volume key.
+  # labelKey: helm.unique.dev/audit-volume-key
   # -- volumes: map of named volume configurations. Cloud provider detected by presence of azure/aws/gcp field.
   volumes: {}
     # blue:
     #   enabled: true
     #   capacity: 1Ti
+    #   # storageClassName: azureblob-nfs-premium  # defaults to azureblob-nfs-premium
     #   azure:
     #     resourceGroup: rg-blue
     #     storageAccount: stblue
