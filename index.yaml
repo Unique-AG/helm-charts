@@ -420,6 +420,38 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: changed
+          description: "⚠️ BREAKING: Replaced auditVolume with auditVolumes - cloud-agnostic, blue-green migration-ready structure."
+        - kind: added
+          description: "Added AUDIT_LOG_DIR environment variable, automatically set based on auditVolumes.target."
+        - kind: added
+          description: "Cloud provider auto-detected by presence of azure field (aws/gcp planned)."
+        - kind: added
+          description: "Added explicit name field for backward-compatible PV/PVC naming."
+        - kind: added
+          description: "Added support for direct paths (e.g., /dev/stdout) as audit target."
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    appVersion: latest
+    created: "2026-01-07T06:56:20.276293127Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: 80dbd35b639a107c1941d8360c5f20d977f6158de2d694dede4a470d5987387b
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-9.0.0/backend-service-9.0.0.tgz
+    version: 9.0.0
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: changed
           description: "Scraping can now be disabled in prometheus.scraping for services that expose no metrics."
         - kind: fixed
           description: "Wrong Chart.yaml note on already released external-secrets."
@@ -2934,4 +2966,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2025-12-18T11:51:38.386039824Z"
+generated: "2026-01-07T06:56:20.276664642Z"
