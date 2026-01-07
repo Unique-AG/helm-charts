@@ -39,8 +39,8 @@
         "labelKey": {
           "type": "string",
           "description": "Label key used on PV/PVC to identify the volume key.",
-          "default": "helm.unique.dev/audit-volume-key",
-          "examples": ["helm.unique.dev/audit-volume-key", "app.kubernetes.io/audit-volume"]
+          "default": "audit.unique.app/volume-key",
+          "examples": ["audit.unique.app/volume-key", "app.kubernetes.io/audit-volume"]
         },
         "volumes": {
           "type": "object",
