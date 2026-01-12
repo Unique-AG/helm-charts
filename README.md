@@ -3,7 +3,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/unique)](https://artifacthub.io/packages/search?repo=unique)
 
-Unique `helm-charts` is a collection of charts for [https://unqiue.ch](https://unique.ch) projects.
+Unique `helm-charts` is a collection of charts for [https://unique.ch](https://unique.ch) projects.
 
 Most charts are available both as Helm Repository as well as OCI artefact (Unique recommends the latter).
 ```sh
