@@ -1,44 +1,56 @@
-{{- if .Values.auditVolume.enabled }}
 {{- $fullName := include "backendService.fullname" . -}}
+{{- $labelKey := default "audit.unique.app/volume-key" .Values.auditVolumes.labelKey -}}
+{{- range $name, $volume := .Values.auditVolumes.volumes }}
+{{- /* Only create PV/PVC if enabled AND a cloud provider is configured */ -}}
+{{- if and $volume.enabled (or $volume.azure) }}
+{{- $pvName := default (printf "%s-audit-%s" $fullName $name) $volume.name }}
+---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: {{ include "backendService.fullname" . }}-audit
-  namespace: {{ .Release.Namespace }}
+  name: {{ $pvName }}
+  namespace: {{ $.Release.Namespace }}
   labels:
-    {{- include "backendService.mutableLabels" . | nindent 4 }}
+    {{- include "backendService.mutableLabels" $ | nindent 4 }}
+    {{ $labelKey }}: {{ $name }}
   annotations:
+    {{- if $volume.azure }}
     pv.kubernetes.io/provisioned-by: blob.csi.azure.com
+    {{- end }}
 spec:
   capacity:
-    storage: {{ default "1Ti" .Values.auditVolume.capacity }}
+    storage: {{ default "1Ti" $volume.capacity }}
   accessModes:
     - ReadWriteMany
-  persistentVolumeReclaimPolicy: Retain 
-  storageClassName: azureblob-nfs-premium # storage class gets installed via terraform property blob_driver_enabled
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: {{ default "azureblob-nfs-premium" $volume.storageClassName | quote }}
+  {{- if $volume.azure }}
   csi:
     driver: blob.csi.azure.com
     readOnly: false
-    volumeHandle: {{ printf "%s-%s" .Values.auditVolume.attributes.storageAccount (default $fullName .Values.auditVolume.attributes.containerName) }}
+    volumeHandle: {{ printf "%s-%s" $volume.azure.storageAccount (default $fullName $volume.azure.containerName) }}
     volumeAttributes:
-      resourceGroup: {{ .Values.auditVolume.attributes.resourceGroup }}
-      storageAccount: {{ .Values.auditVolume.attributes.storageAccount }}
-      containerName: {{ default $fullName .Values.auditVolume.attributes.containerName }}
+      resourceGroup: {{ $volume.azure.resourceGroup }}
+      storageAccount: {{ $volume.azure.storageAccount }}
+      containerName: {{ default $fullName $volume.azure.containerName }}
       protocol: nfs
+  {{- end }}
 ---
-apiVersion: v1        
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "backendService.fullname" . }}-audit
-  namespace: {{ .Release.Namespace }}
+  name: {{ $pvName }}
+  namespace: {{ $.Release.Namespace }}
   labels:
-    {{- include "backendService.mutableLabels" . | nindent 4 }}
+    {{- include "backendService.mutableLabels" $ | nindent 4 }}
+    {{ $labelKey }}: {{ $name }}
 spec:
   accessModes:
     - ReadWriteMany
+  storageClassName: {{ default "azureblob-nfs-premium" $volume.storageClassName | quote }}
   resources:
     requests:
-      storage: {{ default "1Ti" .Values.auditVolume.capacity }}
-  volumeName: {{ include "backendService.fullname" . }}-audit
-  storageClassName: azureblob-nfs-premium # storage class gets installed via terraform property blob_driver_enabled
+      storage: {{ default "1Ti" $volume.capacity }}
+  volumeName: {{ $pvName }}
+{{- end }}
 {{- end }}

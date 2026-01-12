@@ -8,7 +8,7 @@ name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
 # changes to consider on next major: enable netpol by default, deprecate cronJob
-version: 8.2.0
+version: 9.0.1
 appVersion: latest
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
@@ -17,7 +17,7 @@ description: |
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
-    - kind: changed
-      description: "Scraping can now be disabled in prometheus.scraping for services that expose no metrics."
     - kind: fixed
-      description: "Wrong Chart.yaml note on already released external-secrets."
+      description: "Storage class name is correctly set for PV/PVC again and configurable."
+    - kind: fixed
+      description: "PV/PVC label respects FQDM namespacing and is configurable."

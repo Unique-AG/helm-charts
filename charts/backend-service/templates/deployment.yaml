@@ -155,13 +155,35 @@ spec:
             {{- end }}
             {{- end }}
             {{- end }}
+            {{- if .Values.auditVolumes.target }}
+            {{- $target := .Values.auditVolumes.target }}
+            {{- $isPath := hasPrefix "/" $target }}
+            {{- $targetVolume := dict }}
+            {{- if and (not $isPath) .Values.auditVolumes.volumes }}
+            {{- $targetVolume = index .Values.auditVolumes.volumes $target | default dict }}
+            {{- end }}
+            {{- /* Set AUDIT_LOG_DIR if: target is a path, OR target volume is enabled with cloud provider */ -}}
+            {{- $hasCloudProvider := or $targetVolume.azure }}
+            {{- if or $isPath (and $targetVolume.enabled $hasCloudProvider) }}
+            - name: AUDIT_LOG_DIR
+              {{- if $isPath }}
+              value: {{ $target | quote }}
+              {{- else if $targetVolume.mountPath }}
+              value: {{ $targetVolume.mountPath | quote }}
+              {{- else }}
+              value: {{ printf "/audit-%s" $target | quote }}
+              {{- end }}
+            {{- end }}
+            {{- end }}
           volumeMounts:
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if .Values.auditVolume.enabled }}
-            - name: audit
-              mountPath: {{ default "/audit" .Values.auditVolume.mountPath }}
+          {{- range $name, $volume := .Values.auditVolumes.volumes }}
+          {{- if and $volume.enabled (or $volume.azure) }}
+            - name: audit-{{ $name }}
+              mountPath: {{ default (printf "/audit-%s" $name) $volume.mountPath }}
+          {{- end }}
           {{- end }}
           {{- if .Values.deployment.initContainers }}
           {{- range .Values.deployment.initContainers }}
@@ -208,10 +230,12 @@ spec:
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.auditVolume.enabled }}
-        - name: audit
+      {{- range $name, $volume := .Values.auditVolumes.volumes }}
+      {{- if and $volume.enabled (or $volume.azure) }}
+        - name: audit-{{ $name }}
           persistentVolumeClaim:
-            claimName: {{ $fullName }}-audit
+            claimName: {{ default (printf "%s-audit-%s" $fullName $name) $volume.name }}
+      {{- end }}
       {{- end }}
       {{- if .Values.deployment.initContainers }}
       {{- range .Values.deployment.initContainers }}
