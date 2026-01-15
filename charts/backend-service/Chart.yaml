@@ -7,8 +7,8 @@ maintainers:
 name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
-# changes to consider on next major: enable netpol by default, deprecate cronJob
-version: 9.0.1
+# changes to consider on next major: enable netpol by default
+version: 11.0.0
 appVersion: latest
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
@@ -17,7 +17,5 @@ description: |
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
-    - kind: fixed
-      description: "Storage class name is correctly set for PV/PVC again and configurable."
-    - kind: fixed
-      description: "PV/PVC label respects FQDM namespacing and is configurable."
+    - kind: removed
+      description: "Removed deprecated `cronJob` value. Migrate to `extraCronJobs` instead."

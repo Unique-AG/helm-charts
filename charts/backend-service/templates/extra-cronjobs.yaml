@@ -40,9 +40,6 @@ spec:
                 {{- toYaml . | nindent 12 }}
               {{- end }}
             {{- end }}
-            {{- if $globalValues.envSecrets }}
-            checksum/secrets: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum | trunc 8 | quote }}
-            {{- end }}
         spec:
           {{- with $globalValues.imagePullSecrets }}
           imagePullSecrets:
@@ -74,19 +71,15 @@ spec:
               {{- end }}
               {{- end }}
               envFrom:
-                {{- if $globalValues.envSecrets }}
-                - secretRef:
-                    name: {{ $fullName }}-secrets
+                {{- if $globalValues.extraEnvCM }}
+                {{- range $v := $globalValues.extraEnvCM }}
+                - configMapRef:
+                    name: {{ $v }}
+                {{- end }}
                 {{- end }}
                 {{- if $globalValues.extraEnvSecrets }}
                 {{- range $v := $globalValues.extraEnvSecrets }}
                 - secretRef:
-                    name: {{ $v }}
-                {{- end }}
-                {{- end }}
-                {{- if $globalValues.extraEnvCM }}
-                {{- range $v := $globalValues.extraEnvCM }}
-                - configMapRef:
                     name: {{ $v }}
                 {{- end }}
                 {{- end }}
@@ -116,20 +109,15 @@ spec:
                 {{- with $globalValues.envVars }}
                   {{- toYaml . | nindent 16 }}
                 {{- end }}
-                {{- range $key, $value := $globalValues.env }}
-                - name: {{ $key }}
-                  value: {{ $value | quote }}
+                {{- /* Merge global inlineEnv with local env - local takes precedence */}}
+                {{- $mergedEnv := merge ($value.env | default dict) ($globalValues.inlineEnv | default dict) }}
+                {{- range $envKey, $envValue := $mergedEnv }}
+                - name: {{ $envKey }}
+                  value: {{ $envValue | quote }}
                 {{- end }}
                 {{- /* local envVars will take precedence over global envVars as they are specified last */}}
-                {{- with .envVars }}
+                {{- with $value.envVars }}
                   {{- toYaml . | nindent 16 }}
-                {{- end }}
-                {{- with .envVars }}
-                  {{- toYaml . | nindent 16 }}
-                {{- end }}
-                {{- range $key, $value := .env }}
-                - name: {{ $key }}
-                  value: {{ $value | quote }}
                 {{- end }}
                 {{- if $globalValues.secretProvider }}
                 {{- range $k, $v := $globalValues.secretProvider.vaults }}

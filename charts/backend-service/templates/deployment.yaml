@@ -39,9 +39,6 @@ spec:
         {{- end }}
       {{- end }}
         checksum/deployment-env: {{ include (print $.Template.BasePath "/deployment-env.yaml") . | sha256sum | trunc 8 | quote }}
-        {{- if .Values.envSecrets }}
-        checksum/secrets: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum | trunc 8 | quote }}
-        {{- end }}
       labels:
       {{- if .Values.podLabels }}
         {{- with .Values.podLabels }}
@@ -120,10 +117,6 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ $fullName }}-env
-            {{- if .Values.envSecrets }}
-            - secretRef:
-                name: {{ $fullName }}-secrets
-            {{- end }}
             {{- if .Values.extraEnvCM }}
             {{- range $v := .Values.extraEnvCM }}
             - configMapRef:

@@ -110,10 +110,6 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ $fullName }}-hooks-env
-            {{- if $.Values.envSecrets }}
-            - secretRef:
-                name: {{ $fullName }}-hooks-secrets
-            {{- end }}
             {{- if $.Values.extraEnvCM }}
             {{- range $v := $.Values.extraEnvCM }}
             - configMapRef:
@@ -128,6 +124,15 @@ spec:
             {{- end }}
           env:
             {{- with $.Values.envVars }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- /* Per-hook env values - takes precedence over global env from ConfigMap */}}
+            {{- range $envKey, $envValue := $hookConfig.env }}
+            - name: {{ $envKey }}
+              value: {{ $envValue | quote }}
+            {{- end }}
+            {{- /* Per-hook envVars - takes precedence over global envVars */}}
+            {{- with $hookConfig.envVars }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
             {{- if $.Values.workloadIdentity.gcp.enabled }}

@@ -2,7 +2,6 @@ suite: Test Multiple Hooks
 templates:
   - hooks/hooks-env.yaml
   - hooks/hooks.yaml
-  - hooks/secrets.yaml
   - hooks/serviceaccount.yaml
   - hooks/secretproviderclass.yaml
 release:
@@ -95,7 +94,7 @@ tests:
       hooks.migration.command: npm run migrate
       hooks.seed.enabled: true
       hooks.seed.command: npm run seed
-      env:
+      inlineEnv:
         DATABASE_URL: postgres://localhost
         LOG_LEVEL: info
     template: hooks/hooks-env.yaml
@@ -134,30 +133,6 @@ tests:
           path: spec.template.spec.containers[0].envFrom[0].configMapRef.name
           value: ut-hooks-env
         documentIndex: 1
-
-  - it: When multiple hooks are enabled with envSecrets, should create only one shared Secret
-    set:
-      image.tag: pinned-version
-      hooks.migration.enabled: true
-      hooks.migration.command: npm run migrate
-      hooks.seed.enabled: true
-      hooks.seed.command: npm run seed
-      envSecrets:
-        DB_PASSWORD: secretpassword
-        API_KEY: myapikey
-    template: hooks/secrets.yaml
-    asserts:
-      - hasDocuments:
-          count: 1
-      - isKind:
-          of: Secret
-      - equal:
-          path: metadata.name
-          value: ut-hooks-secrets
-      - isNotEmpty:
-          path: data.DB_PASSWORD
-      - isNotEmpty:
-          path: data.API_KEY
 
   - it: When multiple hooks are enabled with serviceAccount, should create only one shared ServiceAccount
     set:
@@ -265,3 +240,46 @@ tests:
       - equal:
           path: metadata.name
           value: ut-hooks-env
+
+  - it: When given per-hook env, renders them in the env section
+    set:
+      image.tag: pinned-version
+      hooks.migration.enabled: true
+      hooks.migration.command: npm run migrate
+      hooks.migration.env:
+        HOOK_VAR: hook-value
+    template: hooks/hooks.yaml
+    asserts:
+      - isKind:
+          of: Job
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: HOOK_VAR
+            value: hook-value
+
+  - it: When given per-hook envVars, renders them after global envVars
+    set:
+      image.tag: pinned-version
+      hooks.migration.enabled: true
+      hooks.migration.command: npm run migrate
+      envVars:
+        - name: GLOBAL_VAR
+          value: global-value
+      hooks.migration.envVars:
+        - name: LOCAL_VAR
+          value: local-value
+    template: hooks/hooks.yaml
+    asserts:
+      - isKind:
+          of: Job
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GLOBAL_VAR
+            value: global-value
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: LOCAL_VAR
+            value: local-value

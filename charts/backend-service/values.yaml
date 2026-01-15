@@ -31,26 +31,8 @@ autoscaling:
 # Note: It must start with a dot.
 # clusterInternalServiceSuffix: .domain.local
 
-# -- cronJob allows you to define a cronJob that mostly bases on the general values.
-# Note that since chart version 1.4.0 it is recommended to use preferably extraCronJobs (see readme for more information)
-cronJob:
-  concurrencyPolicy: Allow
-  enabled: false
-  env: {}
-  failedJobsHistoryLimit: 1
-  jobTemplate:
-    containers:
-      name: ""
-    restartPolicy: OnFailure
-  name: ""
-  schedule: ""
-  startingDeadlineSeconds: 60
-  successfulJobsHistoryLimit: 1
-  suspend: false
-  timeZone: Europe/Zurich
-
 # -- deployment is the deployed application
-# since this chart allows to also deploy as a CronJob or both, all deployment related values are in this section
+# all deployment related values are in this section (see extraCronJobs for cron job configuration)
 deployment:
   enabled: true
   # -- Specify the metadata for the deployment
@@ -77,12 +59,10 @@ deployment:
   #         mountPathDeployment: /opt/folder
   #         readOnly: true
 
-# env is a flat map of ENV_NAME: $VALUE which will get encapsulated into a ConfigMap and loaded using the envFrom syntax
+# inlineEnv is a flat map of ENV_NAME: $VALUE which will get encapsulated into a ConfigMap and loaded using the envFrom syntax
 # It only supports the flat object syntax with key value pairs
-env: {}
-
-# envSecrets is a map of ENV_NAME: $SECRET_VALUE which will get encapsulated into a Secret and loaded using the envFrom syntax
-envSecrets: {}
+# Note: For secrets, use envVars with secretKeyRef or reference an existing Secret via extraEnvSecrets
+inlineEnv: {}
 
 # envVars is a list of ENV_NAME: $VALUE which will be added to the pods where the $VALUE supports the same syntax as the native pod spec
 # https://kubernetes.io/docs/tasks/inject-data-application/define-environment-variable-container/
@@ -131,7 +111,7 @@ extraRoutes:
     ## -- Additional custom rules that can be added to the route
     additionalRules: []
 
-# -- extraCronJobs allows you to define additional cron jobs besides 'cronJob' itself.
+# -- extraCronJobs allows you to define cron jobs alongside the main deployment.
 extraCronJobs: {}
   # foo:
   #   concurrencyPolicy: Forbid
@@ -169,6 +149,16 @@ hooks:
     # name: "" defaults to the hook name (e.g., "migration")
     # For backwards compatibility, the migration hook defaults to "db-migration"
     command: ""
+    # -- Per-hook env values (takes precedence over global env from ConfigMap)
+    # env:
+    #   MY_HOOK_VAR: "value"
+    # -- Per-hook envVars (takes precedence over global envVars)
+    # envVars:
+    #   - name: MY_SECRET_VAR
+    #     valueFrom:
+    #       secretKeyRef:
+    #         name: my-secret
+    #         key: my-key
     # -- Configure hook annotations for ArgoCD and Helm
     # helm:
     #   enabled: true  # default: true
@@ -198,6 +188,15 @@ hooks:
   #   enabled: false
   #   backoffLimit: 1
   #   command: "npm run seed"
+  #   # Per-hook env/envVars example:
+  #   # env:
+  #   #   SEED_MODE: "full"
+  #   # envVars:
+  #   #   - name: DB_PASSWORD
+  #   #     valueFrom:
+  #   #       secretKeyRef:
+  #   #         name: db-secret
+  #   #         key: password
   #   # Example: Disable ArgoCD hooks, only use Helm hooks with custom timing
   #   hooks:
   #     argocd:
@@ -312,6 +311,13 @@ image:
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
+
+# -- lifecycle allows configuring container lifecycle hooks
+# lifecycle:
+#   preStop:
+#     httpGet:
+#       path: /can_shutdown
+#       port: 8080
 
 # -- keda allows you to enable KEDA for the chart
 # `keda` and are mutually exclusive.
@@ -647,6 +653,9 @@ serviceAccount:
   # name: ""
 
 tolerations: []
+
+# -- terminationGracePeriodSeconds allows overriding the default termination grace period for pods
+# terminationGracePeriodSeconds: 30
 
 workloadIdentity:
   azure: {}

@@ -300,9 +300,9 @@ spec:
 {{- if not (.Values.prometheus.defaultAlerts.kubernetesApplication.disabled.KubeJobNotCompleted | default false) }}
       - alert: KubeJobNotCompleted
         expr: |
-          time() - max by (namespace, job_name) (kube_job_status_start_time{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-([0-9]+|db-migration){{- if .Values.cronJob.name }}|{{ .Values.cronJob.name }}-[0-9]+{{- end }}|{{ .Release.Name }}-[0-9]+{{- range $key, $value := .Values.extraCronJobs }}|{{ $key }}-[0-9]+{{- end }}"}
+          time() - max by (namespace, job_name) (kube_job_status_start_time{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-([0-9]+|db-migration)|{{ .Release.Name }}-[0-9]+{{- range $key, $value := .Values.extraCronJobs }}|{{ $key }}-[0-9]+{{- end }}"}
             and
-          kube_job_status_active{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-([0-9]+|db-migration){{- if .Values.cronJob.name }}|{{ .Values.cronJob.name }}-[0-9]+{{- end }}|{{ .Release.Name }}-[0-9]+{{- range $key, $value := .Values.extraCronJobs }}|{{ $key }}-[0-9]+{{- end }}"} > 0) > 43200
+          kube_job_status_active{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-([0-9]+|db-migration)|{{ .Release.Name }}-[0-9]+{{- range $key, $value := .Values.extraCronJobs }}|{{ $key }}-[0-9]+{{- end }}"} > 0) > 43200
         for: {{ dig "KubeJobNotCompleted" "for" "0m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
         labels:
           severity: warning
@@ -319,9 +319,9 @@ spec:
       - alert: KubeJobFailed
         expr: |
           count by() (
-            kube_job_failed{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-([0-9]+|db-migration){{- if .Values.cronJob.name }}|{{ .Values.cronJob.name }}-[0-9]+{{- end }}|{{ .Release.Name }}-[0-9]+{{- range $key, $value := .Values.extraCronJobs }}|{{ $key }}-[0-9]+{{- end }}"}
+            kube_job_failed{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-([0-9]+|db-migration)|{{ .Release.Name }}-[0-9]+{{- range $key, $value := .Values.extraCronJobs }}|{{ $key }}-[0-9]+{{- end }}"}
             and on (job_name, namespace)
-            kube_job_status_start_time{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-([0-9]+|db-migration){{- if .Values.cronJob.name }}|{{ .Values.cronJob.name }}-[0-9]+{{- end }}|{{ .Release.Name }}-[0-9]+{{- range $key, $value := .Values.extraCronJobs }}|{{ $key }}-[0-9]+{{- end }}"} > (time() - 3600)
+            kube_job_status_start_time{namespace="{{ .Release.Namespace }}", job_name=~"{{ $fullName }}-([0-9]+|db-migration)|{{ .Release.Name }}-[0-9]+{{- range $key, $value := .Values.extraCronJobs }}|{{ $key }}-[0-9]+{{- end }}"} > (time() - 3600)
           ) > 0
         for: {{ dig "KubeJobFailed" "for" "0m" (.Values.prometheus.defaultAlerts.kubernetesApplication.customRules | default dict) }}
         labels:

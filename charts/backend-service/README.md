@@ -4,7 +4,7 @@ The 'backend-service' chart is a "convenience" chart from Unique AG that can gen
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 9.0.1](https://img.shields.io/badge/Version-9.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
+![Version: 11.0.0](https://img.shields.io/badge/Version-11.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 This chart is available both as Helm Repository as well as OCI artefact.
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 9.0.1
+helm install my-backend-service unique/backend-service --version 11.0.0
 
 # or
-helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 9.0.1
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 11.0.0
 ```
 
 ### Docker Images
@@ -132,11 +132,9 @@ When using `flavor: kubernetes` (default), the chart will:
 You can find Network Policy examples in the [`ci/networkpolicy-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/networkpolicy-values.yaml) (Kubernetes) and [`ci/networkpolicy-cilium-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/networkpolicy-cilium-values.yaml) (Cilium) files.
 
 ### CronJobs
-`cronJob` as well as `extraCronJobs` can be used to create cron jobs. These convenience fields are easing the effort to deploy Unique as package. Technically one can also deploy this same chart multiple times but this increases the management complexity on the user side. `cronJob` and `extraCronJobs` allow to deploy multiple cron jobs in a single chart deployment. Note, that they all share the same environment settings for now and that they base on the same image. You should not use this feature if you want to deploy arbitrary or other CronJobs not related to Unique or the current workload/deployment.
+`extraCronJobs` can be used to create cron jobs alongside the main deployment. This convenience field eases deploying Unique as a package. While you could deploy this chart multiple times, that increases management complexity. `extraCronJobs` allows deploying multiple cron jobs in a single chart release while sharing environment settings and the same image. You should not use this feature for arbitrary CronJobs unrelated to the current workload/deployment.
 
-⚠️ The syntax between `cronJob` and `extraCronJobs` is different. This is due to the continuous improvement process of Unique where unnecessary complexity has been abstracted for the user. You might still define every property as before, but the chart will default or auto-generate many of the properties that were mandatory in `cronJob`. Unique leaves is open to deprecate `cronJob` in an upcoming major release and generally advises, to directly use `extraCronJobs` for new deployments.
-
-You can find a `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/extra-cronjobs-values.yaml) file.
+You can find an `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/extra-cronjobs-values.yaml) file.
 
 ### Audit Volumes
 <small>added in `9.0.0`</small>
@@ -217,6 +215,102 @@ auditVolumes:
   target: /dev/stdout  # AUDIT_LOG_DIR="/dev/stdout", no PV/PVC created
 ```
 
+### Environment Variables
+
+The chart supports multiple ways to inject environment variables into pods. Understanding the order and precedence is important when the same variable is defined in multiple sources.
+
+#### Available Sources
+
+| Source | Type | Description |
+|--------|------|-------------|
+| `inlineEnv` | `map` | Flat key-value pairs, creates internal ConfigMap |
+| `envVars` | `list` | Full Kubernetes env syntax (supports `valueFrom`) |
+| `extraEnvCM` | `list` | Names of existing ConfigMaps |
+| `extraEnvSecrets` | `list` | Names of existing Secrets |
+| `secretProvider` | `map` | Azure Key Vault secrets via CSI driver |
+
+#### Precedence Order
+
+Environment variables are loaded in a specific order. **Later sources override earlier sources** when the same variable name is defined.
+
+##### Deployment
+
+```
+envFrom (loaded first, lower precedence):
+  1. ConfigMap (contains: inlineEnv + VERSION + PORT)
+  2. extraEnvCM
+  3. extraEnvSecrets
+
+env (loaded last, higher precedence):
+  4. envVars
+  5. secretProvider
+  6. auditVolumes (AUDIT_LOG_DIR)
+  7. workloadIdentity.gcp (GOOGLE_APPLICATION_CREDENTIALS)
+```
+
+##### extraCronJobs
+
+```
+envFrom:
+  1. extraEnvCM
+  2. extraEnvSecrets
+
+env:
+  3. VERSION (auto-set)
+  4. auditVolumes (AUDIT_LOG_DIR)
+  5. envVars (global)
+  6. Merged env (global inlineEnv + extraCronJobs.<name>.env, local takes precedence)
+  7. extraCronJobs.<name>.envVars (local)
+  8. secretProvider
+```
+
+##### Hooks
+
+```
+envFrom:
+  1. ConfigMap (contains: inlineEnv + VERSION)
+  2. extraEnvCM
+  3. extraEnvSecrets
+
+env:
+  4. envVars (global)
+  5. hooks.<name>.env (per-hook, takes precedence)
+  6. hooks.<name>.envVars (per-hook)
+  7. workloadIdentity.gcp (GOOGLE_APPLICATION_CREDENTIALS)
+  8. secretProvider
+```
+
+#### Example: Overriding Variables
+
+```yaml
+# Global inlineEnv (lowest precedence for this variable)
+inlineEnv:
+  DATABASE_URL: "postgres://global:5432/db"
+
+# Local override in extraCronJob (takes precedence)
+extraCronJobs:
+  cleanup:
+    schedule: "0 0 * * *"
+    env:
+      DATABASE_URL: "postgres://readonly:5432/db"  # This value is used
+
+# For secrets, use envVars with secretKeyRef (best practice)
+envVars:
+  - name: DATABASE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: db-secret
+        key: password
+```
+
+#### Protected Variables
+
+The following variables are automatically set and cannot be overridden via `inlineEnv`:
+- `VERSION` - Set to the image tag
+- `PORT` - Set to the application port (deployment only)
+
+To override these, use `envVars` which has higher precedence.
+
 ## JSON Schema
 
 The chart provides a JSON schema for validating `values.yaml` files. This schema helps with:
@@ -237,6 +331,140 @@ Workload Identity support might be added in the future. If you need it sooner, [
 Other authentication methods (service principals, pod identity) are not supported due to the variety of Azure Key Vault access patterns, security policies, and governance requirements across different organizations. The chart provides a stable foundation; extend it using `extraObjects` for custom authentication setups.
 
 ## Upgrade Guides
+
+### ~> `11.0.0`
+
+**Breaking change:** The `cronJob` value has been removed. Use `extraCronJobs` instead.
+
+**What changed:**
+- Removed: `.Values.cronJob` and all related templates
+- The `extraCronJobs` syntax is simpler with better defaults
+
+**Who is affected:**
+- Users with `cronJob.enabled: true` in their values
+
+**Migration:**
+
+**From (old `cronJob`):**
+```yaml
+cronJob:
+  enabled: true
+  name: my-cronjob
+  schedule: "0 0 * * *"
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 3
+  startingDeadlineSeconds: 60
+  suspend: false
+  timeZone: Europe/Zurich
+  jobTemplate:
+    containers:
+      name: my-container
+    restartPolicy: OnFailure
+  env:
+    MY_VAR: value
+  envVars:
+    - name: SECRET_VAR
+      valueFrom:
+        secretKeyRef:
+          name: my-secret
+          key: password
+```
+
+**To (new `extraCronJobs`):**
+```yaml
+extraCronJobs:
+  my-cronjob:
+    schedule: "0 0 * * *"
+    concurrencyPolicy: Forbid
+    failedJobsHistoryLimit: 3
+    successfulJobsHistoryLimit: 3
+    startingDeadlineSeconds: 60
+    suspend: false
+    timeZone: Europe/Zurich
+    restartPolicy: OnFailure
+    env:
+      MY_VAR: value
+    envVars:
+      - name: SECRET_VAR
+        valueFrom:
+          secretKeyRef:
+            name: my-secret
+            key: password
+```
+
+**Key differences:**
+- The cronjob name becomes the key in the `extraCronJobs` map
+- `jobTemplate.containers.name` is no longer needed (defaults to the key name)
+- `jobTemplate.restartPolicy` moves to top-level `restartPolicy`
+- Many fields have sensible defaults and can be omitted
+
+### ~> `10.0.0`
+
+**Breaking changes:** Environment variable configuration has been refactored for clarity and best practices.
+
+**What changed:**
+
+1. **`env` renamed to `inlineEnv`**
+   - The global `env` value has been renamed to `inlineEnv` to clarify that it creates an internal ConfigMap
+   - Local overrides (`extraCronJobs.<name>.env`, `hooks.<name>.env`) remain unchanged
+
+2. **`envSecrets` removed**
+   - Storing secrets in `values.yaml` is bad practice
+   - Use `extraEnvSecrets` to reference an existing Secret, or use `envVars` with `secretKeyRef`
+
+3. **`extraCronJobs` envFrom order changed**
+   - Before: `envSecrets` → `extraEnvSecrets` → `extraEnvCM`
+   - After: `extraEnvCM` → `extraEnvSecrets`
+   - This aligns with deployment behavior where `extraEnvSecrets` takes precedence over `extraEnvCM`
+
+4. **`VERSION` environment variable is now protected**
+   - In `hooks` ConfigMaps, `VERSION` is now set last and cannot be overridden by user-defined env values
+   - This matches the existing deployment behavior
+
+5. **`extraCronJobs` duplicate envVars bug fixed**
+   - Local `envVars` was previously rendered twice; now renders once as intended
+
+6. **Environment variable merging**
+   - `extraCronJobs`: Global `inlineEnv` and local `env` are now merged (local takes precedence) instead of both being appended
+
+**New features:**
+
+- Added per-hook `env` and `envVars` support for hooks (e.g., `hooks.migration.env`, `hooks.migration.envVars`)
+
+**Who is affected:**
+
+- All users using `env` - must rename to `inlineEnv`
+- Users using `envSecrets` - must migrate to `extraEnvSecrets` or `envVars` with `secretKeyRef`
+- Users relying on the previous `extraCronJobs` envFrom order
+
+**Migration:**
+
+**Rename `env` to `inlineEnv`:**
+```yaml
+# Before
+env:
+  DATABASE_URL: "postgres://localhost:5432/db"
+
+# After
+inlineEnv:
+  DATABASE_URL: "postgres://localhost:5432/db"
+```
+
+**Migrate `envSecrets` to `envVars` with `secretKeyRef`:**
+```yaml
+# Before
+envSecrets:
+  DATABASE_PASSWORD: "secret123"  # Bad: secret in values.yaml
+
+# After - reference an existing Secret
+envVars:
+  - name: DATABASE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: my-db-secret
+        key: password
+```
 
 ### ~> `9.0.0`
 

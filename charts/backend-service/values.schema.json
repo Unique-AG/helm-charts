@@ -159,75 +159,6 @@
       "type": "string",
       "description": "Override the default '.svc.cluster.local' service address suffix"
     },
-    "cronJob": {
-      "type": "object",
-      "description": "CronJob configuration",
-      "properties": {
-        "concurrencyPolicy": {
-          "type": "string",
-          "enum": ["Allow", "Forbid", "Replace"],
-          "description": "Concurrency policy for the cron job",
-          "examples": ["Allow"]
-        },
-        "enabled": {
-          "type": "boolean",
-          "description": "Enable cron job",
-          "examples": [false]
-        },
-        "env": {
-          "type": "object",
-          "description": "Environment variables for the cron job"
-        },
-        "failedJobsHistoryLimit": {
-          "type": "integer",
-          "description": "Number of failed jobs to keep in history",
-          "minimum": 0,
-          "examples": [1]
-        },
-        "jobTemplate": {
-          "type": "object",
-          "description": "Job template configuration",
-          "examples": [
-            {
-              "containers": {
-                "name": ""
-              },
-              "restartPolicy": "OnFailure"
-            }
-          ]
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the cron job"
-        },
-        "schedule": {
-          "type": "string",
-          "description": "Cron schedule expression"
-        },
-        "startingDeadlineSeconds": {
-          "type": "integer",
-          "description": "Starting deadline in seconds",
-          "minimum": 0,
-          "examples": [60]
-        },
-        "successfulJobsHistoryLimit": {
-          "type": "integer",
-          "description": "Number of successful jobs to keep in history",
-          "minimum": 0,
-          "examples": [1]
-        },
-        "suspend": {
-          "type": "boolean",
-          "description": "Suspend the cron job",
-          "examples": [false]
-        },
-        "timeZone": {
-          "type": "string",
-          "description": "Timezone for the cron job",
-          "examples": ["Europe/Zurich"]
-        }
-      }
-    },
     "deployment": {
       "type": "object",
       "description": "Deployment configuration",
@@ -264,13 +195,9 @@
         }
       }
     },
-    "env": {
+    "inlineEnv": {
       "type": "object",
-      "description": "Environment variables as a flat map"
-    },
-    "envSecrets": {
-      "type": "object",
-      "description": "Environment variables from secrets as a flat map"
+      "description": "Environment variables as a flat map (creates internal ConfigMap)"
     },
     "envVars": {
       "type": "array",
@@ -437,7 +364,7 @@
     },
     "extraCronJobs": {
       "type": "object",
-      "description": "Additional cron jobs beside 'cronJob' itself",
+      "description": "Cron jobs to deploy alongside the main deployment",
       "additionalProperties": {
         "type": "object",
         "properties": {
