@@ -143,6 +143,9 @@ spec:
             {{- with $hookConfig.envVars }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
+            {{- /* VERSION is added last (before secretProvider) so it cannot be overridden */}}
+            - name: VERSION
+              value: {{ (include "backendService.imageTag" $) | quote }}
             {{- if $.Values.workloadIdentity.gcp.enabled }}
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /var/run/secrets/gcp-wif/config.json

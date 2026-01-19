@@ -212,8 +212,9 @@ env:
   4. envVars (global, deduplicated with per-hook envVars)
   5. Merged env (global inlineEnv + hooks.<name>.env, per-hook takes precedence)
   6. hooks.<name>.envVars (per-hook)
-  7. workloadIdentity.gcp (GOOGLE_APPLICATION_CREDENTIALS)
-  8. secretProvider
+  7. VERSION (auto-set) - protected
+  8. workloadIdentity.gcp (GOOGLE_APPLICATION_CREDENTIALS)
+  9. secretProvider
 ```
 
 Global `envVars` entries are excluded if the same name exists in per-hook `envVars`.

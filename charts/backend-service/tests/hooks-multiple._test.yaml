@@ -212,9 +212,14 @@ tests:
           path: spec.template.spec.volumes[0].csi.volumeAttributes.secretProviderClass
           value: ut-qa-app-common-hooks
         documentIndex: 0
-      - equal:
-          path: spec.template.spec.containers[0].env[0].valueFrom.secretKeyRef.name
-          value: ut-qa-app-common-hooks
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: AMQP_URL
+            valueFrom:
+              secretKeyRef:
+                name: ut-qa-app-common-hooks
+                key: RABBITMQ-ORANGE-WOLF-URL
         documentIndex: 0
 
       # Check seed job references shared SecretProviderClass
@@ -222,9 +227,14 @@ tests:
           path: spec.template.spec.volumes[0].csi.volumeAttributes.secretProviderClass
           value: ut-qa-app-common-hooks
         documentIndex: 1
-      - equal:
-          path: spec.template.spec.containers[0].env[0].valueFrom.secretKeyRef.name
-          value: ut-qa-app-common-hooks
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: AMQP_URL
+            valueFrom:
+              secretKeyRef:
+                name: ut-qa-app-common-hooks
+                key: RABBITMQ-ORANGE-WOLF-URL
         documentIndex: 1
 
   - it: When only one hook is enabled, should still create shared resources with correct naming
