@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "backendService.labels" . | nindent 4 }}
 data:
-  {{- range $key, $value := .Values.env }}
+  {{- range $key, $value := .Values.inlineEnv }}
   {{ $key }}: {{ $value | quote }}
   {{- end }}
   {{/* Static values are added last so that they override the dynamic values (avoids regression and breaking changes) */}}

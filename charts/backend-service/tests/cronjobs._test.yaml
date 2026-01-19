@@ -1,14 +1,14 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
-suite: Test Extra CronJobs
+suite: Test CronJobs
 templates:
-  - extra-cronjobs.yaml
+  - cronjobs.yaml
 release:
   name: ecj
 tests:
-  - it: When given an extra CronJob, renders the CronJob with the correct values
+  - it: When given a CronJob, renders the CronJob with the correct values
     values:
-      - ../ci/extra-cronjobs-values.yaml
-    template: extra-cronjobs.yaml
+      - ../ci/cronjobs-values.yaml
+    template: cronjobs.yaml
     documentSelector:
       path: metadata.name
       value: foo
@@ -41,11 +41,11 @@ tests:
 
   - it: When given pod labels and annotations
     values:
-    - ../ci/extra-cronjobs-values.yaml
+    - ../ci/cronjobs-values.yaml
     set:
       podLabels.app: test
       podAnnotations.test: true
-    template: extra-cronjobs.yaml
+    template: cronjobs.yaml
     asserts:
       - isKind:
           of: CronJob
@@ -59,3 +59,40 @@ tests:
       - equal:
           path: spec.jobTemplate.spec.template.metadata.annotations.test
           value: true
+
+  - it: Local env overrides global inlineEnv (merge with local precedence)
+    values:
+      - ../ci/cronjobs-values.yaml
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: foo
+    asserts:
+      - isKind:
+          of: CronJob
+      # Local env.FOO: BAR should override global inlineEnv.FOO: quux
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "foo")].env[?(@.name == "FOO")].value
+          value: BAR
+      # envVars should appear only once (BAZ from local envVars)
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "foo")].env[?(@.name == "BAZ")].value
+          value: qux
+
+  - it: Global inlineEnv is included when no local override
+    set:
+      image.tag: "1.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      cronJobs.bar.schedule: "0 0 * * *"
+      inlineEnv.GLOBAL_VAR: global-value
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: bar
+    asserts:
+      - isKind:
+          of: CronJob
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "bar")].env[?(@.name == "GLOBAL_VAR")].value
+          value: global-value

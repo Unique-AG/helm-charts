@@ -1,10 +1,10 @@
 #
-# EXAMPLE VALUES FOR EXTRA CRONJOBS
-# Uses cronJob and extraCronJobs to define a CronJob and an extra CronJob
+# EXAMPLE VALUES FOR CRONJOBS
+# Uses cronJobs to define cron jobs alongside the main deployment
 #
-env:
+inlineEnv:
   FOO: quux
-extraCronJobs:
+cronJobs:
   foo:
     concurrencyPolicy: Forbid
     env:

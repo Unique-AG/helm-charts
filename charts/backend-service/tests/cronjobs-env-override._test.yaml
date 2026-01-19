@@ -1,0 +1,672 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: Test CronJobs Environment Variable Override Precedence
+templates:
+  - cronjobs.yaml
+release:
+  name: env-test
+tests:
+  #############################################################################
+  # SECTION 1: Local env (flat map) vs Global inlineEnv (flat map)
+  # Expected: Local env takes precedence over global inlineEnv
+  #############################################################################
+
+  - it: "Local env overrides global inlineEnv for same key (MAX_HEAP_MB scenario)"
+    set:
+      image.tag: "1.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      # Global inlineEnv sets MAX_HEAP_MB to 2048
+      inlineEnv:
+        MAX_HEAP_MB: "2048"
+        DATABASE_URL: "postgres://global"
+      # Local env should override MAX_HEAP_MB to 700
+      cronJobs:
+        node-ingestion-maintenance:
+          schedule: "0 0 * * *"
+          env:
+            MAX_HEAP_MB: "700"
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: node-ingestion-maintenance
+    asserts:
+      - isKind:
+          of: CronJob
+      # Local env.MAX_HEAP_MB: "700" should override global inlineEnv.MAX_HEAP_MB: "2048"
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "MAX_HEAP_MB")].value
+          value: "700"
+      # Global DATABASE_URL should still be present (not overridden)
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "DATABASE_URL")].value
+          value: "postgres://global"
+
+  - it: "Local env overrides multiple global inlineEnv keys"
+    set:
+      image.tag: "1.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      inlineEnv:
+        VAR_A: "global-a"
+        VAR_B: "global-b"
+        VAR_C: "global-c"
+      cronJobs:
+        multi-override:
+          schedule: "0 0 * * *"
+          env:
+            VAR_A: "local-a"
+            VAR_C: "local-c"
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: multi-override
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "VAR_A")].value
+          value: "local-a"
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "VAR_B")].value
+          value: "global-b"
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "VAR_C")].value
+          value: "local-c"
+
+  - it: "Global inlineEnv is included when local env is empty"
+    set:
+      image.tag: "1.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      inlineEnv:
+        ONLY_GLOBAL: "from-global"
+      cronJobs:
+        no-local-env:
+          schedule: "0 0 * * *"
+          # No local env defined
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: no-local-env
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "ONLY_GLOBAL")].value
+          value: "from-global"
+
+  - it: "Local env adds new keys alongside global inlineEnv"
+    set:
+      image.tag: "1.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      inlineEnv:
+        GLOBAL_KEY: "global-value"
+      cronJobs:
+        add-local:
+          schedule: "0 0 * * *"
+          env:
+            LOCAL_KEY: "local-value"
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: add-local
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "GLOBAL_KEY")].value
+          value: "global-value"
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "LOCAL_KEY")].value
+          value: "local-value"
+
+  #############################################################################
+  # SECTION 2: Local envVars (array) vs Global envVars (array)
+  # Expected: Local envVars takes precedence (rendered after global)
+  #############################################################################
+
+  - it: "Local envVars overrides global envVars for same key"
+    set:
+      image.tag: "1.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      envVars:
+        - name: SHARED_VAR
+          value: "global-envVars"
+      cronJobs:
+        envvars-override:
+          schedule: "0 0 * * *"
+          envVars:
+            - name: SHARED_VAR
+              value: "local-envVars"
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: envvars-override
+    asserts:
+      # Global entry is deduplicated - only local entry exists
+      - notContains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: SHARED_VAR
+            value: "global-envVars"
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: SHARED_VAR
+            value: "local-envVars"
+
+  - it: "Local envVars with valueFrom overrides global envVars"
+    set:
+      image.tag: "1.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      envVars:
+        - name: SECRET_VAR
+          value: "plaintext-global"
+      cronJobs:
+        envvars-secret:
+          schedule: "0 0 * * *"
+          envVars:
+            - name: SECRET_VAR
+              valueFrom:
+                secretKeyRef:
+                  name: my-secret
+                  key: secret-key
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: envvars-secret
+    asserts:
+      # Local envVars with secretKeyRef should be present (comes after global)
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: SECRET_VAR
+            valueFrom:
+              secretKeyRef:
+                name: my-secret
+                key: secret-key
+
+  #############################################################################
+  # SECTION 3: Mixed scenarios - env (flat) vs envVars (array)
+  #############################################################################
+
+  - it: "Local envVars overrides merged env (inlineEnv + local env)"
+    set:
+      image.tag: "1.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      inlineEnv:
+        MIXED_VAR: "from-inlineEnv"
+      cronJobs:
+        mixed-override:
+          schedule: "0 0 * * *"
+          env:
+            MIXED_VAR: "from-local-env"
+          envVars:
+            - name: MIXED_VAR
+              value: "from-local-envVars"
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: mixed-override
+    asserts:
+      # Local envVars comes last, so it wins in Kubernetes
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: MIXED_VAR
+            value: "from-local-envVars"
+
+  - it: "Global envVars is deduplicated, merged env and local envVars both present"
+    set:
+      image.tag: "1.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      envVars:
+        - name: TRIPLE_VAR
+          value: "from-global-envVars"
+      inlineEnv:
+        TRIPLE_VAR: "from-inlineEnv"
+      cronJobs:
+        triple-override:
+          schedule: "0 0 * * *"
+          env:
+            TRIPLE_VAR: "from-local-env"
+          envVars:
+            - name: TRIPLE_VAR
+              value: "from-local-envVars"
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: triple-override
+    asserts:
+      # Global envVars is deduplicated (not present)
+      - notContains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: TRIPLE_VAR
+            value: "from-global-envVars"
+      # Merged env (local-env overrides inlineEnv) is present
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: TRIPLE_VAR
+            value: "from-local-env"
+      # Local envVars (highest precedence) is present
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: TRIPLE_VAR
+            value: "from-local-envVars"
+
+  #############################################################################
+  # SECTION 4: Protected env var tests (AUDIT_LOG_DIR and VERSION)
+  # Expected: These cannot be overridden by any user-defined env
+  #############################################################################
+
+  - it: "AUDIT_LOG_DIR cannot be overridden via inlineEnv"
+    set:
+      image.tag: "1.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      auditVolumes:
+        target: "/real/audit/path"
+      inlineEnv:
+        AUDIT_LOG_DIR: "/hacked/path"
+      cronJobs:
+        audit-test:
+          schedule: "0 0 * * *"
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: audit-test
+    asserts:
+      # The last AUDIT_LOG_DIR entry should be the protected one
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: AUDIT_LOG_DIR
+            value: "/real/audit/path"
+
+  - it: "AUDIT_LOG_DIR cannot be overridden via local env"
+    set:
+      image.tag: "1.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      auditVolumes:
+        target: "/real/audit/path"
+      cronJobs:
+        audit-local:
+          schedule: "0 0 * * *"
+          env:
+            AUDIT_LOG_DIR: "/local-hacked"
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: audit-local
+    asserts:
+      # Protected AUDIT_LOG_DIR comes after local env
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: AUDIT_LOG_DIR
+            value: "/real/audit/path"
+
+  - it: "AUDIT_LOG_DIR cannot be overridden via local envVars"
+    set:
+      image.tag: "1.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      auditVolumes:
+        target: "/real/audit/path"
+      cronJobs:
+        audit-envvars:
+          schedule: "0 0 * * *"
+          envVars:
+            - name: AUDIT_LOG_DIR
+              value: "/envvars-hacked"
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: audit-envvars
+    asserts:
+      # Protected AUDIT_LOG_DIR comes after local envVars
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: AUDIT_LOG_DIR
+            value: "/real/audit/path"
+
+  - it: "VERSION cannot be overridden via inlineEnv"
+    set:
+      image.tag: "2.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      inlineEnv:
+        VERSION: "hacked-version"
+      cronJobs:
+        version-test:
+          schedule: "0 0 * * *"
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: version-test
+    asserts:
+      # The last VERSION entry should be the protected one (2.0.0)
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: VERSION
+            value: "2.0.0"
+
+  - it: "VERSION cannot be overridden via local env"
+    set:
+      image.tag: "3.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      cronJobs:
+        version-local:
+          schedule: "0 0 * * *"
+          env:
+            VERSION: "local-hacked"
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: version-local
+    asserts:
+      # Protected VERSION (3.0.0) comes after local env
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: VERSION
+            value: "3.0.0"
+
+  - it: "VERSION cannot be overridden via local envVars"
+    set:
+      image.tag: "4.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      cronJobs:
+        version-envvars:
+          schedule: "0 0 * * *"
+          envVars:
+            - name: VERSION
+              value: "envvars-hacked"
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: version-envvars
+    asserts:
+      # Protected VERSION (4.0.0) comes after local envVars
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: VERSION
+            value: "4.0.0"
+
+  #############################################################################
+  # SECTION 5: Env ordering verification
+  # Expected order: global envVars -> merged env -> local envVars -> AUDIT_LOG_DIR -> VERSION -> secretProvider
+  #############################################################################
+
+  - it: "Env vars are rendered in correct order for precedence"
+    set:
+      image.tag: "5.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      envVars:
+        - name: ORDER_TEST
+          value: "1-global-envVars"
+      inlineEnv:
+        ORDER_TEST: "2-inlineEnv"
+      cronJobs:
+        order-test:
+          schedule: "0 0 * * *"
+          env:
+            ORDER_TEST: "3-local-env"
+          envVars:
+            - name: ORDER_TEST
+              value: "4-local-envVars"
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: order-test
+    asserts:
+      - isKind:
+          of: CronJob
+      # Global envVars is deduplicated (removed because local envVars has same name)
+      - notContains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: ORDER_TEST
+            value: "1-global-envVars"
+      # Note: "2-inlineEnv" is merged with local env, local takes precedence so we get "3-local-env"
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: ORDER_TEST
+            value: "3-local-env"
+      # Local envVars (highest precedence) is present
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: ORDER_TEST
+            value: "4-local-envVars"
+
+  #############################################################################
+  # SECTION 6: Multiple CronJobs with different overrides
+  #############################################################################
+
+  - it: "Different CronJobs can have different env overrides"
+    set:
+      image.tag: "1.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      inlineEnv:
+        HEAP_SIZE: "2048"
+        LOG_LEVEL: "info"
+      cronJobs:
+        job-a:
+          schedule: "0 0 * * *"
+          env:
+            HEAP_SIZE: "512"
+        job-b:
+          schedule: "0 1 * * *"
+          env:
+            HEAP_SIZE: "1024"
+            LOG_LEVEL: "debug"
+        job-c:
+          schedule: "0 2 * * *"
+          # No local env - uses global only
+    template: cronjobs.yaml
+    asserts:
+      # job-a: HEAP_SIZE=512 (local override), LOG_LEVEL=info (global)
+      - documentSelector:
+          path: metadata.name
+          value: job-a
+        equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "HEAP_SIZE")].value
+          value: "512"
+      - documentSelector:
+          path: metadata.name
+          value: job-a
+        equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "LOG_LEVEL")].value
+          value: "info"
+      # job-b: HEAP_SIZE=1024 (local override), LOG_LEVEL=debug (local override)
+      - documentSelector:
+          path: metadata.name
+          value: job-b
+        equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "HEAP_SIZE")].value
+          value: "1024"
+      - documentSelector:
+          path: metadata.name
+          value: job-b
+        equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "LOG_LEVEL")].value
+          value: "debug"
+      # job-c: HEAP_SIZE=2048 (global), LOG_LEVEL=info (global)
+      - documentSelector:
+          path: metadata.name
+          value: job-c
+        equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "HEAP_SIZE")].value
+          value: "2048"
+      - documentSelector:
+          path: metadata.name
+          value: job-c
+        equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "LOG_LEVEL")].value
+          value: "info"
+
+  #############################################################################
+  # SECTION 7: Edge cases
+  #############################################################################
+
+  # NOTE: Empty string values in local env do NOT override non-empty global values
+  # This is a known limitation of Helm's merge function - empty/falsy values don't override
+  # Use envVars with explicit empty string if you need to override with empty value
+  - it: "Empty string in local env does not override global (known limitation - use envVars instead)"
+    set:
+      image.tag: "1.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      inlineEnv:
+        OPTIONAL_VAR: "has-value"
+      cronJobs:
+        empty-override:
+          schedule: "0 0 * * *"
+          env:
+            OPTIONAL_VAR: ""
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: empty-override
+    asserts:
+      # Due to merge behavior, empty string doesn't override - global value is preserved
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "OPTIONAL_VAR")].value
+          value: "has-value"
+
+  - it: "Empty string CAN be set via envVars (workaround for empty value override)"
+    set:
+      image.tag: "1.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      inlineEnv:
+        OPTIONAL_VAR: "has-value"
+      cronJobs:
+        empty-envvars:
+          schedule: "0 0 * * *"
+          envVars:
+            - name: OPTIONAL_VAR
+              value: ""
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: empty-envvars
+    asserts:
+      # envVars comes after merged env, so empty string wins in Kubernetes
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: OPTIONAL_VAR
+            value: ""
+
+  - it: "Numeric values in env are preserved as strings"
+    set:
+      image.tag: "1.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      inlineEnv:
+        PORT: "8080"
+      cronJobs:
+        numeric-env:
+          schedule: "0 0 * * *"
+          env:
+            PORT: "9090"
+            WORKERS: "4"
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: numeric-env
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "PORT")].value
+          value: "9090"
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "WORKERS")].value
+          value: "4"
+
+  - it: "Special characters in env values are handled correctly"
+    set:
+      image.tag: "1.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      cronJobs:
+        special-chars:
+          schedule: "0 0 * * *"
+          env:
+            CONNECTION_STRING: "host=db;port=5432;user=admin"
+            JSON_CONFIG: '{"key":"value"}'
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: special-chars
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "CONNECTION_STRING")].value
+          value: "host=db;port=5432;user=admin"
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "JSON_CONFIG")].value
+          value: '{"key":"value"}'
+
+  #############################################################################
+  # SECTION 8: Real-world OOM scenario test
+  #############################################################################
+
+  - it: "Real-world scenario: CronJob with lower heap to prevent OOM"
+    set:
+      image.tag: "production-v1.2.3"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      # Global settings for main deployment (high memory)
+      inlineEnv:
+        MAX_HEAP_MB: "4096"
+        NODE_OPTIONS: "--max-old-space-size=4096"
+        LOG_LEVEL: "info"
+      # CronJob needs less memory to fit in smaller resource limits
+      cronJobs:
+        node-ingestion-maintenance:
+          schedule: "0 3 * * *"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1Gi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+          env:
+            # Override heap settings for this job
+            MAX_HEAP_MB: "700"
+            NODE_OPTIONS: "--max-old-space-size=700"
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: node-ingestion-maintenance
+    asserts:
+      - isKind:
+          of: CronJob
+      # Verify the local overrides are applied
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "MAX_HEAP_MB")].value
+          value: "700"
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "NODE_OPTIONS")].value
+          value: "--max-old-space-size=700"
+      # Verify global LOG_LEVEL is still present
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[?(@.name == "LOG_LEVEL")].value
+          value: "info"
+      # Verify resources are applied
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].resources.limits.memory
+          value: 1Gi

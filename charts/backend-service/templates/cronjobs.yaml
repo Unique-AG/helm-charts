@@ -1,7 +1,7 @@
 {{- $fullName := include "backendService.fullname" . -}}
 {{- $labelsCronJob := include "backendService.mutableLabels" . -}}
 {{- $globalValues := .Values -}}
-{{- range $key, $value := .Values.extraCronJobs }}
+{{- range $key, $value := .Values.cronJobs }}
 ---
 apiVersion: batch/v1
 kind: CronJob
@@ -9,12 +9,12 @@ metadata:
   name: {{ $key }}
   labels:
     {{- $labelsCronJob | nindent 4 }}
-    app.kubernetes.io/component: cron-job-extra-{{ $key }}
+    app.kubernetes.io/component: cron-job-{{ $key }}
 spec:
   {{- if $value.schedule }}
   schedule: {{ $value.schedule | quote }}
   {{- else }}
-  {{- fail (printf "extraCronJob '%s' 'schedule' is not defined" $key) }}
+  {{- fail (printf "cronJob '%s' 'schedule' is not defined" $key) }}
   {{- end }}
   suspend: {{ $value.suspend | default false }}
   timeZone: {{ $value.timeZone | default "Europe/Zurich" | quote }}
@@ -33,15 +33,12 @@ spec:
               {{- end }}
             {{- end }}
             {{- $labelsCronJob | nindent 12 }}
-            app.kubernetes.io/component: cron-job-extra-{{ $key }}
+            app.kubernetes.io/component: cron-job-{{ $key }}
           annotations:
             {{- if $.Values.podAnnotations }}
               {{- with $.Values.podAnnotations }}
                 {{- toYaml . | nindent 12 }}
               {{- end }}
-            {{- end }}
-            {{- if $globalValues.envSecrets }}
-            checksum/secrets: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum | trunc 8 | quote }}
             {{- end }}
         spec:
           {{- with $globalValues.imagePullSecrets }}
@@ -74,9 +71,11 @@ spec:
               {{- end }}
               {{- end }}
               envFrom:
-                {{- if $globalValues.envSecrets }}
-                - secretRef:
-                    name: {{ $fullName }}-secrets
+                {{- if $globalValues.extraEnvCM }}
+                {{- range $v := $globalValues.extraEnvCM }}
+                - configMapRef:
+                    name: {{ $v }}
+                {{- end }}
                 {{- end }}
                 {{- if $globalValues.extraEnvSecrets }}
                 {{- range $v := $globalValues.extraEnvSecrets }}
@@ -84,15 +83,28 @@ spec:
                     name: {{ $v }}
                 {{- end }}
                 {{- end }}
-                {{- if $globalValues.extraEnvCM }}
-                {{- range $v := $globalValues.extraEnvCM }}
-                - configMapRef:
-                    name: {{ $v }}
-                {{- end }}
-                {{- end }}
               env:
-                - name: VERSION
-                  value: {{ ($globalValues.image.tag | default $.Chart.AppVersion) | quote}}
+                {{- /* Global envVars - excluding names that are overridden in local envVars */}}
+                {{- $localEnvVarNames := dict }}
+                {{- range ($value.envVars | default list) }}
+                {{- $_ := set $localEnvVarNames .name true }}
+                {{- end }}
+                {{- range ($globalValues.envVars | default list) }}
+                {{- if not (hasKey $localEnvVarNames .name) }}
+                - {{ toYaml . | nindent 18 | trim }}
+                {{- end }}
+                {{- end }}
+                {{- /* Merge global inlineEnv with local env - local takes precedence */}}
+                {{- $mergedEnv := merge ($value.env | default dict) ($globalValues.inlineEnv | default dict) }}
+                {{- range $envKey, $envValue := $mergedEnv }}
+                - name: {{ $envKey }}
+                  value: {{ $envValue | quote }}
+                {{- end }}
+                {{- /* Local envVars - takes precedence over global envVars and merged env */}}
+                {{- with $value.envVars }}
+                  {{- toYaml . | nindent 16 }}
+                {{- end }}
+                {{- /* AUDIT_LOG_DIR and VERSION are added last (before secretProvider) so they cannot be overridden */ -}}
                 {{- if $globalValues.auditVolumes.target }}
                 {{- $target := $globalValues.auditVolumes.target }}
                 {{- $isPath := hasPrefix "/" $target }}
@@ -100,7 +112,6 @@ spec:
                 {{- if and (not $isPath) $globalValues.auditVolumes.volumes }}
                 {{- $targetVolume = index $globalValues.auditVolumes.volumes $target | default dict }}
                 {{- end }}
-                {{- /* Set AUDIT_LOG_DIR if: target is a path, OR target volume is enabled with cloud provider */ -}}
                 {{- $hasCloudProvider := or $targetVolume.azure }}
                 {{- if or $isPath (and $targetVolume.enabled $hasCloudProvider) }}
                 - name: AUDIT_LOG_DIR
@@ -113,24 +124,8 @@ spec:
                   {{- end }}
                 {{- end }}
                 {{- end }}
-                {{- with $globalValues.envVars }}
-                  {{- toYaml . | nindent 16 }}
-                {{- end }}
-                {{- range $key, $value := $globalValues.env }}
-                - name: {{ $key }}
-                  value: {{ $value | quote }}
-                {{- end }}
-                {{- /* local envVars will take precedence over global envVars as they are specified last */}}
-                {{- with .envVars }}
-                  {{- toYaml . | nindent 16 }}
-                {{- end }}
-                {{- with .envVars }}
-                  {{- toYaml . | nindent 16 }}
-                {{- end }}
-                {{- range $key, $value := .env }}
-                - name: {{ $key }}
-                  value: {{ $value | quote }}
-                {{- end }}
+                - name: VERSION
+                  value: {{ ($globalValues.image.tag | default $.Chart.AppVersion) | quote}}
                 {{- if $globalValues.secretProvider }}
                 {{- range $k, $v := $globalValues.secretProvider.vaults }}
                 {{- range $key, $value := $v }}

@@ -33,7 +33,7 @@ hooks:
         memory: 128Mi
 
 # Environment variables (shared across all hooks)
-env:
+inlineEnv:
   NODE_ENV: production
   DATABASE_URL: postgres://localhost:5432/mydb
   LOG_LEVEL: info

@@ -110,10 +110,6 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ $fullName }}-hooks-env
-            {{- if $.Values.envSecrets }}
-            - secretRef:
-                name: {{ $fullName }}-hooks-secrets
-            {{- end }}
             {{- if $.Values.extraEnvCM }}
             {{- range $v := $.Values.extraEnvCM }}
             - configMapRef:
@@ -127,9 +123,29 @@ spec:
             {{- end }}
             {{- end }}
           env:
-            {{- with $.Values.envVars }}
+            {{- /* Global envVars - excluding names that are overridden in per-hook envVars */}}
+            {{- $localEnvVarNames := dict }}
+            {{- range ($hookConfig.envVars | default list) }}
+            {{- $_ := set $localEnvVarNames .name true }}
+            {{- end }}
+            {{- range ($.Values.envVars | default list) }}
+            {{- if not (hasKey $localEnvVarNames .name) }}
+            - {{ toYaml . | nindent 14 | trim }}
+            {{- end }}
+            {{- end }}
+            {{- /* Merge global inlineEnv with per-hook env - per-hook takes precedence */}}
+            {{- $mergedEnv := merge ($hookConfig.env | default dict) ($.Values.inlineEnv | default dict) }}
+            {{- range $envKey, $envValue := $mergedEnv }}
+            - name: {{ $envKey }}
+              value: {{ $envValue | quote }}
+            {{- end }}
+            {{- /* Per-hook envVars - takes precedence over global envVars and merged env */}}
+            {{- with $hookConfig.envVars }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
+            {{- /* VERSION is added last (before secretProvider) so it cannot be overridden */}}
+            - name: VERSION
+              value: {{ (include "backendService.imageTag" $) | quote }}
             {{- if $.Values.workloadIdentity.gcp.enabled }}
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /var/run/secrets/gcp-wif/config.json
