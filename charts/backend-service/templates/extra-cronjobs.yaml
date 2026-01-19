@@ -84,8 +84,6 @@ spec:
                 {{- end }}
                 {{- end }}
               env:
-                - name: VERSION
-                  value: {{ ($globalValues.image.tag | default $.Chart.AppVersion) | quote}}
                 {{- if $globalValues.auditVolumes.target }}
                 {{- $target := $globalValues.auditVolumes.target }}
                 {{- $isPath := hasPrefix "/" $target }}
@@ -119,6 +117,9 @@ spec:
                 {{- with $value.envVars }}
                   {{- toYaml . | nindent 16 }}
                 {{- end }}
+                {{- /* VERSION is added last (before secretProvider) so it cannot be overridden via inlineEnv */}}
+                - name: VERSION
+                  value: {{ ($globalValues.image.tag | default $.Chart.AppVersion) | quote}}
                 {{- if $globalValues.secretProvider }}
                 {{- range $k, $v := $globalValues.secretProvider.vaults }}
                 {{- range $key, $value := $v }}
