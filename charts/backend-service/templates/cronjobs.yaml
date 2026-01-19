@@ -1,7 +1,7 @@
 {{- $fullName := include "backendService.fullname" . -}}
 {{- $labelsCronJob := include "backendService.mutableLabels" . -}}
 {{- $globalValues := .Values -}}
-{{- range $key, $value := .Values.extraCronJobs }}
+{{- range $key, $value := .Values.cronJobs }}
 ---
 apiVersion: batch/v1
 kind: CronJob
@@ -9,12 +9,12 @@ metadata:
   name: {{ $key }}
   labels:
     {{- $labelsCronJob | nindent 4 }}
-    app.kubernetes.io/component: cron-job-extra-{{ $key }}
+    app.kubernetes.io/component: cron-job-{{ $key }}
 spec:
   {{- if $value.schedule }}
   schedule: {{ $value.schedule | quote }}
   {{- else }}
-  {{- fail (printf "extraCronJob '%s' 'schedule' is not defined" $key) }}
+  {{- fail (printf "cronJob '%s' 'schedule' is not defined" $key) }}
   {{- end }}
   suspend: {{ $value.suspend | default false }}
   timeZone: {{ $value.timeZone | default "Europe/Zurich" | quote }}
@@ -33,7 +33,7 @@ spec:
               {{- end }}
             {{- end }}
             {{- $labelsCronJob | nindent 12 }}
-            app.kubernetes.io/component: cron-job-extra-{{ $key }}
+            app.kubernetes.io/component: cron-job-{{ $key }}
           annotations:
             {{- if $.Values.podAnnotations }}
               {{- with $.Values.podAnnotations }}

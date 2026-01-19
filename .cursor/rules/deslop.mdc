@@ -1,0 +1,20 @@
+---
+globs: *.md,*.md.gotmpl
+alwaysApply: true
+---
+All markdown files or templates (*.md, *.md.gotmpl files) must be deslopped.
+
+When creating or modifying Markdown files or templates therefor omit or remove: 
+
+- Filler phrases: "It's important to note that...", "Please keep in mind...", "As mentioned above..."
+- Weasel adverbs: "simply", "just", "easily", "basically", "obviously", "clearly"
+- Redundant explanations that repeat the same information in different words
+- Excessive hedging: "might", "perhaps", "it could be argued that..."
+- Marketing-speak and buzzwords: "leverage", "robust", "seamless", "cutting-edge"
+- AI-generated closings: "I hope this helps!", "Let me know if you have any questions!"
+- Unnecessary introductions before getting to the point
+- Over-formatted text (excessive bold, headers for single items, emoji overuse)
+- Generic placeholder content that adds no real value
+- Stating things that are already obvious from context or naming
+
+Report at the end with only a 1-3 sentence summary of what you changed

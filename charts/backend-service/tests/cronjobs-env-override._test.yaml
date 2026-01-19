@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
-suite: Test Extra CronJobs Environment Variable Override Precedence
+suite: Test CronJobs Environment Variable Override Precedence
 templates:
-  - extra-cronjobs.yaml
+  - cronjobs.yaml
 release:
   name: env-test
 tests:
@@ -20,12 +20,12 @@ tests:
         MAX_HEAP_MB: "2048"
         DATABASE_URL: "postgres://global"
       # Local env should override MAX_HEAP_MB to 700
-      extraCronJobs:
+      cronJobs:
         node-ingestion-maintenance:
           schedule: "0 0 * * *"
           env:
             MAX_HEAP_MB: "700"
-    template: extra-cronjobs.yaml
+    template: cronjobs.yaml
     documentSelector:
       path: metadata.name
       value: node-ingestion-maintenance
@@ -50,13 +50,13 @@ tests:
         VAR_A: "global-a"
         VAR_B: "global-b"
         VAR_C: "global-c"
-      extraCronJobs:
+      cronJobs:
         multi-override:
           schedule: "0 0 * * *"
           env:
             VAR_A: "local-a"
             VAR_C: "local-c"
-    template: extra-cronjobs.yaml
+    template: cronjobs.yaml
     documentSelector:
       path: metadata.name
       value: multi-override
@@ -78,11 +78,11 @@ tests:
       securityContext.seccompProfile.type: RuntimeDefault
       inlineEnv:
         ONLY_GLOBAL: "from-global"
-      extraCronJobs:
+      cronJobs:
         no-local-env:
           schedule: "0 0 * * *"
           # No local env defined
-    template: extra-cronjobs.yaml
+    template: cronjobs.yaml
     documentSelector:
       path: metadata.name
       value: no-local-env
@@ -98,12 +98,12 @@ tests:
       securityContext.seccompProfile.type: RuntimeDefault
       inlineEnv:
         GLOBAL_KEY: "global-value"
-      extraCronJobs:
+      cronJobs:
         add-local:
           schedule: "0 0 * * *"
           env:
             LOCAL_KEY: "local-value"
-    template: extra-cronjobs.yaml
+    template: cronjobs.yaml
     documentSelector:
       path: metadata.name
       value: add-local
@@ -128,13 +128,13 @@ tests:
       envVars:
         - name: SHARED_VAR
           value: "global-envVars"
-      extraCronJobs:
+      cronJobs:
         envvars-override:
           schedule: "0 0 * * *"
           envVars:
             - name: SHARED_VAR
               value: "local-envVars"
-    template: extra-cronjobs.yaml
+    template: cronjobs.yaml
     documentSelector:
       path: metadata.name
       value: envvars-override
@@ -159,7 +159,7 @@ tests:
       envVars:
         - name: SECRET_VAR
           value: "plaintext-global"
-      extraCronJobs:
+      cronJobs:
         envvars-secret:
           schedule: "0 0 * * *"
           envVars:
@@ -168,7 +168,7 @@ tests:
                 secretKeyRef:
                   name: my-secret
                   key: secret-key
-    template: extra-cronjobs.yaml
+    template: cronjobs.yaml
     documentSelector:
       path: metadata.name
       value: envvars-secret
@@ -194,7 +194,7 @@ tests:
       securityContext.seccompProfile.type: RuntimeDefault
       inlineEnv:
         MIXED_VAR: "from-inlineEnv"
-      extraCronJobs:
+      cronJobs:
         mixed-override:
           schedule: "0 0 * * *"
           env:
@@ -202,7 +202,7 @@ tests:
           envVars:
             - name: MIXED_VAR
               value: "from-local-envVars"
-    template: extra-cronjobs.yaml
+    template: cronjobs.yaml
     documentSelector:
       path: metadata.name
       value: mixed-override
@@ -224,7 +224,7 @@ tests:
           value: "from-global-envVars"
       inlineEnv:
         TRIPLE_VAR: "from-inlineEnv"
-      extraCronJobs:
+      cronJobs:
         triple-override:
           schedule: "0 0 * * *"
           env:
@@ -232,7 +232,7 @@ tests:
           envVars:
             - name: TRIPLE_VAR
               value: "from-local-envVars"
-    template: extra-cronjobs.yaml
+    template: cronjobs.yaml
     documentSelector:
       path: metadata.name
       value: triple-override
@@ -266,10 +266,10 @@ tests:
       securityContext.seccompProfile.type: RuntimeDefault
       inlineEnv:
         VERSION: "hacked-version"
-      extraCronJobs:
+      cronJobs:
         version-test:
           schedule: "0 0 * * *"
-    template: extra-cronjobs.yaml
+    template: cronjobs.yaml
     documentSelector:
       path: metadata.name
       value: version-test
@@ -286,12 +286,12 @@ tests:
       image.tag: "3.0.0"
       securityContext.allowPrivilegeEscalation: false
       securityContext.seccompProfile.type: RuntimeDefault
-      extraCronJobs:
+      cronJobs:
         version-local:
           schedule: "0 0 * * *"
           env:
             VERSION: "local-hacked"
-    template: extra-cronjobs.yaml
+    template: cronjobs.yaml
     documentSelector:
       path: metadata.name
       value: version-local
@@ -308,13 +308,13 @@ tests:
       image.tag: "4.0.0"
       securityContext.allowPrivilegeEscalation: false
       securityContext.seccompProfile.type: RuntimeDefault
-      extraCronJobs:
+      cronJobs:
         version-envvars:
           schedule: "0 0 * * *"
           envVars:
             - name: VERSION
               value: "envvars-hacked"
-    template: extra-cronjobs.yaml
+    template: cronjobs.yaml
     documentSelector:
       path: metadata.name
       value: version-envvars
@@ -341,7 +341,7 @@ tests:
           value: "1-global-envVars"
       inlineEnv:
         ORDER_TEST: "2-inlineEnv"
-      extraCronJobs:
+      cronJobs:
         order-test:
           schedule: "0 0 * * *"
           env:
@@ -349,7 +349,7 @@ tests:
           envVars:
             - name: ORDER_TEST
               value: "4-local-envVars"
-    template: extra-cronjobs.yaml
+    template: cronjobs.yaml
     documentSelector:
       path: metadata.name
       value: order-test
@@ -386,7 +386,7 @@ tests:
       inlineEnv:
         HEAP_SIZE: "2048"
         LOG_LEVEL: "info"
-      extraCronJobs:
+      cronJobs:
         job-a:
           schedule: "0 0 * * *"
           env:
@@ -399,7 +399,7 @@ tests:
         job-c:
           schedule: "0 2 * * *"
           # No local env - uses global only
-    template: extra-cronjobs.yaml
+    template: cronjobs.yaml
     asserts:
       # job-a: HEAP_SIZE=512 (local override), LOG_LEVEL=info (global)
       - documentSelector:
@@ -455,12 +455,12 @@ tests:
       securityContext.seccompProfile.type: RuntimeDefault
       inlineEnv:
         OPTIONAL_VAR: "has-value"
-      extraCronJobs:
+      cronJobs:
         empty-override:
           schedule: "0 0 * * *"
           env:
             OPTIONAL_VAR: ""
-    template: extra-cronjobs.yaml
+    template: cronjobs.yaml
     documentSelector:
       path: metadata.name
       value: empty-override
@@ -477,13 +477,13 @@ tests:
       securityContext.seccompProfile.type: RuntimeDefault
       inlineEnv:
         OPTIONAL_VAR: "has-value"
-      extraCronJobs:
+      cronJobs:
         empty-envvars:
           schedule: "0 0 * * *"
           envVars:
             - name: OPTIONAL_VAR
               value: ""
-    template: extra-cronjobs.yaml
+    template: cronjobs.yaml
     documentSelector:
       path: metadata.name
       value: empty-envvars
@@ -502,13 +502,13 @@ tests:
       securityContext.seccompProfile.type: RuntimeDefault
       inlineEnv:
         PORT: "8080"
-      extraCronJobs:
+      cronJobs:
         numeric-env:
           schedule: "0 0 * * *"
           env:
             PORT: "9090"
             WORKERS: "4"
-    template: extra-cronjobs.yaml
+    template: cronjobs.yaml
     documentSelector:
       path: metadata.name
       value: numeric-env
@@ -525,13 +525,13 @@ tests:
       image.tag: "1.0.0"
       securityContext.allowPrivilegeEscalation: false
       securityContext.seccompProfile.type: RuntimeDefault
-      extraCronJobs:
+      cronJobs:
         special-chars:
           schedule: "0 0 * * *"
           env:
             CONNECTION_STRING: "host=db;port=5432;user=admin"
             JSON_CONFIG: '{"key":"value"}'
-    template: extra-cronjobs.yaml
+    template: cronjobs.yaml
     documentSelector:
       path: metadata.name
       value: special-chars
@@ -558,7 +558,7 @@ tests:
         NODE_OPTIONS: "--max-old-space-size=4096"
         LOG_LEVEL: "info"
       # CronJob needs less memory to fit in smaller resource limits
-      extraCronJobs:
+      cronJobs:
         node-ingestion-maintenance:
           schedule: "0 3 * * *"
           resources:
@@ -572,7 +572,7 @@ tests:
             # Override heap settings for this job
             MAX_HEAP_MB: "700"
             NODE_OPTIONS: "--max-old-space-size=700"
-    template: extra-cronjobs.yaml
+    template: cronjobs.yaml
     documentSelector:
       path: metadata.name
       value: node-ingestion-maintenance

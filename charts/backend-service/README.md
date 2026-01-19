@@ -4,40 +4,36 @@ The 'backend-service' chart is a "convenience" chart from Unique AG that can gen
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 11.0.0](https://img.shields.io/badge/Version-11.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
+![Version: 10.0.0](https://img.shields.io/badge/Version-10.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
 
 ## Implementation Details
 
-### OCI availibility
-This chart is available both as Helm Repository as well as OCI artefact.
+### OCI Availability
 ```sh
+# Helm Repository
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 11.0.0
+helm install my-backend-service unique/backend-service --version 10.0.0
 
-# or
-helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 11.0.0
+# OCI
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 10.0.0
 ```
 
 ### Docker Images
-The chart itself uses `ghcr.io/unique-ag/chart-testing-service` as its base image. This is due to automation aspects and because there is no specific `appVersion` or service delivered with it. Using `chart-testing-service` Unique can improve the charts quality without dealing with the complexity of private registries during testing. Naturally, when deploying the Unique product, the image will be replaced with the actual Unique image(s). You can inspect the image [here](https://github.com/Unique-AG/helm-charts/tree/main/docker) and it is served from [`ghcr.io/unique-ag/chart-testing-service`](https://github.com/Unique-AG/helm-charts/pkgs/container/chart-testing-service).
+The chart uses [`ghcr.io/unique-ag/chart-testing-service`](https://github.com/Unique-AG/helm-charts/pkgs/container/chart-testing-service) as its default image for CI testing. Replace with actual Unique images when deploying.
 
 ### Networking
-The chart supports the Gateway API and its resources. This is the recommended way to go forward. The Gateway API is a Kubernetes-native way to manage your networking resources and is part of the [Gateway API](https://gateway-api.sigs.k8s.io) project.
-    + The Gateway API is not enabled by default yet, you need to selectively `enable` different `routes` or use `extraRoutes` to configure them. See [Routes](#routes) for more information.
+The chart supports [Gateway API](https://gateway-api.sigs.k8s.io) resources (recommended). Enable specific `routes` or use `extraRoutes` to configure them. See [Routes](#routes).
 
 ### Ports
 <small>added in `3.1.0`</small>
 
-Unique services communicate with each other extensively. Grown organically from local development, each service used to have its own port. This has grown into kubernetes over time. While technically not a problem, it is a nightmare to set up and manage for Application teams. Since `3.1.0` the chart supports a `ports` object that allows to specify ports for the service and deployment/application.
-
 ```yaml
 ports:
-  application: 8080
-  service: 80
+  application: 8080  # container port
+  service: 80        # service port (service.port takes precedence if set)
 ```
-The port is called `application` because it is the port that the Unique application (that gets deployed using this chart) listens on. The object is nested to allow for future expansion in case another port for a container would be needed. It is not called `containerPort` because there are or can be more than one port for a container and more than one container in a pod.
 
-This change allows Application teams to now use Kubernetes internal networking to communicate with each other way more easily without researching and guessing the correct port.
+Simplifies inter-service communication by using standard ports:
 ```yaml
 # before
 ANOTHER_SERVICE_URL: http://backend-service.namespace.svc:8080
@@ -46,32 +42,19 @@ ANOTHER_SERVICE_URL: http://backend-service.namespace.svc:8080
 ANOTHER_SERVICE_URL: http://backend-service.namespace.svc
 ```
 
-The new object `ports` allows also to specify a service port for consistency, but a `service.port` will take precedence over the `ports.service` value.
- to keep non-breaking backward compatibility.
-
 #### Routes
-With `2.0.0` the chart supports _routes_ (namely all routes from [`gateway.networking.k8s.io`](https://gateway-api.sigs.k8s.io/concepts/api-overview/#route-resources)). While `routes`, not yet enabled by default, abstract certain complexity away from the chart consumer, `extraRoutes` can be used by power-users to configure each route exactly to their needs.
+<small>added in `2.0.0`</small>
 
-To use _Routes_ per se you need two things:
+Supports [Gateway API route resources](https://gateway-api.sigs.k8s.io/concepts/api-overview/#route-resources). Use `routes` for simplified configuration or `extraRoutes` for full control.
 
-- Knowledge about them and the Gateway API, you can start from these resources:
-    + [Gateway API](https://gateway-api.sigs.k8s.io)
-    + [Route Resources](https://gateway-api.sigs.k8s.io/concepts/api-overview/#route-resources)
-- CRDs installed
-    + [Install CRDs](https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api)
+**Requirements:** [Gateway API CRDs](https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api) must be installed.
 
-##### HTTPS Redirects
-Routes do not redirect to HTTPS by default. This redirect must be handled in the upstream services or extended via `extraAnnotations`. This is not due to a lack of security but the fact that the chart is agnostic to the upstream service and its configuration so enforcing a redirect can lead to unexpected behavior and indefinite redirects. Also, most modern browsers prefix all requests with `https` as a secure practice.
+**HTTPS Redirects:** Not enabled by default. Handle in upstream services or via `extraAnnotations`.
 
 ### Network Policies
 <small>added in `4.4.0`</small>
 
-The chart supports Kubernetes Network Policies to control traffic flow to and from pods. Network Policies are a Kubernetes-native way to implement network segmentation and can help improve security by restricting network communication.
-
-#### Network Policy Flavors
-<small>added in `4.4.0`</small>
-
-The chart supports two network policy flavors:
+Two flavors supported:
 
 - **`kubernetes`** (default): Standard Kubernetes NetworkPolicy resources
 - **`cilium`**: Cilium's CiliumNetworkPolicy resources with enhanced features
@@ -80,80 +63,53 @@ The chart supports two network policy flavors:
 networkPolicy:
   enabled: true
   flavor: kubernetes  # or "cilium"
-  policyTypes:
-    - Ingress
-    - Egress
+  policyTypes: [Ingress, Egress]
   ingress:
-    # Allow ingress from monitoring namespace
     - from:
         - namespaceSelector:
-            matchLabels:
-              name: monitoring
+            matchLabels: { name: monitoring }
       ports:
-        - protocol: TCP
-          port: 8080
+        - { protocol: TCP, port: 8080 }
   egress:
-    # Allow egress to database namespace
     - to:
         - namespaceSelector:
-            matchLabels:
-              name: database
+            matchLabels: { name: database }
       ports:
-        - protocol: TCP
-          port: 5432
-    # Allow external HTTPS/HTTP access
-    - to: []
-      ports:
-        - protocol: TCP
-          port: 443
-        - protocol: TCP
-          port: 80
+        - { protocol: TCP, port: 5432 }
 ```
 
-#### Kubernetes vs Cilium Differences
+| Flavor | API Version | Selector |
+|--------|-------------|----------|
+| `kubernetes` (default) | `networking.k8s.io/v1` | `podSelector` |
+| `cilium` | `cilium.io/v2` | `endpointSelector` |
 
-When using `flavor: cilium`, the chart will:
-- Use `apiVersion: cilium.io/v2` and `kind: CiliumNetworkPolicy`
-- Use `endpointSelector` instead of `podSelector` in the spec
-- Support advanced Cilium-specific features in your rules
+**Notes:**
+- Requires a CNI that supports NetworkPolicy (Calico, Cilium, Weave Net)
+- Include DNS (port 53/UDP) in egress rules if pods need hostname resolution
 
-When using `flavor: kubernetes` (default), the chart will:
-- Use `apiVersion: networking.k8s.io/v1` and `kind: NetworkPolicy`
-- Use standard `podSelector` in the spec
-- Maintain compatibility with any Kubernetes CNI that supports NetworkPolicy
-
-**Important Notes:**
-- Network Policies require a CNI (Container Network Interface) that supports them, such as Calico, Cilium, or Weave Net
-- For Cilium flavor, you must have Cilium CNI installed with CiliumNetworkPolicy CRDs
-- Once a Network Policy is applied to a pod, it becomes "isolated" and only allowed traffic will be permitted
-- Always include DNS resolution (port 53/UDP) in your egress rules if pods need to resolve hostnames
-- Test your network policies thoroughly to avoid inadvertently blocking required traffic
-
-You can find Network Policy examples in the [`ci/networkpolicy-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/networkpolicy-values.yaml) (Kubernetes) and [`ci/networkpolicy-cilium-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/networkpolicy-cilium-values.yaml) (Cilium) files.
+Examples: [`ci/networkpolicy-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/networkpolicy-values.yaml), [`ci/networkpolicy-cilium-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/networkpolicy-cilium-values.yaml)
 
 ### CronJobs
-`extraCronJobs` can be used to create cron jobs alongside the main deployment. This convenience field eases deploying Unique as a package. While you could deploy this chart multiple times, that increases management complexity. `extraCronJobs` allows deploying multiple cron jobs in a single chart release while sharing environment settings and the same image. You should not use this feature for arbitrary CronJobs unrelated to the current workload/deployment.
+Deploy cron jobs alongside the main deployment, sharing environment settings and image. Use for workload-related jobs only.
 
-You can find an `extraCronJobs` example in the [`ci/extra-cronjobs-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/extra-cronjobs-values.yaml) file.
+Example: [`ci/cronjobs-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/cronjobs-values.yaml)
 
 ### Audit Volumes
 <small>added in `9.0.0`</small>
 
-The chart provides cloud-agnostic audit log storage with blue-green migration support via `auditVolumes`.
-
-#### Structure
+Cloud-agnostic audit log storage with blue-green migration support.
 
 ```yaml
 auditVolumes:
-  target: blue  # Volume key or direct path (e.g., "/dev/stdout")
+  target: blue  # or "/dev/stdout"
   volumes:
     blue:
       enabled: true
       capacity: 1Ti
-      azure:  # Cloud provider detected by presence of this field
+      azure:
         resourceGroup: my-rg
         storageAccount: mystorageaccount
-        containerName: audit-logs  # Optional, defaults to release fullname
+        containerName: audit-logs
 ```
 
 #### Key Concepts
@@ -181,45 +137,24 @@ The `AUDIT_LOG_DIR` environment variable is automatically set based on `auditVol
 
 #### Blue-Green Migration
 
-The blue-green pattern allows zero-downtime migration between storage accounts:
-
-1. **Add new volume** under a new key (e.g., `green`)
-2. **Deploy** - both volumes will be mounted at different paths
-3. **Migrate data** from old to new mount path
-4. **Switch target** to new volume key
-5. **Disable old volume** (`enabled: false`)
+1. Add new volume (`green`) → 2. Deploy (both mounted) → 3. Migrate data → 4. Switch target → 5. Disable old
 
 ```yaml
 auditVolumes:
-  target: green  # Switch to new volume
+  target: green
   volumes:
-    blue:
-      enabled: true  # Keep mounted during migration
-      name: my-release-audit  # Existing PV name
-      azure:
-        resourceGroup: old-rg
-        storageAccount: oldaccount
-    green:
-      enabled: true
-      azure:
-        resourceGroup: new-rg
-        storageAccount: newaccount
+    blue: { enabled: true, name: my-release-audit, azure: { resourceGroup: old-rg, storageAccount: oldaccount } }
+    green: { enabled: true, azure: { resourceGroup: new-rg, storageAccount: newaccount } }
 ```
 
 #### Stdout Logging
 
-For containerized logging without persistent storage:
-
 ```yaml
 auditVolumes:
-  target: /dev/stdout  # AUDIT_LOG_DIR="/dev/stdout", no PV/PVC created
+  target: /dev/stdout  # No PV/PVC created
 ```
 
 ### Environment Variables
-
-The chart supports multiple ways to inject environment variables into pods. Understanding the order and precedence is important when the same variable is defined in multiple sources.
-
-#### Available Sources
 
 | Source | Type | Description |
 |--------|------|-------------|
@@ -248,7 +183,7 @@ env (loaded last, higher precedence):
   7. workloadIdentity.gcp (GOOGLE_APPLICATION_CREDENTIALS)
 ```
 
-##### extraCronJobs
+##### cronJobs
 
 ```
 envFrom:
@@ -259,8 +194,8 @@ env:
   3. VERSION (auto-set)
   4. auditVolumes (AUDIT_LOG_DIR)
   5. envVars (global)
-  6. Merged env (global inlineEnv + extraCronJobs.<name>.env, local takes precedence)
-  7. extraCronJobs.<name>.envVars (local)
+  6. Merged env (global inlineEnv + cronJobs.<name>.env, local takes precedence)
+  7. cronJobs.<name>.envVars (local)
   8. secretProvider
 ```
 
@@ -283,18 +218,15 @@ env:
 #### Example: Overriding Variables
 
 ```yaml
-# Global inlineEnv (lowest precedence for this variable)
 inlineEnv:
   DATABASE_URL: "postgres://global:5432/db"
 
-# Local override in extraCronJob (takes precedence)
-extraCronJobs:
+cronJobs:
   cleanup:
     schedule: "0 0 * * *"
     env:
-      DATABASE_URL: "postgres://readonly:5432/db"  # This value is used
+      DATABASE_URL: "postgres://readonly:5432/db"  # takes precedence
 
-# For secrets, use envVars with secretKeyRef (best practice)
 envVars:
   - name: DATABASE_PASSWORD
     valueFrom:
@@ -313,39 +245,55 @@ To override these, use `envVars` which has higher precedence.
 
 ## JSON Schema
 
-The chart provides a JSON schema for validating `values.yaml` files. This schema helps with:
-- Validating values against the expected structure
-- Providing IDE hints and autocompletion when editing values.yaml files
-- Documenting the accepted values and their types
-
-The schema is available in the `values.schema.json` file in the chart.
+Schema available in `values.schema.json` for validation and IDE autocompletion.
 
 ## Azure Key Vault Access
 
-The chart natively supports VM Managed Identity for Azure Key Vault access via the Secrets Store CSI Driver via the `secretProvider` values object. Supported modes:
+Supports VM Managed Identity via `secretProvider`:
 - [System-assigned Managed Identity](https://azure.github.io/secrets-store-csi-driver-provider-azure/docs/configurations/identity-access-modes/system-assigned-msi-mode/)
 - [User-assigned Managed Identity](https://azure.github.io/secrets-store-csi-driver-provider-azure/docs/configurations/identity-access-modes/user-assigned-msi-mode/)
 
-Workload Identity support might be added in the future. If you need it sooner, [open an issue](https://github.com/Unique-AG/helm-charts/issues).
-
-Other authentication methods (service principals, pod identity) are not supported due to the variety of Azure Key Vault access patterns, security policies, and governance requirements across different organizations. The chart provides a stable foundation; extend it using `extraObjects` for custom authentication setups.
+Other methods (service principals, pod identity) not supported. Use `extraObjects` for custom setups. Workload Identity: [open an issue](https://github.com/Unique-AG/helm-charts/issues) if needed.
 
 ## Upgrade Guides
 
-### ~> `11.0.0`
+### ~> `10.0.0`
 
-**Breaking change:** The `cronJob` value has been removed. Use `extraCronJobs` instead.
+<details>
+<summary>🤖 LLM Migration Prompt</summary>
 
-**What changed:**
-- Removed: `.Values.cronJob` and all related templates
-- The `extraCronJobs` syntax is simpler with better defaults
+```text
+Migrate my backend-service Helm values from 9.x to 10.x:
 
-**Who is affected:**
-- Users with `cronJob.enabled: true` in their values
+1. `cronJob` → `cronJobs`: Convert to map syntax where name becomes the key.
+   Move `jobTemplate.restartPolicy` to top-level. Remove `jobTemplate.containers.name`.
 
-**Migration:**
+2. `env` → `inlineEnv`: Rename global `env` to `inlineEnv`.
 
-**From (old `cronJob`):**
+3. `envSecrets` → `envVars`: Replace with `extraEnvSecrets` ref or `envVars` with `secretKeyRef`.
+
+4. envFrom order changed: now `extraEnvCM` → `extraEnvSecrets` (secrets take precedence).
+```
+
+</details>
+
+**Breaking changes:**
+
+| Change | Migration |
+|--------|-----------|
+| `cronJob` removed | Use `cronJobs` map syntax |
+| `env` renamed | Use `inlineEnv` |
+| `envSecrets` removed | Use `extraEnvSecrets` or `envVars` with `secretKeyRef` |
+| `cronJobs` envFrom order | Now `extraEnvCM` → `extraEnvSecrets` (secrets take precedence) |
+| `VERSION` protected in hooks | Cannot be overridden via env values |
+
+**Fixes:** `cronJobs` duplicate envVars bug, env merging (local takes precedence)
+
+**New:** Per-hook `env` and `envVars` support (`hooks.<name>.env`, `hooks.<name>.envVars`)
+
+**Migration examples:**
+
+`cronJob` → `cronJobs`:
 ```yaml
 cronJob:
   enabled: true
@@ -371,18 +319,12 @@ cronJob:
           key: password
 ```
 
-**To (new `extraCronJobs`):**
+To:
 ```yaml
-extraCronJobs:
-  my-cronjob:
+cronJobs:
+  my-cronjob:  # name becomes the key
     schedule: "0 0 * * *"
-    concurrencyPolicy: Forbid
-    failedJobsHistoryLimit: 3
-    successfulJobsHistoryLimit: 3
-    startingDeadlineSeconds: 60
-    suspend: false
-    timeZone: Europe/Zurich
-    restartPolicy: OnFailure
+    restartPolicy: OnFailure  # moved from jobTemplate
     env:
       MY_VAR: value
     envVars:
@@ -393,95 +335,29 @@ extraCronJobs:
             key: password
 ```
 
-**Key differences:**
-- The cronjob name becomes the key in the `extraCronJobs` map
-- `jobTemplate.containers.name` is no longer needed (defaults to the key name)
-- `jobTemplate.restartPolicy` moves to top-level `restartPolicy`
-- Many fields have sensible defaults and can be omitted
-
-### ~> `10.0.0`
-
-**Breaking changes:** Environment variable configuration has been refactored for clarity and best practices.
-
-**What changed:**
-
-1. **`env` renamed to `inlineEnv`**
-   - The global `env` value has been renamed to `inlineEnv` to clarify that it creates an internal ConfigMap
-   - Local overrides (`extraCronJobs.<name>.env`, `hooks.<name>.env`) remain unchanged
-
-2. **`envSecrets` removed**
-   - Storing secrets in `values.yaml` is bad practice
-   - Use `extraEnvSecrets` to reference an existing Secret, or use `envVars` with `secretKeyRef`
-
-3. **`extraCronJobs` envFrom order changed**
-   - Before: `envSecrets` → `extraEnvSecrets` → `extraEnvCM`
-   - After: `extraEnvCM` → `extraEnvSecrets`
-   - This aligns with deployment behavior where `extraEnvSecrets` takes precedence over `extraEnvCM`
-
-4. **`VERSION` environment variable is now protected**
-   - In `hooks` ConfigMaps, `VERSION` is now set last and cannot be overridden by user-defined env values
-   - This matches the existing deployment behavior
-
-5. **`extraCronJobs` duplicate envVars bug fixed**
-   - Local `envVars` was previously rendered twice; now renders once as intended
-
-6. **Environment variable merging**
-   - `extraCronJobs`: Global `inlineEnv` and local `env` are now merged (local takes precedence) instead of both being appended
-
-**New features:**
-
-- Added per-hook `env` and `envVars` support for hooks (e.g., `hooks.migration.env`, `hooks.migration.envVars`)
-
-**Who is affected:**
-
-- All users using `env` - must rename to `inlineEnv`
-- Users using `envSecrets` - must migrate to `extraEnvSecrets` or `envVars` with `secretKeyRef`
-- Users relying on the previous `extraCronJobs` envFrom order
-
-**Migration:**
-
-**Rename `env` to `inlineEnv`:**
+`env` → `inlineEnv`:
 ```yaml
-# Before
-env:
-  DATABASE_URL: "postgres://localhost:5432/db"
-
-# After
-inlineEnv:
-  DATABASE_URL: "postgres://localhost:5432/db"
+# Before                              # After
+env:                                  inlineEnv:
+  DATABASE_URL: "postgres://..."        DATABASE_URL: "postgres://..."
 ```
 
-**Migrate `envSecrets` to `envVars` with `secretKeyRef`:**
+`envSecrets` → `envVars`:
 ```yaml
-# Before
-envSecrets:
-  DATABASE_PASSWORD: "secret123"  # Bad: secret in values.yaml
-
-# After - reference an existing Secret
-envVars:
-  - name: DATABASE_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: my-db-secret
-        key: password
+# Before (insecure)                   # After
+envSecrets:                           envVars:
+  DB_PASS: "secret123"                  - name: DB_PASS
+                                          valueFrom:
+                                            secretKeyRef:
+                                              name: my-secret
+                                              key: password
 ```
 
 ### ~> `9.0.0`
 
-**Breaking change:** The `auditVolume` (singular) configuration has been replaced with `auditVolumes` (plural) - a cloud-agnostic, blue-green migration-ready structure.
+**Breaking change:** `auditVolume` → `auditVolumes` (cloud-agnostic, blue-green ready). See [Audit Volumes](#audit-volumes).
 
-**What changed:**
-- Removed: `.Values.auditVolume` (singular)
-- Added: `.Values.auditVolumes` with `target` and `volumes` structure
-- Added: `AUDIT_LOG_DIR` environment variable automatically set based on `target`
-- Added: Cloud provider detected by presence of `azure` field (no separate `flavor` needed)
-- Added: Explicit `name` field for backward-compatible PV/PVC naming
-
-See [Audit Volumes](#audit-volumes) for full documentation.
-
-**Migration:**
-
-**From (old):**
+From:
 ```yaml
 auditVolume:
   enabled: true
@@ -493,16 +369,15 @@ auditVolume:
     containerName: audit-logs
 ```
 
-**To (new):**
+To:
 ```yaml
 auditVolumes:
-  target: blue  # Sets AUDIT_LOG_DIR env var
+  target: blue
   volumes:
     blue:
       enabled: true
-      # name: my-release-audit  # Optional: use existing PV name for zero-downtime migration
       capacity: 1Ti
-      azure:  # Cloud provider detected by presence of this field
+      azure:
         resourceGroup: my-resource-group
         storageAccount: mystorageaccount
         containerName: audit-logs
@@ -510,62 +385,35 @@ auditVolumes:
 
 ### ~> `8.0.0`
 
-**Breaking change:** Azure Workload Identity moved from `.Values.serviceAccount.workloadIdentity` to `.Values.workloadIdentity.azure`.
+**Breaking change:** `serviceAccount.workloadIdentity` → `workloadIdentity.azure`
 
-**From:**
+From:
 ```yaml
 serviceAccount:
-  enabled: true
   workloadIdentity:
     enabled: true
-    clientId: "00000000-0000-0000-0000-000000000000"
+    clientId: "..."
 ```
 
-**To:**
+To:
 ```yaml
 workloadIdentity:
   azure:
     enabled: true
-    clientId: "00000000-0000-0000-0000-000000000000"
+    clientId: "..."
 ```
 
 ### ~> `7.0.0`
 
-**Breaking changes:** Pod identity and external-secrets support have been removed.
+**Breaking changes:** Pod identity and external-secrets removed.
 
-**Who is affected:**
-Most users are not affected, [AKS ~1.30](https://learn.microsoft.com/en-us/azure/aks/supported-kubernetes-versions?tabs=azure-cli#kubernetes-130) was the last version with native pod identity support, and external-secrets usage was only Unique-internal but removed.
-
-**What was changed:**
-- Pod identity annotations were removed (`aadPodIdBinding`) as well as its use in the `SecretProviderClass`
-- The `useVMManagedIdentity` parameter (now always `"true"` internally)
-- The `externalSecrets` parameter and template
-
-**Migration:**
-
-If you were using **pod identity**, migrate to `secretProvider` with VM Managed Identity:
-
-```yaml
-secretProvider:
-  tenantId: your-tenant-id
-  userAssignedIdentityID: your-client-id
-  vaults:
-    your-vault-name:
-      ENV_VAR_NAME: secret-name
-```
-
-If you were using **external-secrets**, either:
-- Use `extraObjects` to include your existing ExternalSecret manifests
-- Manage secrets outside the chart using your existing external-secrets operator setup
+Pod identity users: migrate to `secretProvider` with VM Managed Identity. External-secrets users: use `extraObjects` or manage secrets outside the chart.
 
 ### ~> `6.0.0`
 
-#### KEDA
-The KEDA configuration has been restructured to use a map instead of a list for better overlay support. This allows users to overlay specific triggers without having to redefine the entire list.
+**Breaking change:** KEDA `scalers` list → `triggers` map for better overlay support.
 
-**Migration Steps:**
-
-**From (5.x):**
+From:
 ```yaml
 keda:
   enabled: true
@@ -586,12 +434,12 @@ keda:
         desiredReplicas: "10"
 ```
 
-**To (6.x):**
+To:
 ```yaml
 keda:
   enabled: true
   triggers:
-    rabbitmq-trigger:  # arbitrary key name for overlay purposes
+    rabbitmq-trigger:
       type: rabbitmq
       metadata:
         protocol: amqp
@@ -600,7 +448,7 @@ keda:
         value: "20"
       authenticationRef:
         name: keda-trigger-auth-rabbitmq-conn
-    cron-trigger:  # arbitrary key name for overlay purposes
+    cron-trigger:
       type: cron
       metadata:
         timezone: Europe/Zurich
@@ -609,40 +457,15 @@ keda:
         desiredReplicas: "10"
 ```
 
-**Benefits:**
-- Easier to overlay specific triggers without redefining the entire configuration
-- Better support for GitOps workflows where different environments may need different triggers
-- The map keys are arbitrary and only used for identification during overlays
-
-#### Rationale on circling back to `~4` version like support
-
-Version `~5` removed the previous ScaledObject implementation in favor of a CRD-compliant version that aligns with native KEDA scaler syntax.
-
-Our clients and internal deployments rely heavily on GitOps workflows with ArgoCD. Value overlay capabilities are essential for these use cases. Based on this feedback, we addressed the list structure limitations in this major release.
-
-#### External Secrets
-**Note:** External Secrets support has been completely removed in version 7.0.0. See the [7.0.0 upgrade guide](#-700) for migration instructions.
-
 ### ~> `5.0.0`
 
-- switch to `.Values.keda` for autoscaling instead of `.Values.eventBasedAutoscaling`. See values file for an example.
-- if you don't want to deploy a default route, set `routes.paths.default.enabled` to `false`
-- ⚠️ tyk resources are no longer deployed. Please move to Kong.
+**Breaking changes:**
+- `eventBasedAutoscaling` → `keda`
+- `routes.paths.default.enabled: false` to disable default route
+- Tyk resources removed (use Kong)
+- `prometheus.rules` → `defaultAlerts` + `additionalAlerts`
 
-Migrating alerts:
-
-The chart has introduced a new structured approach to alerts that replaces the previous custom `prometheus.rules` configuration. This new system provides predefined alert groups with sensible defaults while still allowing customization.
-
-#### Key Changes:
-
-1. **Structured Alert Groups**: Instead of manually defining each alert rule, you can now enable predefined alert groups:
-   - `defaultAlerts.argocd` - ArgoCD application health and condition alerts
-   - `defaultAlerts.kubernetesApplication` - Pod, deployment, and workload health alerts
-   - `defaultAlerts.kubernetesResources` - CPU, memory, and storage resource alerts
-
-2. **Custom Alerts**: Use `additionalAlerts` for completely custom alert rules with full control over the alert structure.
-
-#### Migration Steps:
+**Alerts migration:**
 
 **From:**
 ```yaml
@@ -676,63 +499,41 @@ prometheus:
         app: app
 ```
 
-**To:**
+To:
 ```yaml
 prometheus:
   enabled: true
-  # Enable predefined alert groups
   defaultAlerts:
-    # Global labels applied to all alerts
     additionalLabels:
       team: backend-team
       app: app
-
-  # Custom alerts for application-specific monitoring
   additionalAlerts:
     QNodeChat5xx:
       alert: QNodeChat5xx
       expr: >
-        sum(
-          max_over_time(
-            nestjs_http_server_responses_total{status=~"^5..$", app="node_chat"}[1m]
-          )
-          or
-          vector(0)
-        )
-          by (app, path, method, status)
-        -
-        sum(
-          max_over_time(
-            nestjs_http_server_responses_total{status=~"^5..$", app="node_chat"}[1m]
-            offset 1m
-          )
-          or vector(0)
-        )
-          by (app, path, method, status)
+        sum(max_over_time(nestjs_http_server_responses_total{status=~"^5..$", app="node_chat"}[1m]) or vector(0)) by (app, path, method, status)
+        - sum(max_over_time(nestjs_http_server_responses_total{status=~"^5..$", app="node_chat"}[1m] offset 1m) or vector(0)) by (app, path, method, status)
         > 0
       for: 0m
       labels:
         severity: critical
         alertGroup: application
-      annotations:
-        summary: "High 5xx error rate detected"
-        description: "Application {{ $labels.app }} is experiencing 5xx errors"
 ```
 
 ### ~> `3.0.0`
 
-- `routes` uses `camelCase` for its keys, replace all `lower_snake_case` keys with `camelCase`
-- `routes.paths.up` is renamed to `routes.paths.probe`, update your `routes` accordingly
+- `routes` keys: `lower_snake_case` → `camelCase`
+- `routes.paths.up` → `routes.paths.probe`
 
 ### ~> `2.0.0`
 
-- `httproute` is converted into a dictionary and moves into `extraRoutes`
-- `ingress` has been removed. Unique Services require an upstream gateway that authenticates requests and populates the headers with matching information from the JWT token.
+- `httproute` → `extraRoutes` (dictionary)
+- `ingress` removed (use Gateway API)
 
 ## Development
 
-If you want to locally template your chart, you must enable this via the `.Capabilities.APIVersions` [built-in object](https://helm.sh/docs/chart_template_guide/builtin_objects/)
-```
+Local templating requires `--api-versions` for Gateway API resources:
+```sh
 helm template some-app oci://ghcr.io/unique-ag/helm-charts/backend-service --api-versions gateway.networking.k8s.io/v1 --values your-own-values.yaml
 ```
 

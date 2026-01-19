@@ -362,7 +362,7 @@
         }
       ]
     },
-    "extraCronJobs": {
+    "cronJobs": {
       "type": "object",
       "description": "Cron jobs to deploy alongside the main deployment",
       "additionalProperties": {

@@ -32,7 +32,7 @@ autoscaling:
 # clusterInternalServiceSuffix: .domain.local
 
 # -- deployment is the deployed application
-# all deployment related values are in this section (see extraCronJobs for cron job configuration)
+# all deployment related values are in this section (see cronJobs for cron job configuration)
 deployment:
   enabled: true
   # -- Specify the metadata for the deployment
@@ -111,8 +111,8 @@ extraRoutes:
     ## -- Additional custom rules that can be added to the route
     additionalRules: []
 
-# -- extraCronJobs allows you to define cron jobs alongside the main deployment.
-extraCronJobs: {}
+# -- cronJobs allows you to define cron jobs alongside the main deployment.
+cronJobs: {}
   # foo:
   #   concurrencyPolicy: Forbid
   #   env:
