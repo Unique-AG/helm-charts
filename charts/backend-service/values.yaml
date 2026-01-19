@@ -112,12 +112,14 @@ extraRoutes:
     additionalRules: []
 
 # -- cronJobs allows you to define cron jobs alongside the main deployment.
+# Per-job env is merged with global inlineEnv (local takes precedence).
+# Per-job envVars deduplicates global envVars (global entries with same name are excluded).
 cronJobs: {}
   # foo:
   #   concurrencyPolicy: Forbid
-  #   env:
+  #   env:                    # merged with global inlineEnv
   #     FOO: BAR
-  #   envVars:
+  #   envVars:                # global envVars with same name are excluded
   #     - name: BAZ
   #       value: qux
   #   failedJobsHistoryLimit: 3
@@ -149,10 +151,10 @@ hooks:
     # name: "" defaults to the hook name (e.g., "migration")
     # For backwards compatibility, the migration hook defaults to "db-migration"
     command: ""
-    # -- Per-hook env values (takes precedence over global env from ConfigMap)
+    # -- Per-hook env values (merged with global inlineEnv, per-hook takes precedence)
     # env:
     #   MY_HOOK_VAR: "value"
-    # -- Per-hook envVars (takes precedence over global envVars)
+    # -- Per-hook envVars (global envVars with same name are excluded)
     # envVars:
     #   - name: MY_SECRET_VAR
     #     valueFrom:

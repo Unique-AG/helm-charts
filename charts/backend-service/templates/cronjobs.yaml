@@ -84,6 +84,27 @@ spec:
                 {{- end }}
                 {{- end }}
               env:
+                {{- /* Global envVars - excluding names that are overridden in local envVars */}}
+                {{- $localEnvVarNames := dict }}
+                {{- range ($value.envVars | default list) }}
+                {{- $_ := set $localEnvVarNames .name true }}
+                {{- end }}
+                {{- range ($globalValues.envVars | default list) }}
+                {{- if not (hasKey $localEnvVarNames .name) }}
+                - {{ toYaml . | nindent 18 | trim }}
+                {{- end }}
+                {{- end }}
+                {{- /* Merge global inlineEnv with local env - local takes precedence */}}
+                {{- $mergedEnv := merge ($value.env | default dict) ($globalValues.inlineEnv | default dict) }}
+                {{- range $envKey, $envValue := $mergedEnv }}
+                - name: {{ $envKey }}
+                  value: {{ $envValue | quote }}
+                {{- end }}
+                {{- /* Local envVars - takes precedence over global envVars and merged env */}}
+                {{- with $value.envVars }}
+                  {{- toYaml . | nindent 16 }}
+                {{- end }}
+                {{- /* AUDIT_LOG_DIR and VERSION are added last (before secretProvider) so they cannot be overridden */ -}}
                 {{- if $globalValues.auditVolumes.target }}
                 {{- $target := $globalValues.auditVolumes.target }}
                 {{- $isPath := hasPrefix "/" $target }}
@@ -91,7 +112,6 @@ spec:
                 {{- if and (not $isPath) $globalValues.auditVolumes.volumes }}
                 {{- $targetVolume = index $globalValues.auditVolumes.volumes $target | default dict }}
                 {{- end }}
-                {{- /* Set AUDIT_LOG_DIR if: target is a path, OR target volume is enabled with cloud provider */ -}}
                 {{- $hasCloudProvider := or $targetVolume.azure }}
                 {{- if or $isPath (and $targetVolume.enabled $hasCloudProvider) }}
                 - name: AUDIT_LOG_DIR
@@ -104,20 +124,6 @@ spec:
                   {{- end }}
                 {{- end }}
                 {{- end }}
-                {{- with $globalValues.envVars }}
-                  {{- toYaml . | nindent 16 }}
-                {{- end }}
-                {{- /* Merge global inlineEnv with local env - local takes precedence */}}
-                {{- $mergedEnv := merge ($value.env | default dict) ($globalValues.inlineEnv | default dict) }}
-                {{- range $envKey, $envValue := $mergedEnv }}
-                - name: {{ $envKey }}
-                  value: {{ $envValue | quote }}
-                {{- end }}
-                {{- /* local envVars will take precedence over global envVars as they are specified last */}}
-                {{- with $value.envVars }}
-                  {{- toYaml . | nindent 16 }}
-                {{- end }}
-                {{- /* VERSION is added last (before secretProvider) so it cannot be overridden via inlineEnv */}}
                 - name: VERSION
                   value: {{ ($globalValues.image.tag | default $.Chart.AppVersion) | quote}}
                 {{- if $globalValues.secretProvider }}

@@ -191,13 +191,15 @@ envFrom:
   2. extraEnvSecrets
 
 env:
-  3. VERSION (auto-set)
-  4. auditVolumes (AUDIT_LOG_DIR)
-  5. envVars (global)
-  6. Merged env (global inlineEnv + cronJobs.<name>.env, local takes precedence)
-  7. cronJobs.<name>.envVars (local)
+  3. envVars (global, deduplicated with local envVars)
+  4. Merged env (global inlineEnv + cronJobs.<name>.env, local takes precedence)
+  5. cronJobs.<name>.envVars (local)
+  6. auditVolumes (AUDIT_LOG_DIR) - protected
+  7. VERSION (auto-set) - protected
   8. secretProvider
 ```
+
+Global `envVars` entries are excluded if the same name exists in local `envVars`.
 
 ##### Hooks
 
@@ -208,12 +210,14 @@ envFrom:
   3. extraEnvSecrets
 
 env:
-  4. envVars (global)
-  5. hooks.<name>.env (per-hook, takes precedence)
+  4. envVars (global, deduplicated with per-hook envVars)
+  5. Merged env (global inlineEnv + hooks.<name>.env, per-hook takes precedence)
   6. hooks.<name>.envVars (per-hook)
   7. workloadIdentity.gcp (GOOGLE_APPLICATION_CREDENTIALS)
   8. secretProvider
 ```
+
+Global `envVars` entries are excluded if the same name exists in per-hook `envVars`.
 
 #### Example: Overriding Variables
 
@@ -265,8 +269,9 @@ Other methods (service principals, pod identity) not supported. Use `extraObject
 ```text
 Migrate my backend-service Helm values from 9.x to 10.x:
 
-1. `cronJob` → `cronJobs`: Convert to map syntax where name becomes the key.
-   Move `jobTemplate.restartPolicy` to top-level. Remove `jobTemplate.containers.name`.
+1. `cronJob` + `extraCronJobs` → `cronJobs`: Merge both into a single `cronJobs` map.
+   For `cronJob`: name becomes the key, move `jobTemplate.restartPolicy` to top-level,
+   remove `jobTemplate.containers.name`. For `extraCronJobs`: move entries directly into `cronJobs`.
 
 2. `env` → `inlineEnv`: Rename global `env` to `inlineEnv`.
 
@@ -282,6 +287,7 @@ Migrate my backend-service Helm values from 9.x to 10.x:
 | Change | Migration |
 |--------|-----------|
 | `cronJob` removed | Use `cronJobs` map syntax |
+| `extraCronJobs` removed | Merge into `cronJobs` map |
 | `env` renamed | Use `inlineEnv` |
 | `envSecrets` removed | Use `extraEnvSecrets` or `envVars` with `secretKeyRef` |
 | `cronJobs` envFrom order | Now `extraEnvCM` → `extraEnvSecrets` (secrets take precedence) |
@@ -333,6 +339,25 @@ cronJobs:
           secretKeyRef:
             name: my-secret
             key: password
+```
+
+`extraCronJobs` → `cronJobs` (merge into map):
+```yaml
+# Before
+extraCronJobs:
+  my-extra-job:
+    schedule: "0 * * * *"
+    restartPolicy: OnFailure
+    env:
+      MODE: extra
+
+# After (merge into cronJobs)
+cronJobs:
+  my-extra-job:
+    schedule: "0 * * * *"
+    restartPolicy: OnFailure
+    env:
+      MODE: extra
 ```
 
 `env` → `inlineEnv`:

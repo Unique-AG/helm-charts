@@ -123,15 +123,23 @@ spec:
             {{- end }}
             {{- end }}
           env:
-            {{- with $.Values.envVars }}
-              {{- toYaml . | nindent 12 }}
+            {{- /* Global envVars - excluding names that are overridden in per-hook envVars */}}
+            {{- $localEnvVarNames := dict }}
+            {{- range ($hookConfig.envVars | default list) }}
+            {{- $_ := set $localEnvVarNames .name true }}
             {{- end }}
-            {{- /* Per-hook env values - takes precedence over global env from ConfigMap */}}
-            {{- range $envKey, $envValue := $hookConfig.env }}
+            {{- range ($.Values.envVars | default list) }}
+            {{- if not (hasKey $localEnvVarNames .name) }}
+            - {{ toYaml . | nindent 14 | trim }}
+            {{- end }}
+            {{- end }}
+            {{- /* Merge global inlineEnv with per-hook env - per-hook takes precedence */}}
+            {{- $mergedEnv := merge ($hookConfig.env | default dict) ($.Values.inlineEnv | default dict) }}
+            {{- range $envKey, $envValue := $mergedEnv }}
             - name: {{ $envKey }}
               value: {{ $envValue | quote }}
             {{- end }}
-            {{- /* Per-hook envVars - takes precedence over global envVars */}}
+            {{- /* Per-hook envVars - takes precedence over global envVars and merged env */}}
             {{- with $hookConfig.envVars }}
               {{- toYaml . | nindent 12 }}
             {{- end }}

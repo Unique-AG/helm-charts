@@ -139,8 +139,8 @@ tests:
       path: metadata.name
       value: envvars-override
     asserts:
-      # Both entries exist (Kubernetes takes last one)
-      - contains:
+      # Global entry is deduplicated - only local entry exists
+      - notContains:
           path: spec.jobTemplate.spec.template.spec.containers[0].env
           content:
             name: SHARED_VAR
@@ -214,7 +214,7 @@ tests:
             name: MIXED_VAR
             value: "from-local-envVars"
 
-  - it: "Global envVars is overridden by merged env which is overridden by local envVars"
+  - it: "Global envVars is deduplicated, merged env and local envVars both present"
     set:
       image.tag: "1.0.0"
       securityContext.allowPrivilegeEscalation: false
@@ -237,17 +237,19 @@ tests:
       path: metadata.name
       value: triple-override
     asserts:
-      # All three should exist in order, Kubernetes uses last one
-      - contains:
+      # Global envVars is deduplicated (not present)
+      - notContains:
           path: spec.jobTemplate.spec.template.spec.containers[0].env
           content:
             name: TRIPLE_VAR
             value: "from-global-envVars"
+      # Merged env (local-env overrides inlineEnv) is present
       - contains:
           path: spec.jobTemplate.spec.template.spec.containers[0].env
           content:
             name: TRIPLE_VAR
             value: "from-local-env"
+      # Local envVars (highest precedence) is present
       - contains:
           path: spec.jobTemplate.spec.template.spec.containers[0].env
           content:
@@ -255,9 +257,82 @@ tests:
             value: "from-local-envVars"
 
   #############################################################################
-  # SECTION 4: VERSION env var protection
-  # Expected: VERSION cannot be overridden by any user-defined env
+  # SECTION 4: Protected env var tests (AUDIT_LOG_DIR and VERSION)
+  # Expected: These cannot be overridden by any user-defined env
   #############################################################################
+
+  - it: "AUDIT_LOG_DIR cannot be overridden via inlineEnv"
+    set:
+      image.tag: "1.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      auditVolumes:
+        target: "/real/audit/path"
+      inlineEnv:
+        AUDIT_LOG_DIR: "/hacked/path"
+      cronJobs:
+        audit-test:
+          schedule: "0 0 * * *"
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: audit-test
+    asserts:
+      # The last AUDIT_LOG_DIR entry should be the protected one
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: AUDIT_LOG_DIR
+            value: "/real/audit/path"
+
+  - it: "AUDIT_LOG_DIR cannot be overridden via local env"
+    set:
+      image.tag: "1.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      auditVolumes:
+        target: "/real/audit/path"
+      cronJobs:
+        audit-local:
+          schedule: "0 0 * * *"
+          env:
+            AUDIT_LOG_DIR: "/local-hacked"
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: audit-local
+    asserts:
+      # Protected AUDIT_LOG_DIR comes after local env
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: AUDIT_LOG_DIR
+            value: "/real/audit/path"
+
+  - it: "AUDIT_LOG_DIR cannot be overridden via local envVars"
+    set:
+      image.tag: "1.0.0"
+      securityContext.allowPrivilegeEscalation: false
+      securityContext.seccompProfile.type: RuntimeDefault
+      auditVolumes:
+        target: "/real/audit/path"
+      cronJobs:
+        audit-envvars:
+          schedule: "0 0 * * *"
+          envVars:
+            - name: AUDIT_LOG_DIR
+              value: "/envvars-hacked"
+    template: cronjobs.yaml
+    documentSelector:
+      path: metadata.name
+      value: audit-envvars
+    asserts:
+      # Protected AUDIT_LOG_DIR comes after local envVars
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: AUDIT_LOG_DIR
+            value: "/real/audit/path"
 
   - it: "VERSION cannot be overridden via inlineEnv"
     set:
@@ -328,7 +403,7 @@ tests:
 
   #############################################################################
   # SECTION 5: Env ordering verification
-  # Expected order: AUDIT_LOG_DIR -> global envVars -> merged env -> local envVars -> VERSION -> secretProvider
+  # Expected order: global envVars -> merged env -> local envVars -> AUDIT_LOG_DIR -> VERSION -> secretProvider
   #############################################################################
 
   - it: "Env vars are rendered in correct order for precedence"
@@ -356,8 +431,8 @@ tests:
     asserts:
       - isKind:
           of: CronJob
-      # Verify all entries exist - Kubernetes will use the last one (4-local-envVars)
-      - contains:
+      # Global envVars is deduplicated (removed because local envVars has same name)
+      - notContains:
           path: spec.jobTemplate.spec.template.spec.containers[0].env
           content:
             name: ORDER_TEST
@@ -368,6 +443,7 @@ tests:
           content:
             name: ORDER_TEST
             value: "3-local-env"
+      # Local envVars (highest precedence) is present
       - contains:
           path: spec.jobTemplate.spec.template.spec.containers[0].env
           content:
