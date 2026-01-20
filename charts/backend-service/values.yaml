@@ -59,10 +59,10 @@ deployment:
   #         mountPathDeployment: /opt/folder
   #         readOnly: true
 
-# inlineEnv is a flat map of ENV_NAME: $VALUE which will get encapsulated into a ConfigMap and loaded using the envFrom syntax
+# env is a flat map of ENV_NAME: $VALUE which will get encapsulated into a ConfigMap and loaded using the envFrom syntax
 # It only supports the flat object syntax with key value pairs
 # Note: For secrets, use envVars with secretKeyRef or reference an existing Secret via extraEnvSecrets
-inlineEnv: {}
+env: {}
 
 # envVars is a list of ENV_NAME: $VALUE which will be added to the pods where the $VALUE supports the same syntax as the native pod spec
 # https://kubernetes.io/docs/tasks/inject-data-application/define-environment-variable-container/
@@ -112,12 +112,12 @@ extraRoutes:
     additionalRules: []
 
 # -- cronJobs allows you to define cron jobs alongside the main deployment.
-# Per-job env is merged with global inlineEnv (local takes precedence).
+# Per-job env is merged with global env (local takes precedence).
 # Per-job envVars deduplicates global envVars (global entries with same name are excluded).
 cronJobs: {}
   # foo:
   #   concurrencyPolicy: Forbid
-  #   env:                    # merged with global inlineEnv
+  #   env:                    # merged with global env
   #     FOO: BAR
   #   envVars:                # global envVars with same name are excluded
   #     - name: BAZ
@@ -151,7 +151,7 @@ hooks:
     # name: "" defaults to the hook name (e.g., "migration")
     # For backwards compatibility, the migration hook defaults to "db-migration"
     command: ""
-    # -- Per-hook env values (merged with global inlineEnv, per-hook takes precedence)
+    # -- Per-hook env values (merged with global env, per-hook takes precedence)
     # env:
     #   MY_HOOK_VAR: "value"
     # -- Per-hook envVars (global envVars with same name are excluded)

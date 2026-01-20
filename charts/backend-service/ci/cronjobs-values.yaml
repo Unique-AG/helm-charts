@@ -2,7 +2,7 @@
 # EXAMPLE VALUES FOR CRONJOBS
 # Uses cronJobs to define cron jobs alongside the main deployment
 #
-inlineEnv:
+env:
   FOO: quux
 cronJobs:
   foo:

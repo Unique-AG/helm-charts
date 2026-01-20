@@ -18,7 +18,7 @@ metadata:
     helm.sh/hook-weight: "4"
     helm.sh/hook-delete-policy: before-hook-creation
 data:
-  {{- range $key, $value := .Values.inlineEnv }}
+  {{- range $key, $value := .Values.env }}
   {{ $key }}: {{ $value | quote }}
   {{- end }}
   {{/* Static values are added last so that they override the dynamic values (avoids regression and breaking changes) */}}
