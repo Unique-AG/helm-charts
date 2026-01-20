@@ -17,9 +17,5 @@ description: |
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
-    - kind: changed
+    - kind: fixed
       description: "Reverted `inlineEnv` back to `env`. Version 10.0.0 was skipped."
-    - kind: changed
-      description: "Environment variable precedence and ordering has been standardized across all workload types (deployment, cronJob, cronJobs, hooks)."
-    - kind: removed
-      description: "Removed deprecated `cronJob` value. Migrate to `cronJobs` instead."
