@@ -60,7 +60,7 @@ tests:
           path: spec.jobTemplate.spec.template.metadata.annotations.test
           value: true
 
-  - it: Local env overrides global inlineEnv (merge with local precedence)
+  - it: Local env overrides global env (merge with local precedence)
     values:
       - ../ci/cronjobs-values.yaml
     template: cronjobs.yaml
@@ -70,7 +70,7 @@ tests:
     asserts:
       - isKind:
           of: CronJob
-      # Local env.FOO: BAR should override global inlineEnv.FOO: quux
+      # Local env.FOO: BAR should override global env.FOO: quux
       - equal:
           path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "foo")].env[?(@.name == "FOO")].value
           value: BAR
@@ -79,13 +79,13 @@ tests:
           path: spec.jobTemplate.spec.template.spec.containers[?(@.name == "foo")].env[?(@.name == "BAZ")].value
           value: qux
 
-  - it: Global inlineEnv is included when no local override
+  - it: Global env is included when no local override
     set:
       image.tag: "1.0.0"
       securityContext.allowPrivilegeEscalation: false
       securityContext.seccompProfile.type: RuntimeDefault
       cronJobs.bar.schedule: "0 0 * * *"
-      inlineEnv.GLOBAL_VAR: global-value
+      env.GLOBAL_VAR: global-value
     template: cronjobs.yaml
     documentSelector:
       path: metadata.name

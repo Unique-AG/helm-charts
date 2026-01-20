@@ -158,7 +158,7 @@ auditVolumes:
 
 | Source | Type | Description |
 |--------|------|-------------|
-| `inlineEnv` | `map` | Flat key-value pairs, creates internal ConfigMap |
+| `env` | `map` | Flat key-value pairs, creates internal ConfigMap |
 | `envVars` | `list` | Full Kubernetes env syntax (supports `valueFrom`) |
 | `extraEnvCM` | `list` | Names of existing ConfigMaps |
 | `extraEnvSecrets` | `list` | Names of existing Secrets |
@@ -172,7 +172,7 @@ Environment variables are loaded in a specific order. **Later sources override e
 
 ```
 envFrom (loaded first, lower precedence):
-  1. ConfigMap (contains: inlineEnv + VERSION + PORT)
+  1. ConfigMap (contains: env + VERSION + PORT)
   2. extraEnvCM
   3. extraEnvSecrets
 
@@ -192,7 +192,7 @@ envFrom:
 
 env:
   3. envVars (global, deduplicated with local envVars)
-  4. Merged env (global inlineEnv + cronJobs.<name>.env, local takes precedence)
+  4. Merged env (global env + cronJobs.<name>.env, local takes precedence)
   5. cronJobs.<name>.envVars (local)
   6. auditVolumes (AUDIT_LOG_DIR) - protected
   7. VERSION (auto-set) - protected
@@ -205,13 +205,13 @@ Global `envVars` entries are excluded if the same name exists in local `envVars`
 
 ```
 envFrom:
-  1. ConfigMap (contains: inlineEnv + VERSION)
+  1. ConfigMap (contains: env + VERSION)
   2. extraEnvCM
   3. extraEnvSecrets
 
 env:
   4. envVars (global, deduplicated with per-hook envVars)
-  5. Merged env (global inlineEnv + hooks.<name>.env, per-hook takes precedence)
+  5. Merged env (global env + hooks.<name>.env, per-hook takes precedence)
   6. hooks.<name>.envVars (per-hook)
   7. VERSION (auto-set) - protected
   8. workloadIdentity.gcp (GOOGLE_APPLICATION_CREDENTIALS)
@@ -223,7 +223,7 @@ Global `envVars` entries are excluded if the same name exists in per-hook `envVa
 #### Example: Overriding Variables
 
 ```yaml
-inlineEnv:
+env:
   DATABASE_URL: "postgres://global:5432/db"
 
 cronJobs:
@@ -242,7 +242,7 @@ envVars:
 
 #### Protected Variables
 
-The following variables are automatically set and cannot be overridden via `inlineEnv`:
+The following variables are automatically set and cannot be overridden via `env`:
 - `VERSION` - Set to the image tag
 - `PORT` - Set to the application port (deployment only)
 
@@ -262,7 +262,9 @@ Other methods (service principals, pod identity) not supported. Use `extraObject
 
 ## Upgrade Guides
 
-### ~> `10.0.0`
+### ~> `10.0.1`
+
+> Version 10.0.0 was skipped.
 
 <details>
 <summary>🤖 LLM Migration Prompt</summary>
@@ -274,11 +276,9 @@ Migrate my backend-service Helm values from 9.x to 10.x:
    For `cronJob`: name becomes the key, move `jobTemplate.restartPolicy` to top-level,
    remove `jobTemplate.containers.name`. For `extraCronJobs`: move entries directly into `cronJobs`.
 
-2. `env` → `inlineEnv`: Rename global `env` to `inlineEnv`.
+2. `envSecrets` → `envVars`: Replace with `extraEnvSecrets` ref or `envVars` with `secretKeyRef`.
 
-3. `envSecrets` → `envVars`: Replace with `extraEnvSecrets` ref or `envVars` with `secretKeyRef`.
-
-4. envFrom order changed: now `extraEnvCM` → `extraEnvSecrets` (secrets take precedence).
+3. envFrom order changed: now `extraEnvCM` → `extraEnvSecrets` (secrets take precedence).
 ```
 
 </details>
@@ -289,7 +289,6 @@ Migrate my backend-service Helm values from 9.x to 10.x:
 |--------|-----------|
 | `cronJob` removed | Use `cronJobs` map syntax |
 | `extraCronJobs` removed | Merge into `cronJobs` map |
-| `env` renamed | Use `inlineEnv` |
 | `envSecrets` removed | Use `extraEnvSecrets` or `envVars` with `secretKeyRef` |
 | `cronJobs` envFrom order | Now `extraEnvCM` → `extraEnvSecrets` (secrets take precedence) |
 | `VERSION` protected in hooks | Cannot be overridden via env values |
@@ -359,13 +358,6 @@ cronJobs:
     restartPolicy: OnFailure
     env:
       MODE: extra
-```
-
-`env` → `inlineEnv`:
-```yaml
-# Before                              # After
-env:                                  inlineEnv:
-  DATABASE_URL: "postgres://..."        DATABASE_URL: "postgres://..."
 ```
 
 `envSecrets` → `envVars`:

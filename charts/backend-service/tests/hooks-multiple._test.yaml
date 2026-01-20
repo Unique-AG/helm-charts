@@ -94,7 +94,7 @@ tests:
       hooks.migration.command: npm run migrate
       hooks.seed.enabled: true
       hooks.seed.command: npm run seed
-      inlineEnv:
+      env:
         DATABASE_URL: postgres://localhost
         LOG_LEVEL: info
     template: hooks/hooks-env.yaml

@@ -8,7 +8,7 @@ name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
 # changes to consider on next major: enable netpol by default
-version: 10.0.0
+version: 10.0.1
 appVersion: latest
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
@@ -17,6 +17,8 @@ description: |
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
+    - kind: changed
+      description: "Reverted `inlineEnv` back to `env`. Version 10.0.0 was skipped."
     - kind: changed
       description: "Environment variable precedence and ordering has been standardized across all workload types (deployment, cronJob, cronJobs, hooks)."
     - kind: removed

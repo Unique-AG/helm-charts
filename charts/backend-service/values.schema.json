@@ -195,7 +195,7 @@
         }
       }
     },
-    "inlineEnv": {
+    "env": {
       "type": "object",
       "description": "Environment variables as a flat map (creates internal ConfigMap)"
     },

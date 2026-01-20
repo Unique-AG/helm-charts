@@ -94,8 +94,8 @@ spec:
                 - {{ toYaml . | nindent 18 | trim }}
                 {{- end }}
                 {{- end }}
-                {{- /* Merge global inlineEnv with local env - local takes precedence */}}
-                {{- $mergedEnv := merge ($value.env | default dict) ($globalValues.inlineEnv | default dict) }}
+                {{- /* Merge global env with local env - local takes precedence */}}
+                {{- $mergedEnv := merge ($value.env | default dict) ($globalValues.env | default dict) }}
                 {{- range $envKey, $envValue := $mergedEnv }}
                 - name: {{ $envKey }}
                   value: {{ $envValue | quote }}

@@ -133,8 +133,8 @@ spec:
             - {{ toYaml . | nindent 14 | trim }}
             {{- end }}
             {{- end }}
-            {{- /* Merge global inlineEnv with per-hook env - per-hook takes precedence */}}
-            {{- $mergedEnv := merge ($hookConfig.env | default dict) ($.Values.inlineEnv | default dict) }}
+            {{- /* Merge global env with per-hook env - per-hook takes precedence */}}
+            {{- $mergedEnv := merge ($hookConfig.env | default dict) ($.Values.env | default dict) }}
             {{- range $envKey, $envValue := $mergedEnv }}
             - name: {{ $envKey }}
               value: {{ $envValue | quote }}
