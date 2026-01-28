@@ -171,6 +171,7 @@ local function validate_api_key(app_repository_url, app_id, company_id, token, u
     })
 
     if err then
+        kong.log.err("Failed to validate API key: ", err)
         return false, nil
     end
 
