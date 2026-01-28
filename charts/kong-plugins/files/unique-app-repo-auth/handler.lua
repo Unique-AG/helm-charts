@@ -180,7 +180,7 @@ local function validate_api_key(app_repository_url, app_id, company_id, token, u
         local roles = nil
         if body and body.roles then
             roles = body.roles
-            kong.log.debug("Roles received from app-repository: ")
+            kong.log.debug("Roles received from app-repository: ", cjson.encode(roles))
         else
             kong.log.debug("No roles received from app-repository")
         end
