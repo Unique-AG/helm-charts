@@ -172,22 +172,20 @@ local function validate_api_key(app_repository_url, app_id, company_id, token, u
 
     if err then
         kong.log.err("Failed to validate API key: ", err)
-        return false, nil
+        return false
     end
 
     if res.status == 200 then
         local body = cjson.decode(res.body)
-        local roles = nil
         if body and body.roles then
-            roles = body.roles
-            kong.log.debug("Roles received from app-repository: ", cjson.encode(roles))
-        else
-            kong.log.debug("No roles received from app-repository")
+            local roles_json = cjson.encode(body.roles)
+            kong.service.request.set_header("x-user-roles", roles_json)
+            kong.log.debug("Set x-user-roles header: ", roles_json)
         end
-        return true, roles
+        return true
     else
         kong.log.warn("API key validation failed with status: ", res.status, " and body: ", res.body)
-        return false, nil
+        return false
     end
 end
 
