@@ -155,6 +155,8 @@ local function set_anonymous_consumer(anonymous)
 end
 
 local function validate_api_key(app_repository_url, app_id, company_id, token, user_id)
+    kong.service.request.clear_header("x-user-roles")
+
     local httpc = http.new()
 
     local path
@@ -181,8 +183,6 @@ local function validate_api_key(app_repository_url, app_id, company_id, token, u
             local roles_json = cjson.encode(body.roles)
             kong.service.request.set_header("x-user-roles", roles_json)
             kong.log.debug("Set x-user-roles header: ", roles_json)
-        else
-            kong.service.request.clear_header("x-user-roles")
         end
         return true
     else
