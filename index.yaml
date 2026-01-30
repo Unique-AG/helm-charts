@@ -1905,6 +1905,26 @@ entries:
   kong-plugins:
   - annotations:
       artifacthub.io/changes: |
+        - kind: added
+          description: Return roles from app-repository to the request
+    apiVersion: v2
+    created: "2026-01-30T19:47:25.132723981Z"
+    description: 'The ''kong-plugins'' chart provides a streamlined solution for deploying
+      Kong plugins via ConfigMaps to be used with the Unique Software.  Refer to each
+      plugins readme section to learn more about them.  Please report any security
+      concerns with the plugins via the [Security Policy](https://github.com/Unique-AG/helm-charts/tree/main?tab=security-ov-file). '
+    digest: dcb3986eadf5f283f85dd009a8ffd63e313ab6d8026e44b66e3b6b13c469feef
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: kong-plugins
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/kong-plugins-1.3.0/kong-plugins-1.3.0.tgz
+    version: 1.3.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: fixed
           description: "Set correct headers in the docs example for Cluster-internal JWT validation."
     apiVersion: v2
@@ -3062,4 +3082,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2026-01-20T14:59:54.417838966Z"
+generated: "2026-01-30T19:47:25.133102953Z"
