@@ -4,7 +4,7 @@ The 'backend-service' chart is a "convenience" chart from Unique AG that can gen
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 10.0.1](https://img.shields.io/badge/Version-10.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
+![Version: 10.1.0](https://img.shields.io/badge/Version-10.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 ```sh
 # Helm Repository
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 10.0.1
+helm install my-backend-service unique/backend-service --version 10.1.0
 
 # OCI
-helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 10.0.1
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 10.1.0
 ```
 
 ### Docker Images
