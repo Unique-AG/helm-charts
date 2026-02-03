@@ -132,3 +132,25 @@ app.kubernetes.io/component: hook
 {{- end -}}
 {{- end -}}
 {{- end -}}
+
+{{/* Helper to render route timeouts (GEP-2257) */}}
+{{/* Expects dict with pathConfig (per-path config) and globalConfig (routes config) */}}
+{{/* Priority: pathConfig.timeouts > pathConfig.timeout > globalConfig.timeouts > globalConfig.timeout */}}
+{{- define "backendService.routeTimeouts" -}}
+{{- $pathConfig := .pathConfig -}}
+{{- $globalConfig := .globalConfig -}}
+{{- if or $pathConfig.timeout $pathConfig.timeouts $globalConfig.timeout $globalConfig.timeouts -}}
+timeouts:
+{{- if $pathConfig.timeouts }}
+  {{- toYaml $pathConfig.timeouts | nindent 2 }}
+{{- else if $pathConfig.timeout }}
+  request: {{ $pathConfig.timeout | quote }}
+  backendRequest: {{ $pathConfig.timeout | quote }}
+{{- else if $globalConfig.timeouts }}
+  {{- toYaml $globalConfig.timeouts | nindent 2 }}
+{{- else if $globalConfig.timeout }}
+  request: {{ $globalConfig.timeout | quote }}
+  backendRequest: {{ $globalConfig.timeout | quote }}
+{{- end }}
+{{- end -}}
+{{- end -}}

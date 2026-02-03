@@ -331,6 +331,72 @@
     "extraRoutes": {
       "type": "object",
       "description": "Additional gateway routes for the chart",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Enable this extra route"
+          },
+          "apiVersion": {
+            "type": "string",
+            "description": "API version for the route",
+            "examples": ["gateway.networking.k8s.io/v1"]
+          },
+          "kind": {
+            "type": "string",
+            "description": "Kind of route (HTTPRoute, GRPCRoute, etc.)",
+            "examples": ["HTTPRoute"]
+          },
+          "annotations": {
+            "type": "object",
+            "description": "Annotations to add to the route"
+          },
+          "labels": {
+            "type": "object",
+            "description": "Labels to add to the route"
+          },
+          "hostnames": {
+            "type": "array",
+            "description": "Hostnames to match",
+            "items": { "type": "string" }
+          },
+          "parentRefs": {
+            "type": "array",
+            "description": "Parent gateway references"
+          },
+          "matches": {
+            "type": "array",
+            "description": "Match conditions for the route"
+          },
+          "filters": {
+            "type": "array",
+            "description": "Filters to apply to matching requests"
+          },
+          "additionalRules": {
+            "type": "array",
+            "description": "Additional custom rules"
+          },
+          "timeouts": {
+            "type": "object",
+            "description": "Timeout configuration (GEP-2257)",
+            "properties": {
+              "request": {
+                "type": "string",
+                "description": "Maximum duration for a gateway to respond to an HTTP request",
+                "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$",
+                "examples": ["60s", "5m"]
+              },
+              "backendRequest": {
+                "type": "string",
+                "description": "Timeout for an individual request from gateway to backend",
+                "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$",
+                "examples": ["30s", "2m"]
+              }
+            }
+          }
+        }
+      },
       "examples": [
         {
           "extra-route-1": {
@@ -357,7 +423,11 @@
               }
             ],
             "filters": [],
-            "additionalRules": []
+            "additionalRules": [],
+            "timeouts": {
+              "request": "60s",
+              "backendRequest": "30s"
+            }
           }
         }
       ]
@@ -1368,15 +1438,131 @@
           "description": "Default prefix for all paths",
           "examples": [""]
         },
+        "timeout": {
+          "type": "string",
+          "description": "Sets both request and backendRequest timeouts for all routes (GEP-2257). Can be overridden per-path.",
+          "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$",
+          "examples": ["60s", "5m", "500ms"]
+        },
+        "timeouts": {
+          "type": "object",
+          "description": "Fine-grained timeout configuration for all routes (GEP-2257). Can be overridden per-path.",
+          "properties": {
+            "request": {
+              "type": "string",
+              "description": "Maximum duration for a gateway to respond to an HTTP request",
+              "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$",
+              "examples": ["60s", "5m"]
+            },
+            "backendRequest": {
+              "type": "string",
+              "description": "Timeout for an individual request from gateway to backend",
+              "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$",
+              "examples": ["30s", "2m"]
+            }
+          }
+        },
         "paths": {
           "type": "object",
           "description": "Path configurations",
+          "properties": {
+            "default": {
+              "type": "object",
+              "description": "Default route configuration",
+              "properties": {
+                "enabled": { "type": "boolean" },
+                "blockList": { "type": "array", "items": { "type": "string" } },
+                "extraAnnotations": { "type": "array" },
+                "timeout": {
+                  "type": "string",
+                  "description": "Overrides routes.timeout for this path (GEP-2257)",
+                  "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$"
+                },
+                "timeouts": {
+                  "type": "object",
+                  "description": "Overrides routes.timeouts for this path (GEP-2257)",
+                  "properties": {
+                    "request": { "type": "string", "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$" },
+                    "backendRequest": { "type": "string", "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$" }
+                  }
+                }
+              }
+            },
+            "versioned": {
+              "type": "object",
+              "description": "Versioned (public) route configuration",
+              "properties": {
+                "enabled": { "type": "boolean" },
+                "pathOverride": { "type": "string" },
+                "extraAnnotations": { "type": "array" },
+                "timeout": {
+                  "type": "string",
+                  "description": "Overrides routes.timeout for this path (GEP-2257)",
+                  "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$"
+                },
+                "timeouts": {
+                  "type": "object",
+                  "description": "Overrides routes.timeouts for this path (GEP-2257)",
+                  "properties": {
+                    "request": { "type": "string", "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$" },
+                    "backendRequest": { "type": "string", "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$" }
+                  }
+                }
+              }
+            },
+            "scoped": {
+              "type": "object",
+              "description": "Scoped route configuration",
+              "properties": {
+                "enabled": { "type": "boolean" },
+                "pathOverride": { "type": "string" },
+                "allowList": { "type": "array", "items": { "type": "string" } },
+                "extraAnnotations": { "type": "array" },
+                "timeout": {
+                  "type": "string",
+                  "description": "Overrides routes.timeout for this path (GEP-2257)",
+                  "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$"
+                },
+                "timeouts": {
+                  "type": "object",
+                  "description": "Overrides routes.timeouts for this path (GEP-2257)",
+                  "properties": {
+                    "request": { "type": "string", "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$" },
+                    "backendRequest": { "type": "string", "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$" }
+                  }
+                }
+              }
+            },
+            "probe": {
+              "type": "object",
+              "description": "Probe route configuration",
+              "properties": {
+                "enabled": { "type": "boolean" },
+                "probePath": { "type": "string" },
+                "extraAnnotations": { "type": "array" },
+                "timeout": {
+                  "type": "string",
+                  "description": "Overrides routes.timeout for this path (GEP-2257)",
+                  "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$"
+                },
+                "timeouts": {
+                  "type": "object",
+                  "description": "Overrides routes.timeouts for this path (GEP-2257)",
+                  "properties": {
+                    "request": { "type": "string", "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$" },
+                    "backendRequest": { "type": "string", "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$" }
+                  }
+                }
+              }
+            }
+          },
           "examples": [
             {
               "default": {
                 "enabled": false,
                 "blockList": ["/metrics"],
-                "extraAnnotations": []
+                "extraAnnotations": [],
+                "timeout": "60s"
               },
               "versioned": {
                 "enabled": false,
@@ -1392,7 +1578,8 @@
               "probe": {
                 "enabled": false,
                 "probePath": "/probe",
-                "extraAnnotations": []
+                "extraAnnotations": [],
+                "timeout": "5s"
               }
             }
           ]

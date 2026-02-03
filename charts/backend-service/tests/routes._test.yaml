@@ -70,6 +70,9 @@ tests:
                 - name: ecj
                   port: 80
                   kind: Service
+              timeouts:
+                backendRequest: 30s
+                request: 30s
             - matches:
                 - path:
                     type: Exact
@@ -84,6 +87,9 @@ tests:
                 - name: ecj
                   port: 80
                   kind: Service
+              timeouts:
+                backendRequest: 30s
+                request: 30s
 
   - it: When given a scoped httpRoute and a pathPrefix, should render the matches correctly including both path and prefix overrides (regression)
     values:
@@ -142,6 +148,9 @@ tests:
                 - name: ecj
                   port: 80
                   kind: Service
+              timeouts:
+                backendRequest: 30s
+                request: 30s
             - matches:
                 - path:
                     type: Exact
@@ -156,6 +165,9 @@ tests:
                 - name: ecj
                   port: 80
                   kind: Service
+              timeouts:
+                backendRequest: 30s
+                request: 30s
 
   - it: When given a blocked httpRoute and a pathPrefix, should not render two slashes (regression)
     values:
@@ -183,6 +195,9 @@ tests:
                 - name: ecj
                   port: 80
                   kind: Service
+              timeouts:
+                backendRequest: 45s
+                request: 60s
             - matches:
                 - path:
                     type: PathPrefix
@@ -191,3 +206,92 @@ tests:
                 - name: ecj
                   port: 80
                   kind: Service
+              timeouts:
+                backendRequest: 45s
+                request: 60s
+
+  - it: renders default route with fine-grained timeouts override
+    values:
+      - ../ci/routes-values.yaml
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1
+    template: routes.yaml
+    documentSelector:
+      path: metadata.name
+      value: ecj-default
+    asserts:
+      - equal:
+          path: spec.rules[0].timeouts
+          value:
+            backendRequest: 45s
+            request: 60s
+
+  - it: renders versioned route with per-path timeout override
+    values:
+      - ../ci/routes-values.yaml
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1
+    template: routes.yaml
+    documentSelector:
+      path: metadata.name
+      value: ecj-versioned
+    asserts:
+      - equal:
+          path: spec.rules[0].timeouts
+          value:
+            backendRequest: 120s
+            request: 120s
+
+  - it: renders scoped route with inherited global timeout
+    values:
+      - ../ci/routes-values.yaml
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1
+    template: routes.yaml
+    documentSelector:
+      path: metadata.name
+      value: ecj-scoped
+    asserts:
+      - equal:
+          path: spec.rules[0].timeouts
+          value:
+            backendRequest: 30s
+            request: 30s
+
+  - it: renders probe route with per-path timeout
+    values:
+      - ../ci/routes-values.yaml
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1
+    template: routes.yaml
+    documentSelector:
+      path: metadata.name
+      value: ecj-probe
+    asserts:
+      - equal:
+          path: spec.rules[0].timeouts
+          value:
+            backendRequest: 5s
+            request: 5s
+
+  - it: does not render timeouts when not configured
+    set:
+      routes:
+        hostname: test.example.com
+        paths:
+          default:
+            enabled: true
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1
+    template: routes.yaml
+    documentSelector:
+      path: metadata.name
+      value: ecj-default
+    asserts:
+      - notExists:
+          path: spec.rules[0].timeouts

@@ -32,6 +32,7 @@ spec:
         - name: {{ include "backendService.fullname" $ }}
           port: {{ include "backendService.servicePort" $ }}
           kind: Service
+      {{- include "backendService.routeTimeouts" (dict "pathConfig" .Values.routes.paths.default "globalConfig" .Values.routes) | nindent 6 }}
 {{- end }}
 
 {{/* Block list routes */}}
@@ -64,6 +65,7 @@ spec:
         - name: {{ include "backendService.fullname" $ }}
           port: {{ include "backendService.servicePort" $ }}
           kind: Service
+      {{- include "backendService.routeTimeouts" (dict "pathConfig" $.Values.routes.paths.default "globalConfig" $.Values.routes) | nindent 6 }}
   {{- end }}
 {{- end }}
 
@@ -104,6 +106,7 @@ spec:
         - path:
             type: PathPrefix
             value: {{ default "/public" .Values.routes.paths.versioned.pathOverride }}{{ include "backendService.routePrefix" $ }}
+      {{- include "backendService.routeTimeouts" (dict "pathConfig" .Values.routes.paths.versioned "globalConfig" .Values.routes) | nindent 6 }}
 {{- end }}
 
 {{/* scoped route */}}
@@ -145,6 +148,7 @@ spec:
         - name: {{ include "backendService.fullname" $ }}
           port: {{ include "backendService.servicePort" $ }}
           kind: Service
+      {{- include "backendService.routeTimeouts" (dict "pathConfig" $.Values.routes.paths.scoped "globalConfig" $.Values.routes) | nindent 6 }}
     {{- end }}
 {{- end }}
 
@@ -187,6 +191,7 @@ spec:
         - name: {{ include "backendService.fullname" $ }}
           port: {{ include "backendService.servicePort" $ }}
           kind: Service
+      {{- include "backendService.routeTimeouts" (dict "pathConfig" .Values.routes.paths.probe "globalConfig" .Values.routes) | nindent 6 }}
 {{- end }}
 
 {{- else if or .Values.routes.paths.default.enabled .Values.routes.paths.versioned.enabled .Values.routes.paths.scoped.enabled .Values.routes.paths.probe.enabled }}
