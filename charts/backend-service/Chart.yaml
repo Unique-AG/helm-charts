@@ -18,4 +18,4 @@ annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
     - kind: added
-      description: "Added support for fine-grained timeout configuration globally and per route (GEP-2257)."
+      description: "Support for fine-grained timeout configuration globally and per route (GEP-2257)."
