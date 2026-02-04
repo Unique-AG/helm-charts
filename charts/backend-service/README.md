@@ -4,7 +4,7 @@ The 'backend-service' chart is a "convenience" chart from Unique AG that can gen
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 10.0.1](https://img.shields.io/badge/Version-10.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
+![Version: 10.1.0](https://img.shields.io/badge/Version-10.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -12,10 +12,10 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 ```sh
 # Helm Repository
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 10.0.1
+helm install my-backend-service unique/backend-service --version 10.1.0
 
 # OCI
-helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 10.0.1
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 10.1.0
 ```
 
 ### Docker Images
@@ -47,9 +47,11 @@ ANOTHER_SERVICE_URL: http://backend-service.namespace.svc
 
 Supports [Gateway API route resources](https://gateway-api.sigs.k8s.io/concepts/api-overview/#route-resources). Use `routes` for simplified configuration or `extraRoutes` for full control.
 
-**Requirements:** [Gateway API CRDs](https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api) must be installed.
+**Requirements:** [Gateway API CRDs](https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api) must be installed in at least `1.3.0`.
 
 **HTTPS Redirects:** Not enabled by default. Handle in upstream services or via `extraAnnotations`.
+
+**Timeouts:** HTTPRoute timeouts are supported via `routes.timeout` or per-path `routes.paths.<name>.timeout`. The value sets both `request` and `backendRequest` timeouts (GEP-2257). Note: Kubernetes Service annotations (e.g., `konghq.com/read-timeout`) take precedence over HTTPRoute timeouts in KIC's translation pipeline and it is not recommended to set both values. Preferred is the Gateway APIs `timeout(s)`.
 
 ### Network Policies
 <small>added in `4.4.0`</small>

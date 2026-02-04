@@ -110,6 +110,11 @@ extraRoutes:
     filters: []
     ## -- Additional custom rules that can be added to the route
     additionalRules: []
+    ## -- timeouts configures request timeouts (GEP-2257)
+    ## Uses Gateway API Duration format: e.g., "10s", "1m", "500ms"
+    # timeouts:
+    #   request: "60s"
+    #   backendRequest: "30s"
 
 # -- cronJobs allows you to define cron jobs alongside the main deployment.
 # Per-job env is merged with global env (local takes precedence).
@@ -570,6 +575,10 @@ routes:
   # -- pathPrefix allows setting the default prefix (fullname) for all paths
   # @default -- defaults to /fullname of the service
   pathPrefix: ""
+  # -- timeout sets both request and backendRequest timeouts for all routes (GEP-2257)
+  # Uses Gateway API Duration format: e.g., "10s", "1m", "500ms"
+  # Can be overridden per-path using paths.<name>.timeout
+  # timeout: "60s"
   paths:
     default:
       enabled: true
@@ -579,6 +588,8 @@ routes:
       extraAnnotations: []
         # konghq.com/request-buffering: "false"
         # konghq.com/read-timeout: "120s"
+      # -- timeout overrides the global routes.timeout for this path (GEP-2257)
+      # timeout: "60s"
     versioned:
       enabled: false
       # -- users wishing to not call their versioned API 'public' can override the path
@@ -587,6 +598,8 @@ routes:
       pathOverride: /public
       extraAnnotations: []
         # konghq.com/request-buffering: "false"
+      # -- timeout overrides the global routes.timeout for this path (GEP-2257)
+      # timeout: "60s"
     scoped:
       enabled: false
       # -- users wishing to not call their scoped API 'scoped' can override the path
@@ -600,6 +613,8 @@ routes:
         - /upload
       extraAnnotations: []
       #   konghq.com/request-buffering: "false"
+      # -- timeout overrides the global routes.timeout for this path (GEP-2257)
+      # timeout: "60s"
     # -- `/probe` is unauthorized and its sole purpose is to expose a health check endpoint for availability monitoring
     # Maps to version neutral `/probe` endpoint all Unique services expose
     probe:
@@ -608,6 +623,8 @@ routes:
       probePath: /probe
       extraAnnotations: []
         # konghq.com/strip-path: "true"
+      # -- timeout overrides the global routes.timeout for this path (GEP-2257)
+      # timeout: "5s"
 
 # .Values.secretProvider lets you mount secrets from Azure Key Vault into the pod using VM Managed Identity
 # Note that 'vault-1' is the literal vault name from azure

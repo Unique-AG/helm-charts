@@ -14,6 +14,10 @@ extraRoutes:
           value: /extra-route-1
     filters: []
     additionalRules: []
+    # GEP-2257 timeouts
+    timeouts:
+      request: 60s
+      backendRequest: 60s
   extra-route-2:
     enabled: true
     parentRefs:
@@ -29,3 +33,7 @@ extraRoutes:
           value: /extra-route-2
     filters: []
     additionalRules: []
+    # GEP-2257 timeouts with different values
+    timeouts:
+      request: 120s
+      backendRequest: 60s

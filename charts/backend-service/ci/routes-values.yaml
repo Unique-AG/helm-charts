@@ -16,6 +16,8 @@ routes:
   # -- pathPrefix allows setting the default prefix (fullname) for all paths
   # @default -- defaults to the fullname of the service
   pathPrefix: ""
+  # -- Global timeout for all routes (GEP-2257), can be overridden per-path
+  timeout: "30s"
   paths:
     default:
       enabled: true
@@ -25,6 +27,8 @@ routes:
       extraAnnotations: []
       #   konghq.com/request-buffering: "false"
       #   konghq.com/read-timeout: "120s"
+      # Override global timeout for this path
+      timeout: "60s"
     versioned:
       enabled: true
       # -- users wishing to not call their versioned API 'public' can override the path
@@ -33,6 +37,8 @@ routes:
       pathOverride: /public
       extraAnnotations: []
       #   konghq.com/request-buffering: "false"
+      # Override global timeout with per-path convenience timeout
+      timeout: "120s"
     scoped:
       enabled: true
       # -- users wishing to not call their scoped API 'scoped' can override the path
@@ -46,9 +52,12 @@ routes:
         - /download
       extraAnnotations: []
       #   konghq.com/request-buffering: "false"
+      # Inherits global timeout: "30s"
     # -- `/probe` is unauthorized and its sole purpose is to expose a health check endpoint for availability monitoring
     # Maps to version neutral `/probe` endpoint all Unique services expose
     probe:
       enabled: true
       extraAnnotations: []
       #   konghq.com/strip-path: "true"
+      # Short timeout for probe endpoint
+      timeout: "5s"
