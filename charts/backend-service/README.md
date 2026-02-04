@@ -47,9 +47,11 @@ ANOTHER_SERVICE_URL: http://backend-service.namespace.svc
 
 Supports [Gateway API route resources](https://gateway-api.sigs.k8s.io/concepts/api-overview/#route-resources). Use `routes` for simplified configuration or `extraRoutes` for full control.
 
-**Requirements:** [Gateway API CRDs](https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api) must be installed.
+**Requirements:** [Gateway API CRDs](https://gateway-api.sigs.k8s.io/guides/#getting-started-with-gateway-api) must be installed in at least `1.3.0`.
 
 **HTTPS Redirects:** Not enabled by default. Handle in upstream services or via `extraAnnotations`.
+
+**Timeouts:** HTTPRoute timeouts are supported via `routes.timeout` or per-path `routes.paths.<name>.timeout`. The value sets both `request` and `backendRequest` timeouts (GEP-2257). Note: Kubernetes Service annotations (e.g., `konghq.com/read-timeout`) take precedence over HTTPRoute timeouts in KIC's translation pipeline and it is not recommended to set both values. Preferred is the Gateway APIs `timeout(s)`.
 
 ### Network Policies
 <small>added in `4.4.0`</small>

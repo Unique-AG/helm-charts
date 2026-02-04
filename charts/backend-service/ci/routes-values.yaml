@@ -27,10 +27,8 @@ routes:
       extraAnnotations: []
       #   konghq.com/request-buffering: "false"
       #   konghq.com/read-timeout: "120s"
-      # Override global timeout with fine-grained control
-      timeouts:
-        request: "60s"
-        backendRequest: "45s"
+      # Override global timeout for this path
+      timeout: "60s"
     versioned:
       enabled: true
       # -- users wishing to not call their versioned API 'public' can override the path

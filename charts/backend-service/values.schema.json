@@ -1444,24 +1444,6 @@
           "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$",
           "examples": ["60s", "5m", "500ms"]
         },
-        "timeouts": {
-          "type": "object",
-          "description": "Fine-grained timeout configuration for all routes (GEP-2257). Can be overridden per-path.",
-          "properties": {
-            "request": {
-              "type": "string",
-              "description": "Maximum duration for a gateway to respond to an HTTP request",
-              "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$",
-              "examples": ["60s", "5m"]
-            },
-            "backendRequest": {
-              "type": "string",
-              "description": "Timeout for an individual request from gateway to backend",
-              "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$",
-              "examples": ["30s", "2m"]
-            }
-          }
-        },
         "paths": {
           "type": "object",
           "description": "Path configurations",
@@ -1477,14 +1459,6 @@
                   "type": "string",
                   "description": "Overrides routes.timeout for this path (GEP-2257)",
                   "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$"
-                },
-                "timeouts": {
-                  "type": "object",
-                  "description": "Overrides routes.timeouts for this path (GEP-2257)",
-                  "properties": {
-                    "request": { "type": "string", "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$" },
-                    "backendRequest": { "type": "string", "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$" }
-                  }
                 }
               }
             },
@@ -1499,14 +1473,6 @@
                   "type": "string",
                   "description": "Overrides routes.timeout for this path (GEP-2257)",
                   "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$"
-                },
-                "timeouts": {
-                  "type": "object",
-                  "description": "Overrides routes.timeouts for this path (GEP-2257)",
-                  "properties": {
-                    "request": { "type": "string", "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$" },
-                    "backendRequest": { "type": "string", "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$" }
-                  }
                 }
               }
             },
@@ -1522,14 +1488,6 @@
                   "type": "string",
                   "description": "Overrides routes.timeout for this path (GEP-2257)",
                   "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$"
-                },
-                "timeouts": {
-                  "type": "object",
-                  "description": "Overrides routes.timeouts for this path (GEP-2257)",
-                  "properties": {
-                    "request": { "type": "string", "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$" },
-                    "backendRequest": { "type": "string", "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$" }
-                  }
                 }
               }
             },
@@ -1544,14 +1502,6 @@
                   "type": "string",
                   "description": "Overrides routes.timeout for this path (GEP-2257)",
                   "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$"
-                },
-                "timeouts": {
-                  "type": "object",
-                  "description": "Overrides routes.timeouts for this path (GEP-2257)",
-                  "properties": {
-                    "request": { "type": "string", "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$" },
-                    "backendRequest": { "type": "string", "pattern": "^([0-9]{1,5}(h|m|s|ms)){1,4}$" }
-                  }
                 }
               }
             }

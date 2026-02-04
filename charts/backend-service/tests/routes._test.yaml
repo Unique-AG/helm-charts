@@ -5,7 +5,7 @@ templates:
 release:
   name: ecj
 tests:
-  - it: When given a httpRoute, should render some properties
+  - it: When given a httpRoute, renders some properties
     values:
       - ../ci/routes-values.yaml
     capabilities:
@@ -16,7 +16,7 @@ tests:
       - isKind:
           of: HTTPRoute
 
-  - it: When given a scoped httpRoute, should render the matches correctly including the service name (regression)
+  - it: When given a scoped httpRoute, renders matches correctly including the service name (regression)
     values:
       - ../ci/routes-values.yaml
     capabilities:
@@ -91,7 +91,7 @@ tests:
                 backendRequest: 30s
                 request: 30s
 
-  - it: When given a scoped httpRoute and a pathPrefix, should render the matches correctly including both path and prefix overrides (regression)
+  - it: When given a scoped httpRoute and a pathPrefix, renders matches correctly including both path and prefix overrides (regression)
     values:
       - ../ci/routes-values.yaml
     set:
@@ -169,7 +169,7 @@ tests:
                 backendRequest: 30s
                 request: 30s
 
-  - it: When given a blocked httpRoute and a pathPrefix, should not render two slashes (regression)
+  - it: When given a blocked httpRoute and a pathPrefix, does not render two slashes (regression)
     values:
       - ../ci/routes-values.yaml
     set:
@@ -196,7 +196,7 @@ tests:
                   port: 80
                   kind: Service
               timeouts:
-                backendRequest: 45s
+                backendRequest: 60s
                 request: 60s
             - matches:
                 - path:
@@ -207,10 +207,10 @@ tests:
                   port: 80
                   kind: Service
               timeouts:
-                backendRequest: 45s
+                backendRequest: 60s
                 request: 60s
 
-  - it: renders default route with fine-grained timeouts override
+  - it: renders default route with per-path timeout override
     values:
       - ../ci/routes-values.yaml
     capabilities:
@@ -224,7 +224,7 @@ tests:
       - equal:
           path: spec.rules[0].timeouts
           value:
-            backendRequest: 45s
+            backendRequest: 60s
             request: 60s
 
   - it: renders versioned route with per-path timeout override
