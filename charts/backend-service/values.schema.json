@@ -1454,7 +1454,7 @@
               "properties": {
                 "enabled": { "type": "boolean" },
                 "blockList": { "type": "array", "items": { "type": "string" } },
-                "extraAnnotations": { "type": "array" },
+                "extraAnnotations": { "type": "object" },
                 "timeout": {
                   "type": "string",
                   "description": "Overrides routes.timeout for this path (GEP-2257)",
@@ -1468,7 +1468,7 @@
               "properties": {
                 "enabled": { "type": "boolean" },
                 "pathOverride": { "type": "string" },
-                "extraAnnotations": { "type": "array" },
+                "extraAnnotations": { "type": "object" },
                 "timeout": {
                   "type": "string",
                   "description": "Overrides routes.timeout for this path (GEP-2257)",
@@ -1483,7 +1483,7 @@
                 "enabled": { "type": "boolean" },
                 "pathOverride": { "type": "string" },
                 "allowList": { "type": "array", "items": { "type": "string" } },
-                "extraAnnotations": { "type": "array" },
+                "extraAnnotations": { "type": "object" },
                 "timeout": {
                   "type": "string",
                   "description": "Overrides routes.timeout for this path (GEP-2257)",
@@ -1497,7 +1497,7 @@
               "properties": {
                 "enabled": { "type": "boolean" },
                 "probePath": { "type": "string" },
-                "extraAnnotations": { "type": "array" },
+                "extraAnnotations": { "type": "object" },
                 "timeout": {
                   "type": "string",
                   "description": "Overrides routes.timeout for this path (GEP-2257)",
@@ -1511,24 +1511,24 @@
               "default": {
                 "enabled": false,
                 "blockList": ["/metrics"],
-                "extraAnnotations": [],
+                "extraAnnotations": {},
                 "timeout": "60s"
               },
               "versioned": {
                 "enabled": false,
                 "pathOverride": "/public",
-                "extraAnnotations": []
+                "extraAnnotations": {}
               },
               "scoped": {
                 "enabled": false,
                 "pathOverride": "/scoped",
                 "allowList": ["/upload"],
-                "extraAnnotations": []
+                "extraAnnotations": {}
               },
               "probe": {
                 "enabled": false,
                 "probePath": "/probe",
-                "extraAnnotations": [],
+                "extraAnnotations": {},
                 "timeout": "5s"
               }
             }
