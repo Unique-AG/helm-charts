@@ -1517,13 +1517,13 @@
               "versioned": {
                 "enabled": false,
                 "pathOverride": "/public",
-                "extraAnnotations": []
+                "extraAnnotations": {}
               },
               "scoped": {
                 "enabled": false,
                 "pathOverride": "/scoped",
                 "allowList": ["/upload"],
-                "extraAnnotations": []
+                "extraAnnotations": {}
               },
               "probe": {
                 "enabled": false,

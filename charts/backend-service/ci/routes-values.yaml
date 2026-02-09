@@ -24,7 +24,7 @@ routes:
       blockList:
         - /metrics
         - /sensitive
-      extraAnnotations: []
+      extraAnnotations: {}
       #   konghq.com/request-buffering: "false"
       #   konghq.com/read-timeout: "120s"
       # Override global timeout for this path
@@ -35,7 +35,7 @@ routes:
       # ⚠️ Customizing this value requires also changing the default url in multiple places including all SDK or integration use cases
       # @default -- the chart will default to 'public' to stay backward compatible
       pathOverride: /public
-      extraAnnotations: []
+      extraAnnotations: {}
       #   konghq.com/request-buffering: "false"
       # Override global timeout with per-path convenience timeout
       timeout: "120s"
@@ -50,14 +50,14 @@ routes:
       allowList:
         - /upload
         - /download
-      extraAnnotations: []
+      extraAnnotations: {}
       #   konghq.com/request-buffering: "false"
       # Inherits global timeout: "30s"
     # -- `/probe` is unauthorized and its sole purpose is to expose a health check endpoint for availability monitoring
     # Maps to version neutral `/probe` endpoint all Unique services expose
     probe:
       enabled: true
-      extraAnnotations: []
+      extraAnnotations: {}
       #   konghq.com/strip-path: "true"
       # Short timeout for probe endpoint
       timeout: "5s"
