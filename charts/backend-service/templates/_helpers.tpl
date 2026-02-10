@@ -136,31 +136,6 @@ app.kubernetes.io/component: hook
 {{- end -}}
 {{- end -}}
 
-{{/* Helper to render backendRefs for HTTPRoute rules */}}
-{{- define "backendService.routeBackendRefs" -}}
-- name: {{ include "backendService.fullname" . }}
-  port: {{ include "backendService.servicePort" . }}
-  kind: Service
-{{- end -}}
-
-{{/* Helper to render URLRewrite filter with ReplaceFullPath */}}
-{{- define "backendService.urlRewriteFullPath" -}}
-- type: URLRewrite
-  urlRewrite:
-    path:
-      type: ReplaceFullPath
-      replaceFullPath: {{ . }}
-{{- end -}}
-
-{{/* Helper to render URLRewrite filter with ReplacePrefixMatch */}}
-{{- define "backendService.urlRewritePrefixMatch" -}}
-- type: URLRewrite
-  urlRewrite:
-    path:
-      type: ReplacePrefixMatch
-      replacePrefixMatch: {{ . }}
-{{- end -}}
-
 {{/* Helper to render route timeouts (GEP-2257) */}}
 {{/* Expects dict with pathConfig (per-path config) and globalConfig (routes config) */}}
 {{/* Priority: pathConfig.timeouts > pathConfig.timeout > globalConfig.timeouts > globalConfig.timeout */}}

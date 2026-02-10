@@ -29,7 +29,9 @@ spec:
             type: PathPrefix
             value: {{ include "backendService.routePrefix" $ | default "/" }}
       backendRefs:
-        {{- include "backendService.routeBackendRefs" $ | nindent 8 }}
+        - name: {{ include "backendService.fullname" $ }}
+          port: {{ include "backendService.servicePort" $ }}
+          kind: Service
       {{- include "backendService.routeTimeouts" (dict "pathConfig" .Values.routes.paths.default "globalConfig" .Values.routes) | nindent 6 }}
 {{- end }}
 
@@ -60,7 +62,9 @@ spec:
             type: PathPrefix
             value: {{ include "backendService.routePrefix" $ }}{{ . }}
       backendRefs:
-        {{- include "backendService.routeBackendRefs" $ | nindent 8 }}
+        - name: {{ include "backendService.fullname" $ }}
+          port: {{ include "backendService.servicePort" $ }}
+          kind: Service
       {{- include "backendService.routeTimeouts" (dict "pathConfig" $.Values.routes.paths.default "globalConfig" $.Values.routes) | nindent 6 }}
   {{- end }}
 {{- end }}
@@ -89,9 +93,15 @@ spec:
     - {{ tpl (.Values.routes.hostname) $ }}
   rules:
     - backendRefs:
-        {{- include "backendService.routeBackendRefs" $ | nindent 8 }}
+        - name: {{ include "backendService.fullname" $ }}
+          port: {{ include "backendService.servicePort" $ }}
+          kind: Service
       filters:
-        {{- include "backendService.urlRewritePrefixMatch" (default "/public" .Values.routes.paths.versioned.pathOverride) | nindent 8 }}
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: {{ default "/public" .Values.routes.paths.versioned.pathOverride }}
       matches:
         - path:
             type: PathPrefix
@@ -139,12 +149,22 @@ spec:
         {{- end }}
       filters:
         {{- if eq $matchType "PathPrefix" }}
-        {{- include "backendService.urlRewritePrefixMatch" (printf "%s%s" (default "/scoped" $.Values.routes.paths.scoped.pathOverride) $entry.path) | nindent 8 }}
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ $entry.path }}
         {{- else }}
-        {{- include "backendService.urlRewriteFullPath" (printf "%s%s" (default "/scoped" $.Values.routes.paths.scoped.pathOverride) $entry.path) | nindent 8 }}
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplaceFullPath
+              replaceFullPath: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ $entry.path }}
         {{- end }}
       backendRefs:
-        {{- include "backendService.routeBackendRefs" $ | nindent 8 }}
+        - name: {{ include "backendService.fullname" $ }}
+          port: {{ include "backendService.servicePort" $ }}
+          kind: Service
       {{- include "backendService.routeTimeouts" (dict "pathConfig" $.Values.routes.paths.scoped "globalConfig" $.Values.routes) | nindent 6 }}
     {{- end }}
 {{- end }}
@@ -179,9 +199,15 @@ spec:
             value: {{ include "backendService.routePrefix" $ }}{{ default "/probe" .Values.routes.paths.probe.probePath }}
             # TODO: Add https://docs.konghq.com/hub/kong-inc/response-transformer/ to omit the response body
       filters:
-        {{- include "backendService.urlRewriteFullPath" (default "/probe" .Values.routes.paths.probe.probePath) | nindent 8 }}
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplaceFullPath
+              replaceFullPath: {{ default "/probe" .Values.routes.paths.probe.probePath }}
       backendRefs:
-        {{- include "backendService.routeBackendRefs" $ | nindent 8 }}
+        - name: {{ include "backendService.fullname" $ }}
+          port: {{ include "backendService.servicePort" $ }}
+          kind: Service
       {{- include "backendService.routeTimeouts" (dict "pathConfig" .Values.routes.paths.probe "globalConfig" .Values.routes) | nindent 6 }}
 {{- end }}
 
