@@ -134,6 +134,58 @@ spec:
     - {{ tpl (.Values.routes.hostname) $ }}
   rules:
     {{- range .Values.routes.paths.scoped.allowList }}
+    {{- if kindIs "map" . }}
+    {{- $entry := . }}
+    {{- $matchType := default "Exact" .type }}
+    {{- if and (eq $matchType "PathPrefix") (not .methods) }}
+    {{- fail "scoped allowList PathPrefix entries require 'methods' to be specified (e.g., methods: [GET])" }}
+    {{- end }}
+    {{- if eq $matchType "PathPrefix" }}
+    - matches:
+        {{- range .methods }}
+        - path:
+            type: PathPrefix
+            value: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ include "backendService.routePrefix" $ }}{{ $entry.path }}
+          method: {{ . }}
+        {{- end }}
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ $entry.path }}
+      backendRefs:
+        - name: {{ include "backendService.fullname" $ }}
+          port: {{ include "backendService.servicePort" $ }}
+          kind: Service
+      {{- include "backendService.routeTimeouts" (dict "pathConfig" $.Values.routes.paths.scoped "globalConfig" $.Values.routes) | nindent 6 }}
+    {{- else }}
+    - matches:
+        {{- if .methods }}
+        {{- range .methods }}
+        - path:
+            type: Exact
+            value: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ include "backendService.routePrefix" $ }}{{ $entry.path }}
+          method: {{ . }}
+        {{- end }}
+        {{- else }}
+        - path:
+            type: Exact
+            value: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ include "backendService.routePrefix" $ }}{{ $entry.path }}
+        {{- end }}
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplaceFullPath
+              replaceFullPath: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ $entry.path }}
+      backendRefs:
+        - name: {{ include "backendService.fullname" $ }}
+          port: {{ include "backendService.servicePort" $ }}
+          kind: Service
+      {{- include "backendService.routeTimeouts" (dict "pathConfig" $.Values.routes.paths.scoped "globalConfig" $.Values.routes) | nindent 6 }}
+    {{- end }}
+    {{- else }}
     - matches:
         - path:
             type: Exact
@@ -149,6 +201,7 @@ spec:
           port: {{ include "backendService.servicePort" $ }}
           kind: Service
       {{- include "backendService.routeTimeouts" (dict "pathConfig" $.Values.routes.paths.scoped "globalConfig" $.Values.routes) | nindent 6 }}
+    {{- end }}
     {{- end }}
 {{- end }}
 

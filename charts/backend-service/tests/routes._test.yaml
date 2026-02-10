@@ -16,7 +16,7 @@ tests:
       - isKind:
           of: HTTPRoute
 
-  - it: When given a scoped httpRoute, renders matches correctly including the service name (regression)
+  - it: When given a scoped httpRoute, renders exact and prefix matches correctly including the service name (regression)
     values:
       - ../ci/routes-values.yaml
     capabilities:
@@ -83,6 +83,24 @@ tests:
                     path:
                       type: ReplaceFullPath
                       replaceFullPath: /scoped/download
+              backendRefs:
+                - name: ecj
+                  port: 80
+                  kind: Service
+              timeouts:
+                backendRequest: 30s
+                request: 30s
+            - matches:
+                - path:
+                    type: PathPrefix
+                    value: /scoped/ecj/html-store
+                  method: GET
+              filters:
+                - type: URLRewrite
+                  urlRewrite:
+                    path:
+                      type: ReplacePrefixMatch
+                      replacePrefixMatch: /scoped/html-store
               backendRefs:
                 - name: ecj
                   port: 80
@@ -161,6 +179,24 @@ tests:
                     path:
                       type: ReplaceFullPath
                       replaceFullPath: /newScopedPathOverride/download
+              backendRefs:
+                - name: ecj
+                  port: 80
+                  kind: Service
+              timeouts:
+                backendRequest: 30s
+                request: 30s
+            - matches:
+                - path:
+                    type: PathPrefix
+                    value: /newScopedPathOverride/newPathPrefix/html-store
+                  method: GET
+              filters:
+                - type: URLRewrite
+                  urlRewrite:
+                    path:
+                      type: ReplacePrefixMatch
+                      replacePrefixMatch: /newScopedPathOverride/html-store
               backendRefs:
                 - name: ecj
                   port: 80
@@ -255,6 +291,24 @@ tests:
                     path:
                       type: ReplaceFullPath
                       replaceFullPath: /scoped/download
+              backendRefs:
+                - name: ecj
+                  port: 80
+                  kind: Service
+              timeouts:
+                backendRequest: 30s
+                request: 30s
+            - matches:
+                - path:
+                    type: PathPrefix
+                    value: /scoped/html-store
+                  method: GET
+              filters:
+                - type: URLRewrite
+                  urlRewrite:
+                    path:
+                      type: ReplacePrefixMatch
+                      replacePrefixMatch: /scoped/html-store
               backendRefs:
                 - name: ecj
                   port: 80
@@ -403,3 +457,136 @@ tests:
     asserts:
       - notExists:
           path: spec.rules[0].timeouts
+
+  - it: renders scoped prefix entry with multiple methods as separate match entries
+    set:
+      routes:
+        hostname: test.example.com
+        pathPrefix: /
+        paths:
+          scoped:
+            enabled: true
+            allowList:
+              - path: /data
+                type: PathPrefix
+                methods:
+                  - GET
+                  - POST
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1
+    template: routes.yaml
+    documentSelector:
+      path: metadata.name
+      value: ecj-scoped
+    asserts:
+      - equal:
+          path: spec.rules[0].matches
+          value:
+            - path:
+                type: PathPrefix
+                value: /scoped/data
+              method: GET
+            - path:
+                type: PathPrefix
+                value: /scoped/data
+              method: POST
+      - equal:
+          path: spec.rules[0].filters[0].urlRewrite.path
+          value:
+            type: ReplacePrefixMatch
+            replacePrefixMatch: /scoped/data
+
+  - it: renders mixed scoped allowList with both string and object entries
+    set:
+      routes:
+        hostname: test.example.com
+        pathPrefix: /
+        paths:
+          scoped:
+            enabled: true
+            allowList:
+              - /upload
+              - path: /html-store
+                type: PathPrefix
+                methods:
+                  - GET
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1
+    template: routes.yaml
+    documentSelector:
+      path: metadata.name
+      value: ecj-scoped
+    asserts:
+      - equal:
+          path: spec.rules[0].matches[0].path.type
+          value: Exact
+      - equal:
+          path: spec.rules[0].filters[0].urlRewrite.path.type
+          value: ReplaceFullPath
+      - equal:
+          path: spec.rules[1].matches[0].path.type
+          value: PathPrefix
+      - equal:
+          path: spec.rules[1].matches[0].method
+          value: GET
+      - equal:
+          path: spec.rules[1].filters[0].urlRewrite.path.type
+          value: ReplacePrefixMatch
+
+  - it: renders object entry with default type as exact match
+    set:
+      routes:
+        hostname: test.example.com
+        pathPrefix: /
+        paths:
+          scoped:
+            enabled: true
+            allowList:
+              - path: /upload
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1
+    template: routes.yaml
+    documentSelector:
+      path: metadata.name
+      value: ecj-scoped
+    asserts:
+      - equal:
+          path: spec.rules[0].matches[0].path.type
+          value: Exact
+      - equal:
+          path: spec.rules[0].filters[0].urlRewrite.path.type
+          value: ReplaceFullPath
+
+  - it: renders object entry with explicit type Exact and methods
+    set:
+      routes:
+        hostname: test.example.com
+        pathPrefix: /
+        paths:
+          scoped:
+            enabled: true
+            allowList:
+              - path: /upload
+                type: Exact
+                methods:
+                  - POST
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1
+    template: routes.yaml
+    documentSelector:
+      path: metadata.name
+      value: ecj-scoped
+    asserts:
+      - equal:
+          path: spec.rules[0].matches[0].path.type
+          value: Exact
+      - equal:
+          path: spec.rules[0].matches[0].method
+          value: POST
+      - equal:
+          path: spec.rules[0].filters[0].urlRewrite.path.type
+          value: ReplaceFullPath

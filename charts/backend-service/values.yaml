@@ -606,11 +606,18 @@ routes:
       # ⚠️ Customizing this value requires also changing the default url in multiple places including all web-apps
       # @default -- the chart will default to 'scoped' to stay backward compatible
       pathOverride: /scoped
-      # -- explicitly list of exact path matches
-      # Only exact path matches are supported to ensure strict security
-      # will be rendered to: `/{scoped|pathOverride}/{entry}`
+      # -- allowList defines paths exposed without JWT authentication.
+      # Entries can be:
+      #   - A string for exact path matches (e.g., "/upload")
+      #   - An object: { path, type (Exact|PathPrefix, default: Exact), methods (optional for Exact, required for PathPrefix) }
+      # ⚠️ PathPrefix entries MUST specify 'methods' to restrict allowed HTTP methods.
+      # Rendered to: `/{scoped|pathOverride}/{pathPrefix}/{entry}`
       allowList:
         - /upload
+        # - path: /html-store
+        #   type: PathPrefix
+        #   methods:
+        #     - GET
       extraAnnotations: {}
       #   konghq.com/request-buffering: "false"
       # -- timeout overrides the global routes.timeout for this path (GEP-2257)
