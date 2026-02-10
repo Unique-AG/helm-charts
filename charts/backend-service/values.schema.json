@@ -1482,7 +1482,45 @@
               "properties": {
                 "enabled": { "type": "boolean" },
                 "pathOverride": { "type": "string" },
-                "allowList": { "type": "array", "items": { "type": "string" } },
+                "allowList": {
+                  "type": "array",
+                  "description": "Paths exposed without JWT auth. Each entry specifies a path, match type, and allowed HTTP methods.",
+                  "items": {
+                    "type": "object",
+                    "description": "Path match with configurable type and required method restriction",
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "description": "Path to match (e.g., /upload)"
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "Match type: Exact (default) or PathPrefix",
+                        "enum": ["Exact", "PathPrefix"],
+                        "default": "Exact"
+                      },
+                      "methods": {
+                        "type": "array",
+                        "description": "Allowed HTTP methods (defaults to [GET] for Exact, required for PathPrefix)",
+                        "items": {
+                          "type": "string",
+                          "enum": ["GET", "HEAD", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH"]
+                        },
+                        "default": ["GET"],
+                        "minItems": 1
+                      }
+                    },
+                    "required": ["path"],
+                    "if": {
+                      "properties": { "type": { "const": "PathPrefix" } },
+                      "required": ["type"]
+                    },
+                    "then": {
+                      "required": ["path", "methods"]
+                    },
+                    "additionalProperties": false
+                  }
+                },
                 "extraAnnotations": { "type": "object" },
                 "timeout": {
                   "type": "string",
@@ -1522,7 +1560,10 @@
               "scoped": {
                 "enabled": false,
                 "pathOverride": "/scoped",
-                "allowList": ["/upload"],
+                "allowList": [
+                  { "path": "/upload", "methods": ["POST"] },
+                  { "path": "/html-store", "type": "PathPrefix", "methods": ["GET"] }
+                ],
                 "extraAnnotations": {}
               },
               "probe": {

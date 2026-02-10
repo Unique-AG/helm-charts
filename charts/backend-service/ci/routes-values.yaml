@@ -40,17 +40,17 @@ routes:
       timeout: "120s"
     scoped:
       enabled: true
-      # -- users wishing to not call their scoped API 'scoped' can override the path
-      # ⚠️ Customizing this value requires also changing the default url in multiple places including all web-apps
-      # @default -- the chart will default to 'scoped' to stay backward compatible
       pathOverride: /scoped
-      # -- explicitly list of exact path matches
-      # will be rendered to: `/{scoped|pathOverride}/{entry}`
       allowList:
-        - /upload
-        - /download
+        - path: /upload
+          methods:
+            - POST
+        - path: /download
+        - path: /html-store
+          type: PathPrefix
+          methods:
+            - GET
       extraAnnotations: {}
-      #   konghq.com/request-buffering: "false"
       # Inherits global timeout: "30s"
     # -- `/probe` is unauthorized and its sole purpose is to expose a health check endpoint for availability monitoring
     # Maps to version neutral `/probe` endpoint all Unique services expose
