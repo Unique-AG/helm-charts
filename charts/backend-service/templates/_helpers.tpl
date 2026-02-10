@@ -86,6 +86,14 @@ app.kubernetes.io/component: hook
 {{- end -}}
 {{- end -}}
 
+{{/* Helper to get the prefix for path concatenation (returns empty when prefix is "/") */}}
+{{- define "backendService.routePrefixForConcat" -}}
+{{- $prefix := include "backendService.routePrefix" . -}}
+{{- if ne $prefix "/" -}}
+{{- $prefix -}}
+{{- end -}}
+{{- end -}}
+
 {{/* Helper to get the service port */}}
 {{- define "backendService.servicePort" -}}
 {{- if .Values.service.port -}}

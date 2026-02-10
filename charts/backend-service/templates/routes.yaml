@@ -60,7 +60,7 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: {{ if eq (include "backendService.routePrefix" $) "/" -}}{{ . }}{{- else -}}{{ include "backendService.routePrefix" $ }}{{ . }}{{- end }}
+            value: {{ include "backendService.routePrefixForConcat" $ }}{{ . }}
       backendRefs:
         - name: {{ include "backendService.fullname" $ }}
           port: {{ include "backendService.servicePort" $ }}
@@ -105,7 +105,7 @@ spec:
       matches:
         - path:
             type: PathPrefix
-            value: {{ default "/public" .Values.routes.paths.versioned.pathOverride }}{{ include "backendService.routePrefix" $ }}
+            value: {{ default "/public" .Values.routes.paths.versioned.pathOverride }}{{ include "backendService.routePrefixForConcat" $ }}
       {{- include "backendService.routeTimeouts" (dict "pathConfig" .Values.routes.paths.versioned "globalConfig" .Values.routes) | nindent 6 }}
 {{- end }}
 
@@ -137,7 +137,7 @@ spec:
     - matches:
         - path:
             type: Exact
-            value: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ include "backendService.routePrefix" $ }}{{ . }}
+            value: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ include "backendService.routePrefixForConcat" $ }}{{ . }}
       filters:
         - type: URLRewrite
           urlRewrite:
@@ -179,7 +179,7 @@ spec:
     - matches:
         - path:
             type: Exact
-            value: {{ include "backendService.routePrefix" $ }}{{ default "/probe" .Values.routes.paths.probe.probePath }}
+            value: {{ include "backendService.routePrefixForConcat" $ }}{{ default "/probe" .Values.routes.paths.probe.probePath }}
             # TODO: Add https://docs.konghq.com/hub/kong-inc/response-transformer/ to omit the response body
       filters:
         - type: URLRewrite
