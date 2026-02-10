@@ -126,6 +126,9 @@ spec:
     {{- range .Values.routes.paths.scoped.allowList }}
     {{- $entry := . }}
     {{- $matchType := default "Exact" .type }}
+    {{- if and (eq $matchType "PathPrefix") (not .methods) }}
+    {{- fail "scoped allowList PathPrefix entries require explicit 'methods' (e.g., methods: [GET])" }}
+    {{- end }}
     {{- $methods := default (list "GET") .methods }}
     - matches:
         {{- range $methods }}
