@@ -1,6 +1,0 @@
-ports:
-  application: 8080
-  service: 9001
-
-service:
-  port: null

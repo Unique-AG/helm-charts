@@ -1,6 +1,5 @@
-# -- routes is a special object designed for Unique services. It abstracts a lot of complexity and allows for a simple configuration of routes.
-# ⚠️ Unique defaults to Kong as its API Gateway (the middlewares especially), and the routes object is designed to work with Kong. If you are using a different API Gateway, you will need to use `extraRoutes`.
-# Refer to [`ci/routes-values.yaml`](https://github.com/Unique-AG/helm-charts/blob/main/charts/backend-service/ci/routes-values.yaml) to see a full example of how to configure routes.
+# CI test: routes + extraRoutes combined (merged from extra-routes-values.yaml)
+# Refer to this file for a full example of how to configure both route types.
 routes:
   # - hostname of the route, will be matched against the host header of the request
   # currently defaults to one, if ever more are needed open an issue, `extraHostNames` will be added, supports templating
@@ -61,3 +60,42 @@ routes:
       #   konghq.com/strip-path: "true"
       # Short timeout for probe endpoint
       timeout: "5s"
+
+# Extra routes using raw Gateway API HTTPRoute spec (for non-Kong gateways or custom routes)
+extraRoutes:
+  extra-route-1:
+    enabled: true
+    parentRefs:
+      - name: kong
+        namespace: kong-system
+        group: gateway.networking.k8s.io
+        kind: Gateway
+    hostnames:
+      - my.api.example.com
+    matches:
+      - path:
+          type: PathPrefix
+          value: /extra-route-1
+    filters: []
+    additionalRules: []
+    timeouts:
+      request: 60s
+      backendRequest: 60s
+  extra-route-2:
+    enabled: true
+    parentRefs:
+      - name: kong
+        namespace: kong-system
+        group: gateway.networking.k8s.io
+        kind: Gateway
+    hostnames:
+      - my.api.example.com
+    matches:
+      - path:
+          type: PathPrefix
+          value: /extra-route-2
+    filters: []
+    additionalRules: []
+    timeouts:
+      request: 120s
+      backendRequest: 60s

@@ -1,3 +1,0 @@
-service:
-  extraLabels:
-    foo: bar

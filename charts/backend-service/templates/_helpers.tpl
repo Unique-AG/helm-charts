@@ -77,20 +77,15 @@ app.kubernetes.io/component: cron-job
 app.kubernetes.io/component: hook
 {{- end }}
 
-{{/* Helper to get the prefix */}}
+{{/* Helper to get the route prefix for path concatenation.
+     Returns empty when pathPrefix is "/" so that concatenation never produces double slashes.
+     For standalone usage (e.g. default route match), pipe through `| default "/"`. */}}
 {{- define "backendService.routePrefix" -}}
-{{- if .Values.routes.pathPrefix -}}
+{{- if eq .Values.routes.pathPrefix "/" -}}
+{{- else if .Values.routes.pathPrefix -}}
 {{- .Values.routes.pathPrefix -}}
 {{- else -}}
 /{{- include "backendService.fullname" . -}}
-{{- end -}}
-{{- end -}}
-
-{{/* Helper to get the prefix for path concatenation (returns empty when prefix is "/") */}}
-{{- define "backendService.routePrefixForConcat" -}}
-{{- $prefix := include "backendService.routePrefix" . -}}
-{{- if ne $prefix "/" -}}
-{{- $prefix -}}
 {{- end -}}
 {{- end -}}
 
