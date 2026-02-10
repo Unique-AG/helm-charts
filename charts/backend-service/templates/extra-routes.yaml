@@ -41,9 +41,7 @@ spec:
     {{- tpl (toYaml $route.additionalRules) $ | nindent 4 }}
     {{- end }}
     - backendRefs:
-        - name: {{ include "backendService.fullname" $ }}
-          port: {{ include "backendService.servicePort" $ }}
-          kind: Service
+        {{- include "backendService.routeBackendRefs" $ | nindent 8 }}
       {{- with $route.filters }}
       filters:
         {{- toYaml . | nindent 8 }}

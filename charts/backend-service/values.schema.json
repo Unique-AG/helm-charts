@@ -1484,48 +1484,34 @@
                 "pathOverride": { "type": "string" },
                 "allowList": {
                   "type": "array",
-                  "description": "Paths exposed without JWT auth. Strings use Exact match; objects allow configuring match type (Exact|PathPrefix) and methods.",
+                  "description": "Paths exposed without JWT auth. Each entry specifies a path, match type, and allowed HTTP methods.",
                   "items": {
-                    "oneOf": [
-                      {
+                    "type": "object",
+                    "description": "Path match with configurable type and required method restriction",
+                    "properties": {
+                      "path": {
                         "type": "string",
-                        "description": "Exact path match (e.g., /upload)"
+                        "description": "Path to match (e.g., /upload)"
                       },
-                      {
-                        "type": "object",
-                        "description": "Path match with configurable type and optional method restriction",
-                        "properties": {
-                          "path": {
-                            "type": "string",
-                            "description": "Path to match (e.g., /html-store)"
-                          },
-                          "type": {
-                            "type": "string",
-                            "description": "Match type: Exact (default) or PathPrefix",
-                            "enum": ["Exact", "PathPrefix"],
-                            "default": "Exact"
-                          },
-                          "methods": {
-                            "type": "array",
-                            "description": "Allowed HTTP methods (required for PathPrefix, optional for Exact)",
-                            "items": {
-                              "type": "string",
-                              "enum": ["GET", "HEAD", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH"]
-                            },
-                            "minItems": 1
-                          }
+                      "type": {
+                        "type": "string",
+                        "description": "Match type: Exact (default) or PathPrefix",
+                        "enum": ["Exact", "PathPrefix"],
+                        "default": "Exact"
+                      },
+                      "methods": {
+                        "type": "array",
+                        "description": "Allowed HTTP methods (defaults to [GET])",
+                        "items": {
+                          "type": "string",
+                          "enum": ["GET", "HEAD", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH"]
                         },
-                        "required": ["path"],
-                        "if": {
-                          "required": ["type"],
-                          "properties": { "type": { "const": "PathPrefix" } }
-                        },
-                        "then": {
-                          "required": ["path", "methods"]
-                        },
-                        "additionalProperties": false
+                        "default": ["GET"],
+                        "minItems": 1
                       }
-                    ]
+                    },
+                    "required": ["path"],
+                    "additionalProperties": false
                   }
                 },
                 "extraAnnotations": { "type": "object" },
@@ -1568,7 +1554,7 @@
                 "enabled": false,
                 "pathOverride": "/scoped",
                 "allowList": [
-                  "/upload",
+                  { "path": "/upload", "methods": ["POST"] },
                   { "path": "/html-store", "type": "PathPrefix", "methods": ["GET"] }
                 ],
                 "extraAnnotations": {}

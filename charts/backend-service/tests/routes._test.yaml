@@ -60,6 +60,7 @@ tests:
                 - path:
                     type: Exact
                     value: /scoped/ecj/upload
+                  method: POST
               filters:
                 - type: URLRewrite
                   urlRewrite:
@@ -77,6 +78,7 @@ tests:
                 - path:
                     type: Exact
                     value: /scoped/ecj/download
+                  method: GET
               filters:
                 - type: URLRewrite
                   urlRewrite:
@@ -156,6 +158,7 @@ tests:
                 - path:
                     type: Exact
                     value: /newScopedPathOverride/newPathPrefix/upload
+                  method: POST
               filters:
                 - type: URLRewrite
                   urlRewrite:
@@ -173,6 +176,7 @@ tests:
                 - path:
                     type: Exact
                     value: /newScopedPathOverride/newPathPrefix/download
+                  method: GET
               filters:
                 - type: URLRewrite
                   urlRewrite:
@@ -268,6 +272,7 @@ tests:
                 - path:
                     type: Exact
                     value: /scoped/upload
+                  method: POST
               filters:
                 - type: URLRewrite
                   urlRewrite:
@@ -285,6 +290,7 @@ tests:
                 - path:
                     type: Exact
                     value: /scoped/download
+                  method: GET
               filters:
                 - type: URLRewrite
                   urlRewrite:
@@ -497,7 +503,7 @@ tests:
             type: ReplacePrefixMatch
             replacePrefixMatch: /scoped/data
 
-  - it: renders mixed scoped allowList with both string and object entries
+  - it: renders mixed scoped allowList with exact and prefix entries
     set:
       routes:
         hostname: test.example.com
@@ -506,7 +512,7 @@ tests:
           scoped:
             enabled: true
             allowList:
-              - /upload
+              - path: /upload
               - path: /html-store
                 type: PathPrefix
                 methods:
@@ -523,6 +529,9 @@ tests:
           path: spec.rules[0].matches[0].path.type
           value: Exact
       - equal:
+          path: spec.rules[0].matches[0].method
+          value: GET
+      - equal:
           path: spec.rules[0].filters[0].urlRewrite.path.type
           value: ReplaceFullPath
       - equal:
@@ -535,7 +544,7 @@ tests:
           path: spec.rules[1].filters[0].urlRewrite.path.type
           value: ReplacePrefixMatch
 
-  - it: renders object entry with default type as exact match
+  - it: renders object entry with default type and default method
     set:
       routes:
         hostname: test.example.com
@@ -556,6 +565,9 @@ tests:
       - equal:
           path: spec.rules[0].matches[0].path.type
           value: Exact
+      - equal:
+          path: spec.rules[0].matches[0].method
+          value: GET
       - equal:
           path: spec.rules[0].filters[0].urlRewrite.path.type
           value: ReplaceFullPath

@@ -41,10 +41,11 @@ routes:
     scoped:
       enabled: true
       pathOverride: /scoped
-      # allowList: strings or objects (type: Exact default, PathPrefix requires methods)
       allowList:
-        - /upload
-        - /download
+        - path: /upload
+          methods:
+            - POST
+        - path: /download
         - path: /html-store
           type: PathPrefix
           methods:

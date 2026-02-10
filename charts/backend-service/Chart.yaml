@@ -17,5 +17,5 @@ description: |
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
-    - kind: added
-      description: "/scoped routes now allow overriding the match type but when doing so, specifying the allowed methods is required."
+    - kind: changed
+      description: "scoped allowList now uses a map syntax instead of string entries. Methods default to [GET] if omitted. Match entries default to 'type: Exact' if omitted. The change is backward compatible as the default is still PUT /scoped/upload."

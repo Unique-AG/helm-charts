@@ -29,9 +29,7 @@ spec:
             type: PathPrefix
             value: {{ include "backendService.routePrefix" $ | default "/" }}
       backendRefs:
-        - name: {{ include "backendService.fullname" $ }}
-          port: {{ include "backendService.servicePort" $ }}
-          kind: Service
+        {{- include "backendService.routeBackendRefs" $ | nindent 8 }}
       {{- include "backendService.routeTimeouts" (dict "pathConfig" .Values.routes.paths.default "globalConfig" .Values.routes) | nindent 6 }}
 {{- end }}
 
@@ -62,9 +60,7 @@ spec:
             type: PathPrefix
             value: {{ include "backendService.routePrefix" $ }}{{ . }}
       backendRefs:
-        - name: {{ include "backendService.fullname" $ }}
-          port: {{ include "backendService.servicePort" $ }}
-          kind: Service
+        {{- include "backendService.routeBackendRefs" $ | nindent 8 }}
       {{- include "backendService.routeTimeouts" (dict "pathConfig" $.Values.routes.paths.default "globalConfig" $.Values.routes) | nindent 6 }}
   {{- end }}
 {{- end }}
@@ -93,15 +89,9 @@ spec:
     - {{ tpl (.Values.routes.hostname) $ }}
   rules:
     - backendRefs:
-        - name: {{ include "backendService.fullname" $ }}
-          port: {{ include "backendService.servicePort" $ }}
-          kind: Service
+        {{- include "backendService.routeBackendRefs" $ | nindent 8 }}
       filters:
-        - type: URLRewrite
-          urlRewrite:
-            path:
-              type: ReplacePrefixMatch
-              replacePrefixMatch: {{ default "/public" .Values.routes.paths.versioned.pathOverride }}
+        {{- include "backendService.urlRewritePrefixMatch" (default "/public" .Values.routes.paths.versioned.pathOverride) | nindent 8 }}
       matches:
         - path:
             type: PathPrefix
@@ -134,74 +124,25 @@ spec:
     - {{ tpl (.Values.routes.hostname) $ }}
   rules:
     {{- range .Values.routes.paths.scoped.allowList }}
-    {{- if kindIs "map" . }}
     {{- $entry := . }}
     {{- $matchType := default "Exact" .type }}
-    {{- if and (eq $matchType "PathPrefix") (not .methods) }}
-    {{- fail "scoped allowList PathPrefix entries require 'methods' to be specified (e.g., methods: [GET])" }}
-    {{- end }}
-    {{- if eq $matchType "PathPrefix" }}
+    {{- $methods := default (list "GET") .methods }}
     - matches:
-        {{- range .methods }}
+        {{- range $methods }}
         - path:
-            type: PathPrefix
+            type: {{ $matchType }}
             value: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ include "backendService.routePrefix" $ }}{{ $entry.path }}
           method: {{ . }}
         {{- end }}
       filters:
-        - type: URLRewrite
-          urlRewrite:
-            path:
-              type: ReplacePrefixMatch
-              replacePrefixMatch: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ $entry.path }}
-      backendRefs:
-        - name: {{ include "backendService.fullname" $ }}
-          port: {{ include "backendService.servicePort" $ }}
-          kind: Service
-      {{- include "backendService.routeTimeouts" (dict "pathConfig" $.Values.routes.paths.scoped "globalConfig" $.Values.routes) | nindent 6 }}
-    {{- else }}
-    - matches:
-        {{- if .methods }}
-        {{- range .methods }}
-        - path:
-            type: Exact
-            value: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ include "backendService.routePrefix" $ }}{{ $entry.path }}
-          method: {{ . }}
-        {{- end }}
+        {{- if eq $matchType "PathPrefix" }}
+        {{- include "backendService.urlRewritePrefixMatch" (printf "%s%s" (default "/scoped" $.Values.routes.paths.scoped.pathOverride) $entry.path) | nindent 8 }}
         {{- else }}
-        - path:
-            type: Exact
-            value: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ include "backendService.routePrefix" $ }}{{ $entry.path }}
+        {{- include "backendService.urlRewriteFullPath" (printf "%s%s" (default "/scoped" $.Values.routes.paths.scoped.pathOverride) $entry.path) | nindent 8 }}
         {{- end }}
-      filters:
-        - type: URLRewrite
-          urlRewrite:
-            path:
-              type: ReplaceFullPath
-              replaceFullPath: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ $entry.path }}
       backendRefs:
-        - name: {{ include "backendService.fullname" $ }}
-          port: {{ include "backendService.servicePort" $ }}
-          kind: Service
+        {{- include "backendService.routeBackendRefs" $ | nindent 8 }}
       {{- include "backendService.routeTimeouts" (dict "pathConfig" $.Values.routes.paths.scoped "globalConfig" $.Values.routes) | nindent 6 }}
-    {{- end }}
-    {{- else }}
-    - matches:
-        - path:
-            type: Exact
-            value: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ include "backendService.routePrefix" $ }}{{ . }}
-      filters:
-        - type: URLRewrite
-          urlRewrite:
-            path:
-              type: ReplaceFullPath
-              replaceFullPath: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ . }}
-      backendRefs:
-        - name: {{ include "backendService.fullname" $ }}
-          port: {{ include "backendService.servicePort" $ }}
-          kind: Service
-      {{- include "backendService.routeTimeouts" (dict "pathConfig" $.Values.routes.paths.scoped "globalConfig" $.Values.routes) | nindent 6 }}
-    {{- end }}
     {{- end }}
 {{- end }}
 
@@ -235,15 +176,9 @@ spec:
             value: {{ include "backendService.routePrefix" $ }}{{ default "/probe" .Values.routes.paths.probe.probePath }}
             # TODO: Add https://docs.konghq.com/hub/kong-inc/response-transformer/ to omit the response body
       filters:
-        - type: URLRewrite
-          urlRewrite:
-            path:
-              type: ReplaceFullPath
-              replaceFullPath: {{ default "/probe" .Values.routes.paths.probe.probePath }}
+        {{- include "backendService.urlRewriteFullPath" (default "/probe" .Values.routes.paths.probe.probePath) | nindent 8 }}
       backendRefs:
-        - name: {{ include "backendService.fullname" $ }}
-          port: {{ include "backendService.servicePort" $ }}
-          kind: Service
+        {{- include "backendService.routeBackendRefs" $ | nindent 8 }}
       {{- include "backendService.routeTimeouts" (dict "pathConfig" .Values.routes.paths.probe "globalConfig" .Values.routes) | nindent 6 }}
 {{- end }}
 

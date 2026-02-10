@@ -607,13 +607,13 @@ routes:
       # @default -- the chart will default to 'scoped' to stay backward compatible
       pathOverride: /scoped
       # -- allowList defines paths exposed without JWT authentication.
-      # Entries can be:
-      #   - A string for exact path matches (e.g., "/upload")
-      #   - An object: { path, type (Exact|PathPrefix, default: Exact), methods (optional for Exact, required for PathPrefix) }
-      # ⚠️ PathPrefix entries MUST specify 'methods' to restrict allowed HTTP methods.
-      # Rendered to: `/{scoped|pathOverride}/{pathPrefix}/{entry}`
+      # Each entry is an object with: path, type (Exact|PathPrefix, default: Exact), methods (default: [GET])
+      # Rendered to: `/{scoped|pathOverride}/{pathPrefix}/{entry.path}`
       allowList:
-        - /upload
+        - path: /upload
+          type: Exact
+          methods:
+            - PUT
         # - path: /html-store
         #   type: PathPrefix
         #   methods:
