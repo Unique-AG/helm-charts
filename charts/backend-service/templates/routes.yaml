@@ -27,7 +27,7 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: {{ include "backendService.routePrefix" $ }}
+            value: {{ include "backendService.routePrefix" $ | default "/" }}
       backendRefs:
         - name: {{ include "backendService.fullname" $ }}
           port: {{ include "backendService.servicePort" $ }}
@@ -60,7 +60,7 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: {{ if eq (include "backendService.routePrefix" $) "/" -}}{{ . }}{{- else -}}{{ include "backendService.routePrefix" $ }}{{ . }}{{- end }}
+            value: {{ include "backendService.routePrefix" $ }}{{ . }}
       backendRefs:
         - name: {{ include "backendService.fullname" $ }}
           port: {{ include "backendService.servicePort" $ }}

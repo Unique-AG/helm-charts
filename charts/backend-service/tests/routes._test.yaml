@@ -210,6 +210,114 @@ tests:
                 backendRequest: 60s
                 request: 60s
 
+  - it: When given a scoped httpRoute and pathPrefix /, does not render double slashes (regression)
+    values:
+      - ../ci/routes-values.yaml
+    set:
+      routes.pathPrefix: /
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1
+    template: routes.yaml
+    documentSelector:
+      path: metadata.name
+      value: ecj-scoped
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: spec.rules
+          value:
+            - matches:
+                - path:
+                    type: Exact
+                    value: /scoped/upload
+              filters:
+                - type: URLRewrite
+                  urlRewrite:
+                    path:
+                      type: ReplaceFullPath
+                      replaceFullPath: /scoped/upload
+              backendRefs:
+                - name: ecj
+                  port: 80
+                  kind: Service
+              timeouts:
+                backendRequest: 30s
+                request: 30s
+            - matches:
+                - path:
+                    type: Exact
+                    value: /scoped/download
+              filters:
+                - type: URLRewrite
+                  urlRewrite:
+                    path:
+                      type: ReplaceFullPath
+                      replaceFullPath: /scoped/download
+              backendRefs:
+                - name: ecj
+                  port: 80
+                  kind: Service
+              timeouts:
+                backendRequest: 30s
+                request: 30s
+
+  - it: When given a probe httpRoute and pathPrefix /, does not render double slashes (regression)
+    values:
+      - ../ci/routes-values.yaml
+    set:
+      routes.pathPrefix: /
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1
+    template: routes.yaml
+    documentSelector:
+      path: metadata.name
+      value: ecj-probe
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: spec.rules
+          value:
+            - matches:
+                - path:
+                    type: Exact
+                    value: /probe
+              filters:
+                - type: URLRewrite
+                  urlRewrite:
+                    path:
+                      type: ReplaceFullPath
+                      replaceFullPath: /probe
+              backendRefs:
+                - name: ecj
+                  port: 80
+                  kind: Service
+              timeouts:
+                backendRequest: 5s
+                request: 5s
+
+  - it: When given a versioned httpRoute and pathPrefix /, does not render trailing slash (regression)
+    values:
+      - ../ci/routes-values.yaml
+    set:
+      routes.pathPrefix: /
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1
+    template: routes.yaml
+    documentSelector:
+      path: metadata.name
+      value: ecj-versioned
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: spec.rules[0].matches[0].path.value
+          value: /public
+
   - it: renders default route with per-path timeout override
     values:
       - ../ci/routes-values.yaml

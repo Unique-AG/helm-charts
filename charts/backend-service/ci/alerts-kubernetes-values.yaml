@@ -1,16 +1,14 @@
-# CI test configuration for Kubernetes Application Alerts
+# CI test: Kubernetes Application + Resources alerts together (without the full comprehensive config)
 prometheus:
   enabled: true
   defaultAlerts:
     kubernetesApplication:
       enabled: true
       for: "6m"
-      # Test with some alerts disabled
       disabled:
         KubePodFrequentRestarts: true
         KubeContainerWaiting: true
         KubeDaemonSetNotScheduled: true
-      # Test with custom rules
       customRules:
         KubePodCrashLooping:
           for: "8m"
@@ -23,8 +21,22 @@ prometheus:
           severity: "critical"
         KubeHpaMaxedOut:
           for: "12m"
-    # Additional labels for testing
+    kubernetesResources:
+      enabled: true
+      for: "8m"
+      disabled:
+        KubernetesPodThrottled: true
+        KubernetesHPAScalingEvent: true
+      customRules:
+        KubernetesPodHighCPUUsage:
+          for: "12m"
+          severity: "critical"
+        KubernetesPodNearMemoryLimit:
+          for: "3m"
+          severity: "warning"
+        KubernetesContainerOOMKilled:
+          for: "1m"
     additionalLabels:
       environment: "staging"
       team: "devops"
-      alert_manager: "prometheus"
+      component: "monitoring"

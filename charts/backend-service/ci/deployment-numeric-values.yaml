@@ -1,3 +1,4 @@
+# CI test: numeric CPU values + extra service labels (merged from service-extra-labels-values.yaml)
 image:
   repository: "ghcr.io/unique-ag/chart-testing-service"
   tag: "1.1.0"
@@ -9,3 +10,6 @@ resources:
   requests:
     cpu: 1
     memory: 128Mi
+service:
+  extraLabels:
+    foo: bar

@@ -6,8 +6,8 @@ release:
   name: ecj
 tests:
   - it: When given extra labels, it should add them to the service
-    values:
-      - ../ci/service-extra-labels-values.yaml
+    set:
+      service.extraLabels.foo: bar
     template: service.yaml
     asserts:
       - isKind:
