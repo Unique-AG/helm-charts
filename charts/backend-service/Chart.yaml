@@ -19,3 +19,5 @@ annotations:
   artifacthub.io/changes: |
     - kind: fixed
       description: "If pathPrefix is /, all routes will now be correctly concatenated."
+    - kind: changed
+      description: "Multiple ci test files merged to reduce validation time."

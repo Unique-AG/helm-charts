@@ -7,7 +7,7 @@ release:
 tests:
   - it: When given two extra routes, should split them correctly (regression)
     values:
-      - ../ci/extra-routes-values.yaml
+      - ../ci/routes-values.yaml
     capabilities:
       apiVersions:
         - gateway.networking.k8s.io/v1
@@ -18,7 +18,7 @@ tests:
 
   - it: renders timeouts correctly
     values:
-      - ../ci/extra-routes-values.yaml
+      - ../ci/routes-values.yaml
     capabilities:
       apiVersions:
         - gateway.networking.k8s.io/v1
@@ -35,7 +35,7 @@ tests:
 
   - it: renders timeouts with different request and backendRequest values
     values:
-      - ../ci/extra-routes-values.yaml
+      - ../ci/routes-values.yaml
     capabilities:
       apiVersions:
         - gateway.networking.k8s.io/v1
