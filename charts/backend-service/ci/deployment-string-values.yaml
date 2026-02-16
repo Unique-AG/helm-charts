@@ -1,3 +1,4 @@
+# CI test: string CPU values + custom ports (merged from ports-values.yaml)
 image:
   repository: "ghcr.io/unique-ag/chart-testing-service"
   tag: "1.1.0"
@@ -8,3 +9,8 @@ resources:
   requests:
     cpu: 100m
     memory: 128Mi
+ports:
+  application: 8080
+  service: 9001
+service:
+  port: null

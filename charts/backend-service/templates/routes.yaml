@@ -27,7 +27,7 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: {{ include "backendService.routePrefix" $ }}
+            value: {{ include "backendService.routePrefix" $ | default "/" }}
       backendRefs:
         - name: {{ include "backendService.fullname" $ }}
           port: {{ include "backendService.servicePort" $ }}
@@ -60,7 +60,7 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: {{ if eq (include "backendService.routePrefix" $) "/" -}}{{ . }}{{- else -}}{{ include "backendService.routePrefix" $ }}{{ . }}{{- end }}
+            value: {{ include "backendService.routePrefix" $ }}{{ . }}
       backendRefs:
         - name: {{ include "backendService.fullname" $ }}
           port: {{ include "backendService.servicePort" $ }}
@@ -134,16 +134,33 @@ spec:
     - {{ tpl (.Values.routes.hostname) $ }}
   rules:
     {{- range .Values.routes.paths.scoped.allowList }}
+    {{- $entry := . }}
+    {{- $matchType := default "Exact" .type }}
+    {{- if and (eq $matchType "PathPrefix") (not .methods) }}
+    {{- fail "scoped allowList PathPrefix entries require explicit 'methods' (e.g., methods: [GET])" }}
+    {{- end }}
+    {{- $methods := default (list "GET") .methods }}
     - matches:
+        {{- range $methods }}
         - path:
-            type: Exact
-            value: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ include "backendService.routePrefix" $ }}{{ . }}
+            type: {{ $matchType }}
+            value: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ include "backendService.routePrefix" $ }}{{ $entry.path }}
+          method: {{ . }}
+        {{- end }}
       filters:
+        {{- if eq $matchType "PathPrefix" }}
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ $entry.path }}
+        {{- else }}
         - type: URLRewrite
           urlRewrite:
             path:
               type: ReplaceFullPath
-              replaceFullPath: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ . }}
+              replaceFullPath: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ $entry.path }}
+        {{- end }}
       backendRefs:
         - name: {{ include "backendService.fullname" $ }}
           port: {{ include "backendService.servicePort" $ }}
