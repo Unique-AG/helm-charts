@@ -135,6 +135,20 @@ tests:
                     type: PathPrefix
                     value: /scoped/ecj/html-store
                   method: GET
+              filters:
+                - type: URLRewrite
+                  urlRewrite:
+                    path:
+                      type: ReplacePrefixMatch
+                      replacePrefixMatch: /scoped/html-store
+              backendRefs:
+                - name: ecj
+                  port: 80
+                  kind: Service
+              timeouts:
+                backendRequest: 30s
+                request: 30s
+            - matches:
                 - path:
                     type: PathPrefix
                     value: /scoped/ecj/html-store
@@ -245,6 +259,20 @@ tests:
                     type: PathPrefix
                     value: /newScopedPathOverride/newPathPrefix/html-store
                   method: GET
+              filters:
+                - type: URLRewrite
+                  urlRewrite:
+                    path:
+                      type: ReplacePrefixMatch
+                      replacePrefixMatch: /newScopedPathOverride/html-store
+              backendRefs:
+                - name: ecj
+                  port: 80
+                  kind: Service
+              timeouts:
+                backendRequest: 30s
+                request: 30s
+            - matches:
                 - path:
                     type: PathPrefix
                     value: /newScopedPathOverride/newPathPrefix/html-store
@@ -371,6 +399,20 @@ tests:
                     type: PathPrefix
                     value: /scoped/html-store
                   method: GET
+              filters:
+                - type: URLRewrite
+                  urlRewrite:
+                    path:
+                      type: ReplacePrefixMatch
+                      replacePrefixMatch: /scoped/html-store
+              backendRefs:
+                - name: ecj
+                  port: 80
+                  kind: Service
+              timeouts:
+                backendRequest: 30s
+                request: 30s
+            - matches:
                 - path:
                     type: PathPrefix
                     value: /scoped/html-store
@@ -530,7 +572,7 @@ tests:
       - notExists:
           path: spec.rules[0].timeouts
 
-  - it: renders scoped prefix entry with multiple methods as separate match entries including OPTIONS
+  - it: renders scoped prefix entry with multiple methods as separate rules including OPTIONS
     set:
       routes:
         hostname: test.example.com
@@ -559,16 +601,32 @@ tests:
                 type: PathPrefix
                 value: /scoped/data
               method: GET
+      - equal:
+          path: spec.rules[0].filters[0].urlRewrite.path
+          value:
+            type: ReplacePrefixMatch
+            replacePrefixMatch: /scoped/data
+      - equal:
+          path: spec.rules[1].matches
+          value:
             - path:
                 type: PathPrefix
                 value: /scoped/data
               method: POST
+      - equal:
+          path: spec.rules[1].filters[0].urlRewrite.path
+          value:
+            type: ReplacePrefixMatch
+            replacePrefixMatch: /scoped/data
+      - equal:
+          path: spec.rules[2].matches
+          value:
             - path:
                 type: PathPrefix
                 value: /scoped/data
               method: OPTIONS
       - equal:
-          path: spec.rules[0].filters[0].urlRewrite.path
+          path: spec.rules[2].filters[0].urlRewrite.path
           value:
             type: ReplacePrefixMatch
             replacePrefixMatch: /scoped/data
@@ -614,10 +672,16 @@ tests:
           path: spec.rules[1].matches[0].method
           value: GET
       - equal:
-          path: spec.rules[1].matches[1].method
+          path: spec.rules[1].filters[0].urlRewrite.path.type
+          value: ReplacePrefixMatch
+      - equal:
+          path: spec.rules[2].matches[0].path.type
+          value: PathPrefix
+      - equal:
+          path: spec.rules[2].matches[0].method
           value: OPTIONS
       - equal:
-          path: spec.rules[1].filters[0].urlRewrite.path.type
+          path: spec.rules[2].filters[0].urlRewrite.path.type
           value: ReplacePrefixMatch
 
   - it: renders object entry with default type and default method plus OPTIONS

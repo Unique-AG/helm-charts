@@ -140,6 +140,26 @@ spec:
     {{- fail "scoped allowList PathPrefix entries require explicit 'methods' (e.g., methods: [GET])" }}
     {{- end }}
     {{- $methods := concat (without (default (list "GET") .methods) "OPTIONS") (list "OPTIONS") }}
+    {{- if eq $matchType "PathPrefix" }}
+    {{- range $methods }}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ include "backendService.routePrefix" $ }}{{ $entry.path }}
+          method: {{ . }}
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ $entry.path }}
+      backendRefs:
+        - name: {{ include "backendService.fullname" $ }}
+          port: {{ include "backendService.servicePort" $ }}
+          kind: Service
+      {{- include "backendService.routeTimeouts" (dict "pathConfig" $.Values.routes.paths.scoped "globalConfig" $.Values.routes) | nindent 6 }}
+    {{- end }}
+    {{- else }}
     - matches:
         {{- range $methods }}
         - path:
@@ -148,24 +168,17 @@ spec:
           method: {{ . }}
         {{- end }}
       filters:
-        {{- if eq $matchType "PathPrefix" }}
-        - type: URLRewrite
-          urlRewrite:
-            path:
-              type: ReplacePrefixMatch
-              replacePrefixMatch: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ $entry.path }}
-        {{- else }}
         - type: URLRewrite
           urlRewrite:
             path:
               type: ReplaceFullPath
               replaceFullPath: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ $entry.path }}
-        {{- end }}
       backendRefs:
         - name: {{ include "backendService.fullname" $ }}
           port: {{ include "backendService.servicePort" $ }}
           kind: Service
       {{- include "backendService.routeTimeouts" (dict "pathConfig" $.Values.routes.paths.scoped "globalConfig" $.Values.routes) | nindent 6 }}
+    {{- end }}
     {{- end }}
 {{- end }}
 
