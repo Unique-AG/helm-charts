@@ -20,6 +20,8 @@ routes:
   paths:
     default:
       enabled: true
+      # nameSuffix: default
+      # blockNameSuffix: block
       blockList:
         - /metrics
         - /sensitive
@@ -30,6 +32,7 @@ routes:
       timeout: "60s"
     versioned:
       enabled: true
+      # nameSuffix: versioned
       # -- users wishing to not call their versioned API 'public' can override the path
       # ⚠️ Customizing this value requires also changing the default url in multiple places including all SDK or integration use cases
       # @default -- the chart will default to 'public' to stay backward compatible
@@ -40,6 +43,7 @@ routes:
       timeout: "120s"
     scoped:
       enabled: true
+      # nameSuffix: scoped
       pathOverride: /scoped
       allowList:
         - path: /upload
@@ -56,6 +60,7 @@ routes:
     # Maps to version neutral `/probe` endpoint all Unique services expose
     probe:
       enabled: true
+      # nameSuffix: probe
       extraAnnotations: {}
       #   konghq.com/strip-path: "true"
       # Short timeout for probe endpoint

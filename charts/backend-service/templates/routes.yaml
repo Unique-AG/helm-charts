@@ -6,7 +6,7 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: {{ template "backendService.fullname" $ }}-default
+  name: {{ template "backendService.fullname" $ }}-{{ .Values.routes.paths.default.nameSuffix }}
   annotations:
     konghq.com/plugins: unique-jwt-auth,unique-route-metrics
     konghq.com/strip-path: "true"
@@ -42,7 +42,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: {{ template "backendService.fullname" $ }}-block
+  name: {{ template "backendService.fullname" $ }}-{{ .Values.routes.paths.default.blockNameSuffix }}
   annotations:
     konghq.com/plugins: unique-block-route,unique-route-metrics
   labels:
@@ -75,7 +75,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: {{ template "backendService.fullname" $ }}-versioned
+  name: {{ template "backendService.fullname" $ }}-{{ .Values.routes.paths.versioned.nameSuffix }}
   annotations:
     konghq.com/plugins: unique-app-repo-auth,unique-route-metrics
     {{- if .Values.routes.paths.versioned.extraAnnotations }}
@@ -115,7 +115,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: {{ template "backendService.fullname" $ }}-scoped
+  name: {{ template "backendService.fullname" $ }}-{{ .Values.routes.paths.scoped.nameSuffix }}
   annotations:
     konghq.com/strip-path: "true"
     konghq.com/plugins: unique-route-metrics
@@ -139,7 +139,27 @@ spec:
     {{- if and (eq $matchType "PathPrefix") (not .methods) }}
     {{- fail "scoped allowList PathPrefix entries require explicit 'methods' (e.g., methods: [GET])" }}
     {{- end }}
-    {{- $methods := default (list "GET") .methods }}
+    {{- $methods := concat (without (default (list "GET") .methods) "OPTIONS") (list "OPTIONS") }}
+    {{- if eq $matchType "PathPrefix" }}
+    {{- range $methods }}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ include "backendService.routePrefix" $ }}{{ $entry.path }}
+          method: {{ . }}
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ $entry.path }}
+      backendRefs:
+        - name: {{ include "backendService.fullname" $ }}
+          port: {{ include "backendService.servicePort" $ }}
+          kind: Service
+      {{- include "backendService.routeTimeouts" (dict "pathConfig" $.Values.routes.paths.scoped "globalConfig" $.Values.routes) | nindent 6 }}
+    {{- end }}
+    {{- else }}
     - matches:
         {{- range $methods }}
         - path:
@@ -148,24 +168,17 @@ spec:
           method: {{ . }}
         {{- end }}
       filters:
-        {{- if eq $matchType "PathPrefix" }}
-        - type: URLRewrite
-          urlRewrite:
-            path:
-              type: ReplacePrefixMatch
-              replacePrefixMatch: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ $entry.path }}
-        {{- else }}
         - type: URLRewrite
           urlRewrite:
             path:
               type: ReplaceFullPath
               replaceFullPath: {{ default "/scoped" $.Values.routes.paths.scoped.pathOverride }}{{ $entry.path }}
-        {{- end }}
       backendRefs:
         - name: {{ include "backendService.fullname" $ }}
           port: {{ include "backendService.servicePort" $ }}
           kind: Service
       {{- include "backendService.routeTimeouts" (dict "pathConfig" $.Values.routes.paths.scoped "globalConfig" $.Values.routes) | nindent 6 }}
+    {{- end }}
     {{- end }}
 {{- end }}
 
@@ -175,7 +188,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: {{ template "backendService.fullname" $ }}-probe
+  name: {{ template "backendService.fullname" $ }}-{{ .Values.routes.paths.probe.nameSuffix }}
   annotations:
     konghq.com/strip-path: "true"
     konghq.com/plugins: unique-route-metrics

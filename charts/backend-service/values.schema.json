@@ -1453,6 +1453,14 @@
               "description": "Default route configuration",
               "properties": {
                 "enabled": { "type": "boolean" },
+                "nameSuffix": {
+                  "type": "string",
+                  "description": "Suffix for the default HTTPRoute resource name ({fullname}-{nameSuffix})"
+                },
+                "blockNameSuffix": {
+                  "type": "string",
+                  "description": "Suffix for the block-list HTTPRoute resource name ({fullname}-{blockNameSuffix})"
+                },
                 "blockList": { "type": "array", "items": { "type": "string" } },
                 "extraAnnotations": { "type": "object" },
                 "timeout": {
@@ -1467,6 +1475,10 @@
               "description": "Versioned (public) route configuration",
               "properties": {
                 "enabled": { "type": "boolean" },
+                "nameSuffix": {
+                  "type": "string",
+                  "description": "Suffix for the versioned HTTPRoute resource name ({fullname}-{nameSuffix})"
+                },
                 "pathOverride": { "type": "string" },
                 "extraAnnotations": { "type": "object" },
                 "timeout": {
@@ -1481,6 +1493,10 @@
               "description": "Scoped route configuration",
               "properties": {
                 "enabled": { "type": "boolean" },
+                "nameSuffix": {
+                  "type": "string",
+                  "description": "Suffix for the scoped HTTPRoute resource name ({fullname}-{nameSuffix})"
+                },
                 "pathOverride": { "type": "string" },
                 "allowList": {
                   "type": "array",
@@ -1534,6 +1550,10 @@
               "description": "Probe route configuration",
               "properties": {
                 "enabled": { "type": "boolean" },
+                "nameSuffix": {
+                  "type": "string",
+                  "description": "Suffix for the probe HTTPRoute resource name ({fullname}-{nameSuffix})"
+                },
                 "probePath": { "type": "string" },
                 "extraAnnotations": { "type": "object" },
                 "timeout": {
