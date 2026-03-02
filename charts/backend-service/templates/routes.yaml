@@ -6,7 +6,7 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: {{ template "backendService.fullname" $ }}-default
+  name: {{ template "backendService.fullname" $ }}-{{ .Values.routes.paths.default.nameSuffix }}
   annotations:
     konghq.com/plugins: unique-jwt-auth,unique-route-metrics
     konghq.com/strip-path: "true"
@@ -42,7 +42,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: {{ template "backendService.fullname" $ }}-block
+  name: {{ template "backendService.fullname" $ }}-{{ .Values.routes.paths.default.blockNameSuffix }}
   annotations:
     konghq.com/plugins: unique-block-route,unique-route-metrics
   labels:
@@ -75,7 +75,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: {{ template "backendService.fullname" $ }}-versioned
+  name: {{ template "backendService.fullname" $ }}-{{ .Values.routes.paths.versioned.nameSuffix }}
   annotations:
     konghq.com/plugins: unique-app-repo-auth,unique-route-metrics
     {{- if .Values.routes.paths.versioned.extraAnnotations }}
@@ -115,7 +115,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: {{ template "backendService.fullname" $ }}-scoped
+  name: {{ template "backendService.fullname" $ }}-{{ .Values.routes.paths.scoped.nameSuffix }}
   annotations:
     konghq.com/strip-path: "true"
     konghq.com/plugins: unique-route-metrics
@@ -139,7 +139,7 @@ spec:
     {{- if and (eq $matchType "PathPrefix") (not .methods) }}
     {{- fail "scoped allowList PathPrefix entries require explicit 'methods' (e.g., methods: [GET])" }}
     {{- end }}
-    {{- $methods := default (list "GET") .methods }}
+    {{- $methods := concat (without (default (list "GET") .methods) "OPTIONS") (list "OPTIONS") }}
     - matches:
         {{- range $methods }}
         - path:
@@ -175,7 +175,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: {{ template "backendService.fullname" $ }}-probe
+  name: {{ template "backendService.fullname" $ }}-{{ .Values.routes.paths.probe.nameSuffix }}
   annotations:
     konghq.com/strip-path: "true"
     konghq.com/plugins: unique-route-metrics

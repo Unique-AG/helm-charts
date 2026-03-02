@@ -582,6 +582,10 @@ routes:
   paths:
     default:
       enabled: true
+      # -- nameSuffix for the default HTTPRoute resource name ({fullname}-{nameSuffix})
+      nameSuffix: default
+      # -- blockNameSuffix for the block-list HTTPRoute resource name ({fullname}-{blockNameSuffix})
+      blockNameSuffix: block
       # -- explicitly list paths to block
       blockList:
         - /metrics
@@ -592,6 +596,8 @@ routes:
       # timeout: "60s"
     versioned:
       enabled: false
+      # -- nameSuffix for the versioned HTTPRoute resource name ({fullname}-{nameSuffix})
+      nameSuffix: versioned
       # -- users wishing to not call their versioned API 'public' can override the path
       # ⚠️ Customizing this value requires also changing the default url in multiple places including all SDK or integration use cases
       # @default -- the chart will default to 'public' to stay backward compatible
@@ -602,6 +608,8 @@ routes:
       # timeout: "60s"
     scoped:
       enabled: false
+      # -- nameSuffix for the scoped HTTPRoute resource name ({fullname}-{nameSuffix})
+      nameSuffix: scoped
       # -- users wishing to not call their scoped API 'scoped' can override the path
       # ⚠️ Customizing this value requires also changing the default url in multiple places including all web-apps
       # @default -- the chart will default to 'scoped' to stay backward compatible
@@ -626,6 +634,8 @@ routes:
     # Maps to version neutral `/probe` endpoint all Unique services expose
     probe:
       enabled: false
+      # -- nameSuffix for the probe HTTPRoute resource name ({fullname}-{nameSuffix})
+      nameSuffix: probe
       # -- path to the probe endpoint
       probePath: /probe
       extraAnnotations: {}

@@ -5,7 +5,7 @@ templates:
 release:
   name: ecj
 tests:
-  - it: When given a httpRoute, renders some properties
+  - it: When given a httpRoute, renders default nameSuffix in resource names
     values:
       - ../ci/routes-values.yaml
     capabilities:
@@ -15,6 +15,36 @@ tests:
     asserts:
       - isKind:
           of: HTTPRoute
+      - equal:
+          path: metadata.name
+          value: ecj-default
+        documentSelector:
+          path: metadata.name
+          value: ecj-default
+      - equal:
+          path: metadata.name
+          value: ecj-block
+        documentSelector:
+          path: metadata.name
+          value: ecj-block
+      - equal:
+          path: metadata.name
+          value: ecj-versioned
+        documentSelector:
+          path: metadata.name
+          value: ecj-versioned
+      - equal:
+          path: metadata.name
+          value: ecj-scoped
+        documentSelector:
+          path: metadata.name
+          value: ecj-scoped
+      - equal:
+          path: metadata.name
+          value: ecj-probe
+        documentSelector:
+          path: metadata.name
+          value: ecj-probe
 
   - it: When given a scoped httpRoute, renders exact and prefix matches correctly including the service name (regression)
     values:
@@ -61,6 +91,10 @@ tests:
                     type: Exact
                     value: /scoped/ecj/upload
                   method: POST
+                - path:
+                    type: Exact
+                    value: /scoped/ecj/upload
+                  method: OPTIONS
               filters:
                 - type: URLRewrite
                   urlRewrite:
@@ -79,6 +113,10 @@ tests:
                     type: Exact
                     value: /scoped/ecj/download
                   method: GET
+                - path:
+                    type: Exact
+                    value: /scoped/ecj/download
+                  method: OPTIONS
               filters:
                 - type: URLRewrite
                   urlRewrite:
@@ -97,6 +135,10 @@ tests:
                     type: PathPrefix
                     value: /scoped/ecj/html-store
                   method: GET
+                - path:
+                    type: PathPrefix
+                    value: /scoped/ecj/html-store
+                  method: OPTIONS
               filters:
                 - type: URLRewrite
                   urlRewrite:
@@ -159,6 +201,10 @@ tests:
                     type: Exact
                     value: /newScopedPathOverride/newPathPrefix/upload
                   method: POST
+                - path:
+                    type: Exact
+                    value: /newScopedPathOverride/newPathPrefix/upload
+                  method: OPTIONS
               filters:
                 - type: URLRewrite
                   urlRewrite:
@@ -177,6 +223,10 @@ tests:
                     type: Exact
                     value: /newScopedPathOverride/newPathPrefix/download
                   method: GET
+                - path:
+                    type: Exact
+                    value: /newScopedPathOverride/newPathPrefix/download
+                  method: OPTIONS
               filters:
                 - type: URLRewrite
                   urlRewrite:
@@ -195,6 +245,10 @@ tests:
                     type: PathPrefix
                     value: /newScopedPathOverride/newPathPrefix/html-store
                   method: GET
+                - path:
+                    type: PathPrefix
+                    value: /newScopedPathOverride/newPathPrefix/html-store
+                  method: OPTIONS
               filters:
                 - type: URLRewrite
                   urlRewrite:
@@ -273,6 +327,10 @@ tests:
                     type: Exact
                     value: /scoped/upload
                   method: POST
+                - path:
+                    type: Exact
+                    value: /scoped/upload
+                  method: OPTIONS
               filters:
                 - type: URLRewrite
                   urlRewrite:
@@ -291,6 +349,10 @@ tests:
                     type: Exact
                     value: /scoped/download
                   method: GET
+                - path:
+                    type: Exact
+                    value: /scoped/download
+                  method: OPTIONS
               filters:
                 - type: URLRewrite
                   urlRewrite:
@@ -309,6 +371,10 @@ tests:
                     type: PathPrefix
                     value: /scoped/html-store
                   method: GET
+                - path:
+                    type: PathPrefix
+                    value: /scoped/html-store
+                  method: OPTIONS
               filters:
                 - type: URLRewrite
                   urlRewrite:
@@ -464,7 +530,7 @@ tests:
       - notExists:
           path: spec.rules[0].timeouts
 
-  - it: renders scoped prefix entry with multiple methods as separate match entries
+  - it: renders scoped prefix entry with multiple methods as separate match entries including OPTIONS
     set:
       routes:
         hostname: test.example.com
@@ -497,6 +563,10 @@ tests:
                 type: PathPrefix
                 value: /scoped/data
               method: POST
+            - path:
+                type: PathPrefix
+                value: /scoped/data
+              method: OPTIONS
       - equal:
           path: spec.rules[0].filters[0].urlRewrite.path
           value:
@@ -532,6 +602,9 @@ tests:
           path: spec.rules[0].matches[0].method
           value: GET
       - equal:
+          path: spec.rules[0].matches[1].method
+          value: OPTIONS
+      - equal:
           path: spec.rules[0].filters[0].urlRewrite.path.type
           value: ReplaceFullPath
       - equal:
@@ -541,10 +614,13 @@ tests:
           path: spec.rules[1].matches[0].method
           value: GET
       - equal:
+          path: spec.rules[1].matches[1].method
+          value: OPTIONS
+      - equal:
           path: spec.rules[1].filters[0].urlRewrite.path.type
           value: ReplacePrefixMatch
 
-  - it: renders object entry with default type and default method
+  - it: renders object entry with default type and default method plus OPTIONS
     set:
       routes:
         hostname: test.example.com
@@ -569,10 +645,13 @@ tests:
           path: spec.rules[0].matches[0].method
           value: GET
       - equal:
+          path: spec.rules[0].matches[1].method
+          value: OPTIONS
+      - equal:
           path: spec.rules[0].filters[0].urlRewrite.path.type
           value: ReplaceFullPath
 
-  - it: renders object entry with explicit type Exact and methods
+  - it: renders object entry with explicit type Exact and methods plus OPTIONS
     set:
       routes:
         hostname: test.example.com
@@ -600,5 +679,53 @@ tests:
           path: spec.rules[0].matches[0].method
           value: POST
       - equal:
+          path: spec.rules[0].matches[1].method
+          value: OPTIONS
+      - equal:
           path: spec.rules[0].filters[0].urlRewrite.path.type
           value: ReplaceFullPath
+
+  - it: renders custom nameSuffix overrides for all route types
+    values:
+      - ../ci/routes-values.yaml
+    set:
+      routes.paths.default.nameSuffix: default-v2
+      routes.paths.default.blockNameSuffix: block-v2
+      routes.paths.versioned.nameSuffix: versioned-v2
+      routes.paths.scoped.nameSuffix: scoped-v2
+      routes.paths.probe.nameSuffix: probe-v2
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1
+    template: routes.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: ecj-default-v2
+        documentSelector:
+          path: metadata.name
+          value: ecj-default-v2
+      - equal:
+          path: metadata.name
+          value: ecj-block-v2
+        documentSelector:
+          path: metadata.name
+          value: ecj-block-v2
+      - equal:
+          path: metadata.name
+          value: ecj-versioned-v2
+        documentSelector:
+          path: metadata.name
+          value: ecj-versioned-v2
+      - equal:
+          path: metadata.name
+          value: ecj-scoped-v2
+        documentSelector:
+          path: metadata.name
+          value: ecj-scoped-v2
+      - equal:
+          path: metadata.name
+          value: ecj-probe-v2
+        documentSelector:
+          path: metadata.name
+          value: ecj-probe-v2
