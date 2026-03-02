@@ -419,6 +419,32 @@ entries:
   backend-service:
   - annotations:
       artifacthub.io/changes: |
+        - kind: fixed
+          description: "OPTIONS method is now included in the scoped allowList by default as the requests get CORS blocked otherwise."
+        - kind: changed
+          description: "All routes now offer a nameSuffix that can be used to force replacement (defaults to the previous value)."
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    appVersion: latest
+    created: "2026-03-02T12:22:45.175183147Z"
+    description: 'The ''backend-service'' chart is a "convenience" chart from Unique
+      AG that can generically be used to deploy backend workloads to Kubernetes.  Note
+      that this chart assumes that you have a valid contract with Unique AG and thus
+      access to the required Docker images. '
+    digest: 6ed5a20badec2a94a665a3586095512210bcbdd7f5bdd8e341aab707a1e3793b
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: backend-service
+    sources:
+    - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/backend-service-10.3.0/backend-service-10.3.0.tgz
+    version: 10.3.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: changed
           description: "scoped allowList now uses a map syntax instead of string entries. Methods default to [GET] if omitted. Match entries default to 'type: Exact' if omitted. The change is backward compatible as the default is still PUT /scoped/upload."
       artifacthub.io/license: Apache-2.0
@@ -3180,4 +3206,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2026-02-10T12:52:19.071645565Z"
+generated: "2026-03-02T12:22:45.175512435Z"
