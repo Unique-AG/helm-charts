@@ -2029,6 +2029,30 @@ entries:
   kong-plugins:
   - annotations:
       artifacthub.io/changes: |
+        - kind: added
+          description: Configurable ssl_verify option for cluster-internal setups without TLS
+        - kind: changed
+          description: Tune log levels - reduce per-request INFO noise, promote key rotation events to INFO
+        - kind: security
+          description: Add WARN logs with client IP for suspicious auth rejections (invalid issuer, algorithm, signature, malformed token)
+    apiVersion: v2
+    created: "2026-03-09T17:47:20.376115598Z"
+    description: 'The ''kong-plugins'' chart provides a streamlined solution for deploying
+      Kong plugins via ConfigMaps to be used with the Unique Software.  Refer to each
+      plugins readme section to learn more about them.  Please report any security
+      concerns with the plugins via the [Security Policy](https://github.com/Unique-AG/helm-charts/tree/main?tab=security-ov-file). '
+    digest: 418ce84b09919c4ba437f808ff12d5e6cb7a43cfe556786d6c68bae7b3ba1934
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: kong-plugins
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/kong-plugins-2.1.0/kong-plugins-2.1.0.tgz
+    version: 2.1.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: changed
           description: Use strict issuer matching for JWT validation
         - kind: changed
@@ -3236,4 +3260,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2026-03-09T15:26:47.071725479Z"
+generated: "2026-03-09T17:47:20.376422103Z"
