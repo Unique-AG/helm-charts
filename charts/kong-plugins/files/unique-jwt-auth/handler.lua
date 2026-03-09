@@ -113,7 +113,7 @@ local function custom_validate_token_signature(conf, jwt, matched_iss, second_ca
     -- -- We could not validate signature, try to get a new keyset?
     local since_last_update = ngx.time() - public_keys.updated_at
     if not second_call and since_last_update > conf.iss_key_grace_period then
-        kong.log.debug('Could not validate signature. Keys updated last ' .. since_last_update .. ' seconds ago')
+        kong.log.info('Could not validate signature. Keys updated last ' .. since_last_update .. ' seconds ago')
         -- can it be that the signature key of the issuer has changed ... ?
         -- invalidate the old keys in kong cache and do a current lookup to the signature keys
         -- of the token issuer
@@ -510,7 +510,7 @@ local function logical_AND_authentication(conf)
 end
 
 function UniqueJwtAuthHandler:access(conf)
-    kong.log.info("UniqueJwtAuthHandler:access")
+    kong.log.debug("UniqueJwtAuthHandler:access")
     -- check if preflight request and whether it should be authenticated
     if not conf.run_on_preflight and kong.request.get_method() == "OPTIONS" then
         return

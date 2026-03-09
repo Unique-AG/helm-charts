@@ -232,7 +232,7 @@ local function do_authentication(conf)
         }
     end
 
-    kong.log.info(string.format("app_repository_url: %s app_id: %s company_id: %s user_id: %s",
+    kong.log.debug(string.format("app_repository_url: %s app_id: %s company_id: %s user_id: %s",
                             conf.app_repository_url or "nil", 
                             app_id or "nil", 
                             company_id or "nil", 
@@ -278,7 +278,7 @@ local function logical_AND_authentication(conf)
 end
 
 function UniqueAppRepoAuthHandler:access(conf)
-    kong.log.info("UniqueAppRepoAuthHandler:access")
+    kong.log.debug("UniqueAppRepoAuthHandler:access")
     -- check if preflight request and whether it should be authenticated
     if not conf.run_on_preflight and kong.request.get_method() == "OPTIONS" then
         return
