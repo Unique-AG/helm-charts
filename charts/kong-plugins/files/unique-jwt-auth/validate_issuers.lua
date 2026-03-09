@@ -7,7 +7,7 @@ local function validate_issuer(allowed_issuers, jwt_claims)
     end
     for _, curr_iss in pairs(allowed_issuers) do
         if curr_iss == jwt_claims.iss then
-            return true
+            return curr_iss
         end
     end
     return nil, "Token issuer not allowed"

@@ -13,23 +13,28 @@ local function get_issuer_keys(well_known_endpoint, conf)
     if not jwks_uri then
         local res, err = httpc:request_uri(well_known_endpoint, {
             method = "GET",
-            headers = conf.well_known_extra_headers or {}
+            headers = conf.well_known_extra_headers or {},
+            ssl_verify = true
         })
         if err then
             return nil, err
         end
-    
+
         local body_table, err = cjson.decode(res.body)
         if err then
             return nil, err
         end
 
         jwks_uri = body_table['jwks_uri']
+        if type(jwks_uri) ~= "string" or jwks_uri:sub(1, 8) ~= "https://" then
+            return nil, "Invalid or missing jwks_uri in well-known response"
+        end
     end
 
     local res, err = httpc:request_uri(jwks_uri, {
         method = "GET",
-        headers = conf.jwks_extra_headers or {}
+        headers = conf.jwks_extra_headers or {},
+        ssl_verify = true
     })
     if err then
         return nil, err
@@ -41,14 +46,16 @@ local function get_issuer_keys(well_known_endpoint, conf)
     end
 
     local keys = {}
-    for i, key in ipairs(body_table['keys']) do
-        keys[i] = convert.convert_kc_key(key)
-
-        -- Remove any newlines and spaces
-        keys[i] = keys[i]:gsub("[\r\n%s]+", "")
-
-        -- Add header and footer
-        keys[i] = "-----BEGIN PUBLIC KEY-----\n" .. keys[i] .. "\n-----END PUBLIC KEY-----"
+    for _, key in ipairs(body_table['keys']) do
+        local pem, err = convert.convert_kc_key(key)
+        if pem then
+            pem = pem:gsub("[\r\n%s]+", "")
+            pem = "-----BEGIN PUBLIC KEY-----\n" .. pem .. "\n-----END PUBLIC KEY-----"
+            keys[#keys + 1] = pem
+        end
+    end
+    if #keys == 0 then
+        return nil, "No usable RSA keys found in JWKS"
     end
     return keys, nil
 end

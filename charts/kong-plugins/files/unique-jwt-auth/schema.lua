@@ -48,7 +48,7 @@ local schema = {
                         type = "string",
                         one_of = {"exp", "nbf"}
                     },
-                    default = {"exp"}
+                    default = {"exp", "nbf"}
                 }
             }, {
                 maximum_expiration = {
