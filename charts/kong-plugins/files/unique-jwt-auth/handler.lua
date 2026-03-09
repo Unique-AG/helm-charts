@@ -85,10 +85,10 @@ end
 -- issued by this instance. The URL from inside the token from the "iss"
 -- information is taken to connect with the token issuer instance.
 -------------------------------------------------------------------------------
-local function custom_validate_token_signature(conf, jwt, second_call)
-    local issuer_cache_key = 'issuer_keys_' .. jwt.claims.iss
+local function custom_validate_token_signature(conf, jwt, matched_iss, second_call)
+    local issuer_cache_key = 'issuer_keys_' .. matched_iss
 
-    local well_known_endpoint = zitadel_keys.get_wellknown_endpoint(conf.well_known_template, jwt.claims.iss)
+    local well_known_endpoint = zitadel_keys.get_wellknown_endpoint(conf.well_known_template, matched_iss)
     -- Retrieve public keys
     local public_keys, err = kong.cache:get(issuer_cache_key, nil, custom_helper_issuer_get_keys, well_known_endpoint, conf)
 
@@ -118,7 +118,7 @@ local function custom_validate_token_signature(conf, jwt, second_call)
         -- invalidate the old keys in kong cache and do a current lookup to the signature keys
         -- of the token issuer
         kong.cache:invalidate(issuer_cache_key)
-        return custom_validate_token_signature(conf, jwt, true)
+        return custom_validate_token_signature(conf, jwt, matched_iss, true)
     end
 
     return kong.response.exit(401, {
@@ -349,10 +349,10 @@ local function custom_match_consumer(conf, jwt)
     end
 
     if not consumer and not conf.consumer_match_ignore_not_found then
-        kong.log.debug("Unable to find consumer " .. consumer_id .. " for token")
+        kong.log.err("Unable to find consumer for token claim [" .. conf.consumer_match_claim .. "]")
         return false, {
             status = 401,
-            message = "Unable to find consumer " .. consumer_id .. " for token"
+            message = "Unable to find consumer for token"
         }
     end
 
@@ -408,11 +408,11 @@ local function do_authentication(conf)
     local claims = jwt.claims
     local header = jwt.header
 
-    kong.log.debug("claims: " .. cjson.encode(claims))
-    kong.log.debug("header: " .. cjson.encode(header))
+    kong.log.debug("JWT issuer: " .. tostring(claims.iss) .. ", subject: " .. tostring(claims.sub))
 
     -- Verify that the issuer is allowed
-    if not validate_issuer(conf.allowed_iss, jwt.claims) then
+    local matched_iss = validate_issuer(conf.allowed_iss, jwt.claims)
+    if not matched_iss then
         return false, {
             status = 401,
             message = "Token issuer not allowed"
@@ -430,7 +430,7 @@ local function do_authentication(conf)
     end
 
     -- Now verify the JWT signature
-    err = custom_validate_token_signature(conf, jwt)
+    err = custom_validate_token_signature(conf, jwt, matched_iss)
     if err ~= nil then
         return false, err
     end
@@ -455,8 +455,6 @@ local function do_authentication(conf)
         end
     end
 
-    custom_set_unique_headers(conf, jwt.claims)
-
     -- Match consumer
     if conf.consumer_match then
         local ok, err = custom_match_consumer(conf, jwt)
@@ -465,7 +463,7 @@ local function do_authentication(conf)
         end
     end
 
-    -- TODO: If further scope or role authentication is needed, do it here
+    custom_set_unique_headers(conf, jwt.claims)
 
     kong.ctx.shared.unique_jwt_token = token
     return true

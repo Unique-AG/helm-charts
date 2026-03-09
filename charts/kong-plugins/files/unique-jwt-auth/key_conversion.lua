@@ -82,6 +82,12 @@ local function openidc_pem_from_rsa_n_and_e(n, e)
 end
 
 local function convert_kc_key(key)
+    if key.kty ~= "RSA" then
+        return nil, "Unsupported key type: " .. tostring(key.kty)
+    end
+    if not key.n or not key.e then
+        return nil, "RSA key missing n or e parameter"
+    end
     return openidc_pem_from_rsa_n_and_e(key.n, key.e)
 end
 
