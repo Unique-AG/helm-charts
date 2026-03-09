@@ -208,6 +208,7 @@ local function do_authentication(conf)
                 message = "Unauthorized"
             }
         elseif token_type == "table" then
+            kong.log.warn("Multiple tokens provided in request from " .. (kong.client.get_forwarded_ip() or "unknown"))
             return false, {
                 status = 401,
                 message = "Multiple tokens provided"
@@ -226,13 +227,14 @@ local function do_authentication(conf)
     local user_id = request_headers["x-user-id"]
 
     if not app_id or not company_id then
+        kong.log.warn("Request missing required headers: x-app-id=" .. tostring(app_id) .. " x-company-id=" .. tostring(company_id) .. " from " .. (kong.client.get_forwarded_ip() or "unknown"))
         return false, {
             status = 401,
             message = "Missing app_id or company_id"
         }
     end
 
-    kong.log.info(string.format("app_repository_url: %s app_id: %s company_id: %s user_id: %s",
+    kong.log.debug(string.format("app_repository_url: %s app_id: %s company_id: %s user_id: %s",
                             conf.app_repository_url or "nil", 
                             app_id or "nil", 
                             company_id or "nil", 
@@ -278,7 +280,7 @@ local function logical_AND_authentication(conf)
 end
 
 function UniqueAppRepoAuthHandler:access(conf)
-    kong.log.info("UniqueAppRepoAuthHandler:access")
+    kong.log.debug("UniqueAppRepoAuthHandler:access")
     -- check if preflight request and whether it should be authenticated
     if not conf.run_on_preflight and kong.request.get_method() == "OPTIONS" then
         return

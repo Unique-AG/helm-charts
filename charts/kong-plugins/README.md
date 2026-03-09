@@ -6,7 +6,7 @@ Refer to each plugins readme section to learn more about them.
 
 Please report any security concerns with the plugins via the [Security Policy](https://github.com/Unique-AG/helm-charts/tree/main?tab=security-ov-file).
 
-![Version: 2.0.0](https://img.shields.io/badge/Version-2.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 2.1.0](https://img.shields.io/badge/Version-2.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 ### kong-plugin-unique-jwt-auth
@@ -20,7 +20,9 @@ To achieve this:
 
 1.  **Specify the JWKS URI directly:** Instead of letting the plugin discover the JWKS endpoint via the IdP's well-known configuration endpoint, you can provide the internal service URL directly using the `config.jwks_uri` value. This bypasses the well-known lookup. For example, if your IdP's JWKS endpoint is available internally at `http://my-idp-service.default.svc.cluster.local/jwks`, set `config.jwks_uri` to this value.
 
-2.  **(Optional) Add custom headers:** If your internal IdP endpoints (either the well-known endpoint or the direct JWKS endpoint) require specific headers for authentication, routing, or other purposes (e.g., a `Host` header matching an Ingress), you can configure these using:
+2.  **Disable TLS verification for cluster-internal traffic:** By default, the plugin enforces TLS verification (`config.ssl_verify: true`) and requires HTTPS for all OIDC endpoints. For cluster-internal setups where the IdP communicates over plain HTTP (e.g., mTLS is handled at the mesh level rather than the application layer), set `config.ssl_verify: false`. This disables both SSL certificate validation and the HTTPS-only requirement for the JWKS and well-known endpoints.
+
+3.  **(Optional) Add custom headers:** If your internal IdP endpoints (either the well-known endpoint or the direct JWKS endpoint) require specific headers for authentication, routing, or other purposes (e.g., a `Host` header matching an Ingress), you can configure these using:
     *   `config.well_known_extra_headers`: Adds headers to the request for the `.well-known/openid-configuration` endpoint (if `config.jwks_uri` is *not* set).
     *   `config.jwks_extra_headers`: Adds headers to the request for the JWKS endpoint specified by `config.jwks_uri`.
 
@@ -44,13 +46,14 @@ config:
   uri_param_names:
     - token
   zitadel_project_id: '<ZITADEL_PROJECT_ID>'
+  # ssl_verify: false
 ```
 
 With this configuration, both external clients (e.g., browser users) and the internal JWT validation plugin can utilize the same identity provider (IdP) for token issuance and validation without requiring further customization.
 
 ## Upgrading
 
-### To 2.0.0
+### To `2.0.0` or `2.1.0` respectively
 
 This release hardens JWT validation in the `unique-jwt-auth` plugin. It includes behavioral changes that may require configuration updates.
 
@@ -60,11 +63,11 @@ Previous versions used Lua pattern matching for `allowed_iss`, which allowed ent
 
 #### Breaking: TLS Verification Enforced
 
-Requests to OIDC well-known and JWKS endpoints now set `ssl_verify = true`. Environments using self-signed certificates or internal CAs not in Kong's trusted store will fail. Ensure the certificate chain for your identity provider is trusted by Kong before upgrading.
+Requests to OIDC well-known and JWKS endpoints now enforce TLS verification by default. Environments using self-signed certificates or internal CAs not in Kong's trusted store will fail. Ensure the certificate chain for your identity provider is trusted by Kong before upgrading, or set `config.ssl_verify: false` to opt out (e.g., for cluster-internal setups where transport security is handled at the mesh layer).
 
 #### Breaking: JWKS URI Must Be HTTPS
 
-The `jwks_uri` returned from the well-known endpoint must start with `https://`. Setups using plain `http://` JWKS URIs (e.g., cluster-internal IdPs without TLS) will be rejected. Note: this applies to the *discovered* `jwks_uri` from the well-known response, not to `config.jwks_uri` set directly in plugin configuration.
+When `config.ssl_verify` is `true` (the default), the `jwks_uri` returned from the well-known endpoint must start with `https://`. Setups using plain `http://` JWKS URIs will be rejected. Set `config.ssl_verify: false` to allow `http://` URIs for cluster-internal IdPs. Note: the HTTPS check applies only to the *discovered* `jwks_uri` from the well-known response, not to `config.jwks_uri` set directly in plugin configuration.
 
 #### Changed Defaults
 

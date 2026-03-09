@@ -14,7 +14,7 @@ local function get_issuer_keys(well_known_endpoint, conf)
         local res, err = httpc:request_uri(well_known_endpoint, {
             method = "GET",
             headers = conf.well_known_extra_headers or {},
-            ssl_verify = true
+            ssl_verify = conf.ssl_verify
         })
         if err then
             return nil, err
@@ -26,15 +26,18 @@ local function get_issuer_keys(well_known_endpoint, conf)
         end
 
         jwks_uri = body_table['jwks_uri']
-        if type(jwks_uri) ~= "string" or jwks_uri:sub(1, 8) ~= "https://" then
+        if type(jwks_uri) ~= "string" then
             return nil, "Invalid or missing jwks_uri in well-known response"
+        end
+        if conf.ssl_verify and jwks_uri:sub(1, 8) ~= "https://" then
+            return nil, "jwks_uri must use HTTPS when ssl_verify is enabled"
         end
     end
 
     local res, err = httpc:request_uri(jwks_uri, {
         method = "GET",
         headers = conf.jwks_extra_headers or {},
-        ssl_verify = true
+        ssl_verify = conf.ssl_verify
     })
     if err then
         return nil, err

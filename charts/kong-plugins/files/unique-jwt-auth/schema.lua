@@ -116,6 +116,11 @@ local schema = {
                     default = {}
                 }
             }, {
+                ssl_verify = {
+                    type = "boolean",
+                    default = true
+                }
+            }, {
                 zitadel_project_id = {
                     type = "string"
                 }
