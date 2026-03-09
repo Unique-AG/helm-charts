@@ -2029,6 +2029,36 @@ entries:
   kong-plugins:
   - annotations:
       artifacthub.io/changes: |
+        - kind: changed
+          description: Use strict issuer matching for JWT validation
+        - kind: changed
+          description: Enable nbf claim verification by default
+        - kind: changed
+          description: Enforce TLS verification on OIDC discovery requests
+        - kind: fixed
+          description: Handle unsupported key types in JWKS responses gracefully
+        - kind: fixed
+          description: Reduce sensitive information in debug logs and error messages
+        - kind: changed
+          description: Set upstream headers only after successful consumer matching
+    apiVersion: v2
+    created: "2026-03-09T15:26:47.071415547Z"
+    description: 'The ''kong-plugins'' chart provides a streamlined solution for deploying
+      Kong plugins via ConfigMaps to be used with the Unique Software.  Refer to each
+      plugins readme section to learn more about them.  Please report any security
+      concerns with the plugins via the [Security Policy](https://github.com/Unique-AG/helm-charts/tree/main?tab=security-ov-file). '
+    digest: f38b46fcd2dcc1be7c2d6cbdf8de3c91783ff8dbf06dc136007756ef37476669
+    icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+    maintainers:
+    - name: unique-ag
+      url: https://unique.ch/
+    name: kong-plugins
+    type: application
+    urls:
+    - https://github.com/Unique-AG/helm-charts/releases/download/kong-plugins-2.0.0/kong-plugins-2.0.0.tgz
+    version: 2.0.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: added
           description: Return roles from app-repository to the request
     apiVersion: v2
@@ -3206,4 +3236,4 @@ entries:
     urls:
     - https://github.com/Unique-AG/helm-charts/releases/download/web-app-1.3.0/web-app-1.3.0.tgz
     version: 1.3.0
-generated: "2026-03-02T12:22:45.175512435Z"
+generated: "2026-03-09T15:26:47.071725479Z"
