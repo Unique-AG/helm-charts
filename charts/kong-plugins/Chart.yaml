@@ -5,7 +5,7 @@ maintainers:
   - name: unique-ag
     url: https://unique.ch/
 name: kong-plugins
-version: 2.0.0
+version: 2.1.0
 description: |
   The 'kong-plugins' chart provides a streamlined solution for deploying Kong plugins via ConfigMaps to be used with the Unique Software.
 
@@ -14,15 +14,7 @@ description: |
   Please report any security concerns with the plugins via the [Security Policy](https://github.com/Unique-AG/helm-charts/tree/main?tab=security-ov-file).
 annotations:
   artifacthub.io/changes: |
+    - kind: added
+      description: Configurable ssl_verify option for cluster-internal setups without TLS
     - kind: changed
-      description: Use strict issuer matching for JWT validation
-    - kind: changed
-      description: Enable nbf claim verification by default
-    - kind: changed
-      description: Enforce TLS verification on OIDC discovery requests
-    - kind: fixed
-      description: Handle unsupported key types in JWKS responses gracefully
-    - kind: fixed
-      description: Reduce sensitive information in debug logs and error messages
-    - kind: changed
-      description: Set upstream headers only after successful consumer matching
+      description: Improve and raise log levels upon non-successful flows
