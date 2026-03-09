@@ -6,7 +6,7 @@ Refer to each plugins readme section to learn more about them.
 
 Please report any security concerns with the plugins via the [Security Policy](https://github.com/Unique-AG/helm-charts/tree/main?tab=security-ov-file).
 
-![Version: 1.3.0](https://img.shields.io/badge/Version-1.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 2.0.0](https://img.shields.io/badge/Version-2.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 ### kong-plugin-unique-jwt-auth
@@ -47,6 +47,35 @@ config:
 ```
 
 With this configuration, both external clients (e.g., browser users) and the internal JWT validation plugin can utilize the same identity provider (IdP) for token issuance and validation without requiring further customization.
+
+## Upgrading
+
+### To 2.0.0
+
+This release hardens JWT validation in the `unique-jwt-auth` plugin. It includes behavioral changes that may require configuration updates.
+
+#### Breaking: Strict Issuer Matching
+
+Previous versions used Lua pattern matching for `allowed_iss`, which allowed entries like `https://id%.example%.com/.*` to match multiple issuers. Version 2.0.0 requires **exact string matches** only. If your `allowed_iss` entries contain Lua pattern characters (`.`, `%`, `*`, `+`, `?`, `[`, `]`, `^`, `$`, `-`), update them to the literal issuer URL returned in your tokens' `iss` claim.
+
+#### Breaking: TLS Verification Enforced
+
+Requests to OIDC well-known and JWKS endpoints now set `ssl_verify = true`. Environments using self-signed certificates or internal CAs not in Kong's trusted store will fail. Ensure the certificate chain for your identity provider is trusted by Kong before upgrading.
+
+#### Breaking: JWKS URI Must Be HTTPS
+
+The `jwks_uri` returned from the well-known endpoint must start with `https://`. Setups using plain `http://` JWKS URIs (e.g., cluster-internal IdPs without TLS) will be rejected. Note: this applies to the *discovered* `jwks_uri` from the well-known response, not to `config.jwks_uri` set directly in plugin configuration.
+
+#### Changed Defaults
+
+- `claims_to_verify` now defaults to `["exp", "nbf"]` (previously `["exp"]`). Existing plugin instances keep their persisted config. New installations will validate `nbf` (not-before) by default. If your IdP sets `nbf` to a future timestamp or clock skew is a concern, adjust `claims_to_verify` accordingly.
+
+#### Other Changes
+
+- Unsupported key types (non-RSA) in JWKS responses are skipped instead of causing errors.
+- Upstream headers (`X-Unique-*`) are now set only after successful consumer matching.
+- Debug logs no longer include full JWT claims or headers.
+- Error messages no longer include internal identifiers.
 
 ## Values
 
