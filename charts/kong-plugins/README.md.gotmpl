@@ -40,17 +40,17 @@ config:
   jwks_extra_headers:
     forwarded: host=id.example.com
   jwks_uri: http://zitadel.<namespace>.svc.cluster.local:8080/oauth/v2/keys
-  ssl_verify: false
   uri_param_names:
     - token
   zitadel_project_id: '<ZITADEL_PROJECT_ID>'
+  # ssl_verify: false
 ```
 
 With this configuration, both external clients (e.g., browser users) and the internal JWT validation plugin can utilize the same identity provider (IdP) for token issuance and validation without requiring further customization.
 
 ## Upgrading
 
-### To 2.0.0
+### To `2.0.0` or `2.1.0` respectively
 
 This release hardens JWT validation in the `unique-jwt-auth` plugin. It includes behavioral changes that may require configuration updates.
 
