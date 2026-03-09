@@ -17,4 +17,6 @@ annotations:
     - kind: added
       description: Configurable ssl_verify option for cluster-internal setups without TLS
     - kind: changed
-      description: Improve and raise log levels upon non-successful flows
+      description: Tune log levels - reduce per-request INFO noise, promote key rotation events to INFO
+    - kind: security
+      description: Add WARN logs with client IP for suspicious auth rejections (invalid issuer, algorithm, signature, malformed token)
