@@ -121,6 +121,7 @@ local function custom_validate_token_signature(conf, jwt, matched_iss, second_ca
         return custom_validate_token_signature(conf, jwt, matched_iss, true)
     end
 
+    kong.log.warn("Rejected token with invalid signature for issuer: " .. matched_iss .. " from " .. (kong.client.get_forwarded_ip() or "unknown"))
     return kong.response.exit(401, {
         message = "Invalid token signature"
     })
@@ -384,6 +385,7 @@ local function do_authentication(conf)
                 message = "Unauthorized"
             }
         elseif token_type == "table" then
+            kong.log.warn("Multiple tokens provided in request from " .. (kong.client.get_forwarded_ip() or "unknown"))
             return false, {
                 status = 401,
                 message = "Multiple tokens provided"
@@ -399,6 +401,7 @@ local function do_authentication(conf)
     -- Decode token to find out who the consumer is
     local jwt, err = jwt_decoder:new(token)
     if err then
+        kong.log.warn("Malformed JWT received from " .. (kong.client.get_forwarded_ip() or "unknown") .. ": " .. tostring(err))
         return false, {
             status = 401,
             message = "Bad token; " .. tostring(err)
@@ -413,6 +416,7 @@ local function do_authentication(conf)
     -- Verify that the issuer is allowed
     local matched_iss = validate_issuer(conf.allowed_iss, jwt.claims)
     if not matched_iss then
+        kong.log.warn("Rejected token with disallowed issuer: " .. tostring(claims.iss) .. " from " .. (kong.client.get_forwarded_ip() or "unknown"))
         return false, {
             status = 401,
             message = "Token issuer not allowed"
@@ -423,6 +427,7 @@ local function do_authentication(conf)
 
     -- Verify "alg"
     if jwt.header.alg ~= algorithm then
+        kong.log.warn("Rejected token with unexpected algorithm: " .. tostring(jwt.header.alg) .. " (expected " .. algorithm .. ") from " .. (kong.client.get_forwarded_ip() or "unknown"))
         return false, {
             status = 403,
             message = "Invalid algorithm"
