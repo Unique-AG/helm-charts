@@ -3,6 +3,8 @@
 {{- $labels := include "kongPlugins.labels" . -}}
 {{- $jwtMetric := .Values.prometheus.defaultAlerts.securityWarnings.jwtAuthMetricName -}}
 {{- $appRepoMetric := .Values.prometheus.defaultAlerts.securityWarnings.appRepoAuthMetricName -}}
+{{- $customRules := .Values.prometheus.defaultAlerts.securityWarnings.customRules | default dict -}}
+{{- $disabled := .Values.prometheus.defaultAlerts.securityWarnings.disabled | default dict -}}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -16,66 +18,189 @@ metadata:
     {{- end }}
 spec:
   groups:
-    - name: {{ $fullName }}-security-warnings
+    - name: {{ $fullName }}-jwt-auth-security-warnings
       rules:
-{{- if not (.Values.prometheus.defaultAlerts.securityWarnings.disabled.KongJwtAuthSecurityWarnings | default false) }}
-      - alert: KongJwtAuthSecurityWarnings
+{{- if not (index $disabled "KongJwtAuthInvalidSignature" | default false) }}
+      - alert: KongJwtAuthInvalidSignature
         expr: |
-          increase({{ $jwtMetric }}[5m]) > 0
-        for: {{ dig "KongJwtAuthSecurityWarnings" "for" "0m" (.Values.prometheus.defaultAlerts.securityWarnings.customRules | default dict) }}
+          increase({{ $jwtMetric }}{reason="invalid_signature"}[5m]) > 2
+        for: {{ dig "KongJwtAuthInvalidSignature" "for" "0m" $customRules }}
         labels:
-          severity: {{ dig "KongJwtAuthSecurityWarnings" "severity" "warning" (.Values.prometheus.defaultAlerts.securityWarnings.customRules | default dict) }}
+          severity: {{ dig "KongJwtAuthInvalidSignature" "severity" "critical" $customRules }}
           alertGroup: security-warnings
           {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
           {{- toYaml . | nindent 10 }}
           {{- end }}
         annotations:
-          summary: "Kong JWT auth security rejections detected"
-          description: "{{ `{{ $value | printf \"%.0f\" }}` }} JWT auth security rejection(s) in the last 5 minutes (reason={{ `{{ $labels.reason }}` }})"
+          summary: "Kong JWT auth rejected a token with an invalid signature"
+          description: "A JWT was rejected because its signature could not be verified against any known key for the issuer."
 {{- end }}
-{{- if not (.Values.prometheus.defaultAlerts.securityWarnings.disabled.KongJwtAuthSecurityWarningBurst | default false) }}
-      - alert: KongJwtAuthSecurityWarningBurst
+{{- if not (index $disabled "KongJwtAuthDisallowedIssuer" | default false) }}
+      - alert: KongJwtAuthDisallowedIssuer
         expr: |
-          rate({{ $jwtMetric }}[5m]) > 10
-        for: {{ dig "KongJwtAuthSecurityWarningBurst" "for" "5m" (.Values.prometheus.defaultAlerts.securityWarnings.customRules | default dict) }}
+          increase({{ $jwtMetric }}{reason="disallowed_issuer"}[5m]) > 2
+        for: {{ dig "KongJwtAuthDisallowedIssuer" "for" "0m" $customRules }}
         labels:
-          severity: {{ dig "KongJwtAuthSecurityWarningBurst" "severity" "critical" (.Values.prometheus.defaultAlerts.securityWarnings.customRules | default dict) }}
+          severity: {{ dig "KongJwtAuthDisallowedIssuer" "severity" "critical" $customRules }}
           alertGroup: security-warnings
           {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
           {{- toYaml . | nindent 10 }}
           {{- end }}
         annotations:
-          summary: "Kong JWT auth security rejections are occurring at a high rate"
-          description: "JWT auth security rejections are firing at {{ `{{ $value | printf \"%.1f\" }}` }} per second (reason={{ `{{ $labels.reason }}` }})"
+          summary: "Kong JWT auth rejected a token from a disallowed issuer"
+          description: "A JWT was rejected because its 'iss' claim does not match any entry in allowed_iss."
 {{- end }}
-{{- if not (.Values.prometheus.defaultAlerts.securityWarnings.disabled.KongAppRepoAuthSecurityWarnings | default false) }}
-      - alert: KongAppRepoAuthSecurityWarnings
+{{- if not (index $disabled "KongJwtAuthUnexpectedAlgorithm" | default false) }}
+      - alert: KongJwtAuthUnexpectedAlgorithm
         expr: |
-          increase({{ $appRepoMetric }}[5m]) > 0
-        for: {{ dig "KongAppRepoAuthSecurityWarnings" "for" "0m" (.Values.prometheus.defaultAlerts.securityWarnings.customRules | default dict) }}
+          increase({{ $jwtMetric }}{reason="unexpected_algorithm"}[5m]) > 2
+        for: {{ dig "KongJwtAuthUnexpectedAlgorithm" "for" "0m" $customRules }}
         labels:
-          severity: {{ dig "KongAppRepoAuthSecurityWarnings" "severity" "warning" (.Values.prometheus.defaultAlerts.securityWarnings.customRules | default dict) }}
+          severity: {{ dig "KongJwtAuthUnexpectedAlgorithm" "severity" "critical" $customRules }}
           alertGroup: security-warnings
           {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
           {{- toYaml . | nindent 10 }}
           {{- end }}
         annotations:
-          summary: "Kong app-repo auth security rejections detected"
-          description: "{{ `{{ $value | printf \"%.0f\" }}` }} app-repo auth security rejection(s) in the last 5 minutes (reason={{ `{{ $labels.reason }}` }})"
+          summary: "Kong JWT auth rejected a token with an unexpected algorithm"
+          description: "A JWT was rejected because its 'alg' header does not match the configured algorithm."
 {{- end }}
-{{- if not (.Values.prometheus.defaultAlerts.securityWarnings.disabled.KongAppRepoAuthSecurityWarningBurst | default false) }}
-      - alert: KongAppRepoAuthSecurityWarningBurst
+{{- if not (index $disabled "KongJwtAuthMalformedJwt" | default false) }}
+      - alert: KongJwtAuthMalformedJwt
         expr: |
-          rate({{ $appRepoMetric }}[5m]) > 10
-        for: {{ dig "KongAppRepoAuthSecurityWarningBurst" "for" "5m" (.Values.prometheus.defaultAlerts.securityWarnings.customRules | default dict) }}
+          increase({{ $jwtMetric }}{reason="malformed_jwt"}[5m]) > 2
+        for: {{ dig "KongJwtAuthMalformedJwt" "for" "0m" $customRules }}
         labels:
-          severity: {{ dig "KongAppRepoAuthSecurityWarningBurst" "severity" "critical" (.Values.prometheus.defaultAlerts.securityWarnings.customRules | default dict) }}
+          severity: {{ dig "KongJwtAuthMalformedJwt" "severity" "warning" $customRules }}
           alertGroup: security-warnings
           {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
           {{- toYaml . | nindent 10 }}
           {{- end }}
         annotations:
-          summary: "Kong app-repo auth security rejections are occurring at a high rate"
-          description: "App-repo auth security rejections are firing at {{ `{{ $value | printf \"%.1f\" }}` }} per second (reason={{ `{{ $labels.reason }}` }})"
+          summary: "Kong JWT auth received a malformed token"
+          description: "A request contained a token that could not be decoded as a valid JWT."
+{{- end }}
+{{- if not (index $disabled "KongJwtAuthMultipleTokens" | default false) }}
+      - alert: KongJwtAuthMultipleTokens
+        expr: |
+          increase({{ $jwtMetric }}{reason="multiple_tokens"}[5m]) > 2
+        for: {{ dig "KongJwtAuthMultipleTokens" "for" "0m" $customRules }}
+        labels:
+          severity: {{ dig "KongJwtAuthMultipleTokens" "severity" "warning" $customRules }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong JWT auth received a request with multiple tokens"
+          description: "A request was rejected because it contained more than one token."
+{{- end }}
+{{- if not (index $disabled "KongJwtAuthUnrecognizableTokenType" | default false) }}
+      - alert: KongJwtAuthUnrecognizableTokenType
+        expr: |
+          increase({{ $jwtMetric }}{reason="unrecognizable_token_type"}[5m]) > 2
+        for: {{ dig "KongJwtAuthUnrecognizableTokenType" "for" "0m" $customRules }}
+        labels:
+          severity: {{ dig "KongJwtAuthUnrecognizableTokenType" "severity" "warning" $customRules }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong JWT auth received a token of an unrecognizable type"
+          description: "A request was rejected because the token was neither a string nor a table."
+{{- end }}
+{{- if not (index $disabled "KongJwtAuthClaimsValidationFailed" | default false) }}
+      - alert: KongJwtAuthClaimsValidationFailed
+        expr: |
+          increase({{ $jwtMetric }}{reason="claims_validation_failed"}[5m]) > 2
+        for: {{ dig "KongJwtAuthClaimsValidationFailed" "for" "0m" $customRules }}
+        labels:
+          severity: {{ dig "KongJwtAuthClaimsValidationFailed" "severity" "warning" $customRules }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong JWT auth rejected tokens with failed claims validation"
+          description: "Tokens were rejected because registered claims (exp, nbf) failed verification. This is normal for expired tokens; enable this alert only if you want visibility into claim failures."
+{{- end }}
+{{- if not (index $disabled "KongJwtAuthMaxExpirationExceeded" | default false) }}
+      - alert: KongJwtAuthMaxExpirationExceeded
+        expr: |
+          increase({{ $jwtMetric }}{reason="max_expiration_exceeded"}[5m]) > 2
+        for: {{ dig "KongJwtAuthMaxExpirationExceeded" "for" "0m" $customRules }}
+        labels:
+          severity: {{ dig "KongJwtAuthMaxExpirationExceeded" "severity" "warning" $customRules }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong JWT auth rejected tokens exceeding maximum expiration"
+          description: "Tokens were rejected because their lifetime exceeds the configured maximum_expiration. This may indicate clients issuing overly long-lived tokens."
+{{- end }}
+
+    - name: {{ $fullName }}-app-repo-auth-security-warnings
+      rules:
+{{- if not (index $disabled "KongAppRepoAuthApiKeyValidationFailed" | default false) }}
+      - alert: KongAppRepoAuthApiKeyValidationFailed
+        expr: |
+          increase({{ $appRepoMetric }}{reason="api_key_validation_failed"}[5m]) > 2
+        for: {{ dig "KongAppRepoAuthApiKeyValidationFailed" "for" "0m" $customRules }}
+        labels:
+          severity: {{ dig "KongAppRepoAuthApiKeyValidationFailed" "severity" "warning" $customRules }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong app-repo auth received an invalid API key"
+          description: "The app repository returned a non-200 response when validating an API key."
+{{- end }}
+{{- if not (index $disabled "KongAppRepoAuthMultipleTokens" | default false) }}
+      - alert: KongAppRepoAuthMultipleTokens
+        expr: |
+          increase({{ $appRepoMetric }}{reason="multiple_tokens"}[5m]) > 2
+        for: {{ dig "KongAppRepoAuthMultipleTokens" "for" "0m" $customRules }}
+        labels:
+          severity: {{ dig "KongAppRepoAuthMultipleTokens" "severity" "warning" $customRules }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong app-repo auth received a request with multiple tokens"
+          description: "A request was rejected because it contained more than one token."
+{{- end }}
+{{- if not (index $disabled "KongAppRepoAuthUnrecognizableTokenType" | default false) }}
+      - alert: KongAppRepoAuthUnrecognizableTokenType
+        expr: |
+          increase({{ $appRepoMetric }}{reason="unrecognizable_token_type"}[5m]) > 2
+        for: {{ dig "KongAppRepoAuthUnrecognizableTokenType" "for" "0m" $customRules }}
+        labels:
+          severity: {{ dig "KongAppRepoAuthUnrecognizableTokenType" "severity" "warning" $customRules }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong app-repo auth received a token of an unrecognizable type"
+          description: "A request was rejected because the token was neither a string nor a table."
+{{- end }}
+{{- if not (index $disabled "KongAppRepoAuthMissingRequiredHeaders" | default false) }}
+      - alert: KongAppRepoAuthMissingRequiredHeaders
+        expr: |
+          increase({{ $appRepoMetric }}{reason="missing_required_headers"}[5m]) > 2
+        for: {{ dig "KongAppRepoAuthMissingRequiredHeaders" "for" "0m" $customRules }}
+        labels:
+          severity: {{ dig "KongAppRepoAuthMissingRequiredHeaders" "severity" "warning" $customRules }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong app-repo auth received a request missing required headers"
+          description: "A request was rejected because x-app-id or x-company-id header was absent."
 {{- end }}
 {{- end }}

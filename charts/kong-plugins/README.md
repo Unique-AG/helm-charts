@@ -109,16 +109,31 @@ The metric will be exposed as `kong_my_custom_auth_warnings_total`.
 
 ### Alerts
 
-The chart ships built-in `PrometheusRule` alerts for both plugins, enabled by default when the `monitoring.coreos.com/v1` CRD is present and `prometheus.enabled` is `true`.
+The chart ships one `PrometheusRule` alert per rejection reason for both plugins — 12 alerts in total — enabled by default when the `monitoring.coreos.com/v1` CRD is present and `prometheus.enabled` is `true`. Each alert fires when more than 2 occurrences are observed within a 5-minute window (`increase(...[5m]) > 2`), filtering out one-off blips from genuine patterns.
 
-All four alerts share the same structure and can be customised via `prometheus.defaultAlerts.securityWarnings`:
+Expiration-related alerts are **disabled by default** since token expiry is a normal operational event.
 
-| Alert | Default `for` | Default severity | Description |
-|-------|--------------|-----------------|-------------|
-| `KongJwtAuthSecurityWarnings` | `0m` | `warning` | Any JWT auth security rejection in the last 5 minutes |
-| `KongJwtAuthSecurityWarningBurst` | `5m` | `critical` | Sustained JWT auth rejection rate above 10/s |
-| `KongAppRepoAuthSecurityWarnings` | `0m` | `warning` | Any app-repo auth security rejection in the last 5 minutes |
-| `KongAppRepoAuthSecurityWarningBurst` | `5m` | `critical` | Sustained app-repo auth rejection rate above 10/s |
+#### unique-jwt-auth alerts
+
+| Alert | Reason | Severity | Enabled by default |
+|-------|--------|----------|--------------------|
+| `KongJwtAuthInvalidSignature` | `invalid_signature` | critical | yes |
+| `KongJwtAuthDisallowedIssuer` | `disallowed_issuer` | critical | yes |
+| `KongJwtAuthUnexpectedAlgorithm` | `unexpected_algorithm` | critical | yes |
+| `KongJwtAuthMalformedJwt` | `malformed_jwt` | warning | yes |
+| `KongJwtAuthMultipleTokens` | `multiple_tokens` | warning | yes |
+| `KongJwtAuthUnrecognizableTokenType` | `unrecognizable_token_type` | warning | yes |
+| `KongJwtAuthClaimsValidationFailed` | `claims_validation_failed` | warning | **no** |
+| `KongJwtAuthMaxExpirationExceeded` | `max_expiration_exceeded` | warning | **no** |
+
+#### unique-app-repo-auth alerts
+
+| Alert | Reason | Severity | Enabled by default |
+|-------|--------|----------|--------------------|
+| `KongAppRepoAuthApiKeyValidationFailed` | `api_key_validation_failed` | warning | yes |
+| `KongAppRepoAuthMultipleTokens` | `multiple_tokens` | warning | yes |
+| `KongAppRepoAuthUnrecognizableTokenType` | `unrecognizable_token_type` | warning | yes |
+| `KongAppRepoAuthMissingRequiredHeaders` | `missing_required_headers` | warning | yes |
 
 **Disable an individual alert:**
 
@@ -127,7 +142,17 @@ prometheus:
   defaultAlerts:
     securityWarnings:
       disabled:
-        KongJwtAuthSecurityWarningBurst: true
+        KongJwtAuthMalformedJwt: true
+```
+
+**Enable an expiration alert:**
+
+```yaml
+prometheus:
+  defaultAlerts:
+    securityWarnings:
+      disabled:
+        KongJwtAuthClaimsValidationFailed: false
 ```
 
 **Override `for` or `severity`:**
@@ -137,8 +162,8 @@ prometheus:
   defaultAlerts:
     securityWarnings:
       customRules:
-        KongJwtAuthSecurityWarnings:
-          for: "2m"
+        KongJwtAuthDisallowedIssuer:
+          for: "1m"
           severity: critical
 ```
 
@@ -197,11 +222,11 @@ When `config.ssl_verify` is `true` (the default), the `jwks_uri` returned from t
 | appRepoAuth.name | string | `"kong-plugin-unique-app-repo-auth"` | The name of the app repository auth config map |
 | jwtAuth | object | `{"name":"kong-plugin-unique-jwt-auth"}` | jwtAuth enables the jwt-auth plugin |
 | jwtAuth.name | string | `"kong-plugin-unique-jwt-auth"` | The name of the jwt auth config map |
-| prometheus.defaultAlerts.securityWarnings | object | `{"additionalLabels":{},"appRepoAuthMetricName":"kong_unique_app_repo_auth_security_warnings_total","customRules":{},"disabled":{},"enabled":true,"jwtAuthMetricName":"kong_unique_jwt_auth_security_warnings_total"}` | securityWarnings alerts fire on the counters emitted by the kong plugins for each WARN-level security rejection. |
+| prometheus.defaultAlerts.securityWarnings | object | `{"additionalLabels":{},"appRepoAuthMetricName":"kong_unique_app_repo_auth_security_warnings_total","customRules":{},"disabled":{"KongJwtAuthClaimsValidationFailed":true,"KongJwtAuthMaxExpirationExceeded":true},"enabled":true,"jwtAuthMetricName":"kong_unique_jwt_auth_security_warnings_total"}` | securityWarnings alerts fire on the counters emitted by the kong plugins for each WARN-level security rejection. |
 | prometheus.defaultAlerts.securityWarnings.additionalLabels | object | `{}` | Extra labels added to the PrometheusRule metadata and each alert's labels. |
 | prometheus.defaultAlerts.securityWarnings.appRepoAuthMetricName | string | `"kong_unique_app_repo_auth_security_warnings_total"` | Base metric name (without kong_ prefix) used in PromQL for the app-repo-auth plugin. Must match config.security_warning_metric_name on the KongClusterPlugin. |
 | prometheus.defaultAlerts.securityWarnings.customRules | object | `{}` | Override for and severity per alert. |
-| prometheus.defaultAlerts.securityWarnings.disabled | object | `{}` | Disable individual alerts by name. |
+| prometheus.defaultAlerts.securityWarnings.disabled | object | `{"KongJwtAuthClaimsValidationFailed":true,"KongJwtAuthMaxExpirationExceeded":true}` | Disable individual alerts by name. Expiration-related alerts are disabled by default as token expiry is a normal operational event. |
 | prometheus.defaultAlerts.securityWarnings.enabled | bool | `true` | Enable the security warnings alert group. Requires monitoring.coreos.com/v1 CRDs. |
 | prometheus.defaultAlerts.securityWarnings.jwtAuthMetricName | string | `"kong_unique_jwt_auth_security_warnings_total"` | Base metric name (without kong_ prefix) used in PromQL for the jwt-auth plugin. Must match config.security_warning_metric_name on the KongClusterPlugin. |
 | prometheus.enabled | bool | `true` | Enable Prometheus integration. When false no PrometheusRule resources are rendered. |

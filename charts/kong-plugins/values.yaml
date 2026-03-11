@@ -27,19 +27,27 @@ prometheus:
       jwtAuthMetricName: kong_unique_jwt_auth_security_warnings_total
       # -- Base metric name (without kong_ prefix) used in PromQL for the app-repo-auth plugin. Must match config.security_warning_metric_name on the KongClusterPlugin.
       appRepoAuthMetricName: kong_unique_app_repo_auth_security_warnings_total
-      # -- Disable individual alerts by name.
-      disabled: {}
-        # KongJwtAuthSecurityWarnings: true
-        # KongJwtAuthSecurityWarningBurst: true
-        # KongAppRepoAuthSecurityWarnings: true
-        # KongAppRepoAuthSecurityWarningBurst: true
+      # -- Disable individual alerts by name. Expiration-related alerts are disabled by default as token expiry is a normal operational event.
+      disabled:
+        KongJwtAuthClaimsValidationFailed: true
+        KongJwtAuthMaxExpirationExceeded: true
+        # KongJwtAuthInvalidSignature: true
+        # KongJwtAuthDisallowedIssuer: true
+        # KongJwtAuthUnexpectedAlgorithm: true
+        # KongJwtAuthMalformedJwt: true
+        # KongJwtAuthMultipleTokens: true
+        # KongJwtAuthUnrecognizableTokenType: true
+        # KongAppRepoAuthApiKeyValidationFailed: true
+        # KongAppRepoAuthMultipleTokens: true
+        # KongAppRepoAuthUnrecognizableTokenType: true
+        # KongAppRepoAuthMissingRequiredHeaders: true
       # -- Override for and severity per alert.
       customRules: {}
-        # KongJwtAuthSecurityWarnings:
+        # KongJwtAuthDisallowedIssuer:
         #   for: "1m"
         #   severity: "critical"
-        # KongJwtAuthSecurityWarningBurst:
-        #   for: "10m"
-        #   severity: "warning"
+        # KongJwtAuthInvalidSignature:
+        #   for: "5m"
+        #   severity: "critical"
       # -- Extra labels added to the PrometheusRule metadata and each alert's labels.
       additionalLabels: {}
