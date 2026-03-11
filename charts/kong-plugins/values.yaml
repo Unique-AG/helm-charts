@@ -14,3 +14,32 @@ appRepoAuth:
   name: kong-plugin-unique-app-repo-auth
   # -- The default app repository url
   appRepositoryUrl: "http://service-app-repository.default.svc:8088"
+
+prometheus:
+  # -- Enable Prometheus integration. When false no PrometheusRule resources are rendered.
+  enabled: true
+  defaultAlerts:
+    # -- securityWarnings alerts fire on the counters emitted by the kong plugins for each WARN-level security rejection.
+    securityWarnings:
+      # -- Enable the security warnings alert group. Requires monitoring.coreos.com/v1 CRDs.
+      enabled: true
+      # -- Base metric name (without kong_ prefix) used in PromQL for the jwt-auth plugin. Must match config.security_warning_metric_name on the KongClusterPlugin.
+      jwtAuthMetricName: kong_unique_jwt_auth_security_warnings_total
+      # -- Base metric name (without kong_ prefix) used in PromQL for the app-repo-auth plugin. Must match config.security_warning_metric_name on the KongClusterPlugin.
+      appRepoAuthMetricName: kong_unique_app_repo_auth_security_warnings_total
+      # -- Disable individual alerts by name.
+      disabled: {}
+        # KongJwtAuthSecurityWarnings: true
+        # KongJwtAuthSecurityWarningBurst: true
+        # KongAppRepoAuthSecurityWarnings: true
+        # KongAppRepoAuthSecurityWarningBurst: true
+      # -- Override for and severity per alert.
+      customRules: {}
+        # KongJwtAuthSecurityWarnings:
+        #   for: "1m"
+        #   severity: "critical"
+        # KongJwtAuthSecurityWarningBurst:
+        #   for: "10m"
+        #   severity: "warning"
+      # -- Extra labels added to the PrometheusRule metadata and each alert's labels.
+      additionalLabels: {}

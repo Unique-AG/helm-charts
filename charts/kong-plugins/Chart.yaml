@@ -16,3 +16,7 @@ annotations:
   artifacthub.io/changes: |
     - kind: added
       description: Prometheus counter metric per plugin for security warning events, labelled by reason. Metric name is configurable via config.security_warning_metric_name and is always prefixed with kong_ by the Prometheus library.
+    - kind: added
+      description: Built-in PrometheusRule alerts for security warning counters on both plugins, enabled by default when monitoring.coreos.com/v1 CRDs are present.
+    - kind: security
+      description: Rejection reasons are logged server-side only and never included in error responses, limiting information exposure to potential attackers.

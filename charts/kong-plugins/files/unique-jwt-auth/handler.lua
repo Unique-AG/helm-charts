@@ -1,7 +1,7 @@
 local constants = require "kong.constants"
 local jwt_decoder = require "kong.plugins.jwt.jwt_parser"
 local cjson = require "cjson.safe"
-local exporter = require "kong.plugins.prometheus.exporter"
+local _exporter_ok, exporter = pcall(require, "kong.plugins.prometheus.exporter")
 
 local zitadel_keys = require "kong.plugins.unique-jwt-auth.zitadel_keys"
 
@@ -19,6 +19,9 @@ local re_gmatch = ngx.re.gmatch
 local counters = {}
 
 local function inc_warn(conf, reason)
+    if not _exporter_ok then
+        return
+    end
     local metric_name = conf.security_warning_metric_name
     if not counters[metric_name] then
         local prom = exporter.get_prometheus()

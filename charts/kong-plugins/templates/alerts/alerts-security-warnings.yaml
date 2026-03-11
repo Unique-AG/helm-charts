@@ -1,0 +1,81 @@
+{{- if and .Values.prometheus .Values.prometheus.defaultAlerts .Values.prometheus.defaultAlerts.securityWarnings .Values.prometheus.defaultAlerts.securityWarnings.enabled .Values.prometheus.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
+{{- $fullName := include "kongPlugins.fullname" . -}}
+{{- $labels := include "kongPlugins.labels" . -}}
+{{- $jwtMetric := .Values.prometheus.defaultAlerts.securityWarnings.jwtAuthMetricName -}}
+{{- $appRepoMetric := .Values.prometheus.defaultAlerts.securityWarnings.appRepoAuthMetricName -}}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ $fullName }}-security-warnings-alerts
+  labels:
+    {{- $labels | nindent 4 }}
+    role: alert-rules
+    alertGroup: security-warnings
+    {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: {{ $fullName }}-security-warnings
+      rules:
+{{- if not (.Values.prometheus.defaultAlerts.securityWarnings.disabled.KongJwtAuthSecurityWarnings | default false) }}
+      - alert: KongJwtAuthSecurityWarnings
+        expr: |
+          increase({{ $jwtMetric }}[5m]) > 0
+        for: {{ dig "KongJwtAuthSecurityWarnings" "for" "0m" (.Values.prometheus.defaultAlerts.securityWarnings.customRules | default dict) }}
+        labels:
+          severity: {{ dig "KongJwtAuthSecurityWarnings" "severity" "warning" (.Values.prometheus.defaultAlerts.securityWarnings.customRules | default dict) }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong JWT auth security rejections detected"
+          description: "{{ `{{ $value | printf \"%.0f\" }}` }} JWT auth security rejection(s) in the last 5 minutes (reason={{ `{{ $labels.reason }}` }})"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.securityWarnings.disabled.KongJwtAuthSecurityWarningBurst | default false) }}
+      - alert: KongJwtAuthSecurityWarningBurst
+        expr: |
+          rate({{ $jwtMetric }}[5m]) > 10
+        for: {{ dig "KongJwtAuthSecurityWarningBurst" "for" "5m" (.Values.prometheus.defaultAlerts.securityWarnings.customRules | default dict) }}
+        labels:
+          severity: {{ dig "KongJwtAuthSecurityWarningBurst" "severity" "critical" (.Values.prometheus.defaultAlerts.securityWarnings.customRules | default dict) }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong JWT auth security rejections are occurring at a high rate"
+          description: "JWT auth security rejections are firing at {{ `{{ $value | printf \"%.1f\" }}` }} per second (reason={{ `{{ $labels.reason }}` }})"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.securityWarnings.disabled.KongAppRepoAuthSecurityWarnings | default false) }}
+      - alert: KongAppRepoAuthSecurityWarnings
+        expr: |
+          increase({{ $appRepoMetric }}[5m]) > 0
+        for: {{ dig "KongAppRepoAuthSecurityWarnings" "for" "0m" (.Values.prometheus.defaultAlerts.securityWarnings.customRules | default dict) }}
+        labels:
+          severity: {{ dig "KongAppRepoAuthSecurityWarnings" "severity" "warning" (.Values.prometheus.defaultAlerts.securityWarnings.customRules | default dict) }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong app-repo auth security rejections detected"
+          description: "{{ `{{ $value | printf \"%.0f\" }}` }} app-repo auth security rejection(s) in the last 5 minutes (reason={{ `{{ $labels.reason }}` }})"
+{{- end }}
+{{- if not (.Values.prometheus.defaultAlerts.securityWarnings.disabled.KongAppRepoAuthSecurityWarningBurst | default false) }}
+      - alert: KongAppRepoAuthSecurityWarningBurst
+        expr: |
+          rate({{ $appRepoMetric }}[5m]) > 10
+        for: {{ dig "KongAppRepoAuthSecurityWarningBurst" "for" "5m" (.Values.prometheus.defaultAlerts.securityWarnings.customRules | default dict) }}
+        labels:
+          severity: {{ dig "KongAppRepoAuthSecurityWarningBurst" "severity" "critical" (.Values.prometheus.defaultAlerts.securityWarnings.customRules | default dict) }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong app-repo auth security rejections are occurring at a high rate"
+          description: "App-repo auth security rejections are firing at {{ `{{ $value | printf \"%.1f\" }}` }} per second (reason={{ `{{ $labels.reason }}` }})"
+{{- end }}
+{{- end }}

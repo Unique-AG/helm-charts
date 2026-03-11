@@ -1,7 +1,7 @@
 local constants = require "kong.constants"
 local http = require("resty.http")
 local cjson = require("cjson.safe")
-local exporter = require "kong.plugins.prometheus.exporter"
+local _exporter_ok, exporter = pcall(require, "kong.plugins.prometheus.exporter")
 
 local fmt = string.format
 local kong = kong
@@ -15,6 +15,9 @@ local re_gmatch = ngx.re.gmatch
 local counters = {}
 
 local function inc_warn(conf, reason)
+    if not _exporter_ok then
+        return
+    end
     local metric_name = conf.security_warning_metric_name
     if not counters[metric_name] then
         local prom = exporter.get_prometheus()
