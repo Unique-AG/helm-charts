@@ -48,6 +48,62 @@ config:
 
 With this configuration, both external clients (e.g., browser users) and the internal JWT validation plugin can utilize the same identity provider (IdP) for token issuance and validation without requiring further customization.
 
+## Prometheus Metrics
+
+Both plugins expose a single Prometheus counter for security warning events when Kong's [Prometheus plugin](https://docs.konghq.com/hub/kong-inc/prometheus/) is enabled. Each rejection that produces a `WARN` log increments the counter with a `reason` label that identifies the failure type.
+
+> [!NOTE]
+> Kong's Prometheus library automatically prepends `kong_` to every metric name. The value you set in `config.security_warning_metric_name` is the base name — the actual metric exposed is `kong_<name>`.
+
+### unique-jwt-auth
+
+Default metric name: `unique_jwt_auth_security_warnings_total`
+
+Possible `reason` label values:
+
+| reason | description |
+|--------|-------------|
+| `invalid_signature` | Token signature could not be verified against any known key |
+| `multiple_tokens` | More than one token was found in the request |
+| `unrecognizable_token_type` | Token is neither a string nor a table |
+| `malformed_jwt` | Token could not be decoded as a JWT |
+| `disallowed_issuer` | Token `iss` claim does not match `allowed_iss` |
+| `unexpected_algorithm` | Token `alg` header does not match configured `algorithm` |
+| `claims_validation_failed` | Registered claims (`exp`, `nbf`) failed verification |
+| `max_expiration_exceeded` | Token lifetime exceeds `maximum_expiration` |
+
+### unique-app-repo-auth
+
+Default metric name: `unique_app_repo_auth_security_warnings_total`
+
+Possible `reason` label values:
+
+| reason | description |
+|--------|-------------|
+| `api_key_validation_failed` | App repository returned a non-200 response for the API key |
+| `multiple_tokens` | More than one token was found in the request |
+| `unrecognizable_token_type` | Token is neither a string nor a table |
+| `missing_required_headers` | `x-app-id` or `x-company-id` header is absent |
+
+### Example output
+
+```
+kong_unique_jwt_auth_security_warnings_total{reason="disallowed_issuer"} 3
+kong_unique_jwt_auth_security_warnings_total{reason="invalid_signature"} 1
+kong_unique_app_repo_auth_security_warnings_total{reason="api_key_validation_failed"} 12
+```
+
+### Overriding the metric name
+
+Set `config.security_warning_metric_name` in the plugin configuration to use a custom base name:
+
+```yaml
+config:
+  security_warning_metric_name: my_custom_auth_warnings_total
+```
+
+The metric will be exposed as `kong_my_custom_auth_warnings_total`.
+
 ## Upgrading
 
 ### To `2.0.0` or `2.1.0` respectively

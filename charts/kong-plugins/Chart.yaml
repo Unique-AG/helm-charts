@@ -5,7 +5,7 @@ maintainers:
   - name: unique-ag
     url: https://unique.ch/
 name: kong-plugins
-version: 2.1.0
+version: 2.2.0
 description: |
   The 'kong-plugins' chart provides a streamlined solution for deploying Kong plugins via ConfigMaps to be used with the Unique Software.
 
@@ -15,8 +15,4 @@ description: |
 annotations:
   artifacthub.io/changes: |
     - kind: added
-      description: Configurable ssl_verify option for cluster-internal setups without TLS
-    - kind: changed
-      description: Tune log levels - reduce per-request INFO noise, promote key rotation events to INFO
-    - kind: security
-      description: Add WARN logs with client IP for suspicious auth rejections (invalid issuer, algorithm, signature, malformed token)
+      description: Prometheus counter metric per plugin for security warning events, labelled by reason. Metric name is configurable via config.security_warning_metric_name and is always prefixed with kong_ by the Prometheus library.

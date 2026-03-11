@@ -1,6 +1,7 @@
 local constants = require "kong.constants"
 local jwt_decoder = require "kong.plugins.jwt.jwt_parser"
 local cjson = require "cjson.safe"
+local exporter = require "kong.plugins.prometheus.exporter"
 
 local zitadel_keys = require "kong.plugins.unique-jwt-auth.zitadel_keys"
 
@@ -14,6 +15,20 @@ local ipairs = ipairs
 local pairs = pairs
 local tostring = tostring
 local re_gmatch = ngx.re.gmatch
+
+local counters = {}
+
+local function inc_warn(conf, reason)
+    local metric_name = conf.security_warning_metric_name
+    if not counters[metric_name] then
+        local prom = exporter.get_prometheus()
+        if not prom then
+            return
+        end
+        counters[metric_name] = prom:counter(metric_name, "Security warning events", {"reason"})
+    end
+    counters[metric_name]:inc(1, {reason})
+end
 
 local priority_env_var = "UNIQUE_JWT_AUTH_PRIORITY"
 local priority
@@ -97,7 +112,7 @@ local function custom_validate_token_signature(conf, jwt, matched_iss, second_ca
             kong.log.err(err)
         end
         return kong.response.exit(403, {
-            message = "Unable to get public key for issuer"
+            message = "Forbidden"
         })
     end
 
@@ -122,8 +137,9 @@ local function custom_validate_token_signature(conf, jwt, matched_iss, second_ca
     end
 
     kong.log.warn("Rejected token with invalid signature for issuer: " .. matched_iss .. " from " .. (kong.client.get_forwarded_ip() or "unknown"))
+    inc_warn(conf, "invalid_signature")
     return kong.response.exit(401, {
-        message = "Invalid token signature"
+        message = "Unauthorized"
     })
 end
 
@@ -353,7 +369,7 @@ local function custom_match_consumer(conf, jwt)
         kong.log.err("Unable to find consumer for token claim [" .. conf.consumer_match_claim .. "]")
         return false, {
             status = 401,
-            message = "Unable to find consumer for token"
+            message = "Unauthorized"
         }
     end
 
@@ -386,14 +402,17 @@ local function do_authentication(conf)
             }
         elseif token_type == "table" then
             kong.log.warn("Multiple tokens provided in request from " .. (kong.client.get_forwarded_ip() or "unknown"))
+            inc_warn(conf, "multiple_tokens")
             return false, {
                 status = 401,
-                message = "Multiple tokens provided"
+                message = "Unauthorized"
             }
         else
+            kong.log.warn("Unrecognizable token type from " .. (kong.client.get_forwarded_ip() or "unknown"))
+            inc_warn(conf, "unrecognizable_token_type")
             return false, {
                 status = 401,
-                message = "Unrecognizable token"
+                message = "Unauthorized"
             }
         end
     end
@@ -402,9 +421,10 @@ local function do_authentication(conf)
     local jwt, err = jwt_decoder:new(token)
     if err then
         kong.log.warn("Malformed JWT received from " .. (kong.client.get_forwarded_ip() or "unknown") .. ": " .. tostring(err))
+        inc_warn(conf, "malformed_jwt")
         return false, {
             status = 401,
-            message = "Bad token; " .. tostring(err)
+            message = "Unauthorized"
         }
     end
 
@@ -417,9 +437,10 @@ local function do_authentication(conf)
     local matched_iss = validate_issuer(conf.allowed_iss, jwt.claims)
     if not matched_iss then
         kong.log.warn("Rejected token with disallowed issuer: " .. tostring(claims.iss) .. " from " .. (kong.client.get_forwarded_ip() or "unknown"))
+        inc_warn(conf, "disallowed_issuer")
         return false, {
             status = 401,
-            message = "Token issuer not allowed"
+            message = "Unauthorized"
         }
     end
 
@@ -428,9 +449,10 @@ local function do_authentication(conf)
     -- Verify "alg"
     if jwt.header.alg ~= algorithm then
         kong.log.warn("Rejected token with unexpected algorithm: " .. tostring(jwt.header.alg) .. " (expected " .. algorithm .. ") from " .. (kong.client.get_forwarded_ip() or "unknown"))
+        inc_warn(conf, "unexpected_algorithm")
         return false, {
             status = 403,
-            message = "Invalid algorithm"
+            message = "Forbidden"
         }
     end
 
@@ -443,9 +465,11 @@ local function do_authentication(conf)
     -- Verify the JWT registered claims
     local ok_claims, errors = jwt:verify_registered_claims(conf.claims_to_verify)
     if not ok_claims then
+        kong.log.warn("Token claims validation failed from " .. (kong.client.get_forwarded_ip() or "unknown") .. ": " .. custom_helper_table_to_string(errors))
+        inc_warn(conf, "claims_validation_failed")
         return false, {
             status = 401,
-            message = "Token claims invalid: " .. custom_helper_table_to_string(errors)
+            message = "Unauthorized"
         }
     end
 
@@ -453,9 +477,11 @@ local function do_authentication(conf)
     if conf.maximum_expiration ~= nil and conf.maximum_expiration > 0 then
         local ok, errors = jwt:check_maximum_expiration(conf.maximum_expiration)
         if not ok then
+            kong.log.warn("Token maximum expiration check failed from " .. (kong.client.get_forwarded_ip() or "unknown") .. ": " .. custom_helper_table_to_string(errors))
+            inc_warn(conf, "max_expiration_exceeded")
             return false, {
                 status = 403,
-                message = "Token claims invalid: " .. custom_helper_table_to_string(errors)
+                message = "Forbidden"
             }
         end
     end
