@@ -23,7 +23,7 @@ spec:
 {{- if not (index $disabled "KongJwtAuthInvalidSignature" | default false) }}
       - alert: KongJwtAuthInvalidSignature
         expr: |
-          increase({{ $jwtMetric }}{reason="invalid_signature"}[5m]) > 2
+          increase({{ $jwtMetric }}{reason="invalid_signature"}[5m]) > {{ dig "KongJwtAuthInvalidSignature" "threshold" 2 $customRules }}
         for: {{ dig "KongJwtAuthInvalidSignature" "for" "0m" $customRules }}
         labels:
           severity: {{ dig "KongJwtAuthInvalidSignature" "severity" "critical" $customRules }}
@@ -38,7 +38,7 @@ spec:
 {{- if not (index $disabled "KongJwtAuthDisallowedIssuer" | default false) }}
       - alert: KongJwtAuthDisallowedIssuer
         expr: |
-          increase({{ $jwtMetric }}{reason="disallowed_issuer"}[5m]) > 2
+          increase({{ $jwtMetric }}{reason="disallowed_issuer"}[5m]) > {{ dig "KongJwtAuthDisallowedIssuer" "threshold" 2 $customRules }}
         for: {{ dig "KongJwtAuthDisallowedIssuer" "for" "0m" $customRules }}
         labels:
           severity: {{ dig "KongJwtAuthDisallowedIssuer" "severity" "critical" $customRules }}
@@ -53,7 +53,7 @@ spec:
 {{- if not (index $disabled "KongJwtAuthUnexpectedAlgorithm" | default false) }}
       - alert: KongJwtAuthUnexpectedAlgorithm
         expr: |
-          increase({{ $jwtMetric }}{reason="unexpected_algorithm"}[5m]) > 2
+          increase({{ $jwtMetric }}{reason="unexpected_algorithm"}[5m]) > {{ dig "KongJwtAuthUnexpectedAlgorithm" "threshold" 2 $customRules }}
         for: {{ dig "KongJwtAuthUnexpectedAlgorithm" "for" "0m" $customRules }}
         labels:
           severity: {{ dig "KongJwtAuthUnexpectedAlgorithm" "severity" "critical" $customRules }}
@@ -68,7 +68,7 @@ spec:
 {{- if not (index $disabled "KongJwtAuthMalformedJwt" | default false) }}
       - alert: KongJwtAuthMalformedJwt
         expr: |
-          increase({{ $jwtMetric }}{reason="malformed_jwt"}[5m]) > 2
+          increase({{ $jwtMetric }}{reason="malformed_jwt"}[5m]) > {{ dig "KongJwtAuthMalformedJwt" "threshold" 2 $customRules }}
         for: {{ dig "KongJwtAuthMalformedJwt" "for" "0m" $customRules }}
         labels:
           severity: {{ dig "KongJwtAuthMalformedJwt" "severity" "warning" $customRules }}
@@ -83,7 +83,7 @@ spec:
 {{- if not (index $disabled "KongJwtAuthMultipleTokens" | default false) }}
       - alert: KongJwtAuthMultipleTokens
         expr: |
-          increase({{ $jwtMetric }}{reason="multiple_tokens"}[5m]) > 2
+          increase({{ $jwtMetric }}{reason="multiple_tokens"}[5m]) > {{ dig "KongJwtAuthMultipleTokens" "threshold" 2 $customRules }}
         for: {{ dig "KongJwtAuthMultipleTokens" "for" "0m" $customRules }}
         labels:
           severity: {{ dig "KongJwtAuthMultipleTokens" "severity" "warning" $customRules }}
@@ -98,7 +98,7 @@ spec:
 {{- if not (index $disabled "KongJwtAuthUnrecognizableTokenType" | default false) }}
       - alert: KongJwtAuthUnrecognizableTokenType
         expr: |
-          increase({{ $jwtMetric }}{reason="unrecognizable_token_type"}[5m]) > 2
+          increase({{ $jwtMetric }}{reason="unrecognizable_token_type"}[5m]) > {{ dig "KongJwtAuthUnrecognizableTokenType" "threshold" 2 $customRules }}
         for: {{ dig "KongJwtAuthUnrecognizableTokenType" "for" "0m" $customRules }}
         labels:
           severity: {{ dig "KongJwtAuthUnrecognizableTokenType" "severity" "warning" $customRules }}
@@ -113,7 +113,7 @@ spec:
 {{- if not (index $disabled "KongJwtAuthClaimsValidationFailed" | default false) }}
       - alert: KongJwtAuthClaimsValidationFailed
         expr: |
-          increase({{ $jwtMetric }}{reason="claims_validation_failed"}[5m]) > 2
+          increase({{ $jwtMetric }}{reason="claims_validation_failed"}[5m]) > {{ dig "KongJwtAuthClaimsValidationFailed" "threshold" 2 $customRules }}
         for: {{ dig "KongJwtAuthClaimsValidationFailed" "for" "0m" $customRules }}
         labels:
           severity: {{ dig "KongJwtAuthClaimsValidationFailed" "severity" "warning" $customRules }}
@@ -128,7 +128,7 @@ spec:
 {{- if not (index $disabled "KongJwtAuthMaxExpirationExceeded" | default false) }}
       - alert: KongJwtAuthMaxExpirationExceeded
         expr: |
-          increase({{ $jwtMetric }}{reason="max_expiration_exceeded"}[5m]) > 2
+          increase({{ $jwtMetric }}{reason="max_expiration_exceeded"}[5m]) > {{ dig "KongJwtAuthMaxExpirationExceeded" "threshold" 2 $customRules }}
         for: {{ dig "KongJwtAuthMaxExpirationExceeded" "for" "0m" $customRules }}
         labels:
           severity: {{ dig "KongJwtAuthMaxExpirationExceeded" "severity" "warning" $customRules }}
@@ -146,8 +146,8 @@ spec:
 {{- if not (index $disabled "KongAppRepoAuthApiKeyValidationFailed" | default false) }}
       - alert: KongAppRepoAuthApiKeyValidationFailed
         expr: |
-          increase({{ $appRepoMetric }}{reason="api_key_validation_failed"}[5m]) > 2
-        for: {{ dig "KongAppRepoAuthApiKeyValidationFailed" "for" "0m" $customRules }}
+          increase({{ $appRepoMetric }}{reason="api_key_validation_failed"}[5m]) > {{ dig "KongAppRepoAuthApiKeyValidationFailed" "threshold" 50 $customRules }}
+        for: {{ dig "KongAppRepoAuthApiKeyValidationFailed" "for" "5m" $customRules }}
         labels:
           severity: {{ dig "KongAppRepoAuthApiKeyValidationFailed" "severity" "warning" $customRules }}
           alertGroup: security-warnings
@@ -161,7 +161,7 @@ spec:
 {{- if not (index $disabled "KongAppRepoAuthMultipleTokens" | default false) }}
       - alert: KongAppRepoAuthMultipleTokens
         expr: |
-          increase({{ $appRepoMetric }}{reason="multiple_tokens"}[5m]) > 2
+          increase({{ $appRepoMetric }}{reason="multiple_tokens"}[5m]) > {{ dig "KongAppRepoAuthMultipleTokens" "threshold" 2 $customRules }}
         for: {{ dig "KongAppRepoAuthMultipleTokens" "for" "0m" $customRules }}
         labels:
           severity: {{ dig "KongAppRepoAuthMultipleTokens" "severity" "warning" $customRules }}
@@ -176,7 +176,7 @@ spec:
 {{- if not (index $disabled "KongAppRepoAuthUnrecognizableTokenType" | default false) }}
       - alert: KongAppRepoAuthUnrecognizableTokenType
         expr: |
-          increase({{ $appRepoMetric }}{reason="unrecognizable_token_type"}[5m]) > 2
+          increase({{ $appRepoMetric }}{reason="unrecognizable_token_type"}[5m]) > {{ dig "KongAppRepoAuthUnrecognizableTokenType" "threshold" 2 $customRules }}
         for: {{ dig "KongAppRepoAuthUnrecognizableTokenType" "for" "0m" $customRules }}
         labels:
           severity: {{ dig "KongAppRepoAuthUnrecognizableTokenType" "severity" "warning" $customRules }}
@@ -191,7 +191,7 @@ spec:
 {{- if not (index $disabled "KongAppRepoAuthMissingRequiredHeaders" | default false) }}
       - alert: KongAppRepoAuthMissingRequiredHeaders
         expr: |
-          increase({{ $appRepoMetric }}{reason="missing_required_headers"}[5m]) > 2
+          increase({{ $appRepoMetric }}{reason="missing_required_headers"}[5m]) > {{ dig "KongAppRepoAuthMissingRequiredHeaders" "threshold" 2 $customRules }}
         for: {{ dig "KongAppRepoAuthMissingRequiredHeaders" "for" "0m" $customRules }}
         labels:
           severity: {{ dig "KongAppRepoAuthMissingRequiredHeaders" "severity" "warning" $customRules }}

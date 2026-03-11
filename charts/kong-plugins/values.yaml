@@ -41,13 +41,13 @@ prometheus:
         # KongAppRepoAuthMultipleTokens: true
         # KongAppRepoAuthUnrecognizableTokenType: true
         # KongAppRepoAuthMissingRequiredHeaders: true
-      # -- Override for and severity per alert.
+      # -- Override for, severity, and threshold per alert. Threshold is the number of occurrences in 5m that triggers the alert (default: 2, except KongAppRepoAuthApiKeyValidationFailed: 50).
       customRules: {}
         # KongJwtAuthDisallowedIssuer:
         #   for: "1m"
         #   severity: "critical"
-        # KongJwtAuthInvalidSignature:
-        #   for: "5m"
-        #   severity: "critical"
+        #   threshold: 1
+        # KongAppRepoAuthApiKeyValidationFailed:
+        #   threshold: 100
       # -- Extra labels added to the PrometheusRule metadata and each alert's labels.
       additionalLabels: {}
