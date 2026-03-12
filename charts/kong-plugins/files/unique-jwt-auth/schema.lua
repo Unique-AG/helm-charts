@@ -144,6 +144,11 @@ local schema = {
                     type = "boolean",
                     default = false
                 }
+            }, {
+                security_warning_metric_name = {
+                    type = "string",
+                    default = "unique_jwt_auth_security_warnings_total"
+                }
             }}
         }
     }}

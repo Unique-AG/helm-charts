@@ -59,6 +59,11 @@ local schema = {
                     required = true,
                     default = true
                 }
+            }, {
+                security_warning_metric_name = {
+                    type = "string",
+                    default = "unique_app_repo_auth_security_warnings_total"
+                }
             }}
         }
     }}

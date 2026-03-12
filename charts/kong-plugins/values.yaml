@@ -14,3 +14,145 @@ appRepoAuth:
   name: kong-plugin-unique-app-repo-auth
   # -- The default app repository url
   appRepositoryUrl: "http://service-app-repository.default.svc:8088"
+
+prometheus:
+  # -- Enable Prometheus integration. When false no PrometheusRule resources are rendered.
+  enabled: true
+  defaultAlerts:
+    # -- securityWarnings alerts fire on the counters emitted by the kong plugins for each WARN-level security rejection.
+    securityWarnings:
+      # -- Enable the security warnings alert group. Requires monitoring.coreos.com/v1 CRDs.
+      enabled: true
+      # -- Base metric name (without kong_ prefix) used in PromQL for the jwt-auth plugin. Must match config.security_warning_metric_name on the KongClusterPlugin.
+      jwtAuthMetricName: kong_unique_jwt_auth_security_warnings_total
+      # -- Base metric name (without kong_ prefix) used in PromQL for the app-repo-auth plugin. Must match config.security_warning_metric_name on the KongClusterPlugin.
+      appRepoAuthMetricName: kong_unique_app_repo_auth_security_warnings_total
+      # -- Per-alert configuration. Each entry controls enabled, severity, for, threshold (number of occurrences in interval), and interval (PromQL range window).
+      rules:
+        # Fires when increase(kong_unique_jwt_auth_security_warnings_total{reason="invalid_signature"}[interval]) > threshold.
+        # Measures: count of JWTs rejected because no current JWKS key for the issuer could verify the signature.
+        # A non-zero baseline here is suspicious; a burst strongly indicates a forgery or cross-environment token replay attempt.
+        KongJwtAuthInvalidSignature:
+          enabled: true
+          for: "0m"
+          severity: critical
+          threshold: 2
+          interval: "5m"
+
+        # Fires when increase(kong_unique_jwt_auth_security_warnings_total{reason="disallowed_issuer"}[interval]) > threshold.
+        # Measures: count of JWTs whose 'iss' claim did not match any entry in allowed_iss.
+        # Indicates tokens from an unknown identity provider reaching the gateway.
+        KongJwtAuthDisallowedIssuer:
+          enabled: true
+          for: "0m"
+          severity: critical
+          threshold: 2
+          interval: "5m"
+
+        # Fires when increase(kong_unique_jwt_auth_security_warnings_total{reason="unexpected_algorithm"}[interval]) > threshold.
+        # Measures: count of JWTs whose 'alg' header did not match the configured algorithm (default RS256).
+        # May indicate algorithm confusion attacks or misconfigured clients.
+        KongJwtAuthUnexpectedAlgorithm:
+          enabled: true
+          for: "0m"
+          severity: critical
+          threshold: 2
+          interval: "5m"
+
+        # Fires when increase(kong_unique_jwt_auth_security_warnings_total{reason="malformed_jwt"}[interval]) > threshold.
+        # Measures: count of requests that carried a token which could not be decoded as a valid JWT structure.
+        # Occasional occurrences are expected from buggy clients; a burst may indicate scanning or fuzzing.
+        KongJwtAuthMalformedJwt:
+          enabled: true
+          for: "0m"
+          severity: warning
+          threshold: 2
+          interval: "5m"
+
+        # Fires when increase(kong_unique_jwt_auth_security_warnings_total{reason="multiple_tokens"}[interval]) > threshold.
+        # Measures: count of requests that supplied more than one token (e.g. both header and query param).
+        # Should not occur with well-behaved clients.
+        KongJwtAuthMultipleTokens:
+          enabled: true
+          for: "0m"
+          severity: warning
+          threshold: 2
+          interval: "5m"
+
+        # Fires when increase(kong_unique_jwt_auth_security_warnings_total{reason="unrecognizable_token_type"}[interval]) > threshold.
+        # Measures: count of requests where the extracted token was neither a string nor a table (internal parsing edge case).
+        KongJwtAuthUnrecognizableTokenType:
+          enabled: true
+          for: "0m"
+          severity: warning
+          threshold: 2
+          interval: "5m"
+
+        # Fires when increase(kong_unique_jwt_auth_security_warnings_total{reason="claims_validation_failed"}[interval]) > threshold.
+        # Measures: count of JWTs rejected because a registered claim other than exp (e.g. nbf) failed verification.
+        KongJwtAuthClaimsValidationFailed:
+          enabled: false
+          for: "0m"
+          severity: warning
+          threshold: 2
+          interval: "5m"
+
+        # Fires when increase(kong_unique_jwt_auth_security_warnings_total{reason="token_expired"}[interval]) > threshold.
+        # Measures: count of JWTs rejected because the exp claim indicated the token has expired.
+        # Disabled by default — token expiry is a normal operational event; enable only for targeted visibility.
+        KongJwtAuthTokenExpired:
+          enabled: false
+          for: "0m"
+          severity: warning
+          threshold: 2
+          interval: "5m"
+
+        # Fires when increase(kong_unique_jwt_auth_security_warnings_total{reason="max_expiration_exceeded"}[interval]) > threshold.
+        # Measures: count of JWTs rejected because their lifetime exceeds the configured maximum_expiration.
+        # Disabled by default — may indicate clients issuing long-lived tokens, not an active attack.
+        KongJwtAuthMaxExpirationExceeded:
+          enabled: false
+          for: "0m"
+          severity: warning
+          threshold: 2
+          interval: "5m"
+
+        # Fires when increase(kong_unique_app_repo_auth_security_warnings_total{reason="api_key_validation_failed"}[interval]) > threshold.
+        # Measures: count of requests where the app repository returned a non-200 response for the provided API key.
+        # Individual failures are expected (revoked keys, typos). A large sustained surge indicates brute-forcing or a misconfigured client.
+        KongAppRepoAuthApiKeyValidationFailed:
+          enabled: true
+          for: "5m"
+          severity: warning
+          threshold: 50
+          interval: "5m"
+
+        # Fires when increase(kong_unique_app_repo_auth_security_warnings_total{reason="multiple_tokens"}[interval]) > threshold.
+        # Measures: count of requests that supplied more than one API key token simultaneously.
+        KongAppRepoAuthMultipleTokens:
+          enabled: true
+          for: "0m"
+          severity: warning
+          threshold: 2
+          interval: "5m"
+
+        # Fires when increase(kong_unique_app_repo_auth_security_warnings_total{reason="unrecognizable_token_type"}[interval]) > threshold.
+        # Measures: count of requests where the extracted token was neither a string nor a table (internal parsing edge case).
+        KongAppRepoAuthUnrecognizableTokenType:
+          enabled: true
+          for: "0m"
+          severity: warning
+          threshold: 2
+          interval: "5m"
+
+        # Fires when increase(kong_unique_app_repo_auth_security_warnings_total{reason="missing_required_headers"}[interval]) > threshold.
+        # Measures: count of requests missing x-app-id or x-company-id headers required for API key validation.
+        KongAppRepoAuthMissingRequiredHeaders:
+          enabled: true
+          for: "0m"
+          severity: warning
+          threshold: 2
+          interval: "5m"
+
+      # -- Extra labels added to the PrometheusRule metadata and each alert's labels.
+      additionalLabels: {}
