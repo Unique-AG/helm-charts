@@ -72,7 +72,8 @@ Possible `reason` label values:
 | `malformed_jwt` | Token could not be decoded as a JWT |
 | `disallowed_issuer` | Token `iss` claim does not match `allowed_iss` |
 | `unexpected_algorithm` | Token `alg` header does not match configured `algorithm` |
-| `claims_validation_failed` | Registered claims (`exp`, `nbf`) failed verification |
+| `token_expired` | Token `exp` claim indicates the token has expired |
+| `claims_validation_failed` | Other registered claim failures (e.g. `nbf` not yet valid) |
 | `max_expiration_exceeded` | Token lifetime exceeds `maximum_expiration` |
 
 ### unique-app-repo-auth
@@ -124,6 +125,7 @@ Expiration-related alerts are **disabled by default** since token expiry is a no
 | `KongJwtAuthMultipleTokens` | `multiple_tokens` | warning | yes |
 | `KongJwtAuthUnrecognizableTokenType` | `unrecognizable_token_type` | warning | yes |
 | `KongJwtAuthClaimsValidationFailed` | `claims_validation_failed` | warning | **no** |
+| `KongJwtAuthTokenExpired` | `token_expired` | warning | **no** |
 | `KongJwtAuthMaxExpirationExceeded` | `max_expiration_exceeded` | warning | **no** |
 
 #### unique-app-repo-auth alerts

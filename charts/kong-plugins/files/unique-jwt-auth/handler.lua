@@ -469,7 +469,11 @@ local function do_authentication(conf)
     local ok_claims, errors = jwt:verify_registered_claims(conf.claims_to_verify)
     if not ok_claims then
         kong.log.warn("Token claims validation failed from " .. (kong.client.get_forwarded_ip() or "unknown") .. ": " .. custom_helper_table_to_string(errors))
-        inc_warn(conf, "claims_validation_failed")
+        local reason = "claims_validation_failed"
+        if type(errors) == "table" and errors.exp and tostring(errors.exp):find("expired") then
+            reason = "token_expired"
+        end
+        inc_warn(conf, reason)
         return false, {
             status = 401,
             message = "Unauthorized"

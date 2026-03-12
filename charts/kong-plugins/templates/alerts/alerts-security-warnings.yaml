@@ -122,7 +122,22 @@ spec:
           {{- end }}
         annotations:
           summary: "Kong JWT auth rejected tokens with failed claims validation"
-          description: "Tokens were rejected because registered claims (exp, nbf) failed verification. This is normal for expired tokens; enable this alert only if you want visibility into claim failures."
+          description: "Tokens were rejected because a registered claim other than exp (e.g. nbf) failed verification. For expired tokens see reason=token_expired."
+{{- end }}
+{{- if dig "KongJwtAuthTokenExpired" "enabled" false $rules }}
+      - alert: KongJwtAuthTokenExpired
+        expr: |
+          increase({{ $jwtMetric }}{reason="token_expired"}[{{ dig "KongJwtAuthTokenExpired" "interval" "5m" $rules }}]) > {{ dig "KongJwtAuthTokenExpired" "threshold" 2 $rules }}
+        for: {{ dig "KongJwtAuthTokenExpired" "for" "0m" $rules }}
+        labels:
+          severity: {{ dig "KongJwtAuthTokenExpired" "severity" "warning" $rules }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong JWT auth rejected expired tokens"
+          description: "Tokens were rejected because the exp claim indicated the token has expired. This is normal (e.g. user returned after session expiry); enable this alert only if you want visibility into expiry volume."
 {{- end }}
 {{- if dig "KongJwtAuthMaxExpirationExceeded" "enabled" false $rules }}
       - alert: KongJwtAuthMaxExpirationExceeded

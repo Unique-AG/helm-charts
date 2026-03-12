@@ -89,9 +89,18 @@ prometheus:
           interval: "5m"
 
         # Fires when increase(kong_unique_jwt_auth_security_warnings_total{reason="claims_validation_failed"}[interval]) > threshold.
-        # Measures: count of JWTs rejected because registered claims (exp, nbf) failed verification.
-        # Disabled by default — token expiry is a normal operational event; enable only for targeted visibility.
+        # Measures: count of JWTs rejected because a registered claim other than exp (e.g. nbf) failed verification.
         KongJwtAuthClaimsValidationFailed:
+          enabled: false
+          for: "0m"
+          severity: warning
+          threshold: 2
+          interval: "5m"
+
+        # Fires when increase(kong_unique_jwt_auth_security_warnings_total{reason="token_expired"}[interval]) > threshold.
+        # Measures: count of JWTs rejected because the exp claim indicated the token has expired.
+        # Disabled by default — token expiry is a normal operational event; enable only for targeted visibility.
+        KongJwtAuthTokenExpired:
           enabled: false
           for: "0m"
           severity: warning
