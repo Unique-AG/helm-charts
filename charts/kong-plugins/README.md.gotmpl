@@ -132,14 +132,17 @@ Expiration-related alerts are **disabled by default** since token expiry is a no
 | `KongAppRepoAuthUnrecognizableTokenType` | `unrecognizable_token_type` | warning | yes |
 | `KongAppRepoAuthMissingRequiredHeaders` | `missing_required_headers` | warning | yes |
 
+All alert parameters are configured under `prometheus.defaultAlerts.securityWarnings.rules.<AlertName>`:
+
 **Disable an individual alert:**
 
 ```yaml
 prometheus:
   defaultAlerts:
     securityWarnings:
-      disabled:
-        KongJwtAuthMalformedJwt: true
+      rules:
+        KongJwtAuthMalformedJwt:
+          enabled: false
 ```
 
 **Enable an expiration alert:**
@@ -148,21 +151,23 @@ prometheus:
 prometheus:
   defaultAlerts:
     securityWarnings:
-      disabled:
-        KongJwtAuthClaimsValidationFailed: false
+      rules:
+        KongJwtAuthClaimsValidationFailed:
+          enabled: true
 ```
 
-**Override `for`, `severity`, or `threshold`:**
+**Override `for`, `severity`, `threshold`, or `interval`:**
 
 ```yaml
 prometheus:
   defaultAlerts:
     securityWarnings:
-      customRules:
+      rules:
         KongJwtAuthDisallowedIssuer:
           for: "1m"
           severity: critical
           threshold: 1
+          interval: "10m"
 ```
 
 **Disable all alerts:**
