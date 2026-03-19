@@ -1,9 +1,6 @@
 {{- if and .Values.prometheus .Values.prometheus.defaultAlerts .Values.prometheus.defaultAlerts.securityWarnings .Values.prometheus.defaultAlerts.securityWarnings.enabled .Values.prometheus.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
 {{- $fullName := include "kongPlugins.fullname" . -}}
 {{- $labels := include "kongPlugins.labels" . -}}
-{{- $jwtMetric := .Values.prometheus.defaultAlerts.securityWarnings.jwtAuthMetricName -}}
-{{- $appRepoMetric := .Values.prometheus.defaultAlerts.securityWarnings.appRepoAuthMetricName -}}
-{{- $rules := .Values.prometheus.defaultAlerts.securityWarnings.rules | default dict -}}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -18,7 +15,27 @@ metadata:
 spec:
   groups:
     - name: {{ $fullName }}-jwt-auth-security-warnings
+      {{- $jwtRules := include "kongPlugins.jwtAuthRules" . -}}
+      {{- if $jwtRules | trim }}
       rules:
+{{- $jwtRules }}
+      {{- else }}
+      rules: []
+      {{- end }}
+
+    - name: {{ $fullName }}-app-repo-auth-security-warnings
+      {{- $appRepoRules := include "kongPlugins.appRepoAuthRules" . -}}
+      {{- if $appRepoRules | trim }}
+      rules:
+{{- $appRepoRules }}
+      {{- else }}
+      rules: []
+      {{- end }}
+{{- end }}
+
+{{- define "kongPlugins.jwtAuthRules" -}}
+{{- $jwtMetric := .Values.prometheus.defaultAlerts.securityWarnings.jwtAuthMetricName -}}
+{{- $rules := .Values.prometheus.defaultAlerts.securityWarnings.rules | default dict -}}
 {{- if dig "KongJwtAuthInvalidSignature" "enabled" true $rules }}
       - alert: KongJwtAuthInvalidSignature
         expr: |
@@ -154,9 +171,11 @@ spec:
           summary: "Kong JWT auth rejected tokens exceeding maximum expiration"
           description: "Tokens were rejected because their lifetime exceeds the configured maximum_expiration. This may indicate clients issuing overly long-lived tokens."
 {{- end }}
+{{- end -}}
 
-    - name: {{ $fullName }}-app-repo-auth-security-warnings
-      rules:
+{{- define "kongPlugins.appRepoAuthRules" -}}
+{{- $appRepoMetric := .Values.prometheus.defaultAlerts.securityWarnings.appRepoAuthMetricName -}}
+{{- $rules := .Values.prometheus.defaultAlerts.securityWarnings.rules | default dict -}}
 {{- if dig "KongAppRepoAuthApiKeyValidationFailed" "enabled" true $rules }}
       - alert: KongAppRepoAuthApiKeyValidationFailed
         expr: |
@@ -217,4 +236,4 @@ spec:
           summary: "Kong app-repo auth received a request missing required headers"
           description: "A request was rejected because x-app-id or x-company-id header was absent."
 {{- end }}
-{{- end }}
+{{- end -}}
