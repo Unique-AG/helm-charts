@@ -1,6 +1,7 @@
 local constants = require "kong.constants"
 local http = require("resty.http")
 local cjson = require("cjson.safe")
+local _exporter_ok, exporter = pcall(require, "kong.plugins.prometheus.exporter")
 
 local fmt = string.format
 local kong = kong
@@ -10,6 +11,23 @@ local ipairs = ipairs
 local pairs = pairs
 local tostring = tostring
 local re_gmatch = ngx.re.gmatch
+
+local counters = {}
+
+local function inc_warn(conf, reason)
+    if not _exporter_ok then
+        return
+    end
+    local metric_name = conf.security_warning_metric_name
+    if not counters[metric_name] then
+        local prom = exporter.get_prometheus()
+        if not prom then
+            return
+        end
+        counters[metric_name] = prom:counter(metric_name, "Security warning events", {"reason"})
+    end
+    counters[metric_name]:inc(1, {reason})
+end
 
 local priority_env_var = "UNIQUE_APP_REPO_AUTH_PRIORITY"
 local priority
@@ -154,7 +172,8 @@ local function set_anonymous_consumer(anonymous)
     set_consumer(consumer)
 end
 
-local function validate_api_key(app_repository_url, app_id, company_id, token, user_id)
+local function validate_api_key(conf, app_id, company_id, token, user_id)
+    local app_repository_url = conf.app_repository_url
     kong.service.request.clear_header("x-user-roles")
 
     local httpc = http.new()
@@ -187,6 +206,7 @@ local function validate_api_key(app_repository_url, app_id, company_id, token, u
         return true
     else
         kong.log.warn("API key validation failed with status: ", res.status, " and body: ", res.body)
+        inc_warn(conf, "api_key_validation_failed")
         return false
     end
 end
@@ -209,14 +229,17 @@ local function do_authentication(conf)
             }
         elseif token_type == "table" then
             kong.log.warn("Multiple tokens provided in request from " .. (kong.client.get_forwarded_ip() or "unknown"))
+            inc_warn(conf, "multiple_tokens")
             return false, {
                 status = 401,
-                message = "Multiple tokens provided"
+                message = "Unauthorized"
             }
         else
+            kong.log.warn("Unrecognizable token type from " .. (kong.client.get_forwarded_ip() or "unknown"))
+            inc_warn(conf, "unrecognizable_token_type")
             return false, {
                 status = 401,
-                message = "Unrecognizable token"
+                message = "Unauthorized"
             }
         end
     end
@@ -228,9 +251,10 @@ local function do_authentication(conf)
 
     if not app_id or not company_id then
         kong.log.warn("Request missing required headers: x-app-id=" .. tostring(app_id) .. " x-company-id=" .. tostring(company_id) .. " from " .. (kong.client.get_forwarded_ip() or "unknown"))
+        inc_warn(conf, "missing_required_headers")
         return false, {
             status = 401,
-            message = "Missing app_id or company_id"
+            message = "Unauthorized"
         }
     end
 
@@ -240,7 +264,7 @@ local function do_authentication(conf)
                             company_id or "nil", 
                             user_id or "nil"))
 
-    if validate_api_key(conf.app_repository_url, app_id, company_id, token, user_id) then
+    if validate_api_key(conf, app_id, company_id, token, user_id) then
         return true
     end
 

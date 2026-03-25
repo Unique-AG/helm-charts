@@ -48,6 +48,145 @@ config:
 
 With this configuration, both external clients (e.g., browser users) and the internal JWT validation plugin can utilize the same identity provider (IdP) for token issuance and validation without requiring further customization.
 
+## Prometheus Metrics
+
+Both plugins expose a single Prometheus counter for security warning events when Kong's [Prometheus plugin](https://docs.konghq.com/hub/kong-inc/prometheus/) is enabled. Each rejection that produces a `WARN` log increments the counter with a `reason` label that identifies the failure type.
+
+> [!NOTE]
+> Kong's Prometheus library automatically prepends `kong_` to every metric name. The value you set in `config.security_warning_metric_name` is the base name — the actual metric exposed is `kong_<name>`.
+
+### unique-jwt-auth
+
+Default metric name: `unique_jwt_auth_security_warnings_total`
+
+Possible `reason` label values:
+
+| reason | description |
+|--------|-------------|
+| `invalid_signature` | Token signature could not be verified against any known key |
+| `multiple_tokens` | More than one token was found in the request |
+| `unrecognizable_token_type` | Token is neither a string nor a table |
+| `malformed_jwt` | Token could not be decoded as a JWT |
+| `disallowed_issuer` | Token `iss` claim does not match `allowed_iss` |
+| `unexpected_algorithm` | Token `alg` header does not match configured `algorithm` |
+| `claims_validation_failed` | Registered claims (`exp`, `nbf`) failed verification |
+| `max_expiration_exceeded` | Token lifetime exceeds `maximum_expiration` |
+
+### unique-app-repo-auth
+
+Default metric name: `unique_app_repo_auth_security_warnings_total`
+
+Possible `reason` label values:
+
+| reason | description |
+|--------|-------------|
+| `api_key_validation_failed` | App repository returned a non-200 response for the API key |
+| `multiple_tokens` | More than one token was found in the request |
+| `unrecognizable_token_type` | Token is neither a string nor a table |
+| `missing_required_headers` | `x-app-id` or `x-company-id` header is absent |
+
+### Example output
+
+```
+kong_unique_jwt_auth_security_warnings_total{reason="disallowed_issuer"} 3
+kong_unique_jwt_auth_security_warnings_total{reason="invalid_signature"} 1
+kong_unique_app_repo_auth_security_warnings_total{reason="api_key_validation_failed"} 12
+```
+
+### Overriding the metric name
+
+Set `config.security_warning_metric_name` in the plugin configuration to use a custom base name:
+
+```yaml
+config:
+  security_warning_metric_name: my_custom_auth_warnings_total
+```
+
+The metric will be exposed as `kong_my_custom_auth_warnings_total`.
+
+### Alerts
+
+The chart ships one `PrometheusRule` alert per rejection reason for both plugins — 12 alerts in total — enabled by default when the `monitoring.coreos.com/v1` CRD is present and `prometheus.enabled` is `true`. Each alert fires when occurrences within a 5-minute window exceed a configurable threshold (`increase(...[5m]) > threshold`). The default threshold is 2 for most alerts and 50 for `KongAppRepoAuthApiKeyValidationFailed` (since individual API key failures are expected).
+
+Expiration-related alerts are **disabled by default** since token expiry is a normal operational event.
+
+#### unique-jwt-auth alerts
+
+| Alert | Reason | Severity | Enabled by default |
+|-------|--------|----------|--------------------|
+| `KongJwtAuthInvalidSignature` | `invalid_signature` | critical | yes |
+| `KongJwtAuthDisallowedIssuer` | `disallowed_issuer` | critical | yes |
+| `KongJwtAuthUnexpectedAlgorithm` | `unexpected_algorithm` | critical | yes |
+| `KongJwtAuthMalformedJwt` | `malformed_jwt` | warning | yes |
+| `KongJwtAuthMultipleTokens` | `multiple_tokens` | warning | yes |
+| `KongJwtAuthUnrecognizableTokenType` | `unrecognizable_token_type` | warning | yes |
+| `KongJwtAuthClaimsValidationFailed` | `claims_validation_failed` | warning | **no** |
+| `KongJwtAuthMaxExpirationExceeded` | `max_expiration_exceeded` | warning | **no** |
+
+#### unique-app-repo-auth alerts
+
+| Alert | Reason | Severity | Enabled by default |
+|-------|--------|----------|--------------------|
+| `KongAppRepoAuthApiKeyValidationFailed` | `api_key_validation_failed` | warning | yes |
+| `KongAppRepoAuthMultipleTokens` | `multiple_tokens` | warning | yes |
+| `KongAppRepoAuthUnrecognizableTokenType` | `unrecognizable_token_type` | warning | yes |
+| `KongAppRepoAuthMissingRequiredHeaders` | `missing_required_headers` | warning | yes |
+
+All alert parameters are configured under `prometheus.defaultAlerts.securityWarnings.rules.<AlertName>`:
+
+**Disable an individual alert:**
+
+```yaml
+prometheus:
+  defaultAlerts:
+    securityWarnings:
+      rules:
+        KongJwtAuthMalformedJwt:
+          enabled: false
+```
+
+**Enable an expiration alert:**
+
+```yaml
+prometheus:
+  defaultAlerts:
+    securityWarnings:
+      rules:
+        KongJwtAuthClaimsValidationFailed:
+          enabled: true
+```
+
+**Override `for`, `severity`, `threshold`, or `interval`:**
+
+```yaml
+prometheus:
+  defaultAlerts:
+    securityWarnings:
+      rules:
+        KongJwtAuthDisallowedIssuer:
+          for: "1m"
+          severity: critical
+          threshold: 1
+          interval: "10m"
+```
+
+**Disable all alerts:**
+
+```yaml
+prometheus:
+  enabled: false
+```
+
+**Override metric names** (use this if you set a custom `config.security_warning_metric_name` on the Kong plugin):
+
+```yaml
+prometheus:
+  defaultAlerts:
+    securityWarnings:
+      jwtAuthMetricName: kong_my_custom_jwt_warnings_total
+      appRepoAuthMetricName: kong_my_custom_app_repo_warnings_total
+```
+
 ## Upgrading
 
 ### To `2.0.0` or `2.1.0` respectively
