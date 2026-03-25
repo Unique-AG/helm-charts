@@ -36,7 +36,7 @@ prometheus:
           enabled: true
           for: "0m"
           severity: critical
-          threshold: 2
+          threshold: 5
           interval: "5m"
 
         # Fires when increase(kong_unique_jwt_auth_security_warnings_total{reason="disallowed_issuer"}[interval]) > threshold.
@@ -66,7 +66,7 @@ prometheus:
           enabled: true
           for: "0m"
           severity: warning
-          threshold: 2
+          threshold: 10
           interval: "5m"
 
         # Fires when increase(kong_unique_jwt_auth_security_warnings_total{reason="multiple_tokens"}[interval]) > threshold.
@@ -85,7 +85,7 @@ prometheus:
           enabled: true
           for: "0m"
           severity: warning
-          threshold: 2
+          threshold: 10
           interval: "5m"
 
         # Fires when increase(kong_unique_jwt_auth_security_warnings_total{reason="claims_validation_failed"}[interval]) > threshold.
@@ -142,7 +142,7 @@ prometheus:
           enabled: true
           for: "0m"
           severity: warning
-          threshold: 2
+          threshold: 10
           interval: "5m"
 
         # Fires when increase(kong_unique_app_repo_auth_security_warnings_total{reason="missing_required_headers"}[interval]) > threshold.
@@ -151,7 +151,7 @@ prometheus:
           enabled: true
           for: "0m"
           severity: warning
-          threshold: 2
+          threshold: 10
           interval: "5m"
 
       # -- Extra labels added to the PrometheusRule metadata and each alert's labels.
