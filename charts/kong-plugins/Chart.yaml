@@ -5,7 +5,7 @@ maintainers:
   - name: unique-ag
     url: https://unique.ch/
 name: kong-plugins
-version: 2.2.0
+version: 2.3.0
 description: |
   The 'kong-plugins' chart provides a streamlined solution for deploying Kong plugins via ConfigMaps to be used with the Unique Software.
 
@@ -14,9 +14,5 @@ description: |
   Please report any security concerns with the plugins via the [Security Policy](https://github.com/Unique-AG/helm-charts/tree/main?tab=security-ov-file).
 annotations:
   artifacthub.io/changes: |
-    - kind: added
-      description: Prometheus counter metric per plugin for security warning events, labelled by reason. Metric name is configurable via config.security_warning_metric_name and is always prefixed with kong_ by the Prometheus library.
-    - kind: added
-      description: Built-in PrometheusRule alerts for security warning counters on both plugins, enabled by default when monitoring.coreos.com/v1 CRDs are present.
-    - kind: security
-      description: Rejection reasons are logged server-side only and never included in error responses, limiting information exposure to potential attackers.
+    - kind: changed
+      description: "Future releases are OCI-only. The Helm repository is frozen and will not receive new versions."

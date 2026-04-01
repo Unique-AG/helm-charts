@@ -5,18 +5,92 @@
 
 Unique `helm-charts` is a collection of charts for [https://unique.ch](https://unique.ch) projects.
 
-Most charts are available both as Helm Repository as well as OCI artefact (Unique recommends the latter).
-```sh
-helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-<chart> unique/<chart> --version <version>
+> [!WARNING]
+> **OCI-only for new releases:** All chart releases after **April 2026** are published exclusively as OCI artifacts on `ghcr.io`. The Helm repository at `https://unique-ag.github.io/helm-charts/` is frozen and will not receive new versions; it is no longer updated or maintained. Existing versions published before that cutover remain available from both the legacy index and OCI.
 
-# or
+**Why:**
+
+1. The GitHub Pages pipeline relies on `chart-releaser-action`, which is incompatible with immutable releases—something Unique enforces to reduce risk from recent AI-driven supply-chain attacks.
+2. OCI is the common distribution path for Helm charts and supports digest pinning and validation.
+
+Install from OCI (recommended):
+
+```sh
 helm install my-<chart> oci://ghcr.io/unique-ag/helm-charts/<chart> --version <version>
 ```
 
+<details>
+<summary>Legacy Helm repository (frozen)</summary>
+
+```sh
+helm repo add unique https://unique-ag.github.io/helm-charts/
+helm install my-<chart> unique/<chart> --version <version>
+```
+
+</details>
+
 You can find comprehensive documentation for each chart in the `charts` directory or on [ArtifactHub#unique](https://artifacthub.io/packages/search?org=unique).
 
-In case the chart you are looking for isn't available over OCI, please open [an issue](https://github.com/Unique-AG/helm-charts/issues/new/choose).
+## Migrating to OCI
+
+### Helm CLI
+
+```sh
+# Before (Helm repository)
+helm repo add unique https://unique-ag.github.io/helm-charts/
+helm install my-release unique/backend-service --version 10.4.0
+
+# After (OCI)
+helm install my-release oci://ghcr.io/unique-ag/helm-charts/backend-service --version 10.4.0
+```
+
+- No `helm repo add` or `helm repo update` for Unique charts.
+- Use the `oci://` URI instead of a repo alias.
+- `helm pull`, `helm show`, and `helm template` accept the same `oci://` reference.
+
+### Helmfile
+
+```yaml
+# Before
+repositories:
+  - name: unique
+    url: https://unique-ag.github.io/helm-charts/
+
+releases:
+  - name: backend-service
+    chart: unique/backend-service
+    version: 10.4.0
+
+# After
+releases:
+  - name: backend-service
+    chart: oci://ghcr.io/unique-ag/helm-charts/backend-service
+    version: 10.4.0
+```
+
+Remove the `repositories` entry for Unique when every release in the file uses OCI; point `chart` at the full OCI URI.
+
+### Argo CD Application
+
+Register the registry as a Helm OCI repository in Argo CD (type `helm-oci`), then reference it without the `oci://` prefix:
+
+```yaml
+# Before (Helm repository)
+spec:
+  source:
+    repoURL: https://unique-ag.github.io/helm-charts/
+    chart: backend-service
+    targetRevision: 10.4.0
+
+# After (OCI)
+spec:
+  source:
+    repoURL: ghcr.io/unique-ag/helm-charts
+    chart: backend-service
+    targetRevision: 10.4.0
+```
+
+`chart` and `targetRevision` stay the same; `repoURL` becomes the GHCR host path. Multi-source apps use the same `repoURL` / `chart` / `targetRevision` shape under each entry in `sources`.
 
 ## About Unique specific Helm Charts
 

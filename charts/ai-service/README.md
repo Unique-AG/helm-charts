@@ -9,15 +9,23 @@ Version 3.0.0 is the last supported iteration of this chart. Subsequent changes 
 
 ## Implementation Details
 
-### OCI availibility
-This chart is available both as Helm Repository as well as OCI artefact.
+### OCI Availability
+
+This chart's last release predates the OCI-only policy; new Unique charts use OCI only and the Helm repository index is frozen—see the [repository README](https://github.com/Unique-AG/helm-charts/blob/main/README.md#migrating-to-oci).
+
+```sh
+helm install my-ai-service oci://ghcr.io/unique-ag/helm-charts/ai-service --version 3.0.0
+```
+
+<details>
+<summary>Legacy Helm repository (frozen, no new versions)</summary>
+
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
 helm install my-ai-service unique/ai-service --version 3.0.0
-
-# or
-helm install my-ai-service oci://ghcr.io/unique-ag/helm-charts/ai-service --version 3.0.0
 ```
+
+</details>
 
 ### Docker Images
 The chart itself uses `ghcr.io/unique-ag/chart-testing-service` as its base image. This is due to automation aspects and because there is no specific `appVersion` or service delivered with it. Using `chart-testing-service` Unique can improve the charts quality without dealing with the complexity of private registries during testing. Naturally, when deploying the Unique product, the image will be replaced with the actual Unique image(s). You can inspect the image [here](https://github.com/Unique-AG/helm-charts/tree/main/docker) and it is served from [`ghcr.io/unique-ag/chart-testing-service`](https://github.com/Unique-AG/helm-charts/pkgs/container/chart-testing-service).

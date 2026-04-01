@@ -4,19 +4,27 @@ The 'backend-service' chart is a "convenience" chart from Unique AG that can gen
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 10.3.0](https://img.shields.io/badge/Version-10.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
+![Version: 10.4.0](https://img.shields.io/badge/Version-10.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
 
 ## Implementation Details
 
 ### OCI Availability
-```sh
-# Helm Repository
-helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 10.3.0
 
-# OCI
-helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 10.3.0
+New releases are published as OCI artifacts only. The Helm repository index is frozen and will not receive new versions—see the [repository README](https://github.com/Unique-AG/helm-charts/blob/main/README.md#migrating-to-oci) for migration steps.
+
+```sh
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 10.4.0
 ```
+
+<details>
+<summary>Legacy Helm repository (frozen, no new versions)</summary>
+
+```sh
+helm repo add unique https://unique-ag.github.io/helm-charts/
+helm install my-backend-service unique/backend-service --version 10.4.0
+```
+
+</details>
 
 ### Docker Images
 The chart uses [`ghcr.io/unique-ag/chart-testing-service`](https://github.com/Unique-AG/helm-charts/pkgs/container/chart-testing-service) as its default image for CI testing. Replace with actual Unique images when deploying.
