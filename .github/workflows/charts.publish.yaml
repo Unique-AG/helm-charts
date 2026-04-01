@@ -1,8 +1,3 @@
-# SPDX-SnippetBegin
-# SPDX-License-Identifier: Apache License 2.0
-# SPDX-SnippetCopyrightText: 2024 © Argo Project, argoproj/argo-helm
-# SPDX-SnippetCopyrightText: 2024 © Unique AG
-# SPDX-SnippetEnd
 name: "[charts] Publish"
 on:
   workflow_dispatch:
@@ -19,7 +14,7 @@ jobs:
   publish:
     if: github.repository == 'unique-ag/helm-charts'
     permissions:
-      contents: read # for checkout and git diff
+      contents: write # to create GitHub releases and tags
       packages: write # to push OCI chart package to GitHub Registry
     runs-on: ubuntu-latest
     steps:
@@ -35,30 +30,47 @@ jobs:
 
       - name: Detect changed charts
         id: changed
-        env:
-          BEFORE_SHA: ${{ github.event.before }}
         run: |
-          NULL_SHA="0000000000000000000000000000000000000000"
-          if [ "${{ github.event_name }}" = "push" ] && [ "$BEFORE_SHA" != "$NULL_SHA" ]; then
-            dirs=$(git diff --name-only "$BEFORE_SHA" "${{ github.sha }}" -- charts/ \
-              | cut -d/ -f1-2 | sort -u)
-          else
-            dirs=$(ls -d charts/*/)
-          fi
+          latest_tag=$(git describe --tags --abbrev=0 HEAD~ 2>/dev/null \
+            || git rev-list --max-parents=0 --first-parent HEAD)
+          echo "Latest tag: $latest_tag"
+          dirs=$(git diff --find-renames --name-only "$latest_tag" -- charts \
+            | cut -d'/' -f1-2 | sort -u)
           echo "charts<<EOF" >> "$GITHUB_OUTPUT"
           echo "$dirs" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
 
-      - name: Package changed charts
+      - name: Package and release charts
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CHANGED_CHARTS: ${{ steps.changed.outputs.charts }}
         run: |
           mkdir -p .cr-release-packages
           while IFS= read -r chart_dir; do
             [ -z "$chart_dir" ] && continue
-            if [ -f "${chart_dir}/Chart.yaml" ]; then
-              helm package "${chart_dir}" -d .cr-release-packages/
+            [ ! -f "$chart_dir/Chart.yaml" ] && continue
+
+            name=$(yq '.name' "$chart_dir/Chart.yaml")
+            version=$(yq '.version' "$chart_dir/Chart.yaml")
+            tag="${name}-${version}"
+
+            echo "Packaging $chart_dir ($tag)..."
+            helm package "$chart_dir" -d .cr-release-packages/
+
+            # idempotent: immutable releases cannot be modified, skip if already created
+            if gh release view "$tag" &>/dev/null; then
+              echo "Release $tag already exists, skipping."
+              continue
             fi
+
+            prev_tag=$(git tag -l "${name}-*" --sort=-v:refname | head -1)
+            release_args=("$tag" --target "$GITHUB_SHA" --title "$tag" --generate-notes)
+            if [ -n "$prev_tag" ]; then
+              release_args+=(--notes-start-tag "$prev_tag")
+            fi
+
+            echo "Creating release $tag..."
+            gh release create "${release_args[@]}"
           done <<< "$CHANGED_CHARTS"
 
       - name: Login to GHCR
@@ -75,6 +87,13 @@ jobs:
           for pkg in .cr-release-packages/*.tgz; do
             if [ -z "${pkg:-}" ]; then
               break
+            fi
+            name=$(helm show chart "$pkg" | yq '.name')
+            version=$(helm show chart "$pkg" | yq '.version')
+            # idempotent: skip if the OCI artifact already exists in GHCR
+            if helm show chart "oci://ghcr.io/${REPO}/${name}" --version "$version" &>/dev/null; then
+              echo "OCI artifact ${name}:${version} already exists, skipping."
+              continue
             fi
             helm push "${pkg}" "oci://ghcr.io/${REPO}"
           done
