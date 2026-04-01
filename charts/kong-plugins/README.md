@@ -6,9 +6,28 @@ Refer to each plugins readme section to learn more about them.
 
 Please report any security concerns with the plugins via the [Security Policy](https://github.com/Unique-AG/helm-charts/tree/main?tab=security-ov-file).
 
-![Version: 2.2.0](https://img.shields.io/badge/Version-2.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 2.3.0](https://img.shields.io/badge/Version-2.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
+
+### OCI Availability
+
+New releases are published as OCI artifacts only. The Helm repository index is frozen and will not receive new versions—see the [repository README](https://github.com/Unique-AG/helm-charts/blob/main/README.md#migrating-to-oci) for migration steps.
+
+```sh
+helm install my-kong-plugins oci://ghcr.io/unique-ag/helm-charts/kong-plugins --version 2.3.0
+```
+
+<details>
+<summary>Legacy Helm repository (frozen, no new versions)</summary>
+
+```sh
+helm repo add unique https://unique-ag.github.io/helm-charts/
+helm install my-kong-plugins unique/kong-plugins --version 2.3.0
+```
+
+</details>
+
 ### kong-plugin-unique-jwt-auth
 This plugin is a modified fork of [kong-plugin-jwt-keycloak](https://github.com/telekom-digioss/kong-plugin-jwt-keycloak) (Apache License 2.0 licensed) 🎖️
 

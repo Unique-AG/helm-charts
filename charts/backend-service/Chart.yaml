@@ -8,7 +8,7 @@ name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
 # changes to consider on next major: enable netpol by default
-version: 10.3.0
+version: 10.4.0
 appVersion: latest
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
@@ -17,7 +17,5 @@ description: |
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
-    - kind: fixed
-      description: "OPTIONS method is now included in the scoped allowList by default as the requests get CORS blocked otherwise."
     - kind: changed
-      description: "All routes now offer a nameSuffix that can be used to force replacement (defaults to the previous value)."
+      description: "Future releases are OCI-only. The Helm repository is frozen and will not receive new versions."

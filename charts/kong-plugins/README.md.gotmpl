@@ -6,6 +6,25 @@
 {{ template "chart.requirementsSection" . }}
 
 ## Implementation Details
+
+### OCI Availability
+
+New releases are published as OCI artifacts only. The Helm repository index is frozen and will not receive new versions—see the [repository README](https://github.com/Unique-AG/helm-charts/blob/main/README.md#migrating-to-oci) for migration steps.
+
+```sh
+helm install my-{{ template "chart.name" . }} oci://ghcr.io/unique-ag/helm-charts/{{ template "chart.name" . }} --version {{ template "chart.version" . }}
+```
+
+<details>
+<summary>Legacy Helm repository (frozen, no new versions)</summary>
+
+```sh
+helm repo add unique https://unique-ag.github.io/helm-charts/
+helm install my-{{ template "chart.name" . }} unique/{{ template "chart.name" . }} --version {{ template "chart.version" . }}
+```
+
+</details>
+
 ### kong-plugin-unique-jwt-auth
 This plugin is a modified fork of [kong-plugin-jwt-keycloak](https://github.com/telekom-digioss/kong-plugin-jwt-keycloak) (Apache License 2.0 licensed) 🎖️
 
