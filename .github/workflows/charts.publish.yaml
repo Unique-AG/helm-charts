@@ -3,6 +3,7 @@
 # SPDX-SnippetCopyrightText: 2024 © Argo Project, argoproj/argo-helm
 # SPDX-SnippetCopyrightText: 2024 © Unique AG
 # SPDX-SnippetEnd
+## Reference: https://github.com/helm/chart-releaser-action
 name: "[charts] Publish"
 on:
   workflow_dispatch:
@@ -19,7 +20,7 @@ jobs:
   publish:
     if: github.repository == 'unique-ag/helm-charts'
     permissions:
-      contents: read # for checkout and git diff
+      contents: write # for helm/chart-releaser-action to push chart release and create a release
       packages: write # to push OCI chart package to GitHub Registry
     runs-on: ubuntu-latest
     steps:
@@ -33,33 +34,34 @@ jobs:
         with:
           version: v3.19.4 # Also update in lint-and-test.yaml
 
-      - name: Detect changed charts
-        id: changed
-        env:
-          BEFORE_SHA: ${{ github.event.before }}
+      - name: Configure Git
         run: |
-          NULL_SHA="0000000000000000000000000000000000000000"
-          if [ "${{ github.event_name }}" = "push" ] && [ "$BEFORE_SHA" != "$NULL_SHA" ]; then
-            dirs=$(git diff --name-only "$BEFORE_SHA" "${{ github.sha }}" -- charts/ \
-              | cut -d/ -f1-2 | sort -u)
-          else
-            dirs=$(ls -d charts/*/)
-          fi
-          echo "charts<<EOF" >> "$GITHUB_OUTPUT"
-          echo "$dirs" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-      - name: Package changed charts
+      # The GitHub repository secret `PGP_PRIVATE_KEY` contains the private key
+      # in ASCII-armored format. To export a (new) key, run this command:
+      # `gpg --armor --export-secret-key <my key>`
+      # - name: Prepare PGP key
+      #   run: |
+      #     IFS=""
+      #     echo "$PGP_PRIVATE_KEY" | gpg --dearmor > $HOME/secring.gpg
+      #     echo "$PGP_PASSPHRASE" > $HOME/passphrase.txt
+
+      #     # Tell chart-releaser-action where to find the key and its passphrase
+      #     echo "CR_KEYRING=$HOME/secring.gpg" >> "$GITHUB_ENV"
+      #     echo "CR_PASSPHRASE_FILE=$HOME/passphrase.txt" >> "$GITHUB_ENV"
+      #   env:
+      #     PGP_PRIVATE_KEY: "${{ secrets.PGP_PRIVATE_KEY }}"
+      #     PGP_PASSPHRASE: "${{ secrets.PGP_PASSPHRASE }}"
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@cae68fefc6b5f367a0275617c9f83181ba54714f # v1.7.0
+        with:
+          config: "./.github/configs/cr.yaml"
+          skip_existing: true # immutable artifacts
         env:
-          CHANGED_CHARTS: ${{ steps.changed.outputs.charts }}
-        run: |
-          mkdir -p .cr-release-packages
-          while IFS= read -r chart_dir; do
-            [ -z "$chart_dir" ] && continue
-            if [ -f "${chart_dir}/Chart.yaml" ]; then
-              helm package "${chart_dir}" -d .cr-release-packages/
-            fi
-          done <<< "$CHANGED_CHARTS"
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Login to GHCR
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
@@ -71,10 +73,10 @@ jobs:
       - name: Push charts to GHCR
         run: |
           shopt -s nullglob
-          REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           for pkg in .cr-release-packages/*.tgz; do
             if [ -z "${pkg:-}" ]; then
               break
             fi
-            helm push "${pkg}" "oci://ghcr.io/${REPO}"
+            REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+            helm push "${pkg}" oci://ghcr.io/${REPO}
           done
