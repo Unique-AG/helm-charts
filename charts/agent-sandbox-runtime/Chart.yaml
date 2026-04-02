@@ -1,0 +1,17 @@
+apiVersion: v2
+name: agent-sandbox-runtime
+description: |
+  Deploys sandbox router, sandbox templates (small/medium/large presets), warm pools, and
+  network policies for the Agent Sandbox ecosystem. Requires agent-sandbox-controller (CRDs + controller).
+type: application
+version: 0.1.0-rc.1
+appVersion: "1.0.0"
+icon: https://www.unique.ch/hubfs/unique_assets/favicon/glyph_caumasee.svg
+maintainers:
+  - name: unique-ag
+    url: https://unique.ch/
+sources:
+  - https://github.com/Unique-AG/helm-charts/tree/main/charts/agent-sandbox-runtime
+  - https://github.com/kubernetes-sigs/agent-sandbox
+annotations:
+  artifacthub.io/license: Apache-2.0

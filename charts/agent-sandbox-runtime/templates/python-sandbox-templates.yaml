@@ -1,0 +1,83 @@
+{{- if .Capabilities.APIVersions.Has "extensions.agents.x-k8s.io/v1alpha1" }}
+{{- range $preset, $config := .Values.sandboxPresets }}
+{{- if $config.enabled }}
+---
+apiVersion: extensions.agents.x-k8s.io/v1alpha1
+kind: SandboxTemplate
+metadata:
+  name: python-sandbox-{{ $preset }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "sandbox.labels" $ | nindent 4 }}
+    sandbox.agents.x-k8s.io/preset: {{ $preset }}
+spec:
+  podTemplate:
+    spec:
+      {{- if $.Values.sandboxTemplate.runtimeClassName }}
+      runtimeClassName: {{ $.Values.sandboxTemplate.runtimeClassName }}
+      {{- end }}
+      {{- with $.Values.sandboxTemplate.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      automountServiceAccountToken: false
+      containers:
+        - name: python-runtime
+          image: "{{ $.Values.sandboxTemplate.image.repository }}:{{ $.Values.sandboxTemplate.image.tag }}"
+          {{- if $.Values.sandboxTemplate.image.pullPolicy }}
+          imagePullPolicy: {{ $.Values.sandboxTemplate.image.pullPolicy }}
+          {{- end }}
+          ports:
+            - containerPort: {{ $.Values.sandboxTemplate.containerPort }}
+          env:
+            - name: SANDBOX_MAX_PROCESSES
+              value: {{ $.Values.sandboxTemplate.maxProcesses | quote }}
+            - name: SANDBOX_MAX_OPEN_FILES
+              value: {{ $.Values.sandboxTemplate.maxOpenFiles | quote }}
+            - name: SANDBOX_MAX_CORE_SIZE
+              value: {{ $.Values.sandboxTemplate.maxCoreSize | quote }}
+            # Limit thread creation for numerical libraries to prevent RLIMIT_NPROC issues
+            - name: OPENBLAS_NUM_THREADS
+              value: "1"
+            - name: OMP_NUM_THREADS
+              value: "1"
+            - name: MKL_NUM_THREADS
+              value: "1"
+            - name: NUMEXPR_NUM_THREADS
+              value: "1"
+          {{- with $.Values.sandboxTemplate.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          readinessProbe:
+            httpGet:
+              path: {{ $.Values.sandboxTemplate.readinessProbe.path | quote }}
+              port: {{ $.Values.sandboxTemplate.containerPort }}
+            initialDelaySeconds: {{ $.Values.sandboxTemplate.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ $.Values.sandboxTemplate.readinessProbe.periodSeconds }}
+          livenessProbe:
+            httpGet:
+              path: {{ $.Values.sandboxTemplate.livenessProbe.path | quote }}
+              port: {{ $.Values.sandboxTemplate.containerPort }}
+            initialDelaySeconds: {{ $.Values.sandboxTemplate.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ $.Values.sandboxTemplate.livenessProbe.periodSeconds }}
+          resources:
+            requests:
+              cpu: {{ $config.resources.requests.cpu | quote }}
+              memory: {{ $config.resources.requests.memory | quote }}
+              ephemeral-storage: {{ $config.resources.requests.ephemeralStorage | default $.Values.sandboxTemplate.resources.requests.ephemeralStorage | quote }}
+            limits:
+              cpu: {{ $config.resources.limits.cpu | quote }}
+              memory: {{ $config.resources.limits.memory | quote }}
+              ephemeral-storage: {{ $config.resources.limits.ephemeralStorage | default $.Values.sandboxTemplate.resources.limits.ephemeralStorage | quote }}
+          volumeMounts:
+            - name: workspace
+              mountPath: {{ $.Values.sandboxTemplate.workspacePath }}
+      volumes:
+        - name: workspace
+          emptyDir:
+            sizeLimit: {{ $.Values.sandboxTemplate.workspaceSizeLimit | quote }}
+      restartPolicy: {{ $.Values.sandboxTemplate.restartPolicy | quote }}
+{{- end }}
+{{- end }}
+{{- end }}

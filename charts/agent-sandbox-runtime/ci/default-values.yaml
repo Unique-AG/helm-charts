@@ -1,0 +1,37 @@
+router:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: us-central1-docker.pkg.dev/k8s-staging-images/agent-sandbox/sandbox-router
+    tag: latest-main
+    pullPolicy: IfNotPresent
+  topologySpreadConstraints:
+    enabled: false
+
+sandboxTemplate:
+  enabled: true
+  runtimeClassName: ""
+  image:
+    repository: us-central1-docker.pkg.dev/k8s-staging-images/agent-sandbox/python-runtime-sandbox
+    tag: latest-main
+    pullPolicy: IfNotPresent
+
+sandboxPresets:
+  small:
+    enabled: true
+    warmPool:
+      enabled: false
+      replicas: 0
+  medium:
+    enabled: true
+    warmPool:
+      enabled: false
+      replicas: 0
+  large:
+    enabled: true
+    warmPool:
+      enabled: false
+      replicas: 0
+
+networkPolicy:
+  enabled: false

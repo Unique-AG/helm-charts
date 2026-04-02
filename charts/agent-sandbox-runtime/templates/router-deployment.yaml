@@ -1,0 +1,53 @@
+{{- if .Values.router.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sandbox.router.name" . }}-deployment
+  labels:
+    {{- include "sandbox.router.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.router.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "sandbox.router.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "sandbox.router.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- if .Values.router.topologySpreadConstraints.enabled }}
+      topologySpreadConstraints:
+        - maxSkew: {{ .Values.router.topologySpreadConstraints.maxSkew }}
+          topologyKey: {{ .Values.router.topologySpreadConstraints.topologyKey }}
+          whenUnsatisfiable: {{ .Values.router.topologySpreadConstraints.whenUnsatisfiable }}
+          labelSelector:
+            matchLabels:
+              {{- include "sandbox.router.selectorLabels" . | nindent 14 }}
+      {{- end }}
+      containers:
+        - name: router
+          image: "{{ .Values.router.image.repository }}:{{ .Values.router.image.tag }}"
+          imagePullPolicy: {{ .Values.router.image.pullPolicy }}
+          env:
+            - name: PROXY_TIMEOUT_SECONDS
+              value: {{ .Values.router.proxyTimeoutSeconds | default 180 | quote }}
+          ports:
+            - containerPort: {{ .Values.router.containerPort }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.router.readinessProbe.path }}
+              port: {{ .Values.router.containerPort }}
+            initialDelaySeconds: {{ .Values.router.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.router.readinessProbe.periodSeconds }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.router.livenessProbe.path }}
+              port: {{ .Values.router.containerPort }}
+            initialDelaySeconds: {{ .Values.router.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.router.livenessProbe.periodSeconds }}
+          resources:
+            {{- toYaml .Values.router.resources | nindent 12 }}
+      securityContext:
+        runAsUser: {{ .Values.router.securityContext.runAsUser }}
+        runAsGroup: {{ .Values.router.securityContext.runAsGroup }}
+{{- end }}

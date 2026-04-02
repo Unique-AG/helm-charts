@@ -1,0 +1,17 @@
+{{- if .Values.router.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.router.service.name | default (printf "%s-svc" (include "sandbox.router.name" .)) }}
+  labels:
+    {{- include "sandbox.router.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.router.service.type }}
+  selector:
+    {{- include "sandbox.router.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      protocol: TCP
+      port: {{ .Values.router.service.port }}
+      targetPort: {{ .Values.router.containerPort }}
+{{- end }}

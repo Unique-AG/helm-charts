@@ -1,0 +1,10 @@
+image:
+  repository: registry.k8s.io/agent-sandbox/agent-sandbox-controller
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+extensions:
+  enabled: true
+
+leaderElect: true

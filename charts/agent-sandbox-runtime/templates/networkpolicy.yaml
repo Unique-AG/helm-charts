@@ -1,0 +1,57 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "sandbox.router.name" . }}-netpol
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "sandbox.router.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "sandbox.router.selectorLabels" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow ingress from node-chat pods
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.networkPolicy.nodeChat.namespace }}
+          podSelector:
+            {{- toYaml .Values.networkPolicy.nodeChat.podSelector | nindent 12 }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.networkPolicy.nodeChat.port }}
+    {{- if .Values.networkPolicy.extraIngress }}
+    # Extra ingress rules
+    {{- toYaml .Values.networkPolicy.extraIngress | nindent 4 }}
+    {{- end }}
+  egress:
+    # Always allow DNS (UDP and TCP port 53 to kube-system)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    {{- if .Values.networkPolicy.allowInternetEgress }}
+    # Allow egress to internet (external traffic)
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              # Exclude private IP ranges (cluster traffic)
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+    {{- end }}
+    {{- if .Values.networkPolicy.extraEgress }}
+    # Extra egress rules
+    {{- toYaml .Values.networkPolicy.extraEgress | nindent 4 }}
+    {{- end }}
+{{- end }}

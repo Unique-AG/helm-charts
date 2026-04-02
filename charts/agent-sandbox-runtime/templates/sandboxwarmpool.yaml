@@ -1,0 +1,19 @@
+{{- if .Capabilities.APIVersions.Has "extensions.agents.x-k8s.io/v1alpha1" }}
+{{- range $preset, $config := .Values.sandboxPresets }}
+{{- if and $config.enabled $config.warmPool.enabled }}
+---
+apiVersion: extensions.agents.x-k8s.io/v1alpha1
+kind: SandboxWarmPool
+metadata:
+  name: python-sandbox-{{ $preset }}-pool
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "sandbox.labels" $ | nindent 4 }}
+    sandbox.agents.x-k8s.io/preset: {{ $preset }}
+spec:
+  replicas: {{ $config.warmPool.replicas }}
+  sandboxTemplateRef:
+    name: python-sandbox-{{ $preset }}
+{{- end }}
+{{- end }}
+{{- end }}
