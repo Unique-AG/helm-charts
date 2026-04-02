@@ -29,8 +29,8 @@ network policies for the Agent Sandbox ecosystem. Requires agent-sandbox-control
 | router.containerSecurityContext.runAsUser | int | `1000` |  |
 | router.enabled | bool | `true` |  |
 | router.image.pullPolicy | string | `"IfNotPresent"` |  |
-| router.image.repository | string | `"sandbox-router"` |  |
-| router.image.tag | string | `"latest"` |  |
+| router.image.repository | string | `"us-central1-docker.pkg.dev/k8s-staging-images/agent-sandbox/sandbox-router"` |  |
+| router.image.tag | string | `"v20260402-v0.2.1-53-gc3c9f03"` |  |
 | router.livenessProbe.initialDelaySeconds | int | `10` |  |
 | router.livenessProbe.path | string | `"/healthz"` |  |
 | router.livenessProbe.periodSeconds | int | `10` |  |
@@ -84,9 +84,9 @@ network policies for the Agent Sandbox ecosystem. Requires agent-sandbox-control
 | sandboxTemplate.containerSecurityContext.runAsNonRoot | bool | `true` |  |
 | sandboxTemplate.containerSecurityContext.runAsUser | int | `1000` |  |
 | sandboxTemplate.enabled | bool | `true` |  |
-| sandboxTemplate.image.pullPolicy | string | `"Never"` |  |
-| sandboxTemplate.image.repository | string | `"uv-runtime-sandbox"` |  |
-| sandboxTemplate.image.tag | string | `"latest"` |  |
+| sandboxTemplate.image.pullPolicy | string | `"IfNotPresent"` |  |
+| sandboxTemplate.image.repository | string | `"us-central1-docker.pkg.dev/k8s-staging-images/agent-sandbox/python-runtime-sandbox"` |  |
+| sandboxTemplate.image.tag | string | `"v20260402-v0.2.1-53-gc3c9f03"` |  |
 | sandboxTemplate.livenessProbe.initialDelaySeconds | int | `2` |  |
 | sandboxTemplate.livenessProbe.path | string | `"/"` |  |
 | sandboxTemplate.livenessProbe.periodSeconds | int | `10` |  |

@@ -3,8 +3,8 @@ router:
   enabled: true
   replicaCount: 2
   image:
-    repository: sandbox-router
-    tag: latest
+    repository: us-central1-docker.pkg.dev/k8s-staging-images/agent-sandbox/sandbox-router
+    tag: v20260402-v0.2.1-53-gc3c9f03
     pullPolicy: IfNotPresent
   service:
     # -- Override the router service name. Defaults to "<release>-sandbox-router-svc".
@@ -58,9 +58,9 @@ sandboxTemplate:
   name: python-sandbox-template
   runtimeClassName: gvisor
   image:
-    repository: uv-runtime-sandbox
-    tag: latest
-    pullPolicy: Never
+    repository: us-central1-docker.pkg.dev/k8s-staging-images/agent-sandbox/python-runtime-sandbox
+    tag: v20260402-v0.2.1-53-gc3c9f03
+    pullPolicy: IfNotPresent
   containerPort: 8888
   # Writable workspace directory (emptyDir volume mount)
   workspacePath: "/workspace"
