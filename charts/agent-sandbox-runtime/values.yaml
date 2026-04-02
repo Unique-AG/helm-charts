@@ -30,9 +30,22 @@ router:
     path: /healthz
     initialDelaySeconds: 10
     periodSeconds: 10
-  securityContext:
+  podSecurityContext:
+    runAsNonRoot: true
     runAsUser: 1000
     runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    capabilities:
+      drop:
+        - ALL
   topologySpreadConstraints:
     enabled: true
     maxSkew: 1

@@ -21,6 +21,12 @@ network policies for the Agent Sandbox ecosystem. Requires agent-sandbox-control
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | router.containerPort | int | `8080` |  |
+| router.containerSecurityContext.allowPrivilegeEscalation | bool | `false` |  |
+| router.containerSecurityContext.capabilities.drop[0] | string | `"ALL"` |  |
+| router.containerSecurityContext.readOnlyRootFilesystem | bool | `true` |  |
+| router.containerSecurityContext.runAsGroup | int | `1000` |  |
+| router.containerSecurityContext.runAsNonRoot | bool | `true` |  |
+| router.containerSecurityContext.runAsUser | int | `1000` |  |
 | router.enabled | bool | `true` |  |
 | router.image.pullPolicy | string | `"IfNotPresent"` |  |
 | router.image.repository | string | `"sandbox-router"` |  |
@@ -28,6 +34,11 @@ network policies for the Agent Sandbox ecosystem. Requires agent-sandbox-control
 | router.livenessProbe.initialDelaySeconds | int | `10` |  |
 | router.livenessProbe.path | string | `"/healthz"` |  |
 | router.livenessProbe.periodSeconds | int | `10` |  |
+| router.podSecurityContext.fsGroup | int | `1000` |  |
+| router.podSecurityContext.runAsGroup | int | `1000` |  |
+| router.podSecurityContext.runAsNonRoot | bool | `true` |  |
+| router.podSecurityContext.runAsUser | int | `1000` |  |
+| router.podSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
 | router.proxyTimeoutSeconds | int | `180` |  |
 | router.readinessProbe.initialDelaySeconds | int | `5` |  |
 | router.readinessProbe.path | string | `"/healthz"` |  |
@@ -37,8 +48,6 @@ network policies for the Agent Sandbox ecosystem. Requires agent-sandbox-control
 | router.resources.limits.memory | string | `"1Gi"` |  |
 | router.resources.requests.cpu | string | `"250m"` |  |
 | router.resources.requests.memory | string | `"512Mi"` |  |
-| router.securityContext.runAsGroup | int | `1000` |  |
-| router.securityContext.runAsUser | int | `1000` |  |
 | router.service.name | string | `""` | Override the router service name. Defaults to "<release>-sandbox-router-svc". The Python SDK tunnel mode auto-discovers "sandbox-router-svc" by default, so set this to "sandbox-router-svc" for seamless SDK integration. |
 | router.service.port | int | `8080` |  |
 | router.service.type | string | `"ClusterIP"` |  |

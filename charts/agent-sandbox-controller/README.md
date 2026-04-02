@@ -29,8 +29,19 @@ Upstream project: https://github.com/kubernetes-sigs/agent-sandbox
 | image.tag | string | `""` |  |
 | leaderElect | bool | `true` |  |
 | nodeSelector | object | `{}` |  |
+| podSecurityContext.fsGroup | int | `65532` |  |
+| podSecurityContext.runAsGroup | int | `65532` |  |
+| podSecurityContext.runAsNonRoot | bool | `true` |  |
+| podSecurityContext.runAsUser | int | `65532` |  |
+| podSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
 | replicaCount | int | `1` |  |
 | resources | object | `{}` |  |
+| securityContext.allowPrivilegeEscalation | bool | `false` |  |
+| securityContext.capabilities.drop[0] | string | `"ALL"` |  |
+| securityContext.readOnlyRootFilesystem | bool | `true` |  |
+| securityContext.runAsGroup | int | `65532` |  |
+| securityContext.runAsNonRoot | bool | `true` |  |
+| securityContext.runAsUser | int | `65532` |  |
 | service.port | int | `8080` |  |
 | tolerations | list | `[]` |  |
 

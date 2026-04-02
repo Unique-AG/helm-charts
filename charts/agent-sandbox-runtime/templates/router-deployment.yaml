@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "sandbox.router.name" . }}-deployment
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "sandbox.router.labels" . | nindent 4 }}
 spec:
@@ -15,6 +16,11 @@ spec:
       labels:
         {{- include "sandbox.router.selectorLabels" . | nindent 8 }}
     spec:
+      automountServiceAccountToken: false
+      {{- with .Values.router.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- if .Values.router.topologySpreadConstraints.enabled }}
       topologySpreadConstraints:
         - maxSkew: {{ .Values.router.topologySpreadConstraints.maxSkew }}
@@ -32,22 +38,25 @@ spec:
             - name: PROXY_TIMEOUT_SECONDS
               value: {{ .Values.router.proxyTimeoutSeconds | default 180 | quote }}
           ports:
-            - containerPort: {{ .Values.router.containerPort }}
+            - name: http
+              containerPort: {{ .Values.router.containerPort }}
+              protocol: TCP
           readinessProbe:
             httpGet:
               path: {{ .Values.router.readinessProbe.path }}
-              port: {{ .Values.router.containerPort }}
+              port: http
             initialDelaySeconds: {{ .Values.router.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.router.readinessProbe.periodSeconds }}
           livenessProbe:
             httpGet:
               path: {{ .Values.router.livenessProbe.path }}
-              port: {{ .Values.router.containerPort }}
+              port: http
             initialDelaySeconds: {{ .Values.router.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.router.livenessProbe.periodSeconds }}
+          {{- with .Values.router.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           resources:
             {{- toYaml .Values.router.resources | nindent 12 }}
-      securityContext:
-        runAsUser: {{ .Values.router.securityContext.runAsUser }}
-        runAsGroup: {{ .Values.router.securityContext.runAsGroup }}
 {{- end }}
