@@ -32,6 +32,12 @@ else
   echo "Please use an older version of Gateway API CRDs or upgrade your Kubernetes version"
 fi
 
+# Agent Sandbox CRDs (needed by the sandbox chart's SandboxTemplate/SandboxWarmPool resources)
+if [ -f "charts/agent-sandbox-controller/crds/crds.yaml" ]; then
+  echo "Installing Agent Sandbox CRDs (agents.x-k8s.io)..."
+  kubectl apply --server-side -f charts/agent-sandbox-controller/crds/crds.yaml
+fi
+
 # Install Cilium in order to be able to test Cilium network policies
 helm repo add cilium https://helm.cilium.io/
 helm repo update

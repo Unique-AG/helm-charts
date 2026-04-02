@@ -1,0 +1,175 @@
+# Router configuration
+router:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: us-central1-docker.pkg.dev/k8s-staging-images/agent-sandbox/sandbox-router
+    tag: v20260402-v0.2.1-53-gc3c9f03
+    pullPolicy: IfNotPresent
+  service:
+    # -- Override the router service name. Defaults to "<release>-sandbox-router-svc".
+    # The Python SDK tunnel mode auto-discovers "sandbox-router-svc" by default,
+    # so set this to "sandbox-router-svc" for seamless SDK integration.
+    name: ""
+    type: ClusterIP
+    port: 8080
+  containerPort: 8080
+  proxyTimeoutSeconds: 180
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+  readinessProbe:
+    path: /healthz
+    initialDelaySeconds: 5
+    periodSeconds: 5
+  livenessProbe:
+    path: /healthz
+    initialDelaySeconds: 10
+    periodSeconds: 10
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    capabilities:
+      drop:
+        - ALL
+  topologySpreadConstraints:
+    enabled: true
+    maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway
+
+# Sandbox template configuration
+sandboxTemplate:
+  enabled: true
+  name: python-sandbox-template
+  runtimeClassName: gvisor
+  image:
+    repository: us-central1-docker.pkg.dev/k8s-staging-images/agent-sandbox/python-runtime-sandbox
+    tag: v20260402-v0.2.1-53-gc3c9f03
+    pullPolicy: IfNotPresent
+  containerPort: 8888
+  # Writable workspace directory (emptyDir volume mount)
+  workspacePath: "/workspace"
+  # Size limit for workspace emptyDir volume
+  # Prevents sandbox from consuming excessive node disk space
+  workspaceSizeLimit: "500Mi"
+  # Maximum number of processes per sandbox (RLIMIT_NPROC)
+  # Prevents fork bombs and limits resource exhaustion attacks
+  # Note: RLIMIT_NPROC is per-UID across the entire node (not per-container),
+  # so this must account for ALL processes running as the same UID on the node.
+  # Set to 0 to disable the limit (rely on pids cgroup instead).
+  maxProcesses: 0
+  # Maximum number of open file descriptors per sandbox (RLIMIT_NOFILE)
+  # Prevents file descriptor exhaustion attacks
+  maxOpenFiles: 512
+  # Maximum core dump size in bytes (RLIMIT_CORE)
+  # Set to 0 to disable core dumps (recommended for security)
+  maxCoreSize: 0
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+      ephemeralStorage: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+      ephemeralStorage: "1Gi"
+  readinessProbe:
+    path: "/"
+    initialDelaySeconds: 0
+    periodSeconds: 1
+  livenessProbe:
+    path: "/"
+    initialDelaySeconds: 2
+    periodSeconds: 10
+  restartPolicy: "Never"
+  # Pod-level security context
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  # Container-level security context
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    capabilities:
+      drop:
+        - ALL
+  # -- Network policy management mode: "Managed" (default) or "Unmanaged".
+  # When Managed, the controller auto-creates a NetworkPolicy per SandboxTemplate.
+  # If no networkPolicy is specified, it defaults to strict isolation (deny all).
+  networkPolicyManagement: Managed
+  # -- Custom NetworkPolicy rules applied to sandbox pods via the SandboxTemplate CRD.
+  # If omitted (null), the controller creates a secure-by-default deny-all policy.
+  # Set explicit ingress/egress rules to allow specific traffic (e.g. from the router).
+  # See: https://github.com/kubernetes-sigs/agent-sandbox/blob/main/extensions/examples/secure-sandboxtemplate.yaml
+  networkPolicy:
+    ingress:
+      - from:
+          - podSelector:
+              matchLabels:
+                app: sandbox-router
+
+# Per-preset sandbox template and warm pool configuration
+# Each preset creates a separate SandboxTemplate with specific resource limits
+# and optionally a SandboxWarmPool for faster sandbox startup
+sandboxPresets:
+  small:
+    enabled: true
+    resources:
+      requests:
+        cpu: "250m"
+        memory: "512Mi"
+        # ephemeralStorage inherited from sandboxTemplate if not specified
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+    warmPool:
+      # Enable warm pool for faster sandbox startup (pre-warms sandbox pods)
+      enabled: true
+      # Number of warm sandbox pods to maintain in the pool
+      replicas: 2
+  medium:
+    enabled: true
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "1000m"
+        memory: "1Gi"
+    warmPool:
+      enabled: false
+      replicas: 0
+  large:
+    enabled: true
+    resources:
+      requests:
+        cpu: "1000m"
+        memory: "2Gi"
+      limits:
+        cpu: "2000m"
+        memory: "2Gi"
+    warmPool:
+      enabled: false
+      replicas: 0
