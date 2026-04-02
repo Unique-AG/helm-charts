@@ -20,13 +20,6 @@ network policies for the Agent Sandbox ecosystem. Requires agent-sandbox-control
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| networkPolicy.allowInternetEgress | bool | `false` |  |
-| networkPolicy.enabled | bool | `false` |  |
-| networkPolicy.extraEgress | list | `[]` |  |
-| networkPolicy.extraIngress | list | `[]` |  |
-| networkPolicy.nodeChat.namespace | string | `"default"` |  |
-| networkPolicy.nodeChat.podSelector.matchLabels.app | string | `"node-chat"` |  |
-| networkPolicy.nodeChat.port | int | `8080` |  |
 | router.containerPort | int | `8080` |  |
 | router.enabled | bool | `true` |  |
 | router.image.pullPolicy | string | `"IfNotPresent"` |  |
@@ -92,6 +85,8 @@ network policies for the Agent Sandbox ecosystem. Requires agent-sandbox-control
 | sandboxTemplate.maxOpenFiles | int | `512` |  |
 | sandboxTemplate.maxProcesses | int | `0` |  |
 | sandboxTemplate.name | string | `"python-sandbox-template"` |  |
+| sandboxTemplate.networkPolicy | object | `{"ingress":[{"from":[{"podSelector":{"matchLabels":{"app":"sandbox-router"}}}]}]}` | Custom NetworkPolicy rules applied to sandbox pods via the SandboxTemplate CRD. If omitted (null), the controller creates a secure-by-default deny-all policy. Set explicit ingress/egress rules to allow specific traffic (e.g. from the router). See: https://github.com/kubernetes-sigs/agent-sandbox/blob/main/extensions/examples/secure-sandboxtemplate.yaml |
+| sandboxTemplate.networkPolicyManagement | string | `"Managed"` | Network policy management mode: "Managed" (default) or "Unmanaged". When Managed, the controller auto-creates a NetworkPolicy per SandboxTemplate. If no networkPolicy is specified, it defaults to strict isolation (deny all). |
 | sandboxTemplate.podSecurityContext.fsGroup | int | `1000` |  |
 | sandboxTemplate.podSecurityContext.runAsGroup | int | `1000` |  |
 | sandboxTemplate.podSecurityContext.runAsNonRoot | bool | `true` |  |

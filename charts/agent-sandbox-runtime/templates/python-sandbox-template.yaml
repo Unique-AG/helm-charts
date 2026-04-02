@@ -7,6 +7,13 @@ metadata:
   labels:
     {{- include "sandbox.labels" . | nindent 4 }}
 spec:
+  {{- with .Values.sandboxTemplate.networkPolicyManagement }}
+  networkPolicyManagement: {{ . }}
+  {{- end }}
+  {{- with .Values.sandboxTemplate.networkPolicy }}
+  networkPolicy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   podTemplate:
     spec:
       {{- if .Values.sandboxTemplate.runtimeClassName }}

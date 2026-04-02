@@ -102,6 +102,20 @@ sandboxTemplate:
     capabilities:
       drop:
         - ALL
+  # -- Network policy management mode: "Managed" (default) or "Unmanaged".
+  # When Managed, the controller auto-creates a NetworkPolicy per SandboxTemplate.
+  # If no networkPolicy is specified, it defaults to strict isolation (deny all).
+  networkPolicyManagement: Managed
+  # -- Custom NetworkPolicy rules applied to sandbox pods via the SandboxTemplate CRD.
+  # If omitted (null), the controller creates a secure-by-default deny-all policy.
+  # Set explicit ingress/egress rules to allow specific traffic (e.g. from the router).
+  # See: https://github.com/kubernetes-sigs/agent-sandbox/blob/main/extensions/examples/secure-sandboxtemplate.yaml
+  networkPolicy:
+    ingress:
+      - from:
+          - podSelector:
+              matchLabels:
+                app: sandbox-router
 
 # Per-preset sandbox template and warm pool configuration
 # Each preset creates a separate SandboxTemplate with specific resource limits
@@ -146,42 +160,3 @@ sandboxPresets:
     warmPool:
       enabled: false
       replicas: 0
-
-# Network policy configuration (applies to router pods)
-networkPolicy:
-  enabled: false
-
-  # Node-chat ingress configuration
-  # Allows incoming traffic from node-chat pods to the router
-  nodeChat:
-    namespace: "default"
-    port: 8080
-    podSelector:
-      matchLabels:
-        app: node-chat
-
-  # Allow egress to internet (0.0.0.0/0)
-  # DNS egress is always allowed regardless of this setting
-  allowInternetEgress: false
-
-  # Extra ingress rules for exceptions
-  # Example:
-  #   - from:
-  #       - namespaceSelector:
-  #           matchLabels:
-  #             name: monitoring
-  #     ports:
-  #       - protocol: TCP
-  #         port: 9090
-  extraIngress: []
-
-  # Extra egress rules for exceptions
-  # Example:
-  #   - to:
-  #       - namespaceSelector:
-  #           matchLabels:
-  #             name: database
-  #     ports:
-  #       - protocol: TCP
-  #         port: 5432
-  extraEgress: []

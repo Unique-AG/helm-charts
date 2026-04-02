@@ -32,6 +32,3 @@ sandboxPresets:
     warmPool:
       enabled: false
       replicas: 0
-
-networkPolicy:
-  enabled: false

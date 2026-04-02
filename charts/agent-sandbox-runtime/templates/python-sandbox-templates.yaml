@@ -11,6 +11,13 @@ metadata:
     {{- include "sandbox.labels" $ | nindent 4 }}
     sandbox.agents.x-k8s.io/preset: {{ $preset }}
 spec:
+  {{- with $.Values.sandboxTemplate.networkPolicyManagement }}
+  networkPolicyManagement: {{ . }}
+  {{- end }}
+  {{- with $.Values.sandboxTemplate.networkPolicy }}
+  networkPolicy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   podTemplate:
     spec:
       {{- if $.Values.sandboxTemplate.runtimeClassName }}
