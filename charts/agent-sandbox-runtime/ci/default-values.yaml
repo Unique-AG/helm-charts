@@ -3,7 +3,7 @@ router:
   replicaCount: 1
   image:
     repository: us-central1-docker.pkg.dev/k8s-staging-images/agent-sandbox/sandbox-router
-    tag: latest-main
+    tag: v20260402-v0.2.1-53-gc3c9f03
     pullPolicy: IfNotPresent
   topologySpreadConstraints:
     enabled: false
@@ -13,7 +13,7 @@ sandboxTemplate:
   runtimeClassName: ""
   image:
     repository: us-central1-docker.pkg.dev/k8s-staging-images/agent-sandbox/python-runtime-sandbox
-    tag: latest-main
+    tag: v20260402-v0.2.1-53-gc3c9f03
     pullPolicy: IfNotPresent
 
 sandboxPresets:
