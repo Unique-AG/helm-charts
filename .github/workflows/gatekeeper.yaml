@@ -11,7 +11,7 @@ on:
 
 jobs:
   conventional-pr-title:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     name: Validate PR title against conventional commit format
     permissions:
       pull-requests: read
@@ -24,7 +24,7 @@ jobs:
           requireScope: true
 
   gatekeeper:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     permissions:
       checks: read
       statuses: read
