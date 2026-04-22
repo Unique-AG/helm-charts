@@ -64,6 +64,10 @@ image:
   # -- tag, most often will refer one of the latest release of the Unique service
   # Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image
   tag: "1.1.0"
+  # -- digest, optional. When set, the image is pinned by digest as `repository:tag@digest`.
+  # Must include the algorithm prefix, e.g. `sha256:abc123...`. Alternatively, the digest can
+  # be embedded directly in `tag` (e.g. `1.1.0@sha256:abc...`). Leave empty to pin by tag only.
+  digest: ""
   # -- pullPolicy, Unique recommends to never use 'Always'
   pullPolicy: IfNotPresent
 

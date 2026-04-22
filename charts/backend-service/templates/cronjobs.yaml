@@ -48,7 +48,7 @@ spec:
           restartPolicy: {{ $value.restartPolicy | default "Never" | quote }}
           containers:
             - name: {{ $key }}
-              image: "{{ $globalValues.image.repository }}:{{ $globalValues.image.tag | default $.Chart.AppVersion }}"
+              image: "{{ include "backendService.image" $ }}"
               imagePullPolicy: {{ $globalValues.image.pullPolicy }}
               securityContext: {{- toYaml $globalValues.securityContext | nindent 16 }}
               resources:
@@ -125,7 +125,7 @@ spec:
                 {{- end }}
                 {{- end }}
                 - name: VERSION
-                  value: {{ ($globalValues.image.tag | default $.Chart.AppVersion) | quote}}
+                  value: {{ (include "backendService.imageVersion" $) | quote}}
                 {{- if $globalValues.secretProvider }}
                 {{- range $k, $v := $globalValues.secretProvider.vaults }}
                 {{- range $key, $value := $v }}

@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "common.labels" . | nindent 4 }}
 data:
-  VERSION: "{{ .Values.image.tag }}"
+  VERSION: "{{ include "webApp.imageVersion" . }}"
   PORT: "{{ .Values.service.port }}"
   {{- range $key, $value := .Values.env }}
   {{ $key }}: {{ $value | quote }}
