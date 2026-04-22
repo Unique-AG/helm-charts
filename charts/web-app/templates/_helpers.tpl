@@ -65,3 +65,18 @@ Create the name of the service account to use
 /{{- include "common.fullname" . -}}
 {{- end -}}
 {{- end -}}
+
+{{/* Helper to get the full image reference (repository:tag[@digest]) */}}
+{{- define "webApp.image" -}}
+{{- $ref := printf "%s:%s" .Values.image.repository .Values.image.tag -}}
+{{- if .Values.image.digest -}}
+{{- printf "%s@%s" $ref .Values.image.digest -}}
+{{- else -}}
+{{- $ref -}}
+{{- end -}}
+{{- end -}}
+
+{{/* Helper to get a label-safe version (image tag without any @digest suffix). */}}
+{{- define "webApp.imageVersion" -}}
+{{- .Values.image.tag | splitList "@" | first -}}
+{{- end -}}

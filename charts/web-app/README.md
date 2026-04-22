@@ -4,7 +4,7 @@ The 'web-app' chart is a "convenience" chart from Unique AG that can generically
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 5.2.0](https://img.shields.io/badge/Version-5.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 5.3.0](https://img.shields.io/badge/Version-5.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -13,7 +13,7 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 New releases are published as OCI artifacts only. The Helm repository index is frozen and will not receive new versions—see the [repository README](https://github.com/Unique-AG/helm-charts/blob/main/README.md#migrating-to-oci) for migration steps.
 
 ```sh
-helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 5.2.0
+helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 5.3.0
 ```
 
 <details>
@@ -21,13 +21,34 @@ helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 5.
 
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-web-app unique/web-app --version 5.2.0
+helm install my-web-app unique/web-app --version 5.3.0
 ```
 
 </details>
 
 ### Docker Images
 The chart itself uses `ghcr.io/unique-ag/chart-testing-service` as its base image. This is due to automation aspects and because there is no specific `appVersion` or service delivered with it. Using `chart-testing-service` Unique can improve the charts quality without dealing with the complexity of private registries during testing. Naturally, when deploying the Unique product, the image will be replaced with the actual Unique image(s). You can inspect the image [here](https://github.com/Unique-AG/helm-charts/tree/main/docker) and it is served from [`ghcr.io/unique-ag/chart-testing-service`](https://github.com/Unique-AG/helm-charts/pkgs/container/chart-testing-service).
+
+### Image Pinning
+
+For supply-chain security, pin images by their content-addressed digest in production. Two equivalent options:
+
+```yaml
+image:
+  repository: ghcr.io/unique-ag/<service>
+  tag: "1.2.3"
+  digest: "sha256:abc123..."   # appended as @sha256:... to the image reference
+```
+
+```yaml
+image:
+  repository: ghcr.io/unique-ag/<service>
+  tag: "1.2.3@sha256:abc123..." # digest embedded directly in tag
+```
+
+Both render the final container image reference as `repository:tag@digest`, which Kubernetes resolves by digest. Use whichever fits your tooling — neither is required, but using one is strongly recommended for production.
+
+The `app.kubernetes.io/version` label and `VERSION` env var always reflect just the tag (anything after `@` is stripped) to stay within Kubernetes' 63-character label limit.
 
 ### Networking
 The chart supports the Gateway API and its resources. This is the recommended way to go forward. The Gateway API is a Kubernetes-native way to manage your networking resources and is part of the [Gateway API](https://gateway-api.sigs.k8s.io) project.
@@ -144,7 +165,8 @@ You can find Network Policy examples in the [`ci/networkpolicy-values.yaml`](htt
 | extraRoutes.extra-route-1.matches | list | `[{"path":{"type":"PathPrefix","value":"/"}}]` | which match conditions should be applied to the route |
 | extraRoutes.extra-route-1.parentRefs | list | `[{"group":"gateway.networking.k8s.io","kind":"Gateway","name":"kong","namespace":"kong-system"}]` | parentRefs define the parent gateway(s) that the route will be associated with |
 | fullnameOverride | string | `""` |  |
-| image | object | `{"pullPolicy":"IfNotPresent","repository":"ghcr.io/unique-ag/chart-testing-service","tag":"1.1.0"}` | The image to use for this specific deployment and its cron jobs |
+| image | object | `{"digest":"","pullPolicy":"IfNotPresent","repository":"ghcr.io/unique-ag/chart-testing-service","tag":"1.1.0"}` | The image to use for this specific deployment and its cron jobs |
+| image.digest | string | `""` | digest, optional. When set, the image is pinned by digest as `repository:tag@digest`. Must include the algorithm prefix, e.g. `sha256:abc123...`. Alternatively, the digest can be embedded directly in `tag` (e.g. `1.1.0@sha256:abc...`). Leave empty to pin by tag only. |
 | image.pullPolicy | string | `"IfNotPresent"` | pullPolicy, Unique recommends to never use 'Always' |
 | image.repository | string | `"ghcr.io/unique-ag/chart-testing-service"` | Repository, where the Unique service image is pulled from - for Unique internal deployments, these is the internal release repository - for client deployments, this will refer to the client's repository where the images have been mirrored too Note that it is bad practice and not advised to directly pull from Uniques release repository Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image |
 | image.tag | string | `"1.1.0"` | tag, most often will refer one of the latest release of the Unique service Read in the readme on why the helm chart comes bundled with the unique-ag/chart-testing-service image |

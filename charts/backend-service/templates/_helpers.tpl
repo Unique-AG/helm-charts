@@ -118,6 +118,23 @@ app.kubernetes.io/component: hook
 {{- end -}}
 {{- end -}}
 
+{{/* Helper to get the full image reference (repository:tag[@digest]) */}}
+{{- define "backendService.image" -}}
+{{- $ref := printf "%s:%s" .Values.image.repository (include "backendService.imageTag" .) -}}
+{{- if .Values.image.digest -}}
+{{- printf "%s@%s" $ref .Values.image.digest -}}
+{{- else -}}
+{{- $ref -}}
+{{- end -}}
+{{- end -}}
+
+{{/* Helper to get a label-safe version (image tag without any @digest suffix).
+     Used for app.kubernetes.io/version label and VERSION env var so they stay
+     within the 63-char Kubernetes label limit when digests are in play. */}}
+{{- define "backendService.imageVersion" -}}
+{{- include "backendService.imageTag" . | splitList "@" | first -}}
+{{- end -}}
+
 {{/* Validate GCP workload identity configuration */}}
 {{- define "backendService.validateGcpWorkloadIdentity" -}}
 {{- if .Values.workloadIdentity.gcp.enabled -}}
