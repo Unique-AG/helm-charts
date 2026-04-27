@@ -11,7 +11,7 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
     helm.sh/chart: {{ include "backendService.chart" . }}
-    app.kubernetes.io/version: {{ include "backendService.imageTag" . | quote }}
+    app.kubernetes.io/version: {{ include "backendService.imageVersion" . | quote }}
   {{- with .Values.deployment.metadata.annotations }}
   annotations:
   {{- toYaml . | nindent 4 }}
@@ -81,7 +81,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ $fullName }}
-          image: "{{ .Values.image.repository }}:{{ include "backendService.imageTag" . }}"
+          image: "{{ include "backendService.image" . }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http

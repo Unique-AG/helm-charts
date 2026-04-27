@@ -61,7 +61,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ default (ternary "db-migration" $hookName (eq $hookName "migration")) $hookConfig.name | quote }}
-          image: "{{ $.Values.image.repository }}:{{ include "backendService.imageTag" $ }}"
+          image: "{{ include "backendService.image" $ }}"
           imagePullPolicy: {{ $.Values.image.pullPolicy }}
           command:
             - /bin/sh
@@ -145,7 +145,7 @@ spec:
             {{- end }}
             {{- /* VERSION is added last (before secretProvider) so it cannot be overridden */}}
             - name: VERSION
-              value: {{ (include "backendService.imageTag" $) | quote }}
+              value: {{ (include "backendService.imageVersion" $) | quote }}
             {{- if $.Values.workloadIdentity.gcp.enabled }}
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /var/run/secrets/gcp-wif/config.json
