@@ -4,7 +4,7 @@ The 'backend-service' chart is a "convenience" chart from Unique AG that can gen
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 10.4.0](https://img.shields.io/badge/Version-10.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
+![Version: 10.5.0](https://img.shields.io/badge/Version-10.5.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -13,7 +13,7 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 New releases are published as OCI artifacts only. The Helm repository index is frozen and will not receive new versions—see the [repository README](https://github.com/Unique-AG/helm-charts/blob/main/README.md#migrating-to-oci) for migration steps.
 
 ```sh
-helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 10.4.0
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 10.5.0
 ```
 
 <details>
@@ -21,13 +21,34 @@ helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-serv
 
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 10.4.0
+helm install my-backend-service unique/backend-service --version 10.5.0
 ```
 
 </details>
 
 ### Docker Images
 The chart uses [`ghcr.io/unique-ag/chart-testing-service`](https://github.com/Unique-AG/helm-charts/pkgs/container/chart-testing-service) as its default image for CI testing. Replace with actual Unique images when deploying.
+
+### Image Pinning
+
+For supply-chain security, pin images by their content-addressed digest in production. Two equivalent options:
+
+```yaml
+image:
+  repository: ghcr.io/unique-ag/<service>
+  tag: "1.2.3"
+  digest: "sha256:abc123..."   # appended as @sha256:... to the image reference
+```
+
+```yaml
+image:
+  repository: ghcr.io/unique-ag/<service>
+  tag: "1.2.3@sha256:abc123..." # digest embedded directly in tag
+```
+
+Both render the final container image reference as `repository:tag@digest`, which Kubernetes resolves by digest. Use whichever fits your tooling — neither is required, but using one is strongly recommended for production.
+
+The `app.kubernetes.io/version` label and `VERSION` env var always reflect just the tag (anything after `@` is stripped) to stay within Kubernetes' 63-character label limit.
 
 ### Networking
 The chart supports [Gateway API](https://gateway-api.sigs.k8s.io) resources (recommended). Enable specific `routes` or use `extraRoutes` to configure them. See [Routes](#routes).

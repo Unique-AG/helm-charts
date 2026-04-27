@@ -914,6 +914,11 @@
           "description": "Tag for the image",
           "examples": ["1.0.4"]
         },
+        "digest": {
+          "type": "string",
+          "description": "Optional image digest (with algorithm prefix, e.g. sha256:...). When set, appended as @digest to pin the image. Alternative: embed @sha256:... directly in tag.",
+          "examples": ["sha256:abc123..."]
+        },
         "pullPolicy": {
           "type": "string",
           "enum": ["Always", "IfNotPresent", "Never"],

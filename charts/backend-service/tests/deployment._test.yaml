@@ -196,3 +196,26 @@ tests:
       - equal:
           path: spec.template.spec.priorityClassName
           value: high-priority
+
+  - it: When image tag embeds a digest, app.kubernetes.io/version is the tag only
+    set:
+      image.tag: "1.2.3@sha256:abc123def456"
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.labels["app.kubernetes.io/version"]
+          value: "1.2.3"
+
+  - it: When image.digest is set, app.kubernetes.io/version is still the tag only
+    set:
+      image.tag: "1.2.3"
+      image.digest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.labels["app.kubernetes.io/version"]
+          value: "1.2.3"
