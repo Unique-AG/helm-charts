@@ -1,0 +1,164 @@
+# Default values for agent-sandbox-controller.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- This is to override the release name.
+nameOverride: ""
+
+# -- This is to override the full name.
+fullnameOverride: ""
+
+# -- Container image used by the controller.
+image:
+  # -- This sets the image repository.
+  repository: registry.k8s.io/agent-sandbox/agent-sandbox-controller
+  # -- Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+  # -- Pin a specific image by digest. Recommended for supply-chain integrity.
+  digest: sha256:5c06f4dc301cf598a6b548b1e14dba3cb9519dd6f74c9d316dac9bac3f3dfae3
+  # -- This sets the pull policy for images.
+  pullPolicy: IfNotPresent
+
+# -- Number of controller replicas. Leader election is used to elect a single active leader.
+replicaCount: 1
+
+# -- Enable the upstream sandbox extensions controller (`SandboxClaim`, `SandboxTemplate`, `SandboxWarmPool`).
+extensions:
+  # -- Toggle the extensions controller and its RBAC.
+  enabled: true
+
+# -- Enable controller leader election (`--leader-elect=true`).
+leaderElect: true
+
+# -- Controller `Service` settings.
+service:
+  # -- Service port exposing controller metrics.
+  port: 8080
+
+# -- Controller container resource requests and limits.
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+# -- Pod-level security context applied to the controller pod.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- Container-level security context applied to the controller container.
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  capabilities:
+    drop:
+      - ALL
+
+# -- Node selector for the controller pod.
+nodeSelector: {}
+
+# -- Tolerations for the controller pod.
+tolerations: []
+
+# -- Affinity rules for the controller pod.
+affinity: {}
+
+# -- Sandbox router subchart configuration.
+# The router proxies traffic to sandbox pods and is required for the Python SDK tunnel mode.
+router:
+  # -- Toggle the sandbox router deployment, service, and network policy.
+  enabled: true
+  # -- Number of router replicas.
+  replicaCount: 2
+  # -- Container image used by the router.
+  image:
+    # -- This sets the router image repository.
+    repository: us-central1-docker.pkg.dev/k8s-staging-images/agent-sandbox/sandbox-router
+    # -- Overrides the router image tag.
+    tag: v20260422-v0.4.2
+    # -- Pin a specific router image by digest.
+    digest: sha256:c3a59a867e66dc70c6e2eb56f40b840f5b3ca2b8ba44be318c6bf163226fd8df
+    # -- This sets the pull policy for the router image.
+    pullPolicy: IfNotPresent
+  # -- Router `Service` settings.
+  service:
+    # -- Override the router service name. Defaults to `<release>-agent-sandbox-controller-router-svc`.
+    # The Python SDK tunnel mode auto-discovers `sandbox-router-svc` by default,
+    # so set this to `sandbox-router-svc` for seamless SDK integration.
+    name: ""
+    # -- Service type for the router.
+    type: ClusterIP
+    # -- Service port exposed by the router.
+    port: 8080
+  # -- Container port the router listens on inside the pod.
+  containerPort: 8080
+  # -- Upstream proxy timeout in seconds the router applies when forwarding to sandboxes.
+  proxyTimeoutSeconds: 180
+  # -- Router container resource requests and limits.
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "250m"
+      memory: "512Mi"
+  # -- HTTP readiness probe configuration for the router.
+  readinessProbe:
+    path: /healthz
+    initialDelaySeconds: 5
+    periodSeconds: 5
+  # -- HTTP liveness probe configuration for the router.
+  livenessProbe:
+    path: /healthz
+    initialDelaySeconds: 10
+    periodSeconds: 10
+  # -- Pod-level security context applied to the router pod.
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  # -- Container-level security context applied to the router container.
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    capabilities:
+      drop:
+        - ALL
+  # -- Spread router replicas across topology domains (defaults to zones).
+  topologySpreadConstraints:
+    enabled: true
+    maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway
+  # -- `NetworkPolicy` for the router pod.
+  networkPolicy:
+    # -- Render the `NetworkPolicy` for the router.
+    enabled: true
+    # -- Ingress rules. When both `allowedSources` and `allowedCIDRs` are empty no ingress rule is rendered.
+    ingress:
+      # -- List of `{ podSelector, namespaceSelector }` pairs allowed to reach the router.
+      allowedSources: []
+      # -- List of CIDRs allowed to reach the router (e.g. `10.0.0.0/8`).
+      allowedCIDRs: []
+    # -- Egress rules. By default the router needs to reach DNS and sandbox pods.
+    egress:
+      # -- Port the router uses to reach sandbox pods.
+      sandboxPort: 8888
+      # -- Namespace selector matching the namespace where sandboxes run. When unset the release namespace is used (`kubernetes.io/metadata.name: <release namespace>`).
+      sandboxNamespaceSelector: {}

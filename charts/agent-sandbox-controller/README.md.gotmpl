@@ -1,0 +1,40 @@
+{{ template "chart.header" . }}
+{{ template "chart.description" . }}
+
+{{ template "chart.versionBadge" . }}{{ template "chart.typeBadge" . }}{{ template "chart.appVersionBadge" . }}
+
+{{ template "chart.requirementsSection" . }}
+
+## Installation
+
+Releases are published as OCI artifacts to GHCR.
+
+```sh
+helm install my-{{ template "chart.name" . }} oci://ghcr.io/unique-ag/helm-charts/{{ template "chart.name" . }} --version {{ template "chart.version" . }}
+```
+
+## Implementation Details
+
+This chart packages the upstream [`kubernetes-sigs/agent-sandbox`](https://github.com/kubernetes-sigs/agent-sandbox) controller. It deploys:
+
+- The controller `Deployment` with leader election enabled by default.
+- The `ClusterRole`/`ClusterRoleBinding` and `ServiceAccount` required by the controller.
+- An optional extensions controller (`SandboxClaim`, `SandboxTemplate`, `SandboxWarmPool`) toggled via `extensions.enabled`.
+- The sandbox `router` deployment, service, and `NetworkPolicy` toggled via `router.enabled`.
+- The `Sandbox` and extensions CRDs (installed via Helm's `crds/` mechanism, not templated).
+
+### CRDs
+
+CRDs in `crds/` are installed by Helm on `helm install` but are **not** upgraded or deleted by Helm. To pick up CRD changes on upgrade you must apply them manually:
+
+```sh
+kubectl apply -f https://raw.githubusercontent.com/Unique-AG/helm-charts/main/charts/{{ template "chart.name" . }}/crds/crds.yaml
+```
+
+### SDK Integration
+
+The Python SDK tunnel mode auto-discovers a service named `sandbox-router-svc`. To opt in, set `router.service.name: sandbox-router-svc` so the router service name matches the SDK default.
+
+{{ template "chart.valuesSection" . }}
+
+{{ template "helm-docs.versionFooter" . }}

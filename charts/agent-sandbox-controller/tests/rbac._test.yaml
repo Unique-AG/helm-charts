@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: Test RBAC
+templates:
+  - clusterrole.yaml
+  - clusterrolebinding.yaml
+  - serviceaccount.yaml
+release:
+  name: ut
+tests:
+  - it: Renders ServiceAccount, ClusterRole and ClusterRoleBinding (controller + extensions) by default
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: serviceaccount.yaml
+      - hasDocuments:
+          count: 2
+        template: clusterrole.yaml
+      - hasDocuments:
+          count: 2
+        template: clusterrolebinding.yaml
+
+  - it: Drops the extensions ClusterRole/Binding when extensions.enabled=false
+    set:
+      extensions:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: clusterrole.yaml
+      - hasDocuments:
+          count: 1
+        template: clusterrolebinding.yaml

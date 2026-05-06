@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: Test Router Resources
+templates:
+  - router-deployment.yaml
+  - router-service.yaml
+  - router-networkpolicy.yaml
+release:
+  name: ut
+tests:
+  - it: Renders the router Deployment, Service and NetworkPolicy by default
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: router-deployment.yaml
+      - hasDocuments:
+          count: 1
+        template: router-service.yaml
+      - hasDocuments:
+          count: 1
+        template: router-networkpolicy.yaml
+
+  - it: Disables all router resources when router.enabled=false
+    set:
+      router:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: router-deployment.yaml
+      - hasDocuments:
+          count: 0
+        template: router-service.yaml
+      - hasDocuments:
+          count: 0
+        template: router-networkpolicy.yaml
+
+  - it: Uses a custom router service name when provided
+    template: router-service.yaml
+    set:
+      router:
+        service:
+          name: sandbox-router-svc
+    asserts:
+      - equal:
+          path: metadata.name
+          value: sandbox-router-svc
+
+  - it: Defaults to a release-prefixed router service name
+    template: router-service.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: ut-agent-sandbox-controller-router-svc
