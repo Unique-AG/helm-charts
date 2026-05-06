@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: Test Controller Deployment
+templates:
+  - deployment.yaml
+release:
+  name: ut
+tests:
+  - it: Renders a controller Deployment
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: ut-agent-sandbox-controller
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: controller
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: "^registry.k8s.io/agent-sandbox/agent-sandbox-controller:.*@sha256:.+$"
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --leader-elect=true
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --extensions
+
+  - it: Disables leader election and extensions when configured
+    set:
+      leaderElect: false
+      extensions:
+        enabled: false
+    asserts:
+      - isNullOrEmpty:
+          path: spec.template.spec.containers[0].args
+
+  - it: Honors a custom replica count
+    set:
+      replicaCount: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3

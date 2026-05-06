@@ -1,0 +1,18 @@
+{{- if .Values.router.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.router.service.name | default (printf "%s-svc" (include "agent-sandbox.router.name" .)) }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "agent-sandbox.router.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.router.service.type }}
+  selector:
+    {{- include "agent-sandbox.router.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      protocol: TCP
+      port: {{ .Values.router.service.port }}
+      targetPort: http
+{{- end }}

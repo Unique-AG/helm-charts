@@ -1,0 +1,67 @@
+{{- if and .Values.router.enabled .Values.router.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "agent-sandbox.router.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "agent-sandbox.router.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "agent-sandbox.router.selectorLabels" . | nindent 6 }}
+  {{- $allowedSources := .Values.router.networkPolicy.ingress.allowedSources | default (list) }}
+  {{- $allowedCIDRs := .Values.router.networkPolicy.ingress.allowedCIDRs | default (list) }}
+  policyTypes:
+    - Ingress
+    - Egress
+  {{- if or $allowedSources $allowedCIDRs }}
+  ingress:
+    - from:
+        {{- range $allowedSources }}
+        - podSelector:
+            matchLabels:
+              {{- toYaml .podSelector | nindent 14 }}
+          namespaceSelector:
+            matchLabels:
+              {{- toYaml .namespaceSelector | nindent 14 }}
+        {{- end }}
+        {{- range $allowedCIDRs }}
+        - ipBlock:
+            cidr: {{ . }}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.router.containerPort }}
+  {{- end }}
+  egress:
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow traffic to sandbox pods
+    - to:
+        - podSelector:
+            matchExpressions:
+              - key: agents.x-k8s.io/sandbox-name-hash
+                operator: Exists
+          namespaceSelector:
+            matchLabels:
+              {{- with .Values.router.networkPolicy.egress.sandboxNamespaceSelector }}
+              {{- toYaml . | nindent 14 }}
+              {{- else }}
+              kubernetes.io/metadata.name: {{ .Release.Namespace }}
+              {{- end }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.router.networkPolicy.egress.sandboxPort | default 8888 }}
+{{- end }}
