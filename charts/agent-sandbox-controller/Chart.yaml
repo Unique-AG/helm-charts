@@ -8,8 +8,8 @@ name: agent-sandbox-controller
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/agent-sandbox-controller
   - https://github.com/kubernetes-sigs/agent-sandbox
-version: 0.4.2-rc.1
-appVersion: "v0.4.2"
+version: 0.4.5-rc.1
+appVersion: "v0.4.5"
 description: |
   Helm chart for the Agent Sandbox controller — a Kubernetes CRD and controller for managing isolated, stateful, singleton workloads (e.g. AI agent runtimes).
 
@@ -17,5 +17,7 @@ description: |
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
-    - kind: added
-      description: Initial release of the agent-sandbox-controller chart packaging the upstream kubernetes-sigs/agent-sandbox controller and router.
+    - kind: changed
+      description: Bumped upstream agent-sandbox to v0.4.5 (controller image, router image, and CRDs).
+    - kind: security
+      description: Removed `pods` `create`/`delete` verbs from the extensions ClusterRole to align with upstream RBAC hardening.
