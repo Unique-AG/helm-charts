@@ -156,6 +156,7 @@ end
 -------------------------------------------------------------------------------
 local function custom_set_unique_headers(conf, jwt_claims)
     local set_header = kong.service.request.set_header
+    local clear_header = kong.service.request.clear_header
     -- Set x-user-id
     set_header("x-user-id", jwt_claims.sub)
 
@@ -166,6 +167,7 @@ local function custom_set_unique_headers(conf, jwt_claims)
 
     -- Set x-user-roles if conf.zitadel_project_id is specified
     if conf.zitadel_project_id then
+        clear_header("x-user-roles")
         local project_roles_key = "urn:zitadel:iam:org:project:" .. conf.zitadel_project_id .. ":roles"
         local project_roles = jwt_claims[project_roles_key]
 
