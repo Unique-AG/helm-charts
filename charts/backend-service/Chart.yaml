@@ -19,7 +19,3 @@ annotations:
   artifacthub.io/changes: |
     - kind: fixed
       description: "Render ArgoCD sync-wave -5 on hook ServiceAccounts so they are applied before hook Jobs."
-    - kind: fixed
-      description: "When digest is passed to the image tag, the Deployments version labels strips it again to respect the length limit of kubernetes labels."
-    - kind: added
-      description: "Explicit and native support for digest pinning."
