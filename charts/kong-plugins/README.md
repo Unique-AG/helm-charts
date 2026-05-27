@@ -6,7 +6,7 @@ Refer to each plugins readme section to learn more about them.
 
 Please report any security concerns with the plugins via the [Security Policy](https://github.com/Unique-AG/helm-charts/tree/main?tab=security-ov-file).
 
-![Version: 2.3.0](https://img.shields.io/badge/Version-2.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 2.3.1](https://img.shields.io/badge/Version-2.3.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -15,7 +15,7 @@ Please report any security concerns with the plugins via the [Security Policy](h
 New releases are published as OCI artifacts only. The Helm repository index is frozen and will not receive new versions—see the [repository README](https://github.com/Unique-AG/helm-charts/blob/main/README.md#migrating-to-oci) for migration steps.
 
 ```sh
-helm install my-kong-plugins oci://ghcr.io/unique-ag/helm-charts/kong-plugins --version 2.3.0
+helm install my-kong-plugins oci://ghcr.io/unique-ag/helm-charts/kong-plugins --version 2.3.1
 ```
 
 <details>
@@ -23,7 +23,7 @@ helm install my-kong-plugins oci://ghcr.io/unique-ag/helm-charts/kong-plugins --
 
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-kong-plugins unique/kong-plugins --version 2.3.0
+helm install my-kong-plugins unique/kong-plugins --version 2.3.1
 ```
 
 </details>
@@ -83,16 +83,16 @@ Default metric name: `unique_jwt_auth_security_warnings_total`
 
 Possible `reason` label values:
 
-| reason | description |
-|--------|-------------|
-| `invalid_signature` | Token signature could not be verified against any known key |
-| `multiple_tokens` | More than one token was found in the request |
-| `unrecognizable_token_type` | Token is neither a string nor a table |
-| `malformed_jwt` | Token could not be decoded as a JWT |
-| `disallowed_issuer` | Token `iss` claim does not match `allowed_iss` |
-| `unexpected_algorithm` | Token `alg` header does not match configured `algorithm` |
-| `claims_validation_failed` | Registered claims (`exp`, `nbf`) failed verification |
-| `max_expiration_exceeded` | Token lifetime exceeds `maximum_expiration` |
+| reason | description | log query |
+|--------|-------------|-----------|
+| `invalid_signature` | Token signature could not be verified against any known key | `{app="gateway"} \|= "invalid signature"` |
+| `multiple_tokens` | More than one token was found in the request | `{app="gateway"} \|= "Multiple tokens"` |
+| `unrecognizable_token_type` | Token is neither a string nor a table | `{app="gateway"} \|= "Unrecognizable token"` |
+| `malformed_jwt` | Token could not be decoded as a JWT | `{app="gateway"} \|= "Malformed JWT"` |
+| `disallowed_issuer` | Token `iss` claim does not match `allowed_iss` | `{app="gateway"} \|= "disallowed issuer"` |
+| `unexpected_algorithm` | Token `alg` header does not match configured `algorithm` | `{app="gateway"} \|= "unexpected algorithm"` |
+| `claims_validation_failed` | Registered claims (`exp`, `nbf`) failed verification | `{app="gateway"} \|= "claims validation failed"` |
+| `max_expiration_exceeded` | Token lifetime exceeds `maximum_expiration` | `{app="gateway"} \|= "maximum expiration"` |
 
 ### unique-app-repo-auth
 
@@ -100,12 +100,12 @@ Default metric name: `unique_app_repo_auth_security_warnings_total`
 
 Possible `reason` label values:
 
-| reason | description |
-|--------|-------------|
-| `api_key_validation_failed` | App repository returned a non-200 response for the API key |
-| `multiple_tokens` | More than one token was found in the request |
-| `unrecognizable_token_type` | Token is neither a string nor a table |
-| `missing_required_headers` | `x-app-id` or `x-company-id` header is absent |
+| reason | description | log query |
+|--------|-------------|-----------|
+| `api_key_validation_failed` | App repository returned a non-200 response for the API key | `{app="gateway"} \|= "API key validation"` |
+| `multiple_tokens` | More than one token was found in the request | `{app="gateway"} \|= "Multiple tokens"` |
+| `unrecognizable_token_type` | Token is neither a string nor a table | `{app="gateway"} \|= "Unrecognizable token"` |
+| `missing_required_headers` | `x-app-id` or `x-company-id` header is absent | `{app="gateway"} \|= "missing required headers"` |
 
 ### Example output
 
