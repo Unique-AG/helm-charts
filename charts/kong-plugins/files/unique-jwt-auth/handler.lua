@@ -18,6 +18,14 @@ local re_gmatch = ngx.re.gmatch
 
 local counters = {}
 
+local function get_client_ip()
+    local xff = kong.request.get_header("X-Forwarded-For")
+    if xff then
+        return xff:match("^%s*([^,%s]+)")
+    end
+    return kong.client.get_forwarded_ip() or kong.client.get_ip() or "unknown"
+end
+
 local function inc_warn(conf, reason)
     if not _exporter_ok then
         return
@@ -139,7 +147,7 @@ local function custom_validate_token_signature(conf, jwt, matched_iss, second_ca
         return custom_validate_token_signature(conf, jwt, matched_iss, true)
     end
 
-    kong.log.warn("Rejected token with invalid signature for issuer: " .. matched_iss .. " from " .. (kong.client.get_forwarded_ip() or "unknown"))
+    kong.log.warn("Rejected token with invalid signature for issuer: " .. matched_iss .. " from " .. get_client_ip())
     inc_warn(conf, "invalid_signature")
     return kong.response.exit(401, {
         message = "Unauthorized"
@@ -404,14 +412,14 @@ local function do_authentication(conf)
                 message = "Unauthorized"
             }
         elseif token_type == "table" then
-            kong.log.warn("Multiple tokens provided in request from " .. (kong.client.get_forwarded_ip() or "unknown"))
+            kong.log.warn("Multiple tokens provided in request from " .. get_client_ip())
             inc_warn(conf, "multiple_tokens")
             return false, {
                 status = 401,
                 message = "Unauthorized"
             }
         else
-            kong.log.warn("Unrecognizable token type from " .. (kong.client.get_forwarded_ip() or "unknown"))
+            kong.log.warn("Unrecognizable token type from " .. get_client_ip())
             inc_warn(conf, "unrecognizable_token_type")
             return false, {
                 status = 401,
@@ -423,7 +431,7 @@ local function do_authentication(conf)
     -- Decode token to find out who the consumer is
     local jwt, err = jwt_decoder:new(token)
     if err then
-        kong.log.warn("Malformed JWT received from " .. (kong.client.get_forwarded_ip() or "unknown") .. ": " .. tostring(err))
+        kong.log.warn("Malformed JWT received from " .. get_client_ip() .. ": " .. tostring(err))
         inc_warn(conf, "malformed_jwt")
         return false, {
             status = 401,
@@ -439,7 +447,7 @@ local function do_authentication(conf)
     -- Verify that the issuer is allowed
     local matched_iss = validate_issuer(conf.allowed_iss, jwt.claims)
     if not matched_iss then
-        kong.log.warn("Rejected token with disallowed issuer: " .. tostring(claims.iss) .. " from " .. (kong.client.get_forwarded_ip() or "unknown"))
+        kong.log.warn("Rejected token with disallowed issuer: " .. tostring(claims.iss) .. " from " .. get_client_ip())
         inc_warn(conf, "disallowed_issuer")
         return false, {
             status = 401,
@@ -451,7 +459,7 @@ local function do_authentication(conf)
 
     -- Verify "alg"
     if jwt.header.alg ~= algorithm then
-        kong.log.warn("Rejected token with unexpected algorithm: " .. tostring(jwt.header.alg) .. " (expected " .. algorithm .. ") from " .. (kong.client.get_forwarded_ip() or "unknown"))
+        kong.log.warn("Rejected token with unexpected algorithm: " .. tostring(jwt.header.alg) .. " (expected " .. algorithm .. ") from " .. get_client_ip())
         inc_warn(conf, "unexpected_algorithm")
         return false, {
             status = 403,
@@ -468,7 +476,7 @@ local function do_authentication(conf)
     -- Verify the JWT registered claims
     local ok_claims, errors = jwt:verify_registered_claims(conf.claims_to_verify)
     if not ok_claims then
-        kong.log.warn("Token claims validation failed from " .. (kong.client.get_forwarded_ip() or "unknown") .. ": " .. custom_helper_table_to_string(errors))
+        kong.log.warn("Token claims validation failed from " .. get_client_ip() .. ": " .. custom_helper_table_to_string(errors))
         local reason = "claims_validation_failed"
         if type(errors) == "table" and errors.exp and tostring(errors.exp):find("expired") then
             reason = "token_expired"
@@ -484,7 +492,7 @@ local function do_authentication(conf)
     if conf.maximum_expiration ~= nil and conf.maximum_expiration > 0 then
         local ok, errors = jwt:check_maximum_expiration(conf.maximum_expiration)
         if not ok then
-            kong.log.warn("Token maximum expiration check failed from " .. (kong.client.get_forwarded_ip() or "unknown") .. ": " .. custom_helper_table_to_string(errors))
+            kong.log.warn("Token maximum expiration check failed from " .. get_client_ip() .. ": " .. custom_helper_table_to_string(errors))
             inc_warn(conf, "max_expiration_exceeded")
             return false, {
                 status = 403,
