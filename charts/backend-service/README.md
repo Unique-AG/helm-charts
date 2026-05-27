@@ -4,7 +4,7 @@ The 'backend-service' chart is a "convenience" chart from Unique AG that can gen
 
 Note that this chart assumes that you have a valid contract with Unique AG and thus access to the required Docker images.
 
-![Version: 10.5.0](https://img.shields.io/badge/Version-10.5.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
+![Version: 10.5.1](https://img.shields.io/badge/Version-10.5.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -13,7 +13,7 @@ Note that this chart assumes that you have a valid contract with Unique AG and t
 New releases are published as OCI artifacts only. The Helm repository index is frozen and will not receive new versions—see the [repository README](https://github.com/Unique-AG/helm-charts/blob/main/README.md#migrating-to-oci) for migration steps.
 
 ```sh
-helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 10.5.0
+helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-service --version 10.5.1
 ```
 
 <details>
@@ -21,7 +21,7 @@ helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-serv
 
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 10.5.0
+helm install my-backend-service unique/backend-service --version 10.5.1
 ```
 
 </details>

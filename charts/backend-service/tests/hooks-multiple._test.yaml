@@ -151,6 +151,27 @@ tests:
       - equal:
           path: metadata.name
           value: ut-hooks
+      - equal:
+          path: metadata.annotations["argocd.argoproj.io/sync-wave"]
+          value: "-5"
+
+  - it: When serviceAccount sync-wave annotation is set, should preserve the override
+    set:
+      image.tag: pinned-version
+      serviceAccount.enabled: true
+      serviceAccount.annotations:
+        argocd.argoproj.io/sync-wave: "-10"
+      hooks.migration.enabled: true
+      hooks.migration.command: npm run migrate
+    template: hooks/serviceaccount.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ServiceAccount
+      - equal:
+          path: metadata.annotations["argocd.argoproj.io/sync-wave"]
+          value: "-10"
 
   - it: When multiple hooks are enabled, both Jobs should reference the shared ServiceAccount
     set:
