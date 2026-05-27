@@ -21,7 +21,10 @@ local counters = {}
 local function get_client_ip()
     local xff = kong.request.get_header("X-Forwarded-For")
     if xff then
-        return xff:match("^%s*([^,%s]+)")
+        local ip = xff:match("^%s*([^,%s]+)")
+        if ip then
+            return ip
+        end
     end
     return kong.client.get_forwarded_ip() or kong.client.get_ip() or "unknown"
 end
