@@ -39,7 +39,7 @@ spec:
 {{- if dig "KongJwtAuthInvalidSignature" "enabled" true $rules }}
       - alert: KongJwtAuthInvalidSignature
         expr: |
-          increase({{ $jwtMetric }}{reason="invalid_signature"}[{{ dig "KongJwtAuthInvalidSignature" "interval" "5m" $rules }}]) > {{ dig "KongJwtAuthInvalidSignature" "threshold" 2 $rules }}
+          sum(increase({{ $jwtMetric }}{reason="invalid_signature"}[{{ dig "KongJwtAuthInvalidSignature" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthInvalidSignature" "threshold" 2 $rules }}
         for: {{ dig "KongJwtAuthInvalidSignature" "for" "0m" $rules }}
         labels:
           severity: {{ dig "KongJwtAuthInvalidSignature" "severity" "critical" $rules }}
@@ -48,13 +48,15 @@ spec:
           {{- toYaml . | nindent 10 }}
           {{- end }}
         annotations:
-          summary: "Kong JWT auth rejected a token with an invalid signature"
-          description: "A JWT was rejected because its signature could not be verified against any known key for the issuer."
+          summary: "Kong JWT auth rejected tokens with invalid signatures"
+          description: |
+            JWTs were rejected because their signatures could not be verified against any known key for the issuer.
+            Loki: `{app="gateway"} |= "invalid signature"`
 {{- end }}
 {{- if dig "KongJwtAuthDisallowedIssuer" "enabled" true $rules }}
       - alert: KongJwtAuthDisallowedIssuer
         expr: |
-          increase({{ $jwtMetric }}{reason="disallowed_issuer"}[{{ dig "KongJwtAuthDisallowedIssuer" "interval" "5m" $rules }}]) > {{ dig "KongJwtAuthDisallowedIssuer" "threshold" 2 $rules }}
+          sum(increase({{ $jwtMetric }}{reason="disallowed_issuer"}[{{ dig "KongJwtAuthDisallowedIssuer" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthDisallowedIssuer" "threshold" 2 $rules }}
         for: {{ dig "KongJwtAuthDisallowedIssuer" "for" "0m" $rules }}
         labels:
           severity: {{ dig "KongJwtAuthDisallowedIssuer" "severity" "critical" $rules }}
@@ -63,13 +65,15 @@ spec:
           {{- toYaml . | nindent 10 }}
           {{- end }}
         annotations:
-          summary: "Kong JWT auth rejected a token from a disallowed issuer"
-          description: "A JWT was rejected because its 'iss' claim does not match any entry in allowed_iss."
+          summary: "Kong JWT auth rejected tokens from disallowed issuers"
+          description: |
+            JWTs were rejected because their 'iss' claims do not match any entry in allowed_iss.
+            Loki: `{app="gateway"} |= "disallowed issuer"`
 {{- end }}
 {{- if dig "KongJwtAuthUnexpectedAlgorithm" "enabled" true $rules }}
       - alert: KongJwtAuthUnexpectedAlgorithm
         expr: |
-          increase({{ $jwtMetric }}{reason="unexpected_algorithm"}[{{ dig "KongJwtAuthUnexpectedAlgorithm" "interval" "5m" $rules }}]) > {{ dig "KongJwtAuthUnexpectedAlgorithm" "threshold" 2 $rules }}
+          sum(increase({{ $jwtMetric }}{reason="unexpected_algorithm"}[{{ dig "KongJwtAuthUnexpectedAlgorithm" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthUnexpectedAlgorithm" "threshold" 2 $rules }}
         for: {{ dig "KongJwtAuthUnexpectedAlgorithm" "for" "0m" $rules }}
         labels:
           severity: {{ dig "KongJwtAuthUnexpectedAlgorithm" "severity" "critical" $rules }}
@@ -78,13 +82,15 @@ spec:
           {{- toYaml . | nindent 10 }}
           {{- end }}
         annotations:
-          summary: "Kong JWT auth rejected a token with an unexpected algorithm"
-          description: "A JWT was rejected because its 'alg' header does not match the configured algorithm."
+          summary: "Kong JWT auth rejected tokens with unexpected algorithms"
+          description: |
+            JWTs were rejected because their 'alg' headers do not match the configured algorithm.
+            Loki: `{app="gateway"} |= "unexpected algorithm"`
 {{- end }}
 {{- if dig "KongJwtAuthMalformedJwt" "enabled" true $rules }}
       - alert: KongJwtAuthMalformedJwt
         expr: |
-          increase({{ $jwtMetric }}{reason="malformed_jwt"}[{{ dig "KongJwtAuthMalformedJwt" "interval" "5m" $rules }}]) > {{ dig "KongJwtAuthMalformedJwt" "threshold" 2 $rules }}
+          sum(increase({{ $jwtMetric }}{reason="malformed_jwt"}[{{ dig "KongJwtAuthMalformedJwt" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthMalformedJwt" "threshold" 2 $rules }}
         for: {{ dig "KongJwtAuthMalformedJwt" "for" "0m" $rules }}
         labels:
           severity: {{ dig "KongJwtAuthMalformedJwt" "severity" "warning" $rules }}
@@ -93,13 +99,15 @@ spec:
           {{- toYaml . | nindent 10 }}
           {{- end }}
         annotations:
-          summary: "Kong JWT auth received a malformed token"
-          description: "A request contained a token that could not be decoded as a valid JWT."
+          summary: "Kong JWT auth received malformed tokens"
+          description: |
+            Requests contained tokens that could not be decoded as valid JWTs.
+            Loki: `{app="gateway"} |= "Malformed JWT"`
 {{- end }}
 {{- if dig "KongJwtAuthMultipleTokens" "enabled" true $rules }}
       - alert: KongJwtAuthMultipleTokens
         expr: |
-          increase({{ $jwtMetric }}{reason="multiple_tokens"}[{{ dig "KongJwtAuthMultipleTokens" "interval" "5m" $rules }}]) > {{ dig "KongJwtAuthMultipleTokens" "threshold" 2 $rules }}
+          sum(increase({{ $jwtMetric }}{reason="multiple_tokens"}[{{ dig "KongJwtAuthMultipleTokens" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthMultipleTokens" "threshold" 2 $rules }}
         for: {{ dig "KongJwtAuthMultipleTokens" "for" "0m" $rules }}
         labels:
           severity: {{ dig "KongJwtAuthMultipleTokens" "severity" "warning" $rules }}
@@ -108,13 +116,15 @@ spec:
           {{- toYaml . | nindent 10 }}
           {{- end }}
         annotations:
-          summary: "Kong JWT auth received a request with multiple tokens"
-          description: "A request was rejected because it contained more than one token."
+          summary: "Kong JWT auth received requests with multiple tokens"
+          description: |
+            Requests were rejected because they contained more than one token.
+            Loki: `{app="gateway"} |= "Multiple tokens"`
 {{- end }}
 {{- if dig "KongJwtAuthUnrecognizableTokenType" "enabled" true $rules }}
       - alert: KongJwtAuthUnrecognizableTokenType
         expr: |
-          increase({{ $jwtMetric }}{reason="unrecognizable_token_type"}[{{ dig "KongJwtAuthUnrecognizableTokenType" "interval" "5m" $rules }}]) > {{ dig "KongJwtAuthUnrecognizableTokenType" "threshold" 2 $rules }}
+          sum(increase({{ $jwtMetric }}{reason="unrecognizable_token_type"}[{{ dig "KongJwtAuthUnrecognizableTokenType" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthUnrecognizableTokenType" "threshold" 2 $rules }}
         for: {{ dig "KongJwtAuthUnrecognizableTokenType" "for" "0m" $rules }}
         labels:
           severity: {{ dig "KongJwtAuthUnrecognizableTokenType" "severity" "warning" $rules }}
@@ -123,13 +133,15 @@ spec:
           {{- toYaml . | nindent 10 }}
           {{- end }}
         annotations:
-          summary: "Kong JWT auth received a token of an unrecognizable type"
-          description: "A request was rejected because the token was neither a string nor a table."
+          summary: "Kong JWT auth received tokens of unrecognizable types"
+          description: |
+            Requests were rejected because their tokens were neither strings nor tables.
+            Loki: `{app="gateway"} |= "Unrecognizable token"`
 {{- end }}
 {{- if dig "KongJwtAuthClaimsValidationFailed" "enabled" false $rules }}
       - alert: KongJwtAuthClaimsValidationFailed
         expr: |
-          increase({{ $jwtMetric }}{reason="claims_validation_failed"}[{{ dig "KongJwtAuthClaimsValidationFailed" "interval" "5m" $rules }}]) > {{ dig "KongJwtAuthClaimsValidationFailed" "threshold" 2 $rules }}
+          sum(increase({{ $jwtMetric }}{reason="claims_validation_failed"}[{{ dig "KongJwtAuthClaimsValidationFailed" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthClaimsValidationFailed" "threshold" 2 $rules }}
         for: {{ dig "KongJwtAuthClaimsValidationFailed" "for" "0m" $rules }}
         labels:
           severity: {{ dig "KongJwtAuthClaimsValidationFailed" "severity" "warning" $rules }}
@@ -139,12 +151,14 @@ spec:
           {{- end }}
         annotations:
           summary: "Kong JWT auth rejected tokens with failed claims validation"
-          description: "Tokens were rejected because a registered claim other than exp (e.g. nbf) failed verification. For expired tokens see reason=token_expired."
+          description: |
+            Tokens were rejected because a registered claim other than exp (e.g. nbf) failed verification. For expired tokens see reason=token_expired.
+            Loki: `{app="gateway"} |= "claims validation failed"`
 {{- end }}
 {{- if dig "KongJwtAuthTokenExpired" "enabled" false $rules }}
       - alert: KongJwtAuthTokenExpired
         expr: |
-          increase({{ $jwtMetric }}{reason="token_expired"}[{{ dig "KongJwtAuthTokenExpired" "interval" "5m" $rules }}]) > {{ dig "KongJwtAuthTokenExpired" "threshold" 2 $rules }}
+          sum(increase({{ $jwtMetric }}{reason="token_expired"}[{{ dig "KongJwtAuthTokenExpired" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthTokenExpired" "threshold" 2 $rules }}
         for: {{ dig "KongJwtAuthTokenExpired" "for" "0m" $rules }}
         labels:
           severity: {{ dig "KongJwtAuthTokenExpired" "severity" "warning" $rules }}
@@ -154,12 +168,14 @@ spec:
           {{- end }}
         annotations:
           summary: "Kong JWT auth rejected expired tokens"
-          description: "Tokens were rejected because the exp claim indicated the token has expired. This is normal (e.g. user returned after session expiry); enable this alert only if you want visibility into expiry volume."
+          description: |
+            Tokens were rejected because the exp claim indicated the token has expired. This is normal (e.g. user returned after session expiry); enable this alert only if you want visibility into expiry volume.
+            Loki: `{app="gateway"} |= "claims validation failed" |= "expired"`
 {{- end }}
 {{- if dig "KongJwtAuthMaxExpirationExceeded" "enabled" false $rules }}
       - alert: KongJwtAuthMaxExpirationExceeded
         expr: |
-          increase({{ $jwtMetric }}{reason="max_expiration_exceeded"}[{{ dig "KongJwtAuthMaxExpirationExceeded" "interval" "5m" $rules }}]) > {{ dig "KongJwtAuthMaxExpirationExceeded" "threshold" 2 $rules }}
+          sum(increase({{ $jwtMetric }}{reason="max_expiration_exceeded"}[{{ dig "KongJwtAuthMaxExpirationExceeded" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthMaxExpirationExceeded" "threshold" 2 $rules }}
         for: {{ dig "KongJwtAuthMaxExpirationExceeded" "for" "0m" $rules }}
         labels:
           severity: {{ dig "KongJwtAuthMaxExpirationExceeded" "severity" "warning" $rules }}
@@ -169,7 +185,9 @@ spec:
           {{- end }}
         annotations:
           summary: "Kong JWT auth rejected tokens exceeding maximum expiration"
-          description: "Tokens were rejected because their lifetime exceeds the configured maximum_expiration. This may indicate clients issuing overly long-lived tokens."
+          description: |
+            Tokens were rejected because their lifetime exceeds the configured maximum_expiration. This may indicate clients issuing overly long-lived tokens.
+            Loki: `{app="gateway"} |= "maximum expiration"`
 {{- end }}
 {{- end -}}
 
@@ -179,7 +197,7 @@ spec:
 {{- if dig "KongAppRepoAuthApiKeyValidationFailed" "enabled" true $rules }}
       - alert: KongAppRepoAuthApiKeyValidationFailed
         expr: |
-          increase({{ $appRepoMetric }}{reason="api_key_validation_failed"}[{{ dig "KongAppRepoAuthApiKeyValidationFailed" "interval" "5m" $rules }}]) > {{ dig "KongAppRepoAuthApiKeyValidationFailed" "threshold" 50 $rules }}
+          sum(increase({{ $appRepoMetric }}{reason="api_key_validation_failed"}[{{ dig "KongAppRepoAuthApiKeyValidationFailed" "interval" "5m" $rules }}])) > {{ dig "KongAppRepoAuthApiKeyValidationFailed" "threshold" 50 $rules }}
         for: {{ dig "KongAppRepoAuthApiKeyValidationFailed" "for" "5m" $rules }}
         labels:
           severity: {{ dig "KongAppRepoAuthApiKeyValidationFailed" "severity" "warning" $rules }}
@@ -188,13 +206,15 @@ spec:
           {{- toYaml . | nindent 10 }}
           {{- end }}
         annotations:
-          summary: "Kong app-repo auth received an invalid API key"
-          description: "The app repository returned a non-200 response when validating an API key."
+          summary: "Kong app-repo auth received invalid API keys"
+          description: |
+            The app repository returned non-200 responses when validating API keys.
+            Loki: `{app="gateway"} |= "API key validation"`
 {{- end }}
 {{- if dig "KongAppRepoAuthMultipleTokens" "enabled" true $rules }}
       - alert: KongAppRepoAuthMultipleTokens
         expr: |
-          increase({{ $appRepoMetric }}{reason="multiple_tokens"}[{{ dig "KongAppRepoAuthMultipleTokens" "interval" "5m" $rules }}]) > {{ dig "KongAppRepoAuthMultipleTokens" "threshold" 2 $rules }}
+          sum(increase({{ $appRepoMetric }}{reason="multiple_tokens"}[{{ dig "KongAppRepoAuthMultipleTokens" "interval" "5m" $rules }}])) > {{ dig "KongAppRepoAuthMultipleTokens" "threshold" 2 $rules }}
         for: {{ dig "KongAppRepoAuthMultipleTokens" "for" "0m" $rules }}
         labels:
           severity: {{ dig "KongAppRepoAuthMultipleTokens" "severity" "warning" $rules }}
@@ -203,13 +223,15 @@ spec:
           {{- toYaml . | nindent 10 }}
           {{- end }}
         annotations:
-          summary: "Kong app-repo auth received a request with multiple tokens"
-          description: "A request was rejected because it contained more than one token."
+          summary: "Kong app-repo auth received requests with multiple tokens"
+          description: |
+            Requests were rejected because they contained more than one token.
+            Loki: `{app="gateway"} |= "Multiple tokens"`
 {{- end }}
 {{- if dig "KongAppRepoAuthUnrecognizableTokenType" "enabled" true $rules }}
       - alert: KongAppRepoAuthUnrecognizableTokenType
         expr: |
-          increase({{ $appRepoMetric }}{reason="unrecognizable_token_type"}[{{ dig "KongAppRepoAuthUnrecognizableTokenType" "interval" "5m" $rules }}]) > {{ dig "KongAppRepoAuthUnrecognizableTokenType" "threshold" 2 $rules }}
+          sum(increase({{ $appRepoMetric }}{reason="unrecognizable_token_type"}[{{ dig "KongAppRepoAuthUnrecognizableTokenType" "interval" "5m" $rules }}])) > {{ dig "KongAppRepoAuthUnrecognizableTokenType" "threshold" 2 $rules }}
         for: {{ dig "KongAppRepoAuthUnrecognizableTokenType" "for" "0m" $rules }}
         labels:
           severity: {{ dig "KongAppRepoAuthUnrecognizableTokenType" "severity" "warning" $rules }}
@@ -218,13 +240,15 @@ spec:
           {{- toYaml . | nindent 10 }}
           {{- end }}
         annotations:
-          summary: "Kong app-repo auth received a token of an unrecognizable type"
-          description: "A request was rejected because the token was neither a string nor a table."
+          summary: "Kong app-repo auth received tokens of unrecognizable types"
+          description: |
+            Requests were rejected because their tokens were neither strings nor tables.
+            Loki: `{app="gateway"} |= "Unrecognizable token"`
 {{- end }}
 {{- if dig "KongAppRepoAuthMissingRequiredHeaders" "enabled" true $rules }}
       - alert: KongAppRepoAuthMissingRequiredHeaders
         expr: |
-          increase({{ $appRepoMetric }}{reason="missing_required_headers"}[{{ dig "KongAppRepoAuthMissingRequiredHeaders" "interval" "5m" $rules }}]) > {{ dig "KongAppRepoAuthMissingRequiredHeaders" "threshold" 2 $rules }}
+          sum(increase({{ $appRepoMetric }}{reason="missing_required_headers"}[{{ dig "KongAppRepoAuthMissingRequiredHeaders" "interval" "5m" $rules }}])) > {{ dig "KongAppRepoAuthMissingRequiredHeaders" "threshold" 2 $rules }}
         for: {{ dig "KongAppRepoAuthMissingRequiredHeaders" "for" "0m" $rules }}
         labels:
           severity: {{ dig "KongAppRepoAuthMissingRequiredHeaders" "severity" "warning" $rules }}
@@ -233,7 +257,9 @@ spec:
           {{- toYaml . | nindent 10 }}
           {{- end }}
         annotations:
-          summary: "Kong app-repo auth received a request missing required headers"
-          description: "A request was rejected because x-app-id or x-company-id header was absent."
+          summary: "Kong app-repo auth received requests missing required headers"
+          description: |
+            Requests were rejected because x-app-id or x-company-id headers were absent.
+            Loki: `{app="gateway"} |= "missing required headers"`
 {{- end }}
 {{- end -}}

@@ -6,7 +6,7 @@ Refer to each plugins readme section to learn more about them.
 
 Please report any security concerns with the plugins via the [Security Policy](https://github.com/Unique-AG/helm-charts/tree/main?tab=security-ov-file).
 
-![Version: 2.3.1](https://img.shields.io/badge/Version-2.3.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 2.3.2](https://img.shields.io/badge/Version-2.3.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -15,7 +15,7 @@ Please report any security concerns with the plugins via the [Security Policy](h
 New releases are published as OCI artifacts only. The Helm repository index is frozen and will not receive new versions—see the [repository README](https://github.com/Unique-AG/helm-charts/blob/main/README.md#migrating-to-oci) for migration steps.
 
 ```sh
-helm install my-kong-plugins oci://ghcr.io/unique-ag/helm-charts/kong-plugins --version 2.3.1
+helm install my-kong-plugins oci://ghcr.io/unique-ag/helm-charts/kong-plugins --version 2.3.2
 ```
 
 <details>
@@ -23,7 +23,7 @@ helm install my-kong-plugins oci://ghcr.io/unique-ag/helm-charts/kong-plugins --
 
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-kong-plugins unique/kong-plugins --version 2.3.1
+helm install my-kong-plugins unique/kong-plugins --version 2.3.2
 ```
 
 </details>
@@ -128,7 +128,7 @@ The metric will be exposed as `kong_my_custom_auth_warnings_total`.
 
 ### Alerts
 
-The chart ships one `PrometheusRule` alert per rejection reason for both plugins — 12 alerts in total — enabled by default when the `monitoring.coreos.com/v1` CRD is present and `prometheus.enabled` is `true`. Each alert fires when occurrences within a 5-minute window exceed a configurable threshold (`increase(...[5m]) > threshold`). The default threshold is 2 for most alerts and 50 for `KongAppRepoAuthApiKeyValidationFailed` (since individual API key failures are expected).
+The chart ships one `PrometheusRule` alert per rejection reason for both plugins — 12 alerts in total — enabled by default when the `monitoring.coreos.com/v1` CRD is present and `prometheus.enabled` is `true`. Each alert fires when total occurrences across gateway pods within a 5-minute window exceed a configurable threshold (`sum(increase(...[5m])) > threshold`). The default threshold is 2 for most alerts and 50 for `KongAppRepoAuthApiKeyValidationFailed` (since individual API key failures are expected).
 
 Expiration-related alerts are **disabled by default** since token expiry is a normal operational event.
 
