@@ -5,7 +5,7 @@ maintainers:
   - name: unique-ag
     url: https://unique.ch/
 name: kong-plugins
-version: 2.3.1
+version: 2.3.2
 description: |
   The 'kong-plugins' chart provides a streamlined solution for deploying Kong plugins via ConfigMaps to be used with the Unique Software.
 
@@ -15,4 +15,6 @@ description: |
 annotations:
   artifacthub.io/changes: |
     - kind: fixed
-      description: Prevent client-supplied x-user-roles header from being forwarded upstream in unique-jwt-auth
+      description: Aggregate security warning alert counters across Kong gateway pods before applying thresholds.
+    - kind: added
+      description: Add Loki queries to security warning alerts.
