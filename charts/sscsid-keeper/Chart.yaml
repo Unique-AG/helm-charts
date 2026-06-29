@@ -7,16 +7,11 @@ maintainers:
 name: sscsid-keeper
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/sscsid-keeper
-version: 1.4.0
+version: 1.5.0
+deprecated: true
 description: |
-  The SSCSID ([Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/)) Keeper (`sscsid-keeper`) is a chart that combines the often used `SecretProviderClass`, which is part of the SSCSID with a running deployment that mounts the matching secrets making them available to others within the same namespace.
-
-  This chart is a pet project of Unique to code more _DRY_ and not officially supported by the maintainers of the `Secrets Store CSI Driver`. Unique also prototypes new features, processes or ideas with this chart (e.g. chart signing).
-
-  Since Unique is at the time of writing Azure focused, leveraging the Azure managed AKS CSI Extension is sometimes simpler than manually installing other Secret _solutions_.
-
-  Note that if you need more sophisticated features, or a officially maintained chart or option that supports reloading, ClusterSecrets etc, seek matching alternatives on your own behalf (e.g. [External Secrets Operator](https://external-secrets.io/latest/)).
+  This chart is deprecated. Unique recommends the External Secrets Operator for managing secrets in Kubernetes.
 annotations:
   artifacthub.io/changes: |
     - kind: changed
-      description: "Future releases are OCI-only. The Helm repository is frozen and will not receive new versions."
+      description: "Update busybox."
