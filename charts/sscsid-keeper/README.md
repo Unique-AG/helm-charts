@@ -1,14 +1,8 @@
 # sscsid-keeper
 
-The SSCSID ([Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/)) Keeper (`sscsid-keeper`) is a chart that combines the often used `SecretProviderClass`, which is part of the SSCSID with a running deployment that mounts the matching secrets making them available to others within the same namespace.
+This chart is deprecated. Unique recommends the External Secrets Operator for managing secrets in Kubernetes.
 
-This chart is a pet project of Unique to code more _DRY_ and not officially supported by the maintainers of the `Secrets Store CSI Driver`. Unique also prototypes new features, processes or ideas with this chart (e.g. chart signing).
-
-Since Unique is at the time of writing Azure focused, leveraging the Azure managed AKS CSI Extension is sometimes simpler than manually installing other Secret _solutions_.
-
-Note that if you need more sophisticated features, or a officially maintained chart or option that supports reloading, ClusterSecrets etc, seek matching alternatives on your own behalf (e.g. [External Secrets Operator](https://external-secrets.io/latest/)).
-
-![Version: 1.4.0](https://img.shields.io/badge/Version-1.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.5.0](https://img.shields.io/badge/Version-1.5.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -17,7 +11,7 @@ Note that if you need more sophisticated features, or a officially maintained ch
 New releases are published as OCI artifacts only. The Helm repository index is frozen and will not receive new versions—see the [repository README](https://github.com/Unique-AG/helm-charts/blob/main/README.md#migrating-to-oci) for migration steps.
 
 ```sh
-helm install my-sscsid-keeper oci://ghcr.io/unique-ag/helm-charts/sscsid-keeper --version 1.4.0
+helm install my-sscsid-keeper oci://ghcr.io/unique-ag/helm-charts/sscsid-keeper --version 1.5.0
 ```
 
 <details>
@@ -25,7 +19,7 @@ helm install my-sscsid-keeper oci://ghcr.io/unique-ag/helm-charts/sscsid-keeper 
 
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-sscsid-keeper unique/sscsid-keeper --version 1.4.0
+helm install my-sscsid-keeper unique/sscsid-keeper --version 1.5.0
 ```
 
 </details>
@@ -35,12 +29,12 @@ helm install my-sscsid-keeper unique/sscsid-keeper --version 1.4.0
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | fullnameOverride | string | `""` | This is to override the full name. |
-| keeper | object | `{"affinity":{},"image":{"pullPolicy":"IfNotPresent","repository":"busybox","tag":"1.37.0"},"imagePullSecrets":[],"pdb":{"enabled":true,"minAvailable":1},"podAnnotations":{},"podLabels":{},"podSecurityContext":{},"replicaCount":2,"resourcesPreset":"yocto","securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":1000},"tolerations":[]}` | Set options for the deployed keeper, its deployment and pods respectively. |
+| keeper | object | `{"affinity":{},"image":{"pullPolicy":"IfNotPresent","repository":"busybox","tag":"1.38.0"},"imagePullSecrets":[],"pdb":{"enabled":true,"minAvailable":1},"podAnnotations":{},"podLabels":{},"podSecurityContext":{},"replicaCount":2,"resourcesPreset":"yocto","securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":1000},"tolerations":[]}` | Set options for the deployed keeper, its deployment and pods respectively. |
 | keeper.affinity | object | `{}` | Default affinity preset for the keeper |
-| keeper.image | object | `{"pullPolicy":"IfNotPresent","repository":"busybox","tag":"1.37.0"}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
+| keeper.image | object | `{"pullPolicy":"IfNotPresent","repository":"busybox","tag":"1.38.0"}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | keeper.image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | keeper.image.repository | string | `"busybox"` | This sets the image repository. |
-| keeper.image.tag | string | `"1.37.0"` | Overrides the image tag whose default is the chart appVersion. |
+| keeper.image.tag | string | `"1.38.0"` | Overrides the image tag whose default is the chart appVersion. |
 | keeper.imagePullSecrets | list | `[]` | This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
 | keeper.pdb | object | `{"enabled":true,"minAvailable":1}` | Set the PodDisruptionBudget for the keeper |
 | keeper.pdb.enabled | bool | `true` | enabled by default as it keeps the secret |
