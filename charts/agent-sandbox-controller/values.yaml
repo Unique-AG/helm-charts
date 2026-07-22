@@ -15,7 +15,7 @@ image:
   # -- Overrides the image tag whose default is the chart appVersion.
   tag: ""
   # -- Pin a specific image by digest. Recommended for supply-chain integrity.
-  digest: sha256:64317cf5694991d9d63ce6a1b3fda16dfeecca0f01c863945cbcdb38ccc18473
+  digest: sha256:93c28f724f34845fcfbd58818959958fd877f9953698c920add3081f61a54429
   # -- This sets the pull policy for images.
   pullPolicy: IfNotPresent
 
@@ -85,9 +85,9 @@ router:
     # -- This sets the router image repository.
     repository: us-central1-docker.pkg.dev/k8s-staging-images/agent-sandbox/sandbox-router
     # -- Overrides the router image tag.
-    tag: v20260506-v0.4.5
+    tag: v20260514-v0.4.6
     # -- Pin a specific router image by digest.
-    digest: sha256:2a3a21a5055051109c7ac8230d3d1c83d7f5f50279ae2c669433bb4d16a93e19
+    digest: sha256:15213198b19cf4da2ad560d84a6e144a1ed79edaf058f806c5438bc5142b7058
     # -- This sets the pull policy for the router image.
     pullPolicy: IfNotPresent
   # -- Router `Service` settings.
