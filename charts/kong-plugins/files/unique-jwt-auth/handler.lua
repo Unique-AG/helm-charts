@@ -7,6 +7,9 @@ local zitadel_keys = require "kong.plugins.unique-jwt-auth.zitadel_keys"
 
 local validate_issuer = require"kong.plugins.unique-jwt-auth.validate_issuers".validate_issuer
 
+local resty_sha256 = require "resty.sha256"
+local to_hex = require "resty.string".to_hex
+
 local fmt = string.format
 local kong = kong
 local type = type
@@ -31,6 +34,30 @@ local function inc_warn(conf, reason)
         counters[metric_name] = prom:counter(metric_name, "Security warning events", {"reason"})
     end
     counters[metric_name]:inc(1, {reason})
+end
+
+-------------------------------------------------------------------------------
+-- Build a redacted fingerprint of a rejected token for logging.
+--
+-- A token that fails jwt_decoder:new is NOT guaranteed to be inert: opaque
+-- access tokens and partially-decodable JWTs can carry live credentials or
+-- PII. We therefore never log the raw value. The fingerprint gives enough to
+-- triage (repeated offenders via the hash, wrong scheme / truncation via the
+-- segment count and lengths) without persisting the secret.
+-- JWTs and opaque tokens are high-entropy, so the sha256 is not
+-- brute-forceable back to the token.
+-------------------------------------------------------------------------------
+local function token_fingerprint(token)
+    local t = tostring(token)
+    local sha = resty_sha256:new()
+    sha:update(t)
+    local digest = to_hex(sha:final())
+    local seg_lens = {}
+    for seg in (t .. "."):gmatch("([^.]*)%.") do
+        seg_lens[#seg_lens + 1] = #seg
+    end
+    return fmt("len=%d segments=%d seg_lens=[%s] sha256=%s",
+        #t, #seg_lens, table.concat(seg_lens, ","), digest)
 end
 
 local priority_env_var = "UNIQUE_JWT_AUTH_PRIORITY"
@@ -425,7 +452,7 @@ local function do_authentication(conf)
     -- Decode token to find out who the consumer is
     local jwt, err = jwt_decoder:new(token)
     if err then
-        kong.log.warn("Malformed JWT received from " .. (kong.client.get_forwarded_ip() or "unknown") .. ": " .. tostring(err))
+        kong.log.warn("Malformed JWT received from " .. (kong.client.get_forwarded_ip() or "unknown") .. ": " .. tostring(err) .. " " .. token_fingerprint(token))
         inc_warn(conf, "malformed_jwt")
         return false, {
             status = 401,
