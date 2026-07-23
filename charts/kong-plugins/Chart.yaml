@@ -15,4 +15,4 @@ description: |
 annotations:
   artifacthub.io/changes: |
     - kind: added
-      description: log the raw token on malformed JWTs so KongJwtAuthMalformedJwt can be triaged from its Loki query
+      description: log a redacted token fingerprint (sha256, length, segment shape) on malformed JWTs so KongJwtAuthMalformedJwt can be triaged without logging the raw token
