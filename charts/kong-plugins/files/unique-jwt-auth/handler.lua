@@ -452,9 +452,6 @@ local function do_authentication(conf)
     -- Decode token to find out who the consumer is
     local jwt, err = jwt_decoder:new(token)
     if err then
-        -- Log a redacted fingerprint, never the raw token: a parse failure
-        -- does not prove the value is safe (opaque tokens and partially
-        -- decodable JWTs can be live credentials / carry PII).
         kong.log.warn("Malformed JWT received from " .. (kong.client.get_forwarded_ip() or "unknown") .. ": " .. tostring(err) .. " " .. token_fingerprint(token))
         inc_warn(conf, "malformed_jwt")
         return false, {
