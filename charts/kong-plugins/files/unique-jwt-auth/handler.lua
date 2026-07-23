@@ -43,8 +43,8 @@ end
 -- access tokens and partially-decodable JWTs can carry live credentials or
 -- PII. We therefore never log the raw value. The fingerprint gives enough to
 -- triage (repeated offenders via the hash, wrong scheme / truncation via the
--- segment shape, encoding corruption via the prefix) without persisting the
--- secret. JWTs and opaque tokens are high-entropy, so the sha256 is not
+-- segment count and lengths) without persisting the secret.
+-- JWTs and opaque tokens are high-entropy, so the sha256 is not
 -- brute-forceable back to the token.
 -------------------------------------------------------------------------------
 local function token_fingerprint(token)
@@ -56,8 +56,8 @@ local function token_fingerprint(token)
     for seg in (t .. "."):gmatch("([^.]*)%.") do
         seg_lens[#seg_lens + 1] = #seg
     end
-    return fmt("len=%d segments=%d seg_lens=[%s] prefix=%q sha256=%s",
-        #t, #seg_lens, table.concat(seg_lens, ","), t:sub(1, 8), digest)
+    return fmt("len=%d segments=%d seg_lens=[%s] sha256=%s",
+        #t, #seg_lens, table.concat(seg_lens, ","), digest)
 end
 
 local priority_env_var = "UNIQUE_JWT_AUTH_PRIORITY"
