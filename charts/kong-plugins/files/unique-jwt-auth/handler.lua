@@ -425,7 +425,13 @@ local function do_authentication(conf)
     -- Decode token to find out who the consumer is
     local jwt, err = jwt_decoder:new(token)
     if err then
-        kong.log.warn("Malformed JWT received from " .. (kong.client.get_forwarded_ip() or "unknown") .. ": " .. tostring(err))
+        -- The token failed jwt_decoder:new, so it could not be parsed into
+        -- claims and is not a usable credential. We log it verbatim so we can
+        -- see what was actually sent (broken client, wrong encoding, probe).
+        -- This is intentionally limited to the malformed case; decodable
+        -- tokens that fail later checks (signature, issuer, claims) must not
+        -- be logged in full because they can carry live claims.
+        kong.log.warn("Malformed JWT received from " .. (kong.client.get_forwarded_ip() or "unknown") .. ": " .. tostring(err) .. " token=" .. tostring(token))
         inc_warn(conf, "malformed_jwt")
         return false, {
             status = 401,
