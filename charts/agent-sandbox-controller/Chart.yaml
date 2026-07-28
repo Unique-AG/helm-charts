@@ -8,8 +8,8 @@ name: agent-sandbox-controller
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/agent-sandbox-controller
   - https://github.com/kubernetes-sigs/agent-sandbox
-version: 0.4.5-rc.1
-appVersion: "v0.4.5"
+version: 0.4.6-rc.1
+appVersion: "v0.4.6"
 description: |
   Helm chart for the Agent Sandbox controller — a Kubernetes CRD and controller for managing isolated, stateful, singleton workloads (e.g. AI agent runtimes).
 

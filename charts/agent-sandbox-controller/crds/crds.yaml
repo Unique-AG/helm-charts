@@ -3835,6 +3835,8 @@ spec:
                 maximum: 1
                 minimum: 0
                 type: integer
+              service:
+                type: boolean
               shutdownPolicy:
                 default: Retain
                 enum:
@@ -8191,6 +8193,8 @@ spec:
                 required:
                 - spec
                 type: object
+              service:
+                type: boolean
               volumeClaimTemplates:
                 items:
                   properties:
