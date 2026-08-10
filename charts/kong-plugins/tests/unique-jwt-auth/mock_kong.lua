@@ -25,6 +25,9 @@ local function new_state(options)
         headers = options.headers or {},
         forwarded_ip = options.forwarded_ip or "10.0.0.1",
         credential = options.credential,
+        -- When set, kong.cache:get returns this keyset without calling the
+        -- loader callback, so HS256 specs can pass Zitadel verification offline.
+        cache_keys = options.cache_keys,
         -- observations
         upstream_headers = {},
         cleared_headers = {},
@@ -84,6 +87,24 @@ function M.install()
                 return state.credential
             end,
             authenticate = function()
+            end
+        },
+        cache = {
+            get = function(_, _, cb, ...)
+                if state.cache_keys then
+                    return {
+                        keys = state.cache_keys,
+                        updated_at = ngx.time()
+                    }
+                end
+                -- Specs that reach verification without setting cache_keys must
+                -- fail loudly rather than silently skipping the signature check.
+                if cb then
+                    return cb(...)
+                end
+                return nil, "kong.cache stub has no cache_keys and no loader"
+            end,
+            invalidate = function()
             end
         },
         log = {

@@ -19,11 +19,14 @@ local assert_none_contains = runner.assert_none_contains
 local TICKET_SECRET = "shared-across-every-gateway-replica"
 local TICKET_ISSUER = "kong-ws-ticket"
 local MINT_PATH = "/auth/ws-ticket"
+local ALLOWED_ISSUER = "https://id.example.com"
+local ACCESS_TOKEN_SECRET = "offline-hs256-access-token-secret"
 -- Anything outside allowed_iss fails on the very first Zitadel check, which
 -- keeps the specs away from a JWKS fetch while still proving that a request
 -- reached the access-token path.
 local UNKNOWN_ISSUER = "https://not-our-idp.example.com"
 local DISALLOWED_ISSUER_LOG = "disallowed issuer"
+local RESOURCE_OWNER_CLAIM = "urn:zitadel:iam:user:resourceowner:id"
 
 local function conf(overrides)
     local base = {
@@ -79,21 +82,53 @@ local function ticket(opts)
 end
 
 --- Build something shaped like a Zitadel access token.
-local function access_token(claim_overrides)
+---
+--- opts.claims overrides claims, opts.remove drops them, opts.iss / opts.alg /
+--- opts.secret override the defaults. Rejection-path specs keep the unknown
+--- issuer and a placeholder secret; mint success specs use ALLOWED_ISSUER,
+--- HS256 and ACCESS_TOKEN_SECRET with the cache stub.
+local function access_token(opts)
+    opts = opts or {}
     local now = ngx.time()
     local claims = {
-        iss = UNKNOWN_ISSUER,
+        iss = opts.iss or UNKNOWN_ISSUER,
         sub = "user-123",
+        [RESOURCE_OWNER_CLAIM] = "company-456",
         exp = now + 3600
     }
-    for key, value in pairs(claim_overrides or {}) do
+    for key, value in pairs(opts.claims or {}) do
         claims[key] = value
+    end
+    for _, key in ipairs(opts.remove or {}) do
+        claims[key] = nil
     end
 
     return build({
         typ = "JWT",
-        alg = "RS256"
-    }, claims, "irrelevant-these-never-reach-signature-checks")
+        alg = opts.alg or "RS256"
+    }, claims, opts.secret or "irrelevant-these-never-reach-signature-checks")
+end
+
+--- Plugin config that lets verify_zitadel_token succeed offline via the
+--- kong.cache stub and an HS256 access token signed with ACCESS_TOKEN_SECRET.
+local function mintable_conf(overrides)
+    local base = {
+        algorithm = "HS256",
+        allowed_iss = {ALLOWED_ISSUER},
+        well_known_template = "%s/.well-known/openid-configuration"
+    }
+    for key, value in pairs(overrides or {}) do
+        base[key] = value
+    end
+    return conf(base)
+end
+
+local function verifiable_access_token(opts)
+    opts = opts or {}
+    opts.iss = opts.iss or ALLOWED_ISSUER
+    opts.alg = opts.alg or "HS256"
+    opts.secret = opts.secret or ACCESS_TOKEN_SECRET
+    return access_token(opts)
 end
 
 describe("ticket authentication", function()
@@ -466,6 +501,92 @@ describe("ticket mint endpoint", function()
 
         assert_any_contains(DISALLOWED_ISSUER_LOG, state.warnings)
         assert_none_contains("ticket mint", state.warnings)
+    end)
+
+    it("mints a ticket that authenticates a subsequent upgrade", function()
+        local mint_state = mock_kong.reset({
+            method = "POST",
+            path = MINT_PATH,
+            headers = {
+                authorization = "Bearer " .. verifiable_access_token()
+            },
+            cache_keys = {ACCESS_TOKEN_SECRET}
+        })
+
+        handler:access(mintable_conf())
+
+        assert_equal(200, mint_state.response.status)
+        assert_equal(60, mint_state.response.body.expires_in)
+        assert_truthy(mint_state.response.body.ticket, "mint should return a ticket")
+        assert_equal(0, #mint_state.errors)
+
+        local upgrade_state = mock_kong.reset({
+            query = {
+                token = mint_state.response.body.ticket
+            }
+        })
+
+        handler:access(conf())
+
+        assert_falsy(upgrade_state.response, "minted ticket should authenticate the upgrade")
+        assert_equal("user-123", upgrade_state.upstream_headers["x-user-id"])
+        assert_equal("company-456", upgrade_state.upstream_headers["x-company-id"])
+    end)
+
+    it("returns 401 when a verified token is missing sub", function()
+        local state = mock_kong.reset({
+            method = "POST",
+            path = MINT_PATH,
+            headers = {
+                authorization = "Bearer " .. verifiable_access_token({
+                    remove = {"sub"}
+                })
+            },
+            cache_keys = {ACCESS_TOKEN_SECRET}
+        })
+
+        handler:access(mintable_conf())
+
+        assert_equal(401, state.response.status)
+        assert_any_contains("access token missing 'sub'", state.warnings)
+        assert_equal(0, #state.errors, "client claim gaps must not look like gateway faults")
+    end)
+
+    it("returns 401 when a verified token is missing the resourceowner claim", function()
+        local state = mock_kong.reset({
+            method = "POST",
+            path = MINT_PATH,
+            headers = {
+                authorization = "Bearer " .. verifiable_access_token({
+                    remove = {RESOURCE_OWNER_CLAIM}
+                })
+            },
+            cache_keys = {ACCESS_TOKEN_SECRET}
+        })
+
+        handler:access(mintable_conf())
+
+        assert_equal(401, state.response.status)
+        assert_any_contains("access token missing '" .. RESOURCE_OWNER_CLAIM .. "'", state.warnings)
+        assert_equal(0, #state.errors, "client claim gaps must not look like gateway faults")
+    end)
+
+    it("still returns 500 when signing itself fails", function()
+        local state = mock_kong.reset({
+            method = "POST",
+            path = MINT_PATH,
+            headers = {
+                authorization = "Bearer " .. verifiable_access_token()
+            },
+            cache_keys = {ACCESS_TOKEN_SECRET}
+        })
+
+        handler:access(mintable_conf({
+            ws_ticket_secret = ""
+        }))
+
+        assert_equal(500, state.response.status)
+        assert_any_contains("Could not mint WebSocket ticket", state.errors)
     end)
 
 end)

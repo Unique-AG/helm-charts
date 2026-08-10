@@ -802,6 +802,19 @@ local function mint_ws_ticket(conf)
         }, no_store)
     end
 
+    -- Checked after verification so the metric means "a real user's token lacks
+    -- org claims" rather than letting forged traffic inflate it. These are
+    -- client credential gaps, not gateway faults — map them to 401, not 500.
+    local missing_claim = ws_ticket.missing_identity_claim(jwt.claims)
+    if missing_claim then
+        kong.log.warn("Rejected ticket mint for access token missing '" .. missing_claim ..
+                          "' from " .. (kong.client.get_forwarded_ip() or "unknown"))
+        inc_warn(conf, "ws_ticket_mint_missing_claims")
+        return kong.response.exit(401, {
+            message = "Unauthorized"
+        }, no_store)
+    end
+
     local ticket, sign_err = ws_ticket.sign(conf, jwt.claims)
     if not ticket then
         kong.log.err("Could not mint WebSocket ticket: " .. tostring(sign_err))

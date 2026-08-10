@@ -56,6 +56,27 @@ local _M = {
 }
 
 -------------------------------------------------------------------------------
+-- Return the name of the first identity claim a ticket needs that is missing
+-- from the access-token claims, or nil when both are present.
+--
+-- Shared by the mint endpoint (so a client credential gap becomes a 401 rather
+-- than a gateway 500) and by sign() itself, so the claim names live in one place.
+-------------------------------------------------------------------------------
+function _M.missing_identity_claim(claims)
+    if type(claims) ~= "table" then
+        return "sub"
+    end
+    if type(claims.sub) ~= "string" or claims.sub == "" then
+        return "sub"
+    end
+    local company = claims[ZITADEL_RESOURCE_OWNER_CLAIM]
+    if type(company) ~= "string" or company == "" then
+        return ZITADEL_RESOURCE_OWNER_CLAIM
+    end
+    return nil
+end
+
+-------------------------------------------------------------------------------
 -- Mint a ticket from the claims of an already-verified Zitadel access token.
 --
 -- @param conf   plugin configuration
@@ -67,17 +88,15 @@ function _M.sign(conf, claims)
         return nil, "ws_ticket_secret is not configured"
     end
 
-    local subject = claims.sub
-    local company = claims[ZITADEL_RESOURCE_OWNER_CLAIM]
-
     -- Both are required: browser-bridge refuses any upgrade that does not carry
     -- gateway-stamped x-user-id and x-company-id headers.
-    if type(subject) ~= "string" or subject == "" then
-        return nil, "access token has no 'sub' claim"
+    local missing = _M.missing_identity_claim(claims)
+    if missing then
+        return nil, "access token has no '" .. missing .. "' claim"
     end
-    if type(company) ~= "string" or company == "" then
-        return nil, "access token has no '" .. ZITADEL_RESOURCE_OWNER_CLAIM .. "' claim"
-    end
+
+    local subject = claims.sub
+    local company = claims[ZITADEL_RESOURCE_OWNER_CLAIM]
 
     local jti, jti_err = new_jti()
     if not jti then

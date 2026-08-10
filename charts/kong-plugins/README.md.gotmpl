@@ -134,6 +134,7 @@ Possible `reason` label values:
 | `ws_ticket_bad_audience` | WebSocket ticket `aud` claim does not match `ws_ticket_audience` |
 | `ws_ticket_malformed` | WebSocket ticket is missing its `sub` or `cid` claim |
 | `ws_ticket_mint_bad_source` | Mint attempted without an `Authorization` header, or using a ticket |
+| `ws_ticket_mint_missing_claims` | Access token verified successfully but lacks `sub` or the Zitadel resourceowner claim |
 | `jwt_in_query_rejected` | Access token arrived in a query parameter while `reject_jwt_in_query` is on |
 
 ### unique-app-repo-auth
@@ -170,7 +171,9 @@ The metric will be exposed as `kong_my_custom_auth_warnings_total`.
 
 ### Alerts
 
-The chart ships one `PrometheusRule` alert per rejection reason for both plugins — 18 alerts in total — enabled by default when the `monitoring.coreos.com/v1` CRD is present and `prometheus.enabled` is `true`. Each alert fires when total occurrences across gateway pods within a 5-minute window exceed a configurable threshold (`sum(increase(...[5m])) > threshold`). The default threshold is 2 for most alerts and 50 for `KongAppRepoAuthApiKeyValidationFailed` (since individual API key failures are expected).
+The chart ships a `PrometheusRule` alert for most rejection reasons across both plugins — enabled by default when the `monitoring.coreos.com/v1` CRD is present and `prometheus.enabled` is `true`. Each alert fires when total occurrences across gateway pods within a 5-minute window exceed a configurable threshold (`sum(increase(...[5m])) > threshold`). The default threshold is 2 for most alerts and 50 for `KongAppRepoAuthApiKeyValidationFailed` (since individual API key failures are expected).
+
+Not every `reason` has an alert. Client-configuration signals such as `ws_ticket_malformed` and `ws_ticket_mint_missing_claims` stay metric-only — alerting on them would page for someone else's token rather than an attack.
 
 Expiration-related alerts are **disabled by default** since token expiry is a normal operational event. `KongJwtAuthWsTicketExpired` is disabled for the same reason: tickets are deliberately short-lived, so a slow client or a reconnect storm produces expiries routinely. Enable it while tuning `ws_ticket_ttl`.
 
