@@ -189,6 +189,91 @@ spec:
             Tokens were rejected because their lifetime exceeds the configured maximum_expiration. This may indicate clients issuing overly long-lived tokens.
             Loki: `{app="gateway"} |= "maximum expiration"`
 {{- end }}
+{{- if dig "KongJwtAuthWsTicketInvalidSignature" "enabled" true $rules }}
+      - alert: KongJwtAuthWsTicketInvalidSignature
+        expr: |
+          sum(increase({{ $jwtMetric }}{reason="ws_ticket_invalid_signature"}[{{ dig "KongJwtAuthWsTicketInvalidSignature" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthWsTicketInvalidSignature" "threshold" 5 $rules }}
+        for: {{ dig "KongJwtAuthWsTicketInvalidSignature" "for" "0m" $rules }}
+        labels:
+          severity: {{ dig "KongJwtAuthWsTicketInvalidSignature" "severity" "critical" $rules }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong JWT auth rejected WebSocket tickets with invalid signatures"
+          description: |
+            WebSocket upgrade tickets were rejected because their HMAC signature or algorithm did not match. The gateway is the only party that can mint a valid ticket, so this points at forgery rather than a misbehaving client.
+            Loki: `{app="gateway"} |= "WebSocket ticket with invalid signature"`
+{{- end }}
+{{- if dig "KongJwtAuthWsTicketBadAudience" "enabled" true $rules }}
+      - alert: KongJwtAuthWsTicketBadAudience
+        expr: |
+          sum(increase({{ $jwtMetric }}{reason="ws_ticket_bad_audience"}[{{ dig "KongJwtAuthWsTicketBadAudience" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthWsTicketBadAudience" "threshold" 2 $rules }}
+        for: {{ dig "KongJwtAuthWsTicketBadAudience" "for" "0m" $rules }}
+        labels:
+          severity: {{ dig "KongJwtAuthWsTicketBadAudience" "severity" "critical" $rules }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong JWT auth rejected WebSocket tickets bound to another audience"
+          description: |
+            WebSocket upgrade tickets were presented to a route they were not minted for, which suggests a ticket is being replayed across services.
+            Loki: `{app="gateway"} |= "WebSocket ticket with unexpected audience"`
+{{- end }}
+{{- if dig "KongJwtAuthWsTicketMintBadSource" "enabled" true $rules }}
+      - alert: KongJwtAuthWsTicketMintBadSource
+        expr: |
+          sum(increase({{ $jwtMetric }}{reason="ws_ticket_mint_bad_source"}[{{ dig "KongJwtAuthWsTicketMintBadSource" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthWsTicketMintBadSource" "threshold" 2 $rules }}
+        for: {{ dig "KongJwtAuthWsTicketMintBadSource" "for" "0m" $rules }}
+        labels:
+          severity: {{ dig "KongJwtAuthWsTicketMintBadSource" "severity" "warning" $rules }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong JWT auth rejected WebSocket ticket mint attempts"
+          description: |
+            Ticket mint requests arrived without an Authorization header, or tried to mint a ticket from another ticket. Either would let a short-lived ticket be renewed indefinitely.
+            Loki: `{app="gateway"} |= "ticket mint"`
+{{- end }}
+{{- if dig "KongJwtAuthWsTicketExpired" "enabled" false $rules }}
+      - alert: KongJwtAuthWsTicketExpired
+        expr: |
+          sum(increase({{ $jwtMetric }}{reason="ws_ticket_expired"}[{{ dig "KongJwtAuthWsTicketExpired" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthWsTicketExpired" "threshold" 10 $rules }}
+        for: {{ dig "KongJwtAuthWsTicketExpired" "for" "0m" $rules }}
+        labels:
+          severity: {{ dig "KongJwtAuthWsTicketExpired" "severity" "warning" $rules }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong JWT auth rejected expired WebSocket tickets"
+          description: |
+            WebSocket upgrade tickets were used outside their validity window. Tickets are deliberately short-lived, so this is disabled by default; enable it while tuning ws_ticket_ttl against real reconnect behaviour.
+            Loki: `{app="gateway"} |= "WebSocket ticket claims validation failed"`
+{{- end }}
+{{- if dig "KongJwtAuthJwtInQueryRejected" "enabled" true $rules }}
+      - alert: KongJwtAuthJwtInQueryRejected
+        expr: |
+          sum(increase({{ $jwtMetric }}{reason="jwt_in_query_rejected"}[{{ dig "KongJwtAuthJwtInQueryRejected" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthJwtInQueryRejected" "threshold" 2 $rules }}
+        for: {{ dig "KongJwtAuthJwtInQueryRejected" "for" "0m" $rules }}
+        labels:
+          severity: {{ dig "KongJwtAuthJwtInQueryRejected" "severity" "warning" $rules }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong JWT auth rejected access tokens sent as query parameters"
+          description: |
+            Access tokens arrived in a query parameter while reject_jwt_in_query is enabled. A sustained rate means a client is still sending its access token in the URL instead of exchanging it for a WebSocket ticket.
+            Loki: `{app="gateway"} |= "access token presented as a query parameter"`
+{{- end }}
 {{- end -}}
 
 {{- define "kongPlugins.appRepoAuthRules" -}}

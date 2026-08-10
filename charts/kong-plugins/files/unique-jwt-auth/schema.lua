@@ -149,6 +149,51 @@ local schema = {
                     type = "string",
                     default = "unique_jwt_auth_security_warnings_total"
                 }
+            }, {
+                ws_ticket_enabled = {
+                    -- description = "Enable the WebSocket upgrade ticket mint endpoint and accept tickets as credentials.",
+                    type = "boolean",
+                    required = true,
+                    default = false
+                }
+            }, {
+                ws_ticket_secret = {
+                    -- description = "HMAC secret used to sign and verify WebSocket upgrade tickets. Required when ws_ticket_enabled is true. Never proxied upstream.",
+                    type = "string",
+                    referenceable = true,
+                    encrypted = true
+                }
+            }, {
+                ws_ticket_ttl = {
+                    -- description = "Lifetime of a WebSocket upgrade ticket in seconds. Must cover the client's reconnect window.",
+                    type = "number",
+                    default = 60,
+                    between = {5, 300}
+                }
+            }, {
+                ws_ticket_issuer = {
+                    -- description = "Issuer claim used to distinguish tickets from access tokens. Must never collide with an entry in allowed_iss.",
+                    type = "string",
+                    default = "kong-ws-ticket"
+                }
+            }, {
+                ws_ticket_audience = {
+                    -- description = "Optional audience claim bound into tickets and enforced on verification.",
+                    type = "string"
+                }
+            }, {
+                ws_ticket_mint_path = {
+                    -- description = "Request path served by the plugin to exchange an access token for a ticket. Never proxied upstream.",
+                    type = "string",
+                    default = "/auth/ws-ticket"
+                }
+            }, {
+                reject_jwt_in_query = {
+                    -- description = "Reject access tokens presented in a query parameter. Enable once all clients send tickets instead.",
+                    type = "boolean",
+                    required = true,
+                    default = false
+                }
             }}
         }
     }}

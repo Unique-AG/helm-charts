@@ -117,6 +117,57 @@ prometheus:
           threshold: 2
           interval: "5m"
 
+        # Fires when sum(increase(kong_unique_jwt_auth_security_warnings_total{reason="ws_ticket_invalid_signature"}[interval])) > threshold.
+        # Measures: count of WebSocket upgrade tickets rejected because the HMAC signature or algorithm did not match.
+        # Tickets are minted by the gateway itself, so a legitimate client cannot produce a bad one — treat any volume as forgery.
+        KongJwtAuthWsTicketInvalidSignature:
+          enabled: true
+          for: "0m"
+          severity: critical
+          threshold: 5
+          interval: "5m"
+
+        # Fires when sum(increase(kong_unique_jwt_auth_security_warnings_total{reason="ws_ticket_bad_audience"}[interval])) > threshold.
+        # Measures: count of tickets presented to a route they were not minted for.
+        # Indicates an attempt to replay a ticket across services, or a client minting against the wrong host.
+        KongJwtAuthWsTicketBadAudience:
+          enabled: true
+          for: "0m"
+          severity: critical
+          threshold: 2
+          interval: "5m"
+
+        # Fires when sum(increase(kong_unique_jwt_auth_security_warnings_total{reason="ws_ticket_mint_bad_source"}[interval])) > threshold.
+        # Measures: count of mint attempts made without an Authorization header, or made using a ticket instead of an access token.
+        # Indicates a client trying to renew a ticket from a ticket, which would defeat its short lifetime.
+        KongJwtAuthWsTicketMintBadSource:
+          enabled: true
+          for: "0m"
+          severity: warning
+          threshold: 2
+          interval: "5m"
+
+        # Fires when sum(increase(kong_unique_jwt_auth_security_warnings_total{reason="ws_ticket_expired"}[interval])) > threshold.
+        # Measures: count of tickets rejected because they were used outside their validity window.
+        # Disabled by default — tickets are deliberately short-lived, so a slow client or a reconnect storm produces these routinely.
+        # Enable temporarily when tuning ws_ticket_ttl against real reconnect behaviour.
+        KongJwtAuthWsTicketExpired:
+          enabled: false
+          for: "0m"
+          severity: warning
+          threshold: 10
+          interval: "5m"
+
+        # Fires when sum(increase(kong_unique_jwt_auth_security_warnings_total{reason="jwt_in_query_rejected"}[interval])) > threshold.
+        # Measures: count of access tokens rejected because they arrived in a query parameter while reject_jwt_in_query is on.
+        # Only meaningful after that flag is enabled; a sustained rate means a client has not been migrated to tickets yet.
+        KongJwtAuthJwtInQueryRejected:
+          enabled: true
+          for: "0m"
+          severity: warning
+          threshold: 2
+          interval: "5m"
+
         # Fires when sum(increase(kong_unique_app_repo_auth_security_warnings_total{reason="api_key_validation_failed"}[interval])) > threshold.
         # Measures: count of requests where the app repository returned a non-200 response for the provided API key.
         # Individual failures are expected (revoked keys, typos). A large sustained surge indicates brute-forcing or a misconfigured client.
