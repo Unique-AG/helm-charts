@@ -149,6 +149,33 @@ local schema = {
                     type = "string",
                     default = "unique_jwt_auth_security_warnings_total"
                 }
+            }, {
+                introspection_enabled = {
+                    -- description = "Validate query-string tokens via Zitadel introspection instead of JWT verification. Intended for WebSocket upgrades that carry an opaque token in uri_param_names. Header and cookie credentials always keep the JWT path.",
+                    type = "boolean",
+                    required = true,
+                    default = false
+                }
+            }, {
+                introspection_client_id = {
+                    -- description = "Client ID of the Zitadel API application used to call the introspection endpoint. Required when introspection_enabled is true.",
+                    type = "string",
+                    referenceable = true
+                }
+            }, {
+                introspection_client_secret = {
+                    -- description = "Client secret of the Zitadel API application used to call the introspection endpoint. Required when introspection_enabled is true.",
+                    type = "string",
+                    referenceable = true,
+                    encrypted = true
+                }
+            }, {
+                introspection_timeout_ms = {
+                    -- description = "Timeout in milliseconds for introspection and well-known discovery requests.",
+                    type = "number",
+                    default = 2000,
+                    between = {100, 10000}
+                }
             }}
         }
     }}

@@ -32,6 +32,18 @@ jobs:
         working-directory: ./charts
         run: ah lint
 
+  # The Lua plugins shipped by kong-plugins are not exercised by `ct install`,
+  # which only renders the ConfigMap that carries them. These specs run the
+  # plugin code itself inside the Kong image it is deployed into.
+  kong-plugin-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Run unique-jwt-auth specs
+        run: ./charts/kong-plugins/tests/unique-jwt-auth/run.sh
+
   chart-test:
     runs-on: ubuntu-latest
     steps:

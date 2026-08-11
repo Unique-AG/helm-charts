@@ -127,6 +127,16 @@ The linting can be invoked manually with the following command:
 ./scripts/lint.sh
 ```
 
+### Testing Kong plugins
+
+`ct` only renders the ConfigMap that carries the Lua plugins in `charts/kong-plugins`; it never executes them. Plugin logic has its own specs, which run inside the Kong image the plugin is deployed into so that they exercise the real OpenResty, `cjson`, `resty.openssl` and `kong.plugins.jwt.jwt_parser`:
+
+```shell
+./charts/kong-plugins/tests/unique-jwt-auth/run.sh
+```
+
+The script needs Docker and takes an optional Kong image tag (defaults to `kong/kong:3.3`). CI runs the same script in the `kong-plugin-test` job. Any change to authentication behaviour should come with a spec.
+
 ### Locally installing charts
 
 Refer to [LOCAL.md](./LOCAL.md) for instructions on how to test charts locally as this is not mandatory for a Contribution. The CI will take care that the charts in their default version are always installable.

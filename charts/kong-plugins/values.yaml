@@ -117,6 +117,26 @@ prometheus:
           threshold: 2
           interval: "5m"
 
+        # Fires when sum(increase(kong_unique_jwt_auth_security_warnings_total{reason="introspection_inactive"}[interval])) > threshold.
+        # Measures: count of query-string tokens rejected because Zitadel introspection returned active=false (revoked, expired, or wrong audience).
+        # Expected after clients revoke WebSocket tokens; a sustained surge may indicate stolen or replayed opaque tokens.
+        KongJwtAuthIntrospectionInactive:
+          enabled: true
+          for: "0m"
+          severity: warning
+          threshold: 10
+          interval: "5m"
+
+        # Fires when sum(increase(kong_unique_jwt_auth_security_warnings_total{reason="introspection_error"}[interval])) > threshold.
+        # Measures: count of introspection failures (transport errors, non-200 responses, misconfiguration).
+        # A non-zero baseline here is an operational problem — Zitadel unreachable or plugin credentials wrong.
+        KongJwtAuthIntrospectionError:
+          enabled: true
+          for: "0m"
+          severity: critical
+          threshold: 5
+          interval: "5m"
+
         # Fires when sum(increase(kong_unique_app_repo_auth_security_warnings_total{reason="api_key_validation_failed"}[interval])) > threshold.
         # Measures: count of requests where the app repository returned a non-200 response for the provided API key.
         # Individual failures are expected (revoked keys, typos). A large sustained surge indicates brute-forcing or a misconfigured client.

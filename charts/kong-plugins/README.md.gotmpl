@@ -67,6 +67,36 @@ config:
 
 With this configuration, both external clients (e.g., browser users) and the internal JWT validation plugin can utilize the same identity provider (IdP) for token issuance and validation without requiring further customization.
 
+#### Opaque Query Tokens (WebSocket upgrades)
+
+The browser WebSocket API cannot set request headers, so a WebSocket handshake has no way to carry `Authorization: Bearer <token>`. The usual workaround — appending the access token to the URL — puts a long-lived JWT into gateway access logs, browser history and `Referer` headers ([CWE-598](https://cwe.mitre.org/data/definitions/598.html)). A JWT also leaks its claims (subject, org, roles) to anyone who can read those logs.
+
+Setting `config.introspection_enabled: true` lets clients put an **opaque** Zitadel token in the query string instead. The plugin validates that token by calling Zitadel's introspection endpoint and stamps the same identity headers as the JWT path. Header and cookie credentials always keep the existing JWT verification path — introspection only applies when the credential arrived via `uri_param_names`.
+
+Clients mint the opaque token with Zitadel's RFC 8693 token exchange grant (audience-restricted to a realtime project), open the WebSocket with `?token=<opaque>`, then revoke the token once the socket is connected. Introspection results are never cached, so a revoked token fails on the next upgrade.
+
+```yaml
+apiVersion: configuration.konghq.com/v1
+kind: KongClusterPlugin
+plugin: unique-jwt-auth
+config:
+  allowed_iss:
+    - https://id.example.com
+  uri_param_names:
+    - token
+  zitadel_project_id: '<ZITADEL_PROJECT_ID>'
+  introspection_enabled: true
+  introspection_client_id: '{vault://env/kong-introspection-client-id}'
+  introspection_client_secret: '{vault://env/kong-introspection-client-secret}'
+  introspection_timeout_ms: 2000
+```
+
+> [!IMPORTANT]
+> `introspection_client_id` / `introspection_client_secret` belong to a Zitadel **API application** in the realtime project. Zitadel only returns `active: true` when that client is part of the token's audience. Supply the secret from a vault — both fields are `referenceable`.
+
+> [!NOTE]
+> Leave `introspection_enabled: false` (the default) on tenants that still send a Zitadel JWT in the query string. Those requests keep the proven JWT path.
+
 ## Prometheus Metrics
 
 Both plugins expose a single Prometheus counter for security warning events when Kong's [Prometheus plugin](https://docs.konghq.com/hub/kong-inc/prometheus/) is enabled. Each rejection that produces a `WARN` log increments the counter with a `reason` label that identifies the failure type.
@@ -90,6 +120,9 @@ Possible `reason` label values:
 | `unexpected_algorithm` | Token `alg` header does not match configured `algorithm` |
 | `claims_validation_failed` | Registered claims (`exp`, `nbf`) failed verification |
 | `max_expiration_exceeded` | Token lifetime exceeds `maximum_expiration` |
+| `token_expired` | Token `exp` claim indicated the token has expired |
+| `introspection_inactive` | Query-string token introspection returned `active: false` |
+| `introspection_error` | Introspection transport failure, non-200 response, or missing credentials |
 
 ### unique-app-repo-auth
 
@@ -125,9 +158,9 @@ The metric will be exposed as `kong_my_custom_auth_warnings_total`.
 
 ### Alerts
 
-The chart ships one `PrometheusRule` alert per rejection reason for both plugins — 12 alerts in total — enabled by default when the `monitoring.coreos.com/v1` CRD is present and `prometheus.enabled` is `true`. Each alert fires when total occurrences across gateway pods within a 5-minute window exceed a configurable threshold (`sum(increase(...[5m])) > threshold`). The default threshold is 2 for most alerts and 50 for `KongAppRepoAuthApiKeyValidationFailed` (since individual API key failures are expected).
+The chart ships a `PrometheusRule` alert for most rejection reasons across both plugins — enabled by default when the `monitoring.coreos.com/v1` CRD is present and `prometheus.enabled` is `true`. Each alert fires when total occurrences across gateway pods within a 5-minute window exceed a configurable threshold (`sum(increase(...[5m])) > threshold`). The default threshold is 2 for most alerts and 50 for `KongAppRepoAuthApiKeyValidationFailed` (since individual API key failures are expected).
 
-Expiration-related alerts are **disabled by default** since token expiry is a normal operational event.
+Expiration-related alerts (`KongJwtAuthTokenExpired`, `KongJwtAuthClaimsValidationFailed`, `KongJwtAuthMaxExpirationExceeded`) are **disabled by default** since token expiry is a normal operational event. `KongJwtAuthIntrospectionInactive` stays enabled at a higher threshold because clients revoke WebSocket tokens after connect — occasional volume is expected, a sustained surge is not.
 
 #### unique-jwt-auth alerts
 
@@ -140,7 +173,10 @@ Expiration-related alerts are **disabled by default** since token expiry is a no
 | `KongJwtAuthMultipleTokens` | `multiple_tokens` | warning | yes |
 | `KongJwtAuthUnrecognizableTokenType` | `unrecognizable_token_type` | warning | yes |
 | `KongJwtAuthClaimsValidationFailed` | `claims_validation_failed` | warning | **no** |
+| `KongJwtAuthTokenExpired` | `token_expired` | warning | **no** |
 | `KongJwtAuthMaxExpirationExceeded` | `max_expiration_exceeded` | warning | **no** |
+| `KongJwtAuthIntrospectionInactive` | `introspection_inactive` | warning | yes |
+| `KongJwtAuthIntrospectionError` | `introspection_error` | critical | yes |
 
 #### unique-app-repo-auth alerts
 

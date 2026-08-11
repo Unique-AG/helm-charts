@@ -5,7 +5,7 @@ maintainers:
   - name: unique-ag
     url: https://unique.ch/
 name: kong-plugins
-version: 2.4.0
+version: 2.5.0
 description: |
   The 'kong-plugins' chart provides a streamlined solution for deploying Kong plugins via ConfigMaps to be used with the Unique Software.
 
@@ -15,4 +15,8 @@ description: |
 annotations:
   artifacthub.io/changes: |
     - kind: added
-      description: log a redacted token fingerprint (sha256, length, segment shape) on malformed JWTs so KongJwtAuthMalformedJwt can be triaged without logging the raw token
+      description: unique-jwt-auth can validate opaque query-string tokens via Zitadel introspection for WebSocket upgrades, so browsers no longer put a long-lived JWT in the URL
+    - kind: added
+      description: two alerts covering inactive introspected tokens and introspection transport or configuration failures
+    - kind: added
+      description: Lua test harness for unique-jwt-auth with a digest-pinned Kong image

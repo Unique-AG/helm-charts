@@ -189,6 +189,40 @@ spec:
             Tokens were rejected because their lifetime exceeds the configured maximum_expiration. This may indicate clients issuing overly long-lived tokens.
             Loki: `{app="gateway"} |= "maximum expiration"`
 {{- end }}
+{{- if dig "KongJwtAuthIntrospectionInactive" "enabled" true $rules }}
+      - alert: KongJwtAuthIntrospectionInactive
+        expr: |
+          sum(increase({{ $jwtMetric }}{reason="introspection_inactive"}[{{ dig "KongJwtAuthIntrospectionInactive" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthIntrospectionInactive" "threshold" 10 $rules }}
+        for: {{ dig "KongJwtAuthIntrospectionInactive" "for" "0m" $rules }}
+        labels:
+          severity: {{ dig "KongJwtAuthIntrospectionInactive" "severity" "warning" $rules }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong JWT auth rejected inactive introspected tokens"
+          description: |
+            Query-string tokens were rejected because Zitadel introspection returned active=false. Clients revoke WebSocket tokens after connect, so occasional volume is expected; a sustained surge may indicate stolen or replayed opaque tokens.
+            Loki: `{app="gateway"} |= "inactive introspected token"`
+{{- end }}
+{{- if dig "KongJwtAuthIntrospectionError" "enabled" true $rules }}
+      - alert: KongJwtAuthIntrospectionError
+        expr: |
+          sum(increase({{ $jwtMetric }}{reason="introspection_error"}[{{ dig "KongJwtAuthIntrospectionError" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthIntrospectionError" "threshold" 5 $rules }}
+        for: {{ dig "KongJwtAuthIntrospectionError" "for" "0m" $rules }}
+        labels:
+          severity: {{ dig "KongJwtAuthIntrospectionError" "severity" "critical" $rules }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong JWT auth failed to introspect query-string tokens"
+          description: |
+            Introspection requests failed (transport error, non-200 response, or missing client credentials). WebSocket upgrades that rely on opaque tokens cannot authenticate until Zitadel or the plugin configuration is healthy.
+            Loki: `{app="gateway"} |= "Introspection"`
+{{- end }}
 {{- end -}}
 
 {{- define "kongPlugins.appRepoAuthRules" -}}

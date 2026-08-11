@@ -4,6 +4,7 @@ local cjson = require "cjson.safe"
 local _exporter_ok, exporter = pcall(require, "kong.plugins.prometheus.exporter")
 
 local zitadel_keys = require "kong.plugins.unique-jwt-auth.zitadel_keys"
+local introspection = require "kong.plugins.unique-jwt-auth.introspection"
 
 local validate_issuer = require"kong.plugins.unique-jwt-auth.validate_issuers".validate_issuer
 
@@ -253,8 +254,7 @@ end
 -- @param conf Plugin configuration
 -- @return token JWT token contained in request (can be a table) or nil
 -- @return err
-local function retrieve_tokens(conf)
-    local token_set = {}
+local function collect_query_tokens(conf, token_set)
     local args = kong.request.get_query()
     for _, v in ipairs(conf.uri_param_names) do
         local token = args[v] -- can be a table
@@ -271,7 +271,9 @@ local function retrieve_tokens(conf)
             end
         end
     end
+end
 
+local function collect_cookie_tokens(conf, token_set)
     local var = ngx.var
     for _, v in ipairs(conf.cookie_names) do
         local cookie = var["cookie_" .. v]
@@ -279,7 +281,9 @@ local function retrieve_tokens(conf)
             token_set[cookie] = true
         end
     end
+end
 
+local function collect_header_tokens(conf, token_set)
     local request_headers = kong.request.get_headers()
     for _, v in ipairs(conf.header_names) do
         local token_header = request_headers[v]
@@ -306,6 +310,13 @@ local function retrieve_tokens(conf)
             end
         end
     end
+end
+
+local function retrieve_tokens(conf)
+    local token_set = {}
+    collect_query_tokens(conf, token_set)
+    collect_cookie_tokens(conf, token_set)
+    collect_header_tokens(conf, token_set)
 
     local tokens_n = 0
     local tokens = {}
@@ -323,6 +334,22 @@ local function retrieve_tokens(conf)
     end
 
     return tokens
+end
+
+-- True when the credential came from a query parameter and nowhere else.
+-- Bearer / cookie credentials keep the existing JWT path; only query-string
+-- tokens (WebSocket upgrades) opt into introspection.
+local function token_came_from_query_only(conf, token)
+    local query_tokens = {}
+    collect_query_tokens(conf, query_tokens)
+    if not query_tokens[token] then
+        return false
+    end
+
+    local other_tokens = {}
+    collect_cookie_tokens(conf, other_tokens)
+    collect_header_tokens(conf, other_tokens)
+    return next(other_tokens) == nil
 end
 
 local function set_consumer(consumer, credential, token)
@@ -447,6 +474,26 @@ local function do_authentication(conf)
                 message = "Unauthorized"
             }
         end
+    end
+
+    -- Opaque query tokens (WebSocket upgrades) are validated via Zitadel
+    -- introspection when enabled. Header and cookie credentials always keep
+    -- the proven JWT path below untouched.
+    if conf.introspection_enabled and token_came_from_query_only(conf, token) then
+        local claims, introspect_err = introspection.introspect(conf, token)
+        if not claims then
+            if introspect_err.reason then
+                inc_warn(conf, introspect_err.reason)
+            end
+            return false, {
+                status = introspect_err.status,
+                message = introspect_err.message
+            }
+        end
+
+        custom_set_unique_headers(conf, claims)
+        kong.ctx.shared.unique_jwt_token = token
+        return true
     end
 
     -- Decode token to find out who the consumer is
