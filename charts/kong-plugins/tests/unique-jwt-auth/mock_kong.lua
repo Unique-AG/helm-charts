@@ -1,16 +1,14 @@
 -------------------------------------------------------------------------------
--- A stand-in for the `kong` PDK global.
+-- A stand-in for the `kong` PDK global, plus a resty.http stub for
+-- introspection specs.
 --
 -- handler.lua captures `local kong = kong` at load time, so the global has to
 -- exist before the plugin is required and must keep the same identity for the
 -- whole run. install() therefore creates it once and reset() swaps the mutable
 -- state behind it between specs.
---
--- Only the surface the plugin actually touches is implemented. Anything the
--- ticket paths do not reach (consumers, cache, worker events) is deliberately
--- absent so that a spec straying into it fails loudly rather than silently
--- passing against a stub.
 -------------------------------------------------------------------------------
+
+local cjson = require "cjson.safe"
 
 local M = {}
 
@@ -28,6 +26,10 @@ local function new_state(options)
         -- When set, kong.cache:get returns this keyset without calling the
         -- loader callback, so HS256 specs can pass Zitadel verification offline.
         cache_keys = options.cache_keys,
+        -- Introspection HTTP stub. Each entry is consumed in order.
+        -- { status, body = table|string, err = string|nil }
+        http_responses = options.http_responses or {},
+        http_calls = {},
         -- observations
         upstream_headers = {},
         cleared_headers = {},
@@ -37,9 +39,42 @@ local function new_state(options)
     }
 end
 
+local function install_http_stub()
+    package.loaded["resty.http"] = {
+        new = function()
+            return {
+                set_timeout = function()
+                end,
+                request_uri = function(_, url, opts)
+                    state.http_calls[#state.http_calls + 1] = {
+                        url = url,
+                        opts = opts
+                    }
+                    local next_response = table.remove(state.http_responses, 1)
+                    if not next_response then
+                        return nil, "http stub has no queued responses"
+                    end
+                    if next_response.err then
+                        return nil, next_response.err
+                    end
+                    local body = next_response.body
+                    if type(body) == "table" then
+                        body = cjson.encode(body)
+                    end
+                    return {
+                        status = next_response.status or 200,
+                        body = body or ""
+                    }
+                end
+            }
+        end
+    }
+end
+
 --- Install the mock as the `kong` global. Call before requiring the plugin.
 function M.install()
     state = new_state()
+    install_http_stub()
 
     local function record_response(status, body, headers)
         state.response = {
@@ -90,19 +125,18 @@ function M.install()
             end
         },
         cache = {
-            get = function(_, _, cb, ...)
+            get = function(_, key, _, cb, ...)
                 if state.cache_keys then
                     return {
                         keys = state.cache_keys,
                         updated_at = ngx.time()
                     }
                 end
-                -- Specs that reach verification without setting cache_keys must
-                -- fail loudly rather than silently skipping the signature check.
+                -- Endpoint discovery and similar loaders go through the callback.
                 if cb then
                     return cb(...)
                 end
-                return nil, "kong.cache stub has no cache_keys and no loader"
+                return nil, "kong.cache stub has no cache_keys and no loader for " .. tostring(key)
             end,
             invalidate = function()
             end

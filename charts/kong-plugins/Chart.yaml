@@ -15,10 +15,8 @@ description: |
 annotations:
   artifacthub.io/changes: |
     - kind: added
-      description: unique-jwt-auth mints short-lived HS256 WebSocket upgrade tickets at ws_ticket_mint_path so browsers no longer have to put an access token in the WebSocket URL
+      description: unique-jwt-auth can validate opaque query-string tokens via Zitadel introspection for WebSocket upgrades, so browsers no longer put a long-lived JWT in the URL
     - kind: added
-      description: unique-jwt-auth accepts tickets as credentials, stamping only x-user-id and x-company-id upstream and clearing every other identity header
+      description: two alerts covering inactive introspected tokens and introspection transport or configuration failures
     - kind: added
-      description: reject_jwt_in_query refuses access tokens presented in a query parameter, to be enabled once all clients send tickets
-    - kind: added
-      description: five alerts covering ticket forgery, audience mismatch, mint abuse, ticket expiry and rejected query-string access tokens
+      description: Lua test harness for unique-jwt-auth with a digest-pinned Kong image

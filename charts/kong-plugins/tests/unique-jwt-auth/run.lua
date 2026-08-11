@@ -3,7 +3,6 @@ package.path = "/spec/?.lua;" .. package.path
 
 local runner = require "runner"
 
-require "ws_ticket_spec"
 require "handler_spec"
 
 os.exit(runner.report())
