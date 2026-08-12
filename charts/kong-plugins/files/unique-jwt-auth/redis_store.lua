@@ -36,7 +36,7 @@ return c
 ]]
 
 local function pool_name(conf)
-  local db = conf.redis_database or 0
+  local db = conf.redis_database or 7
   return conf.redis_host .. ":" .. tostring(conf.redis_port) .. ":" .. tostring(db)
 end
 
@@ -70,7 +70,7 @@ local function connect(conf)
       end
     end
 
-    local db = conf.redis_database or 0
+    local db = conf.redis_database or 7
     if db ~= 0 then
       local res, serr = red:select(db)
       if not res then

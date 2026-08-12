@@ -238,7 +238,7 @@ local schema = {
             }, {
                 redis_database = {
                     type = "number",
-                    default = 0,
+                    default = 7,
                     between = {0, 15}
                 }
             }, {

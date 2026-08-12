@@ -93,10 +93,10 @@ Browsers cannot set an `Authorization` header on a WebSocket handshake, so clien
 | `redis_password` | — | `referenceable` + `encrypted` (Kong vault). |
 | `redis_ssl` / `redis_ssl_verify` | `false` / `true` | TLS to Redis. |
 | `redis_timeout_ms` | `2000` | Connect/read timeout. |
-| `redis_database` | `0` | Logical Redis DB. |
+| `redis_database` | `7` | Logical Redis DB. Claimed in the monorepo Redis registry (`infrastructure/redis.md`). Redis Cluster has no `SELECT` — set `0` and rely on `redis_key_prefix` for isolation. |
 | `redis_key_prefix` | `ws_ticket:` | Key prefix for ticket records and rate-limit counters. |
 
-Redis is required across replicas: `kong.cache` and `lua_shared_dict` are per-pod and cannot enforce single-use. Mint and consume **fail closed** (503) if Redis is unreachable.
+Redis is required across replicas: `kong.cache` and `lua_shared_dict` are per-pod and cannot enforce single-use. Mint and consume **fail closed** (503) if Redis is unreachable. Pick the logical DB from the monorepo Redis registry; DB `7` is registered for Kong WebSocket tickets.
 
 **Example** (enable per WebSocket route after Redis is provisioned):
 
