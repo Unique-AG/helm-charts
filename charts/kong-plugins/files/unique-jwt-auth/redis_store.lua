@@ -7,12 +7,32 @@ local redis = require "resty.redis"
 
 local _M = {}
 
+-- Scope is checked inside the script so a ticket presented with the wrong
+-- scope is rejected WITHOUT being deleted: a misrouted client must not burn
+-- a ticket that is still valid for its intended socket. The sentinel cannot
+-- collide with a stored record because records are always JSON objects.
 local CONSUME_SCRIPT = [[
 local v = redis.call('GET', KEYS[1])
-if v then
-  redis.call('DEL', KEYS[1])
+if not v then
+  return nil
 end
+local ok, rec = pcall(cjson.decode, v)
+if ok and type(rec) == 'table' and rec.scope ~= ARGV[1] then
+  return 'SCOPE_MISMATCH'
+end
+redis.call('DEL', KEYS[1])
 return v
+]]
+
+-- INCR and EXPIRE must be one atomic unit: a failure between the two would
+-- leave a counter without a TTL that never resets, permanently rate-limiting
+-- that subject/IP until the key is deleted by hand.
+local INCR_SCRIPT = [[
+local c = redis.call('INCR', KEYS[1])
+if c == 1 then
+  redis.call('EXPIRE', KEYS[1], ARGV[1])
+end
+return c
 ]]
 
 local function pool_name(conf)
@@ -97,15 +117,16 @@ function _M.put(conf, key, value, ttl)
   return true
 end
 
---- Atomically retrieve and delete a ticket record (EVAL GET+DEL).
--- @return record string, or nil + err (nil/"not found" when missing)
-function _M.consume(conf, key)
+--- Atomically retrieve and delete a ticket record (EVAL GET+scope check+DEL).
+-- A wrong-scope attempt leaves the record in place.
+-- @return record string, or nil + err ("not found" / "scope mismatch" / redis error)
+function _M.consume(conf, key, scope)
   local red, err = connect(conf)
   if not red then
     return nil, err
   end
 
-  local res, serr = red:eval(CONSUME_SCRIPT, 1, prefixed(conf, key))
+  local res, serr = red:eval(CONSUME_SCRIPT, 1, prefixed(conf, key), scope or "")
   keepalive(red)
 
   if serr then
@@ -114,31 +135,26 @@ function _M.consume(conf, key)
   if res == ngx.null or res == nil then
     return nil, "not found"
   end
+  if res == "SCOPE_MISMATCH" then
+    return nil, "scope mismatch"
+  end
   return res
 end
 
 --- Increment a counter with a sliding window TTL. Returns the new count.
+-- Atomic EVAL so the counter can never exist without a TTL.
 function _M.incr_with_expiry(conf, key, window)
   local red, err = connect(conf)
   if not red then
     return nil, err
   end
 
-  local full = prefixed(conf, key)
-  local count, ierr = red:incr(full)
-  if not count then
-    keepalive(red)
+  local count, ierr = red:eval(INCR_SCRIPT, 1, prefixed(conf, key), window)
+  keepalive(red)
+
+  if not count or count == ngx.null then
     return nil, "redis INCR failed: " .. tostring(ierr)
   end
-
-  if count == 1 then
-    local _, eerr = red:expire(full, window)
-    if eerr then
-      kong.log.warn("redis EXPIRE failed: ", eerr)
-    end
-  end
-
-  keepalive(red)
   return count
 end
 

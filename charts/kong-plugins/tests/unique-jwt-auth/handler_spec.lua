@@ -506,7 +506,7 @@ describe("ticket consume", function()
         assert_falsy(retry.response, "ticket should still be valid after non-upgrade rejection")
     end)
 
-    it("rejects a ticket with the wrong scope", function()
+    it("rejects a ticket with the wrong scope without burning it", function()
         local mint_cfg = ticket_conf({
             ticket_scope = "ws:chat"
         })
@@ -525,6 +525,18 @@ describe("ticket consume", function()
         handler:access(consume_cfg)
         assert_equal(401, state.response.status)
         assert_any_contains("scope mismatch", state.warnings)
+
+        -- The misrouted attempt must not have consumed the ticket: it must
+        -- still work on the route with the scope it was minted for.
+        local retry = mock_kong.reset({
+            query = {
+                ticket = ticket
+            },
+            headers = upgrade_headers()
+        })
+        handler:access(mint_cfg)
+        assert_falsy(retry.response, "ticket should still be valid for its own scope")
+        assert_equal("user-123", retry.upstream_headers["x-user-id"])
     end)
 
     it("rejects a disallowed Origin", function()
@@ -624,14 +636,42 @@ describe("atomic consume", function()
         local hash = ws_ticket._sha256_hex(ticket)
         local key = ws_ticket._ticket_key(hash)
 
-        local first, ferr = redis_store.consume(cfg, key)
+        -- A wrong-scope consume must reject WITHOUT deleting the record.
+        local burned, berr = redis_store.consume(cfg, key, "ws:other")
+        assert_falsy(burned, "wrong-scope consume must not return the record")
+        assert_equal("scope mismatch", berr)
+
+        local first, ferr = redis_store.consume(cfg, key, cfg.ticket_scope)
         if not first then
             error("first consume should return the record: " .. tostring(ferr))
         end
 
-        local second, serr = redis_store.consume(cfg, key)
+        local second, serr = redis_store.consume(cfg, key, cfg.ticket_scope)
         assert_falsy(second, "second consume must not return a record")
         assert_equal("not found", serr)
+    end)
+
+    it("sets a TTL on rate-limit counters atomically", function()
+        -- INCR+EXPIRE run as one EVAL: the counter must never exist without
+        -- a TTL, or the rate limit would never reset.
+        local cfg = ticket_conf()
+        flush_redis(cfg)
+
+        local count, err = redis_store.incr_with_expiry(cfg, "mint:ttl-spec", 60)
+        if not count then
+            error("incr_with_expiry failed: " .. tostring(err))
+        end
+        assert_equal(1, count)
+
+        local redis = require "resty.redis"
+        local red = redis:new()
+        red:set_timeout(2000)
+        assert(red:connect(cfg.redis_host, cfg.redis_port))
+        assert(red:select(cfg.redis_database))
+        local ttl = red:ttl(cfg.redis_key_prefix .. "mint:ttl-spec")
+        red:set_keepalive(10000, 10)
+        assert_truthy(ttl and ttl > 0 and ttl <= 60,
+            "rate-limit counter must carry a TTL, got " .. tostring(ttl))
     end)
 
 end)

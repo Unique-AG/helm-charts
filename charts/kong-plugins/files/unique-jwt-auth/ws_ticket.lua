@@ -238,13 +238,23 @@ function _M.consume(conf, ticket)
   end
 
   local hash = sha256_hex(ticket)
-  local raw, err = redis_store.consume(conf, ticket_key(hash))
+  -- Scope is enforced inside the atomic consume script: a wrong-scope attempt
+  -- is rejected without deleting the record, so a misrouted client does not
+  -- burn a ticket that is still valid for its intended socket.
+  local raw, err = redis_store.consume(conf, ticket_key(hash), conf.ticket_scope or "")
   if not raw then
     if err == "not found" then
       return nil, {
         status = 401,
         message = "Unauthorized",
         reason = "ws_ticket_unknown",
+      }
+    end
+    if err == "scope mismatch" then
+      return nil, {
+        status = 401,
+        message = "Unauthorized",
+        reason = "ws_ticket_scope_mismatch",
       }
     end
     return nil, {
@@ -262,14 +272,6 @@ function _M.consume(conf, ticket)
       message = "Unauthorized",
       reason = "ws_ticket_unknown",
       redis_error = derr,
-    }
-  end
-
-  if record.scope ~= conf.ticket_scope then
-    return nil, {
-      status = 401,
-      message = "Unauthorized",
-      reason = "ws_ticket_scope_mismatch",
     }
   end
 

@@ -72,7 +72,7 @@ With this configuration, both external clients (e.g., browser users) and the int
 Browsers cannot set an `Authorization` header on a WebSocket handshake, so clients often put a credential in the query string. When `ws_ticket_enabled` is true, the plugin can exchange a normal Zitadel JWT for a short-lived opaque ticket and accept that ticket on the upgrade:
 
 1. `POST /auth/ticket` with `Authorization: Bearer <access token>` — plugin verifies the JWT (same checks as the normal path), stores `sha256(ticket)` in Redis with identity + scope + TTL, returns `{ticket, expires_in}`. Never proxied upstream. The access token is never stored.
-2. `GET …?ticket=…` with `Upgrade: websocket` — plugin atomically retrieves and deletes the hash (Redis `EVAL`), stamps `x-user-id` / `x-company-id`, strips the query parameter, proxies the upgrade.
+2. `GET …?ticket=…` with `Upgrade: websocket` — plugin atomically checks scope and retrieves-and-deletes the hash (Redis `EVAL`); a wrong-scope attempt is rejected without consuming the ticket. It then stamps `x-user-id` / `x-company-id`, strips the query parameter, proxies the upgrade.
 
 `?token=` (and cookie / `Authorization`) keep working unchanged. The ticket path is selected only when `?ticket=` is present; there is no fallback to the token path on a bad ticket.
 
