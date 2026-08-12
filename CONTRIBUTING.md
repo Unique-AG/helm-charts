@@ -127,6 +127,16 @@ The linting can be invoked manually with the following command:
 ./scripts/lint.sh
 ```
 
+### Testing kong-plugins Lua specs
+
+`ct` only renders the ConfigMaps that carry the Lua plugins; it never executes them. The `unique-jwt-auth` specs run inside the pinned Kong image against a real Redis container:
+
+```shell
+./charts/kong-plugins/tests/unique-jwt-auth/run.sh
+```
+
+CI runs the same script as the `kong-plugin-test` job. Image digests are pinned in `run.sh`; bump tag and digest together when moving Kong or Redis versions.
+
 ### Locally installing charts
 
 Refer to [LOCAL.md](./LOCAL.md) for instructions on how to test charts locally as this is not mandatory for a Contribution. The CI will take care that the charts in their default version are always installable.

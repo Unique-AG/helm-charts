@@ -5,7 +5,7 @@ maintainers:
   - name: unique-ag
     url: https://unique.ch/
 name: kong-plugins
-version: 2.4.0
+version: 2.5.0
 description: |
   The 'kong-plugins' chart provides a streamlined solution for deploying Kong plugins via ConfigMaps to be used with the Unique Software.
 
@@ -15,4 +15,4 @@ description: |
 annotations:
   artifacthub.io/changes: |
     - kind: added
-      description: log a redacted token fingerprint (sha256, length, segment shape) on malformed JWTs so KongJwtAuthMalformedJwt can be triaged without logging the raw token
+      description: mint single-use opaque WebSocket upgrade tickets stored hash-only in Redis (?ticket=), while the existing ?token= path stays unchanged when ws_ticket_enabled is off

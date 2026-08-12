@@ -149,6 +149,103 @@ local schema = {
                     type = "string",
                     default = "unique_jwt_auth_security_warnings_total"
                 }
+            }, {
+                -- Single-use opaque WebSocket tickets (Redis-backed).
+                -- Default false: existing ?token= / cookie / Authorization flow unchanged.
+                ws_ticket_enabled = {
+                    type = "boolean",
+                    default = false,
+                    required = true
+                }
+            }, {
+                ticket_param_name = {
+                    type = "string",
+                    default = "ticket"
+                }
+            }, {
+                ticket_mint_path = {
+                    type = "string",
+                    default = "/auth/ticket"
+                }
+            }, {
+                ticket_ttl = {
+                    type = "number",
+                    default = 20,
+                    between = {5, 60}
+                }
+            }, {
+                -- Route/service binding written into the ticket record and
+                -- checked on consume so a chat ticket cannot open another socket.
+                ticket_scope = {
+                    type = "string"
+                }
+            }, {
+                ticket_allowed_origins = {
+                    type = "set",
+                    elements = {
+                        type = "string"
+                    },
+                    default = {}
+                }
+            }, {
+                -- Max mint requests per authenticated subject per 60s window.
+                -- 0 disables the limit.
+                ticket_mint_rate_limit = {
+                    type = "number",
+                    default = 60,
+                    between = {0, 10000}
+                }
+            }, {
+                -- Max failed consumptions per client IP per 60s window.
+                -- 0 disables the limit.
+                ticket_fail_rate_limit = {
+                    type = "number",
+                    default = 30,
+                    between = {0, 10000}
+                }
+            }, {
+                redis_host = {
+                    type = "string"
+                }
+            }, {
+                redis_port = {
+                    type = "number",
+                    default = 6379,
+                    between = {1, 65535}
+                }
+            }, {
+                redis_ssl = {
+                    type = "boolean",
+                    default = false
+                }
+            }, {
+                redis_ssl_verify = {
+                    type = "boolean",
+                    default = true
+                }
+            }, {
+                redis_password = {
+                    type = "string",
+                    referenceable = true,
+                    encrypted = true
+                }
+            }, {
+                redis_timeout_ms = {
+                    type = "number",
+                    default = 2000,
+                    between = {50, 60000}
+                }
+            }, {
+                redis_database = {
+                    type = "number",
+                    default = 0,
+                    between = {0, 15}
+                }
+            }, {
+                redis_key_prefix = {
+                    type = "string",
+                    default = "ws_ticket:"
+                }
             }}
         }
     }}

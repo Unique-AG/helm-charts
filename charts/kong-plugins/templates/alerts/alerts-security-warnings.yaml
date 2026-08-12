@@ -189,6 +189,91 @@ spec:
             Tokens were rejected because their lifetime exceeds the configured maximum_expiration. This may indicate clients issuing overly long-lived tokens.
             Loki: `{app="gateway"} |= "maximum expiration"`
 {{- end }}
+{{- if dig "KongJwtAuthWsTicketUnknown" "enabled" true $rules }}
+      - alert: KongJwtAuthWsTicketUnknown
+        expr: |
+          sum(increase({{ $jwtMetric }}{reason="ws_ticket_unknown"}[{{ dig "KongJwtAuthWsTicketUnknown" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthWsTicketUnknown" "threshold" 5 $rules }}
+        for: {{ dig "KongJwtAuthWsTicketUnknown" "for" "0m" $rules }}
+        labels:
+          severity: {{ dig "KongJwtAuthWsTicketUnknown" "severity" "warning" $rules }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong JWT auth rejected unknown, expired, or replayed WebSocket tickets"
+          description: |
+            Single-use WebSocket tickets were rejected because they were missing from Redis (forged, expired, or already consumed) or presented outside an upgrade.
+            Loki: `{app="gateway"} |= "Ticket unknown"`
+{{- end }}
+{{- if dig "KongJwtAuthWsTicketScopeMismatch" "enabled" true $rules }}
+      - alert: KongJwtAuthWsTicketScopeMismatch
+        expr: |
+          sum(increase({{ $jwtMetric }}{reason="ws_ticket_scope_mismatch"}[{{ dig "KongJwtAuthWsTicketScopeMismatch" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthWsTicketScopeMismatch" "threshold" 2 $rules }}
+        for: {{ dig "KongJwtAuthWsTicketScopeMismatch" "for" "0m" $rules }}
+        labels:
+          severity: {{ dig "KongJwtAuthWsTicketScopeMismatch" "severity" "critical" $rules }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong JWT auth rejected WebSocket tickets with mismatched scope"
+          description: |
+            A ticket minted for one WebSocket route/service was presented on another. This should not occur with well-behaved clients.
+            Loki: `{app="gateway"} |= "Ticket scope mismatch"`
+{{- end }}
+{{- if dig "KongJwtAuthWsTicketOriginRejected" "enabled" true $rules }}
+      - alert: KongJwtAuthWsTicketOriginRejected
+        expr: |
+          sum(increase({{ $jwtMetric }}{reason="ws_ticket_origin_rejected"}[{{ dig "KongJwtAuthWsTicketOriginRejected" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthWsTicketOriginRejected" "threshold" 2 $rules }}
+        for: {{ dig "KongJwtAuthWsTicketOriginRejected" "for" "0m" $rules }}
+        labels:
+          severity: {{ dig "KongJwtAuthWsTicketOriginRejected" "severity" "warning" $rules }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong JWT auth rejected WebSocket tickets with disallowed Origin"
+          description: |
+            Upgrade requests carrying a ticket were rejected because the Origin header was missing or not on the exact allowlist.
+            Loki: `{app="gateway"} |= "Ticket Origin rejected"`
+{{- end }}
+{{- if dig "KongJwtAuthWsTicketMintRateLimited" "enabled" true $rules }}
+      - alert: KongJwtAuthWsTicketMintRateLimited
+        expr: |
+          sum(increase({{ $jwtMetric }}{reason="ws_ticket_mint_rate_limited"}[{{ dig "KongJwtAuthWsTicketMintRateLimited" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthWsTicketMintRateLimited" "threshold" 10 $rules }}
+        for: {{ dig "KongJwtAuthWsTicketMintRateLimited" "for" "0m" $rules }}
+        labels:
+          severity: {{ dig "KongJwtAuthWsTicketMintRateLimited" "severity" "warning" $rules }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong JWT auth rate-limited WebSocket ticket minting"
+          description: |
+            Authenticated subjects exceeded ticket_mint_rate_limit. A sustained burst may indicate mint abuse.
+            Loki: `{app="gateway"} |= "Ticket mint rate-limited"`
+{{- end }}
+{{- if dig "KongJwtAuthWsTicketRedisError" "enabled" true $rules }}
+      - alert: KongJwtAuthWsTicketRedisError
+        expr: |
+          sum(increase({{ $jwtMetric }}{reason="ws_ticket_redis_error"}[{{ dig "KongJwtAuthWsTicketRedisError" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthWsTicketRedisError" "threshold" 2 $rules }}
+        for: {{ dig "KongJwtAuthWsTicketRedisError" "for" "1m" $rules }}
+        labels:
+          severity: {{ dig "KongJwtAuthWsTicketRedisError" "severity" "critical" $rules }}
+          alertGroup: security-warnings
+          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        annotations:
+          summary: "Kong JWT auth cannot reach Redis for WebSocket tickets"
+          description: |
+            Ticket mint or consume failed closed because Redis was unreachable or returned an error. WebSocket upgrades that require tickets will fail until Redis recovers.
+            Loki: `{app="gateway"} |= "Ticket" |= "Redis error"`
+{{- end }}
 {{- end -}}
 
 {{- define "kongPlugins.appRepoAuthRules" -}}

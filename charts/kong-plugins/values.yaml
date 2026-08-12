@@ -117,6 +117,51 @@ prometheus:
           threshold: 2
           interval: "5m"
 
+        # Fires when sum(increase(kong_unique_jwt_auth_security_warnings_total{reason="ws_ticket_unknown"}[interval])) > threshold.
+        # Measures: forged, expired, replayed, or non-upgrade presentations of single-use WebSocket tickets.
+        KongJwtAuthWsTicketUnknown:
+          enabled: true
+          for: "0m"
+          severity: warning
+          threshold: 5
+          interval: "5m"
+
+        # Fires when sum(increase(kong_unique_jwt_auth_security_warnings_total{reason="ws_ticket_scope_mismatch"}[interval])) > threshold.
+        # Measures: tickets presented on a different route/service than they were minted for.
+        KongJwtAuthWsTicketScopeMismatch:
+          enabled: true
+          for: "0m"
+          severity: critical
+          threshold: 2
+          interval: "5m"
+
+        # Fires when sum(increase(kong_unique_jwt_auth_security_warnings_total{reason="ws_ticket_origin_rejected"}[interval])) > threshold.
+        # Measures: ticket upgrades whose Origin header was missing or not on the exact allowlist.
+        KongJwtAuthWsTicketOriginRejected:
+          enabled: true
+          for: "0m"
+          severity: warning
+          threshold: 2
+          interval: "5m"
+
+        # Fires when sum(increase(kong_unique_jwt_auth_security_warnings_total{reason="ws_ticket_mint_rate_limited"}[interval])) > threshold.
+        # Measures: authenticated subjects that exceeded ticket_mint_rate_limit.
+        KongJwtAuthWsTicketMintRateLimited:
+          enabled: true
+          for: "0m"
+          severity: warning
+          threshold: 10
+          interval: "5m"
+
+        # Fires when sum(increase(kong_unique_jwt_auth_security_warnings_total{reason="ws_ticket_redis_error"}[interval])) > threshold.
+        # Measures: ticket mint/consume failures caused by Redis unavailability (fail-closed).
+        KongJwtAuthWsTicketRedisError:
+          enabled: true
+          for: "1m"
+          severity: critical
+          threshold: 2
+          interval: "5m"
+
         # Fires when sum(increase(kong_unique_app_repo_auth_security_warnings_total{reason="api_key_validation_failed"}[interval])) > threshold.
         # Measures: count of requests where the app repository returned a non-200 response for the provided API key.
         # Individual failures are expected (revoked keys, typos). A large sustained surge indicates brute-forcing or a misconfigured client.
