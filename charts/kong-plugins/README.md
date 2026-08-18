@@ -6,7 +6,7 @@ Refer to each plugins readme section to learn more about them.
 
 Please report any security concerns with the plugins via the [Security Policy](https://github.com/Unique-AG/helm-charts/tree/main?tab=security-ov-file).
 
-![Version: 2.4.0](https://img.shields.io/badge/Version-2.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 2.5.0](https://img.shields.io/badge/Version-2.5.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -15,7 +15,7 @@ Please report any security concerns with the plugins via the [Security Policy](h
 New releases are published as OCI artifacts only. The Helm repository index is frozen and will not receive new versions—see the [repository README](https://github.com/Unique-AG/helm-charts/blob/main/README.md#migrating-to-oci) for migration steps.
 
 ```sh
-helm install my-kong-plugins oci://ghcr.io/unique-ag/helm-charts/kong-plugins --version 2.4.0
+helm install my-kong-plugins oci://ghcr.io/unique-ag/helm-charts/kong-plugins --version 2.5.0
 ```
 
 <details>
@@ -23,7 +23,7 @@ helm install my-kong-plugins oci://ghcr.io/unique-ag/helm-charts/kong-plugins --
 
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-kong-plugins unique/kong-plugins --version 2.4.0
+helm install my-kong-plugins unique/kong-plugins --version 2.5.0
 ```
 
 </details>
@@ -128,7 +128,9 @@ The metric will be exposed as `kong_my_custom_auth_warnings_total`.
 
 ### Alerts
 
-The chart ships one `PrometheusRule` alert per rejection reason for both plugins — 12 alerts in total — enabled by default when the `monitoring.coreos.com/v1` CRD is present and `prometheus.enabled` is `true`. Each alert fires when total occurrences across gateway pods within a 5-minute window exceed a configurable threshold (`sum(increase(...[5m])) > threshold`). The default threshold is 2 for most alerts and 50 for `KongAppRepoAuthApiKeyValidationFailed` (since individual API key failures are expected).
+The chart ships one `PrometheusRule` alert per rejection reason for both plugins — 12 alerts in total — enabled by default when the `monitoring.coreos.com/v1` CRD is present and `prometheus.enabled` is `true`. Each alert fires when total occurrences across gateway pods within a configurable interval exceed a threshold (`sum(increase(...[interval])) > threshold`).
+
+Defaults distinguish attack signals (`invalid_signature`, `unexpected_algorithm` — critical, low thresholds) from dev/client noise (warning, higher thresholds and longer `for` durations). See `prometheus.defaultAlerts.securityWarnings.rules` in `values.yaml` for per-alert settings.
 
 Expiration-related alerts are **disabled by default** since token expiry is a normal operational event.
 
@@ -137,7 +139,7 @@ Expiration-related alerts are **disabled by default** since token expiry is a no
 | Alert | Reason | Severity | Enabled by default |
 |-------|--------|----------|--------------------|
 | `KongJwtAuthInvalidSignature` | `invalid_signature` | critical | yes |
-| `KongJwtAuthDisallowedIssuer` | `disallowed_issuer` | critical | yes |
+| `KongJwtAuthDisallowedIssuer` | `disallowed_issuer` | warning | yes |
 | `KongJwtAuthUnexpectedAlgorithm` | `unexpected_algorithm` | critical | yes |
 | `KongJwtAuthMalformedJwt` | `malformed_jwt` | warning | yes |
 | `KongJwtAuthMultipleTokens` | `multiple_tokens` | warning | yes |
@@ -247,12 +249,12 @@ When `config.ssl_verify` is `true` (the default), the `jwks_uri` returned from t
 | appRepoAuth.name | string | `"kong-plugin-unique-app-repo-auth"` | The name of the app repository auth config map |
 | jwtAuth | object | `{"name":"kong-plugin-unique-jwt-auth"}` | jwtAuth enables the jwt-auth plugin |
 | jwtAuth.name | string | `"kong-plugin-unique-jwt-auth"` | The name of the jwt auth config map |
-| prometheus.defaultAlerts.securityWarnings | object | `{"additionalLabels":{},"appRepoAuthMetricName":"kong_unique_app_repo_auth_security_warnings_total","enabled":true,"jwtAuthMetricName":"kong_unique_jwt_auth_security_warnings_total","rules":{"KongAppRepoAuthApiKeyValidationFailed":{"enabled":true,"for":"5m","interval":"5m","severity":"warning","threshold":50},"KongAppRepoAuthMissingRequiredHeaders":{"enabled":true,"for":"0m","interval":"5m","severity":"warning","threshold":10},"KongAppRepoAuthMultipleTokens":{"enabled":true,"for":"0m","interval":"5m","severity":"warning","threshold":2},"KongAppRepoAuthUnrecognizableTokenType":{"enabled":true,"for":"0m","interval":"5m","severity":"warning","threshold":10},"KongJwtAuthClaimsValidationFailed":{"enabled":false,"for":"0m","interval":"5m","severity":"warning","threshold":2},"KongJwtAuthDisallowedIssuer":{"enabled":true,"for":"0m","interval":"5m","severity":"critical","threshold":2},"KongJwtAuthInvalidSignature":{"enabled":true,"for":"0m","interval":"5m","severity":"critical","threshold":5},"KongJwtAuthMalformedJwt":{"enabled":true,"for":"0m","interval":"5m","severity":"warning","threshold":10},"KongJwtAuthMaxExpirationExceeded":{"enabled":false,"for":"0m","interval":"5m","severity":"warning","threshold":2},"KongJwtAuthMultipleTokens":{"enabled":true,"for":"0m","interval":"5m","severity":"warning","threshold":2},"KongJwtAuthTokenExpired":{"enabled":false,"for":"0m","interval":"5m","severity":"warning","threshold":2},"KongJwtAuthUnexpectedAlgorithm":{"enabled":true,"for":"0m","interval":"5m","severity":"critical","threshold":2},"KongJwtAuthUnrecognizableTokenType":{"enabled":true,"for":"0m","interval":"5m","severity":"warning","threshold":10}}}` | securityWarnings alerts fire on the counters emitted by the kong plugins for each WARN-level security rejection. |
+| prometheus.defaultAlerts.securityWarnings | object | `{"additionalLabels":{},"appRepoAuthMetricName":"kong_unique_app_repo_auth_security_warnings_total","enabled":true,"jwtAuthMetricName":"kong_unique_jwt_auth_security_warnings_total","rules":{"KongAppRepoAuthApiKeyValidationFailed":{"enabled":true,"for":"10m","interval":"15m","severity":"warning","threshold":250},"KongAppRepoAuthMissingRequiredHeaders":{"enabled":true,"for":"5m","interval":"15m","severity":"warning","threshold":50},"KongAppRepoAuthMultipleTokens":{"enabled":true,"for":"5m","interval":"15m","severity":"warning","threshold":10},"KongAppRepoAuthUnrecognizableTokenType":{"enabled":true,"for":"5m","interval":"15m","severity":"warning","threshold":10},"KongJwtAuthClaimsValidationFailed":{"enabled":false,"for":"0m","interval":"5m","severity":"warning","threshold":2},"KongJwtAuthDisallowedIssuer":{"enabled":true,"for":"5m","interval":"15m","severity":"warning","threshold":15},"KongJwtAuthInvalidSignature":{"enabled":true,"for":"0m","interval":"10m","severity":"critical","threshold":3},"KongJwtAuthMalformedJwt":{"enabled":true,"for":"10m","interval":"15m","severity":"warning","threshold":50},"KongJwtAuthMaxExpirationExceeded":{"enabled":false,"for":"0m","interval":"5m","severity":"warning","threshold":2},"KongJwtAuthMultipleTokens":{"enabled":true,"for":"5m","interval":"15m","severity":"warning","threshold":10},"KongJwtAuthTokenExpired":{"enabled":false,"for":"0m","interval":"5m","severity":"warning","threshold":2},"KongJwtAuthUnexpectedAlgorithm":{"enabled":true,"for":"0m","interval":"15m","severity":"critical","threshold":3},"KongJwtAuthUnrecognizableTokenType":{"enabled":true,"for":"5m","interval":"15m","severity":"warning","threshold":10}}}` | securityWarnings alerts fire on the counters emitted by the kong plugins for each WARN-level security rejection. |
 | prometheus.defaultAlerts.securityWarnings.additionalLabels | object | `{}` | Extra labels added to the PrometheusRule metadata and each alert's labels. |
 | prometheus.defaultAlerts.securityWarnings.appRepoAuthMetricName | string | `"kong_unique_app_repo_auth_security_warnings_total"` | Base metric name (without kong_ prefix) used in PromQL for the app-repo-auth plugin. Must match config.security_warning_metric_name on the KongClusterPlugin. |
 | prometheus.defaultAlerts.securityWarnings.enabled | bool | `true` | Enable the security warnings alert group. Requires monitoring.coreos.com/v1 CRDs. |
 | prometheus.defaultAlerts.securityWarnings.jwtAuthMetricName | string | `"kong_unique_jwt_auth_security_warnings_total"` | Base metric name (without kong_ prefix) used in PromQL for the jwt-auth plugin. Must match config.security_warning_metric_name on the KongClusterPlugin. |
-| prometheus.defaultAlerts.securityWarnings.rules | object | `{"KongAppRepoAuthApiKeyValidationFailed":{"enabled":true,"for":"5m","interval":"5m","severity":"warning","threshold":50},"KongAppRepoAuthMissingRequiredHeaders":{"enabled":true,"for":"0m","interval":"5m","severity":"warning","threshold":10},"KongAppRepoAuthMultipleTokens":{"enabled":true,"for":"0m","interval":"5m","severity":"warning","threshold":2},"KongAppRepoAuthUnrecognizableTokenType":{"enabled":true,"for":"0m","interval":"5m","severity":"warning","threshold":10},"KongJwtAuthClaimsValidationFailed":{"enabled":false,"for":"0m","interval":"5m","severity":"warning","threshold":2},"KongJwtAuthDisallowedIssuer":{"enabled":true,"for":"0m","interval":"5m","severity":"critical","threshold":2},"KongJwtAuthInvalidSignature":{"enabled":true,"for":"0m","interval":"5m","severity":"critical","threshold":5},"KongJwtAuthMalformedJwt":{"enabled":true,"for":"0m","interval":"5m","severity":"warning","threshold":10},"KongJwtAuthMaxExpirationExceeded":{"enabled":false,"for":"0m","interval":"5m","severity":"warning","threshold":2},"KongJwtAuthMultipleTokens":{"enabled":true,"for":"0m","interval":"5m","severity":"warning","threshold":2},"KongJwtAuthTokenExpired":{"enabled":false,"for":"0m","interval":"5m","severity":"warning","threshold":2},"KongJwtAuthUnexpectedAlgorithm":{"enabled":true,"for":"0m","interval":"5m","severity":"critical","threshold":2},"KongJwtAuthUnrecognizableTokenType":{"enabled":true,"for":"0m","interval":"5m","severity":"warning","threshold":10}}` | Per-alert configuration. Each entry controls enabled, severity, for, threshold (number of occurrences in interval), and interval (PromQL range window). |
+| prometheus.defaultAlerts.securityWarnings.rules | object | `{"KongAppRepoAuthApiKeyValidationFailed":{"enabled":true,"for":"10m","interval":"15m","severity":"warning","threshold":250},"KongAppRepoAuthMissingRequiredHeaders":{"enabled":true,"for":"5m","interval":"15m","severity":"warning","threshold":50},"KongAppRepoAuthMultipleTokens":{"enabled":true,"for":"5m","interval":"15m","severity":"warning","threshold":10},"KongAppRepoAuthUnrecognizableTokenType":{"enabled":true,"for":"5m","interval":"15m","severity":"warning","threshold":10},"KongJwtAuthClaimsValidationFailed":{"enabled":false,"for":"0m","interval":"5m","severity":"warning","threshold":2},"KongJwtAuthDisallowedIssuer":{"enabled":true,"for":"5m","interval":"15m","severity":"warning","threshold":15},"KongJwtAuthInvalidSignature":{"enabled":true,"for":"0m","interval":"10m","severity":"critical","threshold":3},"KongJwtAuthMalformedJwt":{"enabled":true,"for":"10m","interval":"15m","severity":"warning","threshold":50},"KongJwtAuthMaxExpirationExceeded":{"enabled":false,"for":"0m","interval":"5m","severity":"warning","threshold":2},"KongJwtAuthMultipleTokens":{"enabled":true,"for":"5m","interval":"15m","severity":"warning","threshold":10},"KongJwtAuthTokenExpired":{"enabled":false,"for":"0m","interval":"5m","severity":"warning","threshold":2},"KongJwtAuthUnexpectedAlgorithm":{"enabled":true,"for":"0m","interval":"15m","severity":"critical","threshold":3},"KongJwtAuthUnrecognizableTokenType":{"enabled":true,"for":"5m","interval":"15m","severity":"warning","threshold":10}}` | Per-alert configuration. Each entry controls enabled, severity, for, threshold (number of occurrences in interval), and interval (PromQL range window). |
 | prometheus.enabled | bool | `true` | Enable Prometheus integration. When false no PrometheusRule resources are rendered. |
 
 ----------------------------------------------
