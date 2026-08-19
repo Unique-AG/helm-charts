@@ -14,5 +14,7 @@ description: |
   Please report any security concerns with the plugins via the [Security Policy](https://github.com/Unique-AG/helm-charts/tree/main?tab=security-ov-file).
 annotations:
   artifacthub.io/changes: |
+    - kind: changed
+      description: retune security warning alert defaults to reduce dev-noise misfires while keeping attack signals critical
     - kind: added
       description: mint single-use opaque WebSocket upgrade tickets stored hash-only in Redis (?ticket=), while the existing ?token= path stays unchanged when ws_ticket_enabled is off

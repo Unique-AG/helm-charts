@@ -39,7 +39,7 @@ spec:
 {{- if dig "KongJwtAuthInvalidSignature" "enabled" true $rules }}
       - alert: KongJwtAuthInvalidSignature
         expr: |
-          sum(increase({{ $jwtMetric }}{reason="invalid_signature"}[{{ dig "KongJwtAuthInvalidSignature" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthInvalidSignature" "threshold" 2 $rules }}
+          sum(increase({{ $jwtMetric }}{reason="invalid_signature"}[{{ dig "KongJwtAuthInvalidSignature" "interval" "10m" $rules }}])) > {{ dig "KongJwtAuthInvalidSignature" "threshold" 3 $rules }}
         for: {{ dig "KongJwtAuthInvalidSignature" "for" "0m" $rules }}
         labels:
           severity: {{ dig "KongJwtAuthInvalidSignature" "severity" "critical" $rules }}
@@ -56,10 +56,10 @@ spec:
 {{- if dig "KongJwtAuthDisallowedIssuer" "enabled" true $rules }}
       - alert: KongJwtAuthDisallowedIssuer
         expr: |
-          sum(increase({{ $jwtMetric }}{reason="disallowed_issuer"}[{{ dig "KongJwtAuthDisallowedIssuer" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthDisallowedIssuer" "threshold" 2 $rules }}
-        for: {{ dig "KongJwtAuthDisallowedIssuer" "for" "0m" $rules }}
+          sum(increase({{ $jwtMetric }}{reason="disallowed_issuer"}[{{ dig "KongJwtAuthDisallowedIssuer" "interval" "15m" $rules }}])) > {{ dig "KongJwtAuthDisallowedIssuer" "threshold" 15 $rules }}
+        for: {{ dig "KongJwtAuthDisallowedIssuer" "for" "5m" $rules }}
         labels:
-          severity: {{ dig "KongJwtAuthDisallowedIssuer" "severity" "critical" $rules }}
+          severity: {{ dig "KongJwtAuthDisallowedIssuer" "severity" "warning" $rules }}
           alertGroup: security-warnings
           {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
           {{- toYaml . | nindent 10 }}
@@ -73,7 +73,7 @@ spec:
 {{- if dig "KongJwtAuthUnexpectedAlgorithm" "enabled" true $rules }}
       - alert: KongJwtAuthUnexpectedAlgorithm
         expr: |
-          sum(increase({{ $jwtMetric }}{reason="unexpected_algorithm"}[{{ dig "KongJwtAuthUnexpectedAlgorithm" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthUnexpectedAlgorithm" "threshold" 2 $rules }}
+          sum(increase({{ $jwtMetric }}{reason="unexpected_algorithm"}[{{ dig "KongJwtAuthUnexpectedAlgorithm" "interval" "15m" $rules }}])) > {{ dig "KongJwtAuthUnexpectedAlgorithm" "threshold" 3 $rules }}
         for: {{ dig "KongJwtAuthUnexpectedAlgorithm" "for" "0m" $rules }}
         labels:
           severity: {{ dig "KongJwtAuthUnexpectedAlgorithm" "severity" "critical" $rules }}
@@ -90,8 +90,8 @@ spec:
 {{- if dig "KongJwtAuthMalformedJwt" "enabled" true $rules }}
       - alert: KongJwtAuthMalformedJwt
         expr: |
-          sum(increase({{ $jwtMetric }}{reason="malformed_jwt"}[{{ dig "KongJwtAuthMalformedJwt" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthMalformedJwt" "threshold" 2 $rules }}
-        for: {{ dig "KongJwtAuthMalformedJwt" "for" "0m" $rules }}
+          sum(increase({{ $jwtMetric }}{reason="malformed_jwt"}[{{ dig "KongJwtAuthMalformedJwt" "interval" "15m" $rules }}])) > {{ dig "KongJwtAuthMalformedJwt" "threshold" 50 $rules }}
+        for: {{ dig "KongJwtAuthMalformedJwt" "for" "10m" $rules }}
         labels:
           severity: {{ dig "KongJwtAuthMalformedJwt" "severity" "warning" $rules }}
           alertGroup: security-warnings
@@ -107,8 +107,8 @@ spec:
 {{- if dig "KongJwtAuthMultipleTokens" "enabled" true $rules }}
       - alert: KongJwtAuthMultipleTokens
         expr: |
-          sum(increase({{ $jwtMetric }}{reason="multiple_tokens"}[{{ dig "KongJwtAuthMultipleTokens" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthMultipleTokens" "threshold" 2 $rules }}
-        for: {{ dig "KongJwtAuthMultipleTokens" "for" "0m" $rules }}
+          sum(increase({{ $jwtMetric }}{reason="multiple_tokens"}[{{ dig "KongJwtAuthMultipleTokens" "interval" "15m" $rules }}])) > {{ dig "KongJwtAuthMultipleTokens" "threshold" 10 $rules }}
+        for: {{ dig "KongJwtAuthMultipleTokens" "for" "5m" $rules }}
         labels:
           severity: {{ dig "KongJwtAuthMultipleTokens" "severity" "warning" $rules }}
           alertGroup: security-warnings
@@ -124,8 +124,8 @@ spec:
 {{- if dig "KongJwtAuthUnrecognizableTokenType" "enabled" true $rules }}
       - alert: KongJwtAuthUnrecognizableTokenType
         expr: |
-          sum(increase({{ $jwtMetric }}{reason="unrecognizable_token_type"}[{{ dig "KongJwtAuthUnrecognizableTokenType" "interval" "5m" $rules }}])) > {{ dig "KongJwtAuthUnrecognizableTokenType" "threshold" 2 $rules }}
-        for: {{ dig "KongJwtAuthUnrecognizableTokenType" "for" "0m" $rules }}
+          sum(increase({{ $jwtMetric }}{reason="unrecognizable_token_type"}[{{ dig "KongJwtAuthUnrecognizableTokenType" "interval" "15m" $rules }}])) > {{ dig "KongJwtAuthUnrecognizableTokenType" "threshold" 10 $rules }}
+        for: {{ dig "KongJwtAuthUnrecognizableTokenType" "for" "5m" $rules }}
         labels:
           severity: {{ dig "KongJwtAuthUnrecognizableTokenType" "severity" "warning" $rules }}
           alertGroup: security-warnings
@@ -282,8 +282,8 @@ spec:
 {{- if dig "KongAppRepoAuthApiKeyValidationFailed" "enabled" true $rules }}
       - alert: KongAppRepoAuthApiKeyValidationFailed
         expr: |
-          sum(increase({{ $appRepoMetric }}{reason="api_key_validation_failed"}[{{ dig "KongAppRepoAuthApiKeyValidationFailed" "interval" "5m" $rules }}])) > {{ dig "KongAppRepoAuthApiKeyValidationFailed" "threshold" 50 $rules }}
-        for: {{ dig "KongAppRepoAuthApiKeyValidationFailed" "for" "5m" $rules }}
+          sum(increase({{ $appRepoMetric }}{reason="api_key_validation_failed"}[{{ dig "KongAppRepoAuthApiKeyValidationFailed" "interval" "15m" $rules }}])) > {{ dig "KongAppRepoAuthApiKeyValidationFailed" "threshold" 250 $rules }}
+        for: {{ dig "KongAppRepoAuthApiKeyValidationFailed" "for" "10m" $rules }}
         labels:
           severity: {{ dig "KongAppRepoAuthApiKeyValidationFailed" "severity" "warning" $rules }}
           alertGroup: security-warnings
@@ -299,8 +299,8 @@ spec:
 {{- if dig "KongAppRepoAuthMultipleTokens" "enabled" true $rules }}
       - alert: KongAppRepoAuthMultipleTokens
         expr: |
-          sum(increase({{ $appRepoMetric }}{reason="multiple_tokens"}[{{ dig "KongAppRepoAuthMultipleTokens" "interval" "5m" $rules }}])) > {{ dig "KongAppRepoAuthMultipleTokens" "threshold" 2 $rules }}
-        for: {{ dig "KongAppRepoAuthMultipleTokens" "for" "0m" $rules }}
+          sum(increase({{ $appRepoMetric }}{reason="multiple_tokens"}[{{ dig "KongAppRepoAuthMultipleTokens" "interval" "15m" $rules }}])) > {{ dig "KongAppRepoAuthMultipleTokens" "threshold" 10 $rules }}
+        for: {{ dig "KongAppRepoAuthMultipleTokens" "for" "5m" $rules }}
         labels:
           severity: {{ dig "KongAppRepoAuthMultipleTokens" "severity" "warning" $rules }}
           alertGroup: security-warnings
@@ -316,8 +316,8 @@ spec:
 {{- if dig "KongAppRepoAuthUnrecognizableTokenType" "enabled" true $rules }}
       - alert: KongAppRepoAuthUnrecognizableTokenType
         expr: |
-          sum(increase({{ $appRepoMetric }}{reason="unrecognizable_token_type"}[{{ dig "KongAppRepoAuthUnrecognizableTokenType" "interval" "5m" $rules }}])) > {{ dig "KongAppRepoAuthUnrecognizableTokenType" "threshold" 2 $rules }}
-        for: {{ dig "KongAppRepoAuthUnrecognizableTokenType" "for" "0m" $rules }}
+          sum(increase({{ $appRepoMetric }}{reason="unrecognizable_token_type"}[{{ dig "KongAppRepoAuthUnrecognizableTokenType" "interval" "15m" $rules }}])) > {{ dig "KongAppRepoAuthUnrecognizableTokenType" "threshold" 10 $rules }}
+        for: {{ dig "KongAppRepoAuthUnrecognizableTokenType" "for" "5m" $rules }}
         labels:
           severity: {{ dig "KongAppRepoAuthUnrecognizableTokenType" "severity" "warning" $rules }}
           alertGroup: security-warnings
@@ -333,8 +333,8 @@ spec:
 {{- if dig "KongAppRepoAuthMissingRequiredHeaders" "enabled" true $rules }}
       - alert: KongAppRepoAuthMissingRequiredHeaders
         expr: |
-          sum(increase({{ $appRepoMetric }}{reason="missing_required_headers"}[{{ dig "KongAppRepoAuthMissingRequiredHeaders" "interval" "5m" $rules }}])) > {{ dig "KongAppRepoAuthMissingRequiredHeaders" "threshold" 2 $rules }}
-        for: {{ dig "KongAppRepoAuthMissingRequiredHeaders" "for" "0m" $rules }}
+          sum(increase({{ $appRepoMetric }}{reason="missing_required_headers"}[{{ dig "KongAppRepoAuthMissingRequiredHeaders" "interval" "15m" $rules }}])) > {{ dig "KongAppRepoAuthMissingRequiredHeaders" "threshold" 50 $rules }}
+        for: {{ dig "KongAppRepoAuthMissingRequiredHeaders" "for" "5m" $rules }}
         labels:
           severity: {{ dig "KongAppRepoAuthMissingRequiredHeaders" "severity" "warning" $rules }}
           alertGroup: security-warnings

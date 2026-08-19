@@ -182,7 +182,9 @@ The metric will be exposed as `kong_my_custom_auth_warnings_total`.
 
 ### Alerts
 
-The chart ships one `PrometheusRule` alert per rejection reason for both plugins — 18 alerts in total — enabled by default when the `monitoring.coreos.com/v1` CRD is present and `prometheus.enabled` is `true`. Each alert fires when total occurrences across gateway pods within a 5-minute window exceed a configurable threshold (`sum(increase(...[5m])) > threshold`). The default threshold is 2 for most alerts and 50 for `KongAppRepoAuthApiKeyValidationFailed` (since individual API key failures are expected).
+The chart ships one `PrometheusRule` alert per rejection reason for both plugins — 18 alerts in total — enabled by default when the `monitoring.coreos.com/v1` CRD is present and `prometheus.enabled` is `true`. Each alert fires when total occurrences across gateway pods within a configurable interval exceed a threshold (`sum(increase(...[interval])) > threshold`).
+
+Defaults distinguish attack signals (`invalid_signature`, `unexpected_algorithm` — critical, low thresholds) from dev/client noise (warning, higher thresholds and longer `for` durations). See `prometheus.defaultAlerts.securityWarnings.rules` in `values.yaml` for per-alert settings.
 
 Expiration-related alerts are **disabled by default** since token expiry is a normal operational event.
 
@@ -191,7 +193,7 @@ Expiration-related alerts are **disabled by default** since token expiry is a no
 | Alert | Reason | Severity | Enabled by default |
 |-------|--------|----------|--------------------|
 | `KongJwtAuthInvalidSignature` | `invalid_signature` | critical | yes |
-| `KongJwtAuthDisallowedIssuer` | `disallowed_issuer` | critical | yes |
+| `KongJwtAuthDisallowedIssuer` | `disallowed_issuer` | warning | yes |
 | `KongJwtAuthUnexpectedAlgorithm` | `unexpected_algorithm` | critical | yes |
 | `KongJwtAuthMalformedJwt` | `malformed_jwt` | warning | yes |
 | `KongJwtAuthMultipleTokens` | `multiple_tokens` | warning | yes |
