@@ -261,7 +261,51 @@ end)
 
 describe("ticket mint", function()
 
-    it("rejects mint without Authorization Bearer", function()
+    it("matches only POST requests to the configured mint path", function()
+        local cfg = ticket_conf({
+            ticket_mint_path = "/custom/ticket"
+        })
+
+        mock_kong.reset({
+            method = "POST",
+            path = "/custom/ticket"
+        })
+        assert_truthy(ws_ticket.is_mint_request(cfg))
+
+        mock_kong.reset({
+            method = "GET",
+            path = "/custom/ticket"
+        })
+        assert_falsy(ws_ticket.is_mint_request(cfg))
+
+        mock_kong.reset({
+            method = "POST",
+            path = "/auth/ticket"
+        })
+        assert_falsy(ws_ticket.is_mint_request(cfg))
+    end)
+
+    it("restricts mint authentication to the Authorization header", function()
+        local cfg = ticket_conf({
+            uri_param_names = {"token"},
+            cookie_names = {"session"},
+            header_names = {"authorization", "x-access-token"}
+        })
+        local mint_cfg = ws_ticket.mint_auth_conf(cfg)
+
+        assert_equal(0, #mint_cfg.uri_param_names)
+        assert_equal(0, #mint_cfg.cookie_names)
+        assert_equal(1, #mint_cfg.header_names)
+        assert_equal("authorization", mint_cfg.header_names[1])
+        assert_equal(cfg.ticket_scope, mint_cfg.ticket_scope)
+
+        -- The route's normal token configuration is not mutated.
+        assert_equal("token", cfg.uri_param_names[1])
+        assert_equal("session", cfg.cookie_names[1])
+        assert_equal("x-access-token", cfg.header_names[2])
+    end)
+
+    it("rejects mint when the JWT is supplied only as a query parameter", function()
         flush_redis(ticket_conf())
         local state = mock_kong.reset({
             method = "POST",
@@ -275,7 +319,6 @@ describe("ticket mint", function()
         handler:access(ticket_conf())
 
         assert_equal(401, state.response.status)
-        assert_any_contains("missing Authorization Bearer", state.warnings)
     end)
 
     it("rejects mint with an invalid JWT", function()
@@ -424,6 +467,20 @@ describe("ticket consume", function()
         assert_equal(200, state.response.status, "mint for consume setup")
         return state.response.body.ticket
     end
+
+    it("reads the configured ticket query parameter", function()
+        local cfg = ticket_conf({
+            ticket_param_name = "ws_ticket"
+        })
+        mock_kong.reset({
+            query = {
+                ticket = "legacy-name",
+                ws_ticket = "configured-name"
+            }
+        })
+
+        assert_equal("configured-name", ws_ticket.get_ticket_from_request(cfg))
+    end)
 
     it("accepts a mint → upgrade round trip and strips the ticket param", function()
         local cfg = ticket_conf()

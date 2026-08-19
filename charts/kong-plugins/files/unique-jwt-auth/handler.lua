@@ -417,85 +417,6 @@ end
 -- Now again module names which also exist in original "jwt" kong OSS plugin
 -------------------------------------------------------------------------------
 
--------------------------------------------------------------------------------
--- Shared Zitadel JWT verification used by the normal auth path and by ticket
--- minting. Same checks, same order, same error responses — extracted so the
--- two call sites cannot drift. Does not match consumers or stamp headers.
---
--- @return jwt on success; nil, err_table on failure
---   err_table = { status, message } (or a kong.response.exit return value
---   from custom_validate_token_signature)
--------------------------------------------------------------------------------
-local function verify_zitadel_token(conf, token)
-    local jwt, err = jwt_decoder:new(token)
-    if err then
-        kong.log.warn("Malformed JWT received from " .. (kong.client.get_forwarded_ip() or "unknown") .. ": " .. tostring(err) .. " " .. token_fingerprint(token))
-        inc_warn(conf, "malformed_jwt")
-        return nil, {
-            status = 401,
-            message = "Unauthorized"
-        }
-    end
-
-    local claims = jwt.claims
-
-    kong.log.debug("JWT issuer: " .. tostring(claims.iss) .. ", subject: " .. tostring(claims.sub))
-
-    local matched_iss = validate_issuer(conf.allowed_iss, jwt.claims)
-    if not matched_iss then
-        kong.log.warn("Rejected token with disallowed issuer: " .. tostring(claims.iss) .. " from " .. (kong.client.get_forwarded_ip() or "unknown"))
-        inc_warn(conf, "disallowed_issuer")
-        return nil, {
-            status = 401,
-            message = "Unauthorized"
-        }
-    end
-
-    local algorithm = conf.algorithm
-
-    if jwt.header.alg ~= algorithm then
-        kong.log.warn("Rejected token with unexpected algorithm: " .. tostring(jwt.header.alg) .. " (expected " .. algorithm .. ") from " .. (kong.client.get_forwarded_ip() or "unknown"))
-        inc_warn(conf, "unexpected_algorithm")
-        return nil, {
-            status = 403,
-            message = "Forbidden"
-        }
-    end
-
-    err = custom_validate_token_signature(conf, jwt, matched_iss)
-    if err ~= nil then
-        return nil, err
-    end
-
-    local ok_claims, errors = jwt:verify_registered_claims(conf.claims_to_verify)
-    if not ok_claims then
-        kong.log.warn("Token claims validation failed from " .. (kong.client.get_forwarded_ip() or "unknown") .. ": " .. custom_helper_table_to_string(errors))
-        local reason = "claims_validation_failed"
-        if type(errors) == "table" and errors.exp and tostring(errors.exp):find("expired") then
-            reason = "token_expired"
-        end
-        inc_warn(conf, reason)
-        return nil, {
-            status = 401,
-            message = "Unauthorized"
-        }
-    end
-
-    if conf.maximum_expiration ~= nil and conf.maximum_expiration > 0 then
-        local ok, max_errors = jwt:check_maximum_expiration(conf.maximum_expiration)
-        if not ok then
-            kong.log.warn("Token maximum expiration check failed from " .. (kong.client.get_forwarded_ip() or "unknown") .. ": " .. custom_helper_table_to_string(max_errors))
-            inc_warn(conf, "max_expiration_exceeded")
-            return nil, {
-                status = 403,
-                message = "Forbidden"
-            }
-        end
-    end
-
-    return jwt
-end
-
 local function do_authentication(conf)
     local token, err = retrieve_tokens(conf)
     if err then
@@ -529,16 +450,84 @@ local function do_authentication(conf)
         end
     end
 
-    local jwt, verr = verify_zitadel_token(conf, token)
-    if not jwt then
-        return false, verr
+    -- Decode token to find out who the consumer is
+    local jwt, err = jwt_decoder:new(token)
+    if err then
+        kong.log.warn("Malformed JWT received from " .. (kong.client.get_forwarded_ip() or "unknown") .. ": " .. tostring(err) .. " " .. token_fingerprint(token))
+        inc_warn(conf, "malformed_jwt")
+        return false, {
+            status = 401,
+            message = "Unauthorized"
+        }
+    end
+
+    local claims = jwt.claims
+    local header = jwt.header
+
+    kong.log.debug("JWT issuer: " .. tostring(claims.iss) .. ", subject: " .. tostring(claims.sub))
+
+    -- Verify that the issuer is allowed
+    local matched_iss = validate_issuer(conf.allowed_iss, jwt.claims)
+    if not matched_iss then
+        kong.log.warn("Rejected token with disallowed issuer: " .. tostring(claims.iss) .. " from " .. (kong.client.get_forwarded_ip() or "unknown"))
+        inc_warn(conf, "disallowed_issuer")
+        return false, {
+            status = 401,
+            message = "Unauthorized"
+        }
+    end
+
+    local algorithm = conf.algorithm
+
+    -- Verify "alg"
+    if jwt.header.alg ~= algorithm then
+        kong.log.warn("Rejected token with unexpected algorithm: " .. tostring(jwt.header.alg) .. " (expected " .. algorithm .. ") from " .. (kong.client.get_forwarded_ip() or "unknown"))
+        inc_warn(conf, "unexpected_algorithm")
+        return false, {
+            status = 403,
+            message = "Forbidden"
+        }
+    end
+
+    -- Now verify the JWT signature
+    err = custom_validate_token_signature(conf, jwt, matched_iss)
+    if err ~= nil then
+        return false, err
+    end
+
+    -- Verify the JWT registered claims
+    local ok_claims, errors = jwt:verify_registered_claims(conf.claims_to_verify)
+    if not ok_claims then
+        kong.log.warn("Token claims validation failed from " .. (kong.client.get_forwarded_ip() or "unknown") .. ": " .. custom_helper_table_to_string(errors))
+        local reason = "claims_validation_failed"
+        if type(errors) == "table" and errors.exp and tostring(errors.exp):find("expired") then
+            reason = "token_expired"
+        end
+        inc_warn(conf, reason)
+        return false, {
+            status = 401,
+            message = "Unauthorized"
+        }
+    end
+
+    -- Verify the JWT registered claims
+    if conf.maximum_expiration ~= nil and conf.maximum_expiration > 0 then
+        local ok, errors = jwt:check_maximum_expiration(conf.maximum_expiration)
+        if not ok then
+            kong.log.warn("Token maximum expiration check failed from " .. (kong.client.get_forwarded_ip() or "unknown") .. ": " .. custom_helper_table_to_string(errors))
+            inc_warn(conf, "max_expiration_exceeded")
+            return false, {
+                status = 403,
+                message = "Forbidden"
+            }
+        end
     end
 
     -- Match consumer
     if conf.consumer_match then
-        local ok, merr = custom_match_consumer(conf, jwt)
+        local ok, err = custom_match_consumer(conf, jwt)
         if not ok then
-            return ok, merr
+            return ok, err
         end
     end
 
@@ -548,138 +537,19 @@ local function do_authentication(conf)
     return true
 end
 
--------------------------------------------------------------------------------
--- Mint a single-use opaque WebSocket ticket.
--- Answers the request directly — never proxied upstream.
--------------------------------------------------------------------------------
-local function mint_ws_ticket(conf)
-    if not conf.redis_host or conf.redis_host == "" then
-        kong.log.err("ws_ticket_enabled but redis_host is not configured")
-        inc_warn(conf, "ws_ticket_redis_error")
-        return kong.response.exit(503, {
-            message = "Service Unavailable"
-        })
-    end
-    if not conf.ticket_scope or conf.ticket_scope == "" then
-        kong.log.err("ws_ticket_enabled but ticket_scope is not configured")
-        return kong.response.exit(500, {
-            message = "An unexpected error occurred"
-        })
-    end
-
-    local token = ws_ticket.bearer_from_authorization()
-    if not token then
-        kong.log.warn("Ticket mint rejected: missing Authorization Bearer from " .. (kong.client.get_forwarded_ip() or "unknown"))
-        return kong.response.exit(401, {
-            message = "Unauthorized"
-        })
-    end
-
-    local jwt, verr = verify_zitadel_token(conf, token)
-    if not jwt then
-        if type(verr) == "table" and verr.status then
-            return kong.response.exit(verr.status, {
-                message = verr.message or "Unauthorized"
-            })
-        end
-        -- custom_validate_token_signature already exited
-        return verr
-    end
-
-    local ticket, result = ws_ticket.mint(conf, jwt.claims)
-    if not ticket then
-        local err = result
-        if err.reason then
-            if err.reason == "ws_ticket_mint_missing_claims" then
-                kong.log.warn("Ticket mint rejected: missing claim " .. tostring(err.claim) .. " from " .. (kong.client.get_forwarded_ip() or "unknown"))
-            elseif err.reason == "ws_ticket_mint_rate_limited" then
-                kong.log.warn("Ticket mint rate-limited for subject from " .. (kong.client.get_forwarded_ip() or "unknown"))
-                inc_warn(conf, err.reason)
-            elseif err.reason == "ws_ticket_redis_error" then
-                kong.log.err("Ticket mint Redis error: ", err.redis_error)
-                inc_warn(conf, err.reason)
-            else
-                kong.log.err("Ticket mint failed: ", err.reason, " ", err.redis_error)
-            end
-        end
-        return kong.response.exit(err.status or 500, {
-            message = err.message or "An unexpected error occurred"
-        })
-    end
-
-    return kong.response.exit(200, {
-        ticket = ticket,
-        expires_in = result
-    }, {
-        ["Cache-Control"] = "no-store",
-        ["Content-Type"] = "application/json"
-    })
+local function exit_auth_error(err)
+    return kong.response.exit(err.status, err.errors or {
+        message = err.message
+    }, err.headers)
 end
 
--------------------------------------------------------------------------------
--- Consume a single-use opaque ticket from ?ticket= on a WebSocket upgrade.
--- Exclusive path: no fallback to the token path on failure.
--------------------------------------------------------------------------------
-local function consume_ws_ticket(conf, ticket)
-    if not conf.redis_host or conf.redis_host == "" then
-        kong.log.err("ws_ticket_enabled but redis_host is not configured")
-        inc_warn(conf, "ws_ticket_redis_error")
-        return kong.response.exit(503, {
-            message = "Service Unavailable"
-        })
+local function exit_ws_ticket_error(conf, err)
+    if err.warning_reason then
+        inc_warn(conf, err.warning_reason)
     end
-
-    if not ws_ticket.is_websocket_upgrade() then
-        kong.log.warn("Ticket presented on non-upgrade request from " .. (kong.client.get_forwarded_ip() or "unknown"))
-        inc_warn(conf, "ws_ticket_unknown")
-        return kong.response.exit(401, {
-            message = "Unauthorized"
-        })
-    end
-
-    local origin_ok, origin_why = ws_ticket.origin_allowed(conf)
-    if not origin_ok then
-        kong.log.warn("Ticket Origin rejected (" .. tostring(origin_why) .. ") from " .. (kong.client.get_forwarded_ip() or "unknown"))
-        inc_warn(conf, "ws_ticket_origin_rejected")
-        return kong.response.exit(401, {
-            message = "Unauthorized"
-        })
-    end
-
-    local record, err = ws_ticket.consume(conf, ticket)
-    if not record then
-        local limited, lreason = ws_ticket.fail_rate_limited(conf)
-        if limited then
-            if lreason == "ws_ticket_redis_error" then
-                inc_warn(conf, "ws_ticket_redis_error")
-                return kong.response.exit(503, {
-                    message = "Service Unavailable"
-                })
-            end
-            kong.log.warn("Ticket fail-rate limited from " .. (kong.client.get_forwarded_ip() or "unknown"))
-            return kong.response.exit(429, {
-                message = "Too Many Requests"
-            })
-        end
-
-        if err.reason == "ws_ticket_redis_error" then
-            kong.log.err("Ticket consume Redis error: ", err.redis_error)
-            inc_warn(conf, "ws_ticket_redis_error")
-        elseif err.reason == "ws_ticket_scope_mismatch" then
-            kong.log.warn("Ticket scope mismatch from " .. (kong.client.get_forwarded_ip() or "unknown"))
-            inc_warn(conf, "ws_ticket_scope_mismatch")
-        else
-            kong.log.warn("Ticket unknown/expired/replayed from " .. (kong.client.get_forwarded_ip() or "unknown"))
-            inc_warn(conf, "ws_ticket_unknown")
-        end
-        return kong.response.exit(err.status or 401, {
-            message = err.message or "Unauthorized"
-        })
-    end
-
-    ws_ticket.set_identity_headers(record)
-    ws_ticket.strip_ticket_from_query(conf)
-    -- Authenticated via ticket; continue to proxy the upgrade.
+    return kong.response.exit(err.status or 500, {
+        message = err.message or "An unexpected error occurred"
+    }, err.headers)
 end
 
 local function set_anonymous_consumer(anonymous)
@@ -732,15 +602,27 @@ function UniqueJwtAuthHandler:access(conf)
     -- Single-use opaque WebSocket tickets. Default-off; when disabled the
     -- existing ?token= / cookie / Authorization flow is unchanged.
     if conf.ws_ticket_enabled then
-        local mint_path = conf.ticket_mint_path or "/auth/ticket"
-        if kong.request.get_method() == "POST" and kong.request.get_path() == mint_path then
-            return mint_ws_ticket(conf)
+        if ws_ticket.is_mint_request(conf) then
+            local ok, err = do_authentication(ws_ticket.mint_auth_conf(conf))
+            if not ok then
+                return exit_auth_error(err)
+            end
+
+            local created, create_err = ws_ticket.create_ticket(conf)
+            if not created then
+                return exit_ws_ticket_error(conf, create_err)
+            end
+            return created
         end
 
-        local ticket = ws_ticket.ticket_from_query(conf)
+        local ticket = ws_ticket.get_ticket_from_request(conf)
         if ticket then
             -- Exclusive: ?ticket= never falls through to the token path.
-            return consume_ws_ticket(conf, ticket)
+            local ok, err = ws_ticket.do_authentication(conf, ticket)
+            if not ok then
+                return exit_ws_ticket_error(conf, err)
+            end
+            return
         end
     end
 
