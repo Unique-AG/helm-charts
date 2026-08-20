@@ -252,32 +252,36 @@ end
 -- Checks for the JWT in URI parameters, then in cookies, and finally
 -- in the configured header_names (defaults to `[Authorization]`).
 -- @param conf Plugin configuration
+-- @param headers_only Skip URI parameters and cookies when true
 -- @return token JWT token contained in request (can be a table) or nil
 -- @return err
-local function retrieve_tokens(conf)
+local function retrieve_tokens(conf, headers_only)
     local token_set = {}
-    local args = kong.request.get_query()
-    for _, v in ipairs(conf.uri_param_names) do
-        local token = args[v] -- can be a table
-        if token then
-            if type(token) == "table" then
-                for _, t in ipairs(token) do
-                    if t ~= "" then
-                        token_set[t] = true
-                    end
-                end
 
-            elseif token ~= "" then
-                token_set[token] = true
+    if not headers_only then
+        local args = kong.request.get_query()
+        for _, v in ipairs(conf.uri_param_names) do
+            local token = args[v] -- can be a table
+            if token then
+                if type(token) == "table" then
+                    for _, t in ipairs(token) do
+                        if t ~= "" then
+                            token_set[t] = true
+                        end
+                    end
+
+                elseif token ~= "" then
+                    token_set[token] = true
+                end
             end
         end
-    end
 
-    local var = ngx.var
-    for _, v in ipairs(conf.cookie_names) do
-        local cookie = var["cookie_" .. v]
-        if cookie and cookie ~= "" then
-            token_set[cookie] = true
+        local var = ngx.var
+        for _, v in ipairs(conf.cookie_names) do
+            local cookie = var["cookie_" .. v]
+            if cookie and cookie ~= "" then
+                token_set[cookie] = true
+            end
         end
     end
 
@@ -417,8 +421,8 @@ end
 -- Now again module names which also exist in original "jwt" kong OSS plugin
 -------------------------------------------------------------------------------
 
-local function do_authentication(conf)
-    local token, err = retrieve_tokens(conf)
+local function do_authentication(conf, headers_only)
+    local token, err = retrieve_tokens(conf, headers_only)
     if err then
         kong.log.err(err)
         return kong.response.exit(500, {
@@ -599,7 +603,7 @@ function UniqueJwtAuthHandler:access(conf)
     -- existing ?token= / cookie / Authorization flow is unchanged.
     if conf.ws_ticket_enabled then
         if ws_ticket.is_mint_request(conf) then
-            local ok, err = do_authentication(conf)
+            local ok, err = do_authentication(conf, true)
             if not ok then
                 return kong.response.exit(err.status, err.errors or {
                     message = err.message
