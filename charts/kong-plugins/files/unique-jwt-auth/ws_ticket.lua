@@ -78,6 +78,15 @@ function _M.get_ticket_from_request(conf)
 end
 
 function _M.validate_upgrade_request(conf)
+  if kong.request.get_path() ~= conf.ticket_upgrade_path then
+    kong.log.warn("WebSocket ticket presented on an unexpected path")
+    return false, {
+      status = 401,
+      message = "Unauthorized",
+      warning_reason = "ws_ticket_unknown",
+    }
+  end
+
   if not has_http_token(kong.request.get_header("upgrade"), "websocket")
     or not has_http_token(kong.request.get_header("connection"), "upgrade")
   then

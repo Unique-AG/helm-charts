@@ -74,7 +74,7 @@ With this configuration, both external clients (e.g., browser users) and the int
 
 Browsers cannot set an `Authorization` header on a WebSocket handshake. When `ws_ticket_enabled` is true, the plugin can exchange an authenticated request for a short-lived, single-use ticket:
 
-1. `POST /auth/ticket` requires a Bearer JWT in a configured header (`Authorization` by default) and returns `{ticket, expires_in}`. Redis stores only the ticket hash, user ID, and company ID.
+1. `POST /auth/ticket` uses the existing JWT authentication sources and returns `{ticket, expires_in}`. Redis stores only the ticket hash, user ID, and company ID.
 2. A WebSocket upgrade with `?ticket=…` atomically retrieves and deletes the ticket with Redis `GETDEL`, sets the trusted identity headers, removes the ticket from the upstream query, and proxies the upgrade.
 
 The feature is disabled by default. Requests without `?ticket=` continue through the existing query, cookie, or `Authorization` JWT flow. A request containing an invalid ticket does not fall back to JWT authentication.
@@ -84,6 +84,7 @@ The feature is disabled by default. Requests without `?ticket=` continue through
 | `ws_ticket_enabled` | `false` | Master switch. Off = identical to previous behaviour. |
 | `ticket_param_name` | `ticket` | Query parameter for the opaque ticket. |
 | `ticket_mint_path` | `/auth/ticket` | Path answered by the plugin for minting. |
+| `ticket_upgrade_path` | — | Exact WebSocket path allowed to consume tickets. Required when enabled. |
 | `ticket_ttl` | `20` | Ticket lifetime in seconds (5–60). |
 | `ticket_allowed_origins` | `[]` | Exact Origin allowlist on consume. Empty = not enforced. |
 | `redis_host` / `redis_port` | — / `6379` | Redis endpoint reachable from every Kong replica. |
@@ -109,6 +110,7 @@ config:
     - token
   zitadel_project_id: '<ZITADEL_PROJECT_ID>'
   ws_ticket_enabled: true
+  ticket_upgrade_path: /graphql
   ticket_allowed_origins:
     - https://app.example.com
   redis_host: redis.kong-system.svc.cluster.local

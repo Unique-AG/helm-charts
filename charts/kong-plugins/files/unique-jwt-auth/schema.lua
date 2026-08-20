@@ -166,6 +166,8 @@ local schema = {
                     default = "/auth/ticket"
                 }
             }, {
+                ticket_upgrade_path = typedefs.path
+            }, {
                 ticket_ttl = {
                     type = "number",
                     default = 20,
@@ -234,6 +236,17 @@ local schema = {
                 eq = true
             },
             then_field = "config.redis_host",
+            then_match = {
+                required = true
+            }
+        }
+    }, {
+        conditional = {
+            if_field = "config.ws_ticket_enabled",
+            if_match = {
+                eq = true
+            },
+            then_field = "config.ticket_upgrade_path",
             then_match = {
                 required = true
             }
