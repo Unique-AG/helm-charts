@@ -1,25 +1,12 @@
--- Mint and consume single-use opaque WebSocket upgrade tickets.
--- Tickets are random opaque values (not JWTs). Only the SHA-256 hash is
--- stored in Redis together with identity, scope, and issuance time.
-
 local cjson = require "cjson.safe"
 local resty_sha256 = require "resty.sha256"
 local to_hex = require "resty.string".to_hex
 local openssl_rand = require "resty.openssl.rand"
-local jwt_decoder = require "kong.plugins.jwt.jwt_parser"
 local redis_store = require "kong.plugins.unique-jwt-auth.redis_store"
-
-local encode_base64 = ngx.encode_base64
 
 local _M = {}
 
-local TICKET_BYTES = 32 -- 256 bits
-local RATE_WINDOW_S = 60
-
-local function b64url(raw)
-  local b64 = encode_base64(raw, true) -- no_padding
-  return (b64:gsub("+", "-"):gsub("/", "_"))
-end
+local TICKET_BYTES = 32
 
 local function sha256_hex(value)
   local sha = resty_sha256:new()
@@ -27,372 +14,74 @@ local function sha256_hex(value)
   return to_hex(sha:final())
 end
 
-local function ticket_key(hash)
-  return "t:" .. hash
+local function has_http_token(value, expected)
+  if type(value) == "table" then
+    for _, entry in ipairs(value) do
+      if has_http_token(entry, expected) then
+        return true
+      end
+    end
+    return false
+  end
+
+  if type(value) ~= "string" then
+    return false
+  end
+
+  for token in value:gmatch("[^,]+") do
+    if token:match("^%s*(.-)%s*$"):lower() == expected then
+      return true
+    end
+  end
+  return false
 end
 
-local function mint_rate_key(sub)
-  return "mint:" .. sub
+local function origin_allowed(conf)
+  if #conf.ticket_allowed_origins == 0 then
+    return true
+  end
+
+  local origin = kong.request.get_header("origin")
+  if type(origin) ~= "string" then
+    return false
+  end
+
+  for _, allowed in ipairs(conf.ticket_allowed_origins) do
+    if origin == allowed then
+      return true
+    end
+  end
+  return false
 end
 
-local function fail_rate_key(ip)
-  return "fail:" .. (ip or "unknown")
+local function strip_ticket_from_query(conf)
+  local args = kong.request.get_query()
+  args[conf.ticket_param_name] = nil
+  kong.service.request.set_query(args)
 end
 
---- True when this request targets the configured ticket mint endpoint.
+local function set_identity_headers(record)
+  kong.service.request.set_header("x-user-id", record.user_id)
+  kong.service.request.set_header("x-company-id", record.company_id)
+  kong.service.request.clear_header("x-user-roles")
+  kong.service.request.clear_header("x-company-name")
+  kong.service.request.clear_header("x-company-domain")
+end
+
 function _M.is_mint_request(conf)
   return kong.request.get_method() == "POST"
     and kong.request.get_path() == conf.ticket_mint_path
 end
 
---- Restrict the existing JWT authenticator to Authorization for ticket minting.
--- The normal authenticator also accepts query parameters and cookies; allowing
--- either here would put the long-lived JWT back into a URL.
-function _M.mint_auth_conf(conf)
-  return setmetatable({
-    uri_param_names = {},
-    cookie_names = {},
-    header_names = {"authorization"},
-  }, {
-    __index = conf,
-  })
-end
-
---- True when the request is a genuine WebSocket upgrade.
-function _M.is_websocket_upgrade()
-  local upgrade = kong.request.get_header("upgrade")
-  if not upgrade then
-    return false
-  end
-  if type(upgrade) == "table" then
-    upgrade = upgrade[1]
-  end
-  if not ngx.re.find(upgrade, [[websocket]], "ijo") then
-    return false
-  end
-
-  local connection = kong.request.get_header("connection")
-  if not connection then
-    return false
-  end
-  if type(connection) == "table" then
-    connection = connection[1]
-  end
-  return ngx.re.find(connection, [[upgrade]], "ijo") and true or false
-end
-
---- Exact-match Origin against the configured allowlist.
--- When the allowlist is empty/nil, Origin is not enforced.
--- @return true, or false + reason
-function _M.origin_allowed(conf)
-  local allowed = conf.ticket_allowed_origins
-  if not allowed or #allowed == 0 then
-    return true
-  end
-
-  local origin = kong.request.get_header("origin")
-  if not origin or origin == "" then
-    return false, "missing"
-  end
-  if type(origin) == "table" then
-    origin = origin[1]
-  end
-
-  for _, entry in ipairs(allowed) do
-    if origin == entry then
-      return true
-    end
-  end
-  return false, "mismatch"
-end
-
---- Read the ticket query parameter (never logged by callers).
 function _M.get_ticket_from_request(conf)
-  local name = conf.ticket_param_name or "ticket"
-  local args = kong.request.get_query()
-  local value = args[name]
-  if not value or value == "" then
-    return nil
-  end
-  if type(value) == "table" then
-    value = value[1]
-  end
-  if not value or value == "" then
-    return nil
-  end
-  return value
+  return kong.request.get_query()[conf.ticket_param_name]
 end
 
---- Strip the ticket query parameter before proxying upstream.
-local function strip_ticket_from_query(conf)
-  local name = conf.ticket_param_name or "ticket"
-  local args = kong.request.get_query()
-  if args[name] == nil then
-    return
-  end
-  args[name] = nil
-  kong.service.request.set_query(args)
-end
-
-local function missing_identity(claims)
-  if not claims.sub or claims.sub == "" then
-    return "sub"
-  end
-  local cid = claims["urn:zitadel:iam:user:resourceowner:id"]
-  if not cid or cid == "" then
-    return "urn:zitadel:iam:user:resourceowner:id"
-  end
-  return nil
-end
-
---- Mint a single-use ticket for the verified JWT claims.
--- @return ticket, expires_in on success; nil, err_table on failure
---   err_table = { status, message, reason?, redis_error? }
-function _M.mint(conf, claims)
-  local missing = missing_identity(claims)
-  if missing then
-    return nil, {
-      status = 401,
-      message = "Unauthorized",
-      reason = "ws_ticket_mint_missing_claims",
-      claim = missing,
-    }
-  end
-
-  local sub = claims.sub
-  local company_id = claims["urn:zitadel:iam:user:resourceowner:id"]
-  local ttl = conf.ticket_ttl or 20
-  local scope = conf.ticket_scope
-  if not scope or scope == "" then
-    return nil, {
-      status = 500,
-      message = "An unexpected error occurred",
-      reason = "ws_ticket_misconfigured",
-    }
-  end
-
-  local limit = conf.ticket_mint_rate_limit
-  if limit and limit > 0 then
-    local count, rerr = redis_store.incr_with_expiry(conf, mint_rate_key(sub), RATE_WINDOW_S)
-    if not count then
-      return nil, {
-        status = 503,
-        message = "Service Unavailable",
-        reason = "ws_ticket_redis_error",
-        redis_error = rerr,
-      }
-    end
-    if count > limit then
-      return nil, {
-        status = 429,
-        message = "Too Many Requests",
-        reason = "ws_ticket_mint_rate_limited",
-      }
-    end
-  end
-
-  local raw, rerr = openssl_rand.bytes(TICKET_BYTES)
-  if not raw then
-    return nil, {
-      status = 500,
-      message = "An unexpected error occurred",
-      reason = "ws_ticket_rng_failed",
-      redis_error = rerr,
-    }
-  end
-
-  local ticket = b64url(raw)
-  local hash = sha256_hex(ticket)
-  local record = cjson.encode({
-    sub = sub,
-    company_id = company_id,
-    scope = scope,
-    iat = ngx.time(),
-  })
-  if not record then
-    return nil, {
-      status = 500,
-      message = "An unexpected error occurred",
-      reason = "ws_ticket_encode_failed",
-    }
-  end
-
-  local ok, serr = redis_store.put(conf, ticket_key(hash), record, ttl)
-  if not ok then
-    return nil, {
-      status = 503,
-      message = "Service Unavailable",
-      reason = "ws_ticket_redis_error",
-      redis_error = serr,
-    }
-  end
-
-  return ticket, ttl
-end
-
---- Create a ticket after the handler's existing JWT authenticator succeeds.
--- The authenticator stores the verified token in kong.ctx.shared; decoding it
--- again here only exposes its already-verified identity claims.
-function _M.create_ticket(conf)
-  if not conf.redis_host or conf.redis_host == "" then
-    kong.log.err("ws_ticket_enabled but redis_host is not configured")
-    return nil, {
-      status = 503,
-      message = "Service Unavailable",
-      warning_reason = "ws_ticket_redis_error",
-    }
-  end
-  if not conf.ticket_scope or conf.ticket_scope == "" then
-    kong.log.err("ws_ticket_enabled but ticket_scope is not configured")
-    return nil, {
-      status = 500,
-      message = "An unexpected error occurred",
-    }
-  end
-
-  local token = kong.ctx.shared.unique_jwt_token
-  local jwt, decode_err = jwt_decoder:new(token)
-  if not jwt then
-    kong.log.err("Ticket mint could not decode the authenticated JWT: ", decode_err)
-    return nil, {
-      status = 500,
-      message = "An unexpected error occurred",
-    }
-  end
-
-  local ticket, result = _M.mint(conf, jwt.claims)
-  if not ticket then
-    local err = result
-    if err.reason == "ws_ticket_mint_missing_claims" then
-      kong.log.warn("Ticket mint rejected: missing claim " .. tostring(err.claim) .. " from " .. (kong.client.get_forwarded_ip() or "unknown"))
-    elseif err.reason == "ws_ticket_mint_rate_limited" then
-      kong.log.warn("Ticket mint rate-limited for subject from " .. (kong.client.get_forwarded_ip() or "unknown"))
-      err.warning_reason = err.reason
-    elseif err.reason == "ws_ticket_redis_error" then
-      kong.log.err("Ticket mint Redis error: ", err.redis_error)
-      err.warning_reason = err.reason
-    else
-      kong.log.err("Ticket mint failed: ", err.reason, " ", err.redis_error)
-    end
-    return nil, err
-  end
-
-  return kong.response.exit(200, {
-    ticket = ticket,
-    expires_in = result,
-  }, {
-    ["Cache-Control"] = "no-store",
-    ["Content-Type"] = "application/json",
-  })
-end
-
---- Consume a ticket: atomic retrieve-and-delete, validate scope.
--- @return record table on success; nil, err_table on failure
-function _M.consume(conf, ticket)
-  if not ticket or ticket == "" then
-    return nil, {
-      status = 401,
-      message = "Unauthorized",
-      reason = "ws_ticket_unknown",
-    }
-  end
-
-  local hash = sha256_hex(ticket)
-  -- Scope is enforced inside the atomic consume script: a wrong-scope attempt
-  -- is rejected without deleting the record, so a misrouted client does not
-  -- burn a ticket that is still valid for its intended socket.
-  local raw, err = redis_store.consume(conf, ticket_key(hash), conf.ticket_scope or "")
-  if not raw then
-    if err == "not found" then
-      return nil, {
-        status = 401,
-        message = "Unauthorized",
-        reason = "ws_ticket_unknown",
-      }
-    end
-    if err == "scope mismatch" then
-      return nil, {
-        status = 401,
-        message = "Unauthorized",
-        reason = "ws_ticket_scope_mismatch",
-      }
-    end
-    return nil, {
-      status = 503,
-      message = "Service Unavailable",
-      reason = "ws_ticket_redis_error",
-      redis_error = err,
-    }
-  end
-
-  local record, derr = cjson.decode(raw)
-  if not record or type(record) ~= "table" then
-    return nil, {
-      status = 401,
-      message = "Unauthorized",
-      reason = "ws_ticket_unknown",
-      redis_error = derr,
-    }
-  end
-
-  if not record.sub or record.sub == "" or not record.company_id or record.company_id == "" then
-    return nil, {
-      status = 401,
-      message = "Unauthorized",
-      reason = "ws_ticket_unknown",
-    }
-  end
-
-  return record
-end
-
---- Rate-limit failed consumptions per client IP. Returns true if limited.
-function _M.fail_rate_limited(conf)
-  local limit = conf.ticket_fail_rate_limit
-  if not limit or limit <= 0 then
-    return false
-  end
-
-  local ip = kong.client.get_forwarded_ip() or "unknown"
-  local count, err = redis_store.incr_with_expiry(conf, fail_rate_key(ip), RATE_WINDOW_S)
-  if not count then
-    -- fail closed on Redis errors during rate limiting too
-    kong.log.err("ticket fail-rate Redis error: ", err)
-    return true, "ws_ticket_redis_error"
-  end
-  if count > limit then
-    return true, "ws_ticket_fail_rate_limited"
-  end
-  return false
-end
-
---- Stamp identity headers a ticket can vouch for; clear the rest.
-local function set_identity_headers(record)
-  local set_header = kong.service.request.set_header
-  local clear_header = kong.service.request.clear_header
-
-  set_header("x-user-id", record.sub)
-  set_header("x-company-id", record.company_id)
-  clear_header("x-user-roles")
-  clear_header("x-company-name")
-  clear_header("x-company-domain")
-end
-
---- Authenticate a WebSocket upgrade with a single-use ticket.
--- A present ticket is an exclusive auth path: failures are returned to the
--- handler and never fall through to the legacy token/cookie/header flow.
-function _M.do_authentication(conf, ticket)
-  if not conf.redis_host or conf.redis_host == "" then
-    kong.log.err("ws_ticket_enabled but redis_host is not configured")
-    return false, {
-      status = 503,
-      message = "Service Unavailable",
-      warning_reason = "ws_ticket_redis_error",
-    }
-  end
-
-  if not _M.is_websocket_upgrade() then
-    kong.log.warn("Ticket presented on non-upgrade request from " .. (kong.client.get_forwarded_ip() or "unknown"))
+function _M.validate_upgrade_request(conf)
+  if not has_http_token(kong.request.get_header("upgrade"), "websocket")
+    or not has_http_token(kong.request.get_header("connection"), "upgrade")
+  then
+    kong.log.warn("WebSocket ticket presented on a non-upgrade request")
     return false, {
       status = 401,
       message = "Unauthorized",
@@ -400,9 +89,8 @@ function _M.do_authentication(conf, ticket)
     }
   end
 
-  local origin_ok, origin_why = _M.origin_allowed(conf)
-  if not origin_ok then
-    kong.log.warn("Ticket Origin rejected (" .. tostring(origin_why) .. ") from " .. (kong.client.get_forwarded_ip() or "unknown"))
+  if not origin_allowed(conf) then
+    kong.log.warn("WebSocket ticket rejected because of its Origin")
     return false, {
       status = 401,
       message = "Unauthorized",
@@ -410,45 +98,96 @@ function _M.do_authentication(conf, ticket)
     }
   end
 
-  local record, err = _M.consume(conf, ticket)
-  if not record then
-    local limited, limit_reason = _M.fail_rate_limited(conf)
-    if limited then
-      if limit_reason == "ws_ticket_redis_error" then
-        return false, {
-          status = 503,
-          message = "Service Unavailable",
-          warning_reason = "ws_ticket_redis_error",
-        }
-      end
-      kong.log.warn("Ticket fail-rate limited from " .. (kong.client.get_forwarded_ip() or "unknown"))
+  return true
+end
+
+function _M.create_ticket(conf)
+  local user_id = kong.ctx.shared.user_id
+  local company_id = kong.ctx.shared.company_id
+  if not user_id or user_id == "" or not company_id or company_id == "" then
+    kong.log.warn("WebSocket ticket mint rejected because identity is incomplete")
+    return nil, {
+      status = 401,
+      message = "Unauthorized",
+    }
+  end
+
+  local raw, random_err = openssl_rand.bytes(TICKET_BYTES)
+  if not raw then
+    kong.log.err("WebSocket ticket generation failed: ", random_err)
+    return nil, {
+      status = 500,
+      message = "An unexpected error occurred",
+    }
+  end
+
+  local ticket = ngx.encode_base64(raw, true):gsub("%+", "-"):gsub("/", "_")
+  local record = cjson.encode({
+    user_id = user_id,
+    company_id = company_id,
+  })
+  local stored, store_err = redis_store.put(conf, sha256_hex(ticket), record)
+  if not stored then
+    kong.log.err("WebSocket ticket Redis write failed: ", store_err)
+    return nil, {
+      status = 503,
+      message = "Service Unavailable",
+      warning_reason = "ws_ticket_redis_error",
+    }
+  end
+
+  return {
+    ticket = ticket,
+    expires_in = conf.ticket_ttl,
+  }
+end
+
+function _M.do_authentication(conf, ticket)
+  if type(ticket) ~= "string" or ticket == "" then
+    return false, {
+      status = 401,
+      message = "Unauthorized",
+      warning_reason = "ws_ticket_unknown",
+    }
+  end
+
+  local raw, consume_err = redis_store.consume(conf, sha256_hex(ticket))
+  if not raw then
+    if consume_err ~= "not found" then
+      kong.log.err("WebSocket ticket Redis read failed: ", consume_err)
       return false, {
-        status = 429,
-        message = "Too Many Requests",
+        status = 503,
+        message = "Service Unavailable",
+        warning_reason = "ws_ticket_redis_error",
       }
     end
 
-    if err.reason == "ws_ticket_redis_error" then
-      kong.log.err("Ticket consume Redis error: ", err.redis_error)
-      err.warning_reason = "ws_ticket_redis_error"
-    elseif err.reason == "ws_ticket_scope_mismatch" then
-      kong.log.warn("Ticket scope mismatch from " .. (kong.client.get_forwarded_ip() or "unknown"))
-      err.warning_reason = "ws_ticket_scope_mismatch"
-    else
-      kong.log.warn("Ticket unknown/expired/replayed from " .. (kong.client.get_forwarded_ip() or "unknown"))
-      err.warning_reason = "ws_ticket_unknown"
-    end
-    return false, err
+    kong.log.warn("Unknown, expired, or replayed WebSocket ticket")
+    return false, {
+      status = 401,
+      message = "Unauthorized",
+      warning_reason = "ws_ticket_unknown",
+    }
+  end
+
+  local record = cjson.decode(raw)
+  if type(record) ~= "table"
+    or type(record.user_id) ~= "string"
+    or record.user_id == ""
+    or type(record.company_id) ~= "string"
+    or record.company_id == ""
+  then
+    kong.log.warn("WebSocket ticket contained an invalid identity")
+    return false, {
+      status = 401,
+      message = "Unauthorized",
+      warning_reason = "ws_ticket_unknown",
+    }
   end
 
   set_identity_headers(record)
   strip_ticket_from_query(conf)
   return true
 end
-
--- Exported for tests
-_M._sha256_hex = sha256_hex
-_M._ticket_key = ticket_key
-_M._missing_identity = missing_identity
 
 return _M

@@ -150,8 +150,6 @@ local schema = {
                     default = "unique_jwt_auth_security_warnings_total"
                 }
             }, {
-                -- Single-use opaque WebSocket tickets (Redis-backed).
-                -- Default false: existing ?token= / cookie / Authorization flow unchanged.
                 ws_ticket_enabled = {
                     type = "boolean",
                     default = false,
@@ -174,12 +172,6 @@ local schema = {
                     between = {5, 60}
                 }
             }, {
-                -- Route/service binding written into the ticket record and
-                -- checked on consume so a chat ticket cannot open another socket.
-                ticket_scope = {
-                    type = "string"
-                }
-            }, {
                 ticket_allowed_origins = {
                     type = "set",
                     elements = {
@@ -188,30 +180,15 @@ local schema = {
                     default = {}
                 }
             }, {
-                -- Max mint requests per authenticated subject per 60s window.
-                -- 0 disables the limit.
-                ticket_mint_rate_limit = {
-                    type = "number",
-                    default = 60,
-                    between = {0, 10000}
-                }
+                redis_host = typedefs.host
             }, {
-                -- Max failed consumptions per client IP per 60s window.
-                -- 0 disables the limit.
-                ticket_fail_rate_limit = {
-                    type = "number",
-                    default = 30,
-                    between = {0, 10000}
-                }
+                redis_port = typedefs.port({
+                    default = 6379
+                })
             }, {
-                redis_host = {
-                    type = "string"
-                }
-            }, {
-                redis_port = {
-                    type = "number",
-                    default = 6379,
-                    between = {1, 65535}
+                redis_username = {
+                    type = "string",
+                    referenceable = true
                 }
             }, {
                 redis_ssl = {
@@ -224,22 +201,23 @@ local schema = {
                     default = true
                 }
             }, {
+                redis_server_name = typedefs.sni
+            }, {
                 redis_password = {
                     type = "string",
-                    referenceable = true,
-                    encrypted = true
+                    len_min = 0,
+                    referenceable = true
                 }
             }, {
-                redis_timeout_ms = {
+                redis_timeout = {
                     type = "number",
                     default = 2000,
                     between = {50, 60000}
                 }
             }, {
                 redis_database = {
-                    type = "number",
-                    default = 7,
-                    between = {0, 15}
+                    type = "integer",
+                    default = 0
                 }
             }, {
                 redis_key_prefix = {
@@ -247,6 +225,18 @@ local schema = {
                     default = "ws_ticket:"
                 }
             }}
+        }
+    }},
+    entity_checks = {{
+        conditional = {
+            if_field = "config.ws_ticket_enabled",
+            if_match = {
+                eq = true
+            },
+            then_field = "config.redis_host",
+            then_match = {
+                required = true
+            }
         }
     }}
 }

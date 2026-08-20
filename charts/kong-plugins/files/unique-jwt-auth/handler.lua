@@ -534,13 +534,9 @@ local function do_authentication(conf)
     custom_set_unique_headers(conf, jwt.claims)
 
     kong.ctx.shared.unique_jwt_token = token
+    kong.ctx.shared.user_id = jwt.claims.sub
+    kong.ctx.shared.company_id = jwt.claims["urn:zitadel:iam:user:resourceowner:id"]
     return true
-end
-
-local function exit_auth_error(err)
-    return kong.response.exit(err.status, err.errors or {
-        message = err.message
-    }, err.headers)
 end
 
 local function exit_ws_ticket_error(conf, err)
@@ -603,20 +599,30 @@ function UniqueJwtAuthHandler:access(conf)
     -- existing ?token= / cookie / Authorization flow is unchanged.
     if conf.ws_ticket_enabled then
         if ws_ticket.is_mint_request(conf) then
-            local ok, err = do_authentication(ws_ticket.mint_auth_conf(conf))
+            local ok, err = do_authentication(conf)
             if not ok then
-                return exit_auth_error(err)
+                return kong.response.exit(err.status, err.errors or {
+                    message = err.message
+                }, err.headers)
             end
 
             local created, create_err = ws_ticket.create_ticket(conf)
             if not created then
                 return exit_ws_ticket_error(conf, create_err)
             end
-            return created
+            return kong.response.exit(200, created, {
+                ["Cache-Control"] = "no-store",
+                ["Content-Type"] = "application/json"
+            })
         end
 
         local ticket = ws_ticket.get_ticket_from_request(conf)
-        if ticket then
+        if ticket ~= nil then
+            local valid, validation_err = ws_ticket.validate_upgrade_request(conf)
+            if not valid then
+                return exit_ws_ticket_error(conf, validation_err)
+            end
+
             -- Exclusive: ?ticket= never falls through to the token path.
             local ok, err = ws_ticket.do_authentication(conf, ticket)
             if not ok then

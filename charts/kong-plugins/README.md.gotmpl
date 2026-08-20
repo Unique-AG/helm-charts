@@ -69,12 +69,12 @@ With this configuration, both external clients (e.g., browser users) and the int
 
 #### Single-use WebSocket tickets (Redis)
 
-Browsers cannot set an `Authorization` header on a WebSocket handshake, so clients often put a credential in the query string. When `ws_ticket_enabled` is true, the plugin can exchange a normal Zitadel JWT for a short-lived opaque ticket and accept that ticket on the upgrade:
+Browsers cannot set an `Authorization` header on a WebSocket handshake. When `ws_ticket_enabled` is true, the plugin can exchange an authenticated request for a short-lived, single-use ticket:
 
-1. `POST /auth/ticket` with `Authorization: Bearer <access token>` — plugin verifies the JWT (same checks as the normal path), stores `sha256(ticket)` in Redis with identity + scope + TTL, returns `{ticket, expires_in}`. Never proxied upstream. The access token is never stored.
-2. `GET …?ticket=…` with `Upgrade: websocket` — plugin atomically checks scope and retrieves-and-deletes the hash (Redis `EVAL`); a wrong-scope attempt is rejected without consuming the ticket. It then stamps `x-user-id` / `x-company-id`, strips the query parameter, proxies the upgrade.
+1. `POST /auth/ticket` uses the existing JWT authentication sources and returns `{ticket, expires_in}`. Redis stores only the ticket hash, user ID, and company ID.
+2. A WebSocket upgrade with `?ticket=…` atomically retrieves and deletes the ticket with Redis `GETDEL`, sets the trusted identity headers, removes the ticket from the upstream query, and proxies the upgrade.
 
-`?token=` (and cookie / `Authorization`) keep working unchanged. The ticket path is selected only when `?ticket=` is present; there is no fallback to the token path on a bad ticket.
+The feature is disabled by default. Requests without `?ticket=` continue through the existing query, cookie, or `Authorization` JWT flow. A request containing an invalid ticket does not fall back to JWT authentication.
 
 | Setting | Default | Purpose |
 | --- | --- | --- |
@@ -82,18 +82,16 @@ Browsers cannot set an `Authorization` header on a WebSocket handshake, so clien
 | `ticket_param_name` | `ticket` | Query parameter for the opaque ticket. |
 | `ticket_mint_path` | `/auth/ticket` | Path answered by the plugin for minting. |
 | `ticket_ttl` | `20` | Ticket lifetime in seconds (5–60). |
-| `ticket_scope` | — | Route/service binding written into the record and checked on consume. Required when enabled. |
 | `ticket_allowed_origins` | `[]` | Exact Origin allowlist on consume. Empty = not enforced. |
-| `ticket_mint_rate_limit` | `60` | Max mints per subject per 60s. `0` disables. |
-| `ticket_fail_rate_limit` | `30` | Max failed consumptions per IP per 60s. `0` disables. |
 | `redis_host` / `redis_port` | — / `6379` | Redis endpoint reachable from every Kong replica. |
-| `redis_password` | — | `referenceable` + `encrypted` (Kong vault). |
+| `redis_username` / `redis_password` | — | Optional Redis ACL credentials; both fields support Kong vault references. |
 | `redis_ssl` / `redis_ssl_verify` | `false` / `true` | TLS to Redis. |
-| `redis_timeout_ms` | `2000` | Connect/read timeout. |
-| `redis_database` | `7` | Logical Redis DB. Claimed in the monorepo Redis registry (`infrastructure/redis.md`). Redis Cluster has no `SELECT` — set `0` and rely on `redis_key_prefix` for isolation. |
-| `redis_key_prefix` | `ws_ticket:` | Key prefix for ticket records and rate-limit counters. |
+| `redis_server_name` | — | TLS server name for SNI and certificate verification. |
+| `redis_timeout` | `2000` | Redis timeout in milliseconds. |
+| `redis_database` | `0` | Logical Redis database. |
+| `redis_key_prefix` | `ws_ticket:` | Key prefix for ticket records. |
 
-Redis is required across replicas: `kong.cache` and `lua_shared_dict` are per-pod and cannot enforce single-use. Mint and consume **fail closed** (503) if Redis is unreachable. Pick the logical DB from the monorepo Redis registry; DB `7` is registered for Kong WebSocket tickets.
+Redis 6.2 or newer is required for `GETDEL`. Ticket operations return 503 when Redis is unavailable; existing JWT authentication remains available.
 
 **Example** (enable per WebSocket route after Redis is provisioned):
 
@@ -108,7 +106,6 @@ config:
     - token
   zitadel_project_id: '<ZITADEL_PROJECT_ID>'
   ws_ticket_enabled: true
-  ticket_scope: ws:graphql
   ticket_allowed_origins:
     - https://app.example.com
   redis_host: redis.kong-system.svc.cluster.local
@@ -141,11 +138,8 @@ Possible `reason` label values:
 | `unexpected_algorithm` | Token `alg` header does not match configured `algorithm` |
 | `claims_validation_failed` | Registered claims (`exp`, `nbf`) failed verification |
 | `max_expiration_exceeded` | Token lifetime exceeds `maximum_expiration` |
-| `token_expired` | Token `exp` claim indicates expiry |
 | `ws_ticket_unknown` | Ticket missing, expired, replayed, or presented outside an upgrade |
-| `ws_ticket_scope_mismatch` | Ticket presented on a different route/service than minted for |
 | `ws_ticket_origin_rejected` | Upgrade Origin missing or not on the exact allowlist |
-| `ws_ticket_mint_rate_limited` | Subject exceeded `ticket_mint_rate_limit` |
 | `ws_ticket_redis_error` | Redis unreachable or errored during mint/consume (fail-closed) |
 
 ### unique-app-repo-auth
@@ -182,7 +176,7 @@ The metric will be exposed as `kong_my_custom_auth_warnings_total`.
 
 ### Alerts
 
-The chart ships one `PrometheusRule` alert per rejection reason for both plugins — 18 alerts in total — enabled by default when the `monitoring.coreos.com/v1` CRD is present and `prometheus.enabled` is `true`. Each alert fires when total occurrences across gateway pods within a configurable interval exceed a threshold (`sum(increase(...[interval])) > threshold`).
+The chart ships 12 `PrometheusRule` alerts for selected rejection reasons when the `monitoring.coreos.com/v1` CRD is present and `prometheus.enabled` is `true`. Each alert fires when total occurrences across gateway pods within a configurable interval exceed a threshold (`sum(increase(...[interval])) > threshold`).
 
 Defaults distinguish attack signals (`invalid_signature`, `unexpected_algorithm` — critical, low thresholds) from dev/client noise (warning, higher thresholds and longer `for` durations). See `prometheus.defaultAlerts.securityWarnings.rules` in `values.yaml` for per-alert settings.
 
@@ -199,13 +193,7 @@ Expiration-related alerts are **disabled by default** since token expiry is a no
 | `KongJwtAuthMultipleTokens` | `multiple_tokens` | warning | yes |
 | `KongJwtAuthUnrecognizableTokenType` | `unrecognizable_token_type` | warning | yes |
 | `KongJwtAuthClaimsValidationFailed` | `claims_validation_failed` | warning | **no** |
-| `KongJwtAuthTokenExpired` | `token_expired` | warning | **no** |
 | `KongJwtAuthMaxExpirationExceeded` | `max_expiration_exceeded` | warning | **no** |
-| `KongJwtAuthWsTicketUnknown` | `ws_ticket_unknown` | warning | yes |
-| `KongJwtAuthWsTicketScopeMismatch` | `ws_ticket_scope_mismatch` | critical | yes |
-| `KongJwtAuthWsTicketOriginRejected` | `ws_ticket_origin_rejected` | warning | yes |
-| `KongJwtAuthWsTicketMintRateLimited` | `ws_ticket_mint_rate_limited` | warning | yes |
-| `KongJwtAuthWsTicketRedisError` | `ws_ticket_redis_error` | critical | yes |
 
 #### unique-app-repo-auth alerts
 
