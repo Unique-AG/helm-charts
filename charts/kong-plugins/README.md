@@ -6,7 +6,7 @@ Refer to each plugins readme section to learn more about them.
 
 Please report any security concerns with the plugins via the [Security Policy](https://github.com/Unique-AG/helm-charts/tree/main?tab=security-ov-file).
 
-![Version: 2.5.0](https://img.shields.io/badge/Version-2.5.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 2.6.0](https://img.shields.io/badge/Version-2.6.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -15,7 +15,7 @@ Please report any security concerns with the plugins via the [Security Policy](h
 New releases are published as OCI artifacts only. The Helm repository index is frozen and will not receive new versions—see the [repository README](https://github.com/Unique-AG/helm-charts/blob/main/README.md#migrating-to-oci) for migration steps.
 
 ```sh
-helm install my-kong-plugins oci://ghcr.io/unique-ag/helm-charts/kong-plugins --version 2.5.0
+helm install my-kong-plugins oci://ghcr.io/unique-ag/helm-charts/kong-plugins --version 2.6.0
 ```
 
 <details>
@@ -23,7 +23,7 @@ helm install my-kong-plugins oci://ghcr.io/unique-ag/helm-charts/kong-plugins --
 
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-kong-plugins unique/kong-plugins --version 2.5.0
+helm install my-kong-plugins unique/kong-plugins --version 2.6.0
 ```
 
 </details>
@@ -70,6 +70,56 @@ config:
 
 With this configuration, both external clients (e.g., browser users) and the internal JWT validation plugin can utilize the same identity provider (IdP) for token issuance and validation without requiring further customization.
 
+#### Single-use WebSocket tickets (Redis)
+
+Browsers cannot set an `Authorization` header on a WebSocket handshake. When `ws_ticket_enabled` is true, the plugin can exchange an authenticated request for a short-lived, single-use ticket:
+
+1. `POST /auth/ticket` uses the existing JWT authentication sources and returns `{ticket, expires_in}`. Redis stores only the ticket hash, user ID, and company ID.
+2. A WebSocket upgrade with `?ticket=…` atomically retrieves and deletes the ticket with Redis `GETDEL`, sets the trusted identity headers, removes the ticket from the upstream query, and proxies the upgrade.
+
+The feature is disabled by default. Requests without `?ticket=` continue through the existing query, cookie, or `Authorization` JWT flow. A request containing an invalid ticket does not fall back to JWT authentication.
+
+| Setting | Default | Purpose |
+| --- | --- | --- |
+| `ws_ticket_enabled` | `false` | Master switch. Off = identical to previous behaviour. |
+| `ticket_param_name` | `ticket` | Query parameter for the opaque ticket. |
+| `ticket_mint_path` | `/auth/ticket` | Path answered by the plugin for minting. |
+| `ticket_upgrade_path` | — | Exact WebSocket path allowed to consume tickets. Required when enabled. |
+| `ticket_ttl` | `20` | Ticket lifetime in seconds (5–60). |
+| `ticket_allowed_origins` | `[]` | Exact Origin allowlist on consume. Empty = not enforced. |
+| `redis_host` / `redis_port` | — / `6379` | Redis endpoint reachable from every Kong replica. |
+| `redis_username` / `redis_password` | — | Optional Redis ACL credentials; both fields support Kong vault references. |
+| `redis_ssl` / `redis_ssl_verify` | `false` / `true` | TLS to Redis. |
+| `redis_server_name` | — | TLS server name for SNI and certificate verification. |
+| `redis_timeout` | `2000` | Redis timeout in milliseconds. |
+| `redis_database` | `0` | Logical Redis database. |
+| `redis_key_prefix` | `ws_ticket:` | Key prefix for ticket records. |
+
+Redis 6.2 or newer is required for `GETDEL`. Ticket operations return 503 when Redis is unavailable; existing JWT authentication remains available.
+
+**Example** (enable per WebSocket route after Redis is provisioned):
+
+```yaml
+apiVersion: configuration.konghq.com/v1
+kind: KongClusterPlugin
+plugin: unique-jwt-auth
+config:
+  allowed_iss:
+    - https://id.example.com
+  uri_param_names:
+    - token
+  zitadel_project_id: '<ZITADEL_PROJECT_ID>'
+  ws_ticket_enabled: true
+  ticket_upgrade_path: /graphql
+  ticket_allowed_origins:
+    - https://app.example.com
+  redis_host: redis.kong-system.svc.cluster.local
+  redis_port: 6379
+  redis_password: '{vault://env/kong-ws-ticket-redis-password}'
+```
+
+Rollout: deploy with the flag off (no behaviour change) → provision Redis and enable per tenant → migrate clients from `?token=` to `?ticket=` at their own pace. Redact the ticket query parameter in ingress, WAF, and tracing logs (the plugin strips it from the upstream request only).
+
 ## Prometheus Metrics
 
 Both plugins expose a single Prometheus counter for security warning events when Kong's [Prometheus plugin](https://docs.konghq.com/hub/kong-inc/prometheus/) is enabled. Each rejection that produces a `WARN` log increments the counter with a `reason` label that identifies the failure type.
@@ -93,6 +143,9 @@ Possible `reason` label values:
 | `unexpected_algorithm` | Token `alg` header does not match configured `algorithm` |
 | `claims_validation_failed` | Registered claims (`exp`, `nbf`) failed verification |
 | `max_expiration_exceeded` | Token lifetime exceeds `maximum_expiration` |
+| `ws_ticket_unknown` | Ticket missing, expired, replayed, or presented outside an upgrade |
+| `ws_ticket_origin_rejected` | Upgrade Origin missing or not on the exact allowlist |
+| `ws_ticket_redis_error` | Redis unreachable or errored during mint/consume (fail-closed) |
 
 ### unique-app-repo-auth
 
@@ -128,7 +181,7 @@ The metric will be exposed as `kong_my_custom_auth_warnings_total`.
 
 ### Alerts
 
-The chart ships one `PrometheusRule` alert per rejection reason for both plugins — 12 alerts in total — enabled by default when the `monitoring.coreos.com/v1` CRD is present and `prometheus.enabled` is `true`. Each alert fires when total occurrences across gateway pods within a configurable interval exceed a threshold (`sum(increase(...[interval])) > threshold`).
+The chart ships 12 `PrometheusRule` alerts for selected rejection reasons when the `monitoring.coreos.com/v1` CRD is present and `prometheus.enabled` is `true`. Each alert fires when total occurrences across gateway pods within a configurable interval exceed a threshold (`sum(increase(...[interval])) > threshold`).
 
 Defaults distinguish attack signals (`invalid_signature`, `unexpected_algorithm` — critical, low thresholds) from dev/client noise (warning, higher thresholds and longer `for` durations). See `prometheus.defaultAlerts.securityWarnings.rules` in `values.yaml` for per-alert settings.
 

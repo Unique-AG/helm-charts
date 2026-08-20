@@ -149,7 +149,107 @@ local schema = {
                     type = "string",
                     default = "unique_jwt_auth_security_warnings_total"
                 }
+            }, {
+                ws_ticket_enabled = {
+                    type = "boolean",
+                    default = false,
+                    required = true
+                }
+            }, {
+                ticket_param_name = {
+                    type = "string",
+                    default = "ticket"
+                }
+            }, {
+                ticket_mint_path = {
+                    type = "string",
+                    default = "/auth/ticket"
+                }
+            }, {
+                ticket_upgrade_path = typedefs.path
+            }, {
+                ticket_ttl = {
+                    type = "number",
+                    default = 20,
+                    between = {5, 60}
+                }
+            }, {
+                ticket_allowed_origins = {
+                    type = "set",
+                    elements = {
+                        type = "string"
+                    },
+                    default = {}
+                }
+            }, {
+                redis_host = typedefs.host
+            }, {
+                redis_port = typedefs.port({
+                    default = 6379
+                })
+            }, {
+                redis_username = {
+                    type = "string",
+                    referenceable = true
+                }
+            }, {
+                redis_ssl = {
+                    type = "boolean",
+                    default = false
+                }
+            }, {
+                redis_ssl_verify = {
+                    type = "boolean",
+                    default = true
+                }
+            }, {
+                redis_server_name = typedefs.sni
+            }, {
+                redis_password = {
+                    type = "string",
+                    len_min = 0,
+                    referenceable = true
+                }
+            }, {
+                redis_timeout = {
+                    type = "number",
+                    default = 2000,
+                    between = {50, 60000}
+                }
+            }, {
+                redis_database = {
+                    type = "integer",
+                    default = 0
+                }
+            }, {
+                redis_key_prefix = {
+                    type = "string",
+                    default = "ws_ticket:"
+                }
             }}
+        }
+    }},
+    entity_checks = {{
+        conditional = {
+            if_field = "config.ws_ticket_enabled",
+            if_match = {
+                eq = true
+            },
+            then_field = "config.redis_host",
+            then_match = {
+                required = true
+            }
+        }
+    }, {
+        conditional = {
+            if_field = "config.ws_ticket_enabled",
+            if_match = {
+                eq = true
+            },
+            then_field = "config.ticket_upgrade_path",
+            then_match = {
+                required = true
+            }
         }
     }}
 }

@@ -4,6 +4,7 @@ local cjson = require "cjson.safe"
 local _exporter_ok, exporter = pcall(require, "kong.plugins.prometheus.exporter")
 
 local zitadel_keys = require "kong.plugins.unique-jwt-auth.zitadel_keys"
+local ws_ticket = require "kong.plugins.unique-jwt-auth.ws_ticket"
 
 local validate_issuer = require"kong.plugins.unique-jwt-auth.validate_issuers".validate_issuer
 
@@ -533,7 +534,18 @@ local function do_authentication(conf)
     custom_set_unique_headers(conf, jwt.claims)
 
     kong.ctx.shared.unique_jwt_token = token
+    kong.ctx.shared.user_id = jwt.claims.sub
+    kong.ctx.shared.company_id = jwt.claims["urn:zitadel:iam:user:resourceowner:id"]
     return true
+end
+
+local function exit_ws_ticket_error(conf, err)
+    if err.warning_reason then
+        inc_warn(conf, err.warning_reason)
+    end
+    return kong.response.exit(err.status or 500, {
+        message = err.message or "An unexpected error occurred"
+    }, err.headers)
 end
 
 local function set_anonymous_consumer(anonymous)
@@ -581,6 +593,43 @@ function UniqueJwtAuthHandler:access(conf)
     -- check if preflight request and whether it should be authenticated
     if not conf.run_on_preflight and kong.request.get_method() == "OPTIONS" then
         return
+    end
+
+    -- Single-use opaque WebSocket tickets. Default-off; when disabled the
+    -- existing ?token= / cookie / Authorization flow is unchanged.
+    if conf.ws_ticket_enabled then
+        if ws_ticket.is_mint_request(conf) then
+            local ok, err = do_authentication(conf)
+            if not ok then
+                return kong.response.exit(err.status, err.errors or {
+                    message = err.message
+                }, err.headers)
+            end
+
+            local created, create_err = ws_ticket.create_ticket(conf)
+            if not created then
+                return exit_ws_ticket_error(conf, create_err)
+            end
+            return kong.response.exit(200, created, {
+                ["Cache-Control"] = "no-store",
+                ["Content-Type"] = "application/json"
+            })
+        end
+
+        local ticket = ws_ticket.get_ticket_from_request(conf)
+        if ticket ~= nil then
+            local valid, validation_err = ws_ticket.validate_upgrade_request(conf)
+            if not valid then
+                return exit_ws_ticket_error(conf, validation_err)
+            end
+
+            -- Exclusive: ?ticket= never falls through to the token path.
+            local ok, err = ws_ticket.do_authentication(conf, ticket)
+            if not ok then
+                return exit_ws_ticket_error(conf, err)
+            end
+            return
+        end
     end
 
     if conf.anonymous then
