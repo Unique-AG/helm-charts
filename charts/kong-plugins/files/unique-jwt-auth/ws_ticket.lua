@@ -54,6 +54,16 @@ local function origin_allowed(conf)
   return false
 end
 
+local function upgrade_path_allowed(conf)
+  local request_path = kong.request.get_path()
+  for _, allowed in ipairs(conf.ticket_upgrade_paths) do
+    if request_path == allowed then
+      return true
+    end
+  end
+  return false
+end
+
 local function strip_ticket_from_query(conf)
   local args = kong.request.get_query()
   args[conf.ticket_param_name] = nil
@@ -78,7 +88,7 @@ function _M.get_ticket_from_request(conf)
 end
 
 function _M.validate_upgrade_request(conf)
-  if kong.request.get_path() ~= conf.ticket_upgrade_path then
+  if not upgrade_path_allowed(conf) then
     kong.log.warn("WebSocket ticket presented on an unexpected path")
     return false, {
       status = 401,

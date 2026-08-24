@@ -166,7 +166,11 @@ local schema = {
                     default = "/auth/ticket"
                 }
             }, {
-                ticket_upgrade_path = typedefs.path
+                ticket_upgrade_paths = {
+                    type = "set",
+                    elements = typedefs.path,
+                    len_min = 1
+                }
             }, {
                 ticket_ttl = {
                     type = "number",
@@ -246,7 +250,7 @@ local schema = {
             if_match = {
                 eq = true
             },
-            then_field = "config.ticket_upgrade_path",
+            then_field = "config.ticket_upgrade_paths",
             then_match = {
                 required = true
             }

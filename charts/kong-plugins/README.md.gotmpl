@@ -81,7 +81,7 @@ The feature is disabled by default. Requests without `?ticket=` continue through
 | `ws_ticket_enabled` | `false` | Master switch. Off = identical to previous behaviour. |
 | `ticket_param_name` | `ticket` | Query parameter for the opaque ticket. |
 | `ticket_mint_path` | `/auth/ticket` | Path answered by the plugin for minting. |
-| `ticket_upgrade_path` | — | Exact WebSocket path allowed to consume tickets. Required when enabled. |
+| `ticket_upgrade_paths` | — | Non-empty allowlist of exact WebSocket paths allowed to consume tickets. Required when enabled. |
 | `ticket_ttl` | `20` | Ticket lifetime in seconds (5–60). |
 | `ticket_allowed_origins` | `[]` | Exact Origin allowlist on consume. Empty = not enforced. |
 | `redis_host` / `redis_port` | — / `6379` | Redis endpoint reachable from every Kong replica. |
@@ -94,7 +94,7 @@ The feature is disabled by default. Requests without `?ticket=` continue through
 
 Redis 6.2 or newer is required for `GETDEL`. Ticket operations return 503 when Redis is unavailable; existing JWT authentication remains available.
 
-**Example** (enable per WebSocket route after Redis is provisioned):
+**Example** (enable the cluster-wide plugin after Redis is provisioned):
 
 ```yaml
 apiVersion: configuration.konghq.com/v1
@@ -107,7 +107,10 @@ config:
     - token
   zitadel_project_id: '<ZITADEL_PROJECT_ID>'
   ws_ticket_enabled: true
-  ticket_upgrade_path: /graphql
+  ticket_upgrade_paths:
+    - /browser-bridge/ws
+    - /speech/socket.io/
+    - /graphql
   ticket_allowed_origins:
     - https://app.example.com
   redis_host: redis.kong-system.svc.cluster.local
