@@ -54,13 +54,19 @@ local function origin_allowed(conf)
   return false
 end
 
-local function upgrade_path_allowed(conf)
-  local request_path = kong.request.get_path()
-  for _, allowed in ipairs(conf.ticket_upgrade_paths) do
+local function path_allowed(request_path, exact_paths, path_suffixes)
+  for _, allowed in ipairs(exact_paths or {}) do
     if request_path == allowed then
       return true
     end
   end
+
+  for _, suffix in ipairs(path_suffixes or {}) do
+    if request_path:sub(-#suffix) == suffix then
+      return true
+    end
+  end
+
   return false
 end
 
@@ -80,7 +86,11 @@ end
 
 function _M.is_mint_request(conf)
   return kong.request.get_method() == "POST"
-    and kong.request.get_path() == conf.ticket_mint_path
+    and path_allowed(
+      kong.request.get_path(),
+      conf.ticket_mint_paths,
+      conf.ticket_mint_path_suffixes
+    )
 end
 
 function _M.get_ticket_from_request(conf)
@@ -88,7 +98,11 @@ function _M.get_ticket_from_request(conf)
 end
 
 function _M.validate_upgrade_request(conf)
-  if not upgrade_path_allowed(conf) then
+  if not path_allowed(
+    kong.request.get_path(),
+    conf.ticket_upgrade_paths,
+    conf.ticket_upgrade_path_suffixes
+  ) then
     kong.log.warn("WebSocket ticket presented on an unexpected path")
     return false, {
       status = 401,

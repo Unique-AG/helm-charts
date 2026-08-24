@@ -161,15 +161,28 @@ local schema = {
                     default = "ticket"
                 }
             }, {
-                ticket_mint_path = {
-                    type = "string",
-                    default = "/auth/ticket"
+                ticket_mint_paths = {
+                    type = "set",
+                    elements = typedefs.path,
+                    default = {}
+                }
+            }, {
+                ticket_mint_path_suffixes = {
+                    type = "set",
+                    elements = typedefs.path,
+                    default = {}
                 }
             }, {
                 ticket_upgrade_paths = {
                     type = "set",
                     elements = typedefs.path,
-                    len_min = 1
+                    default = {}
+                }
+            }, {
+                ticket_upgrade_path_suffixes = {
+                    type = "set",
+                    elements = typedefs.path,
+                    default = {}
                 }
             }, {
                 ticket_ttl = {
@@ -245,14 +258,25 @@ local schema = {
             }
         }
     }, {
-        conditional = {
+        conditional_at_least_one_of = {
             if_field = "config.ws_ticket_enabled",
             if_match = {
                 eq = true
             },
-            then_field = "config.ticket_upgrade_paths",
-            then_match = {
-                required = true
+            then_at_least_one_of = {
+                "config.ticket_mint_paths",
+                "config.ticket_mint_path_suffixes"
+            }
+        }
+    }, {
+        conditional_at_least_one_of = {
+            if_field = "config.ws_ticket_enabled",
+            if_match = {
+                eq = true
+            },
+            then_at_least_one_of = {
+                "config.ticket_upgrade_paths",
+                "config.ticket_upgrade_path_suffixes"
             }
         }
     }}
