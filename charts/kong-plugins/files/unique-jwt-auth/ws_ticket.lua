@@ -54,6 +54,16 @@ local function origin_allowed(conf)
   return false
 end
 
+-- Scope a ticket to the service that minted it, derived from the first path
+-- segment (e.g. "/theme/auth/ticket" -> "theme"). This is a routing fact Kong
+-- has already established for the request -- the same signal path_allowed()
+-- above already matches against -- not a value a client could assert itself.
+-- Returns nil when no segment can be derived (e.g. root path), so callers
+-- have a single sentinel to fail closed against.
+local function service_scope(request_path)
+  return request_path:match("^/([^/]+)")
+end
+
 local function path_allowed(request_path, exact_paths, path_suffixes)
   for _, allowed in ipairs(exact_paths or {}) do
     if request_path == allowed then
@@ -145,6 +155,15 @@ function _M.create_ticket(conf)
     }
   end
 
+  local scope = service_scope(kong.request.get_path())
+  if not scope then
+    kong.log.err("WebSocket ticket mint rejected because no scope could be derived from the request path")
+    return nil, {
+      status = 401,
+      message = "Unauthorized",
+    }
+  end
+
   local raw, random_err = openssl_rand.bytes(TICKET_BYTES)
   if not raw then
     kong.log.err("WebSocket ticket generation failed: ", random_err)
@@ -158,6 +177,7 @@ function _M.create_ticket(conf)
   local record = cjson.encode({
     user_id = user_id,
     company_id = company_id,
+    scope = scope,
   })
   local stored, store_err = redis_store.put(conf, sha256_hex(ticket), record)
   if not stored then
@@ -215,6 +235,22 @@ function _M.do_authentication(conf, ticket)
       status = 401,
       message = "Unauthorized",
       warning_reason = "ws_ticket_unknown",
+    }
+  end
+
+  -- Bind consumption to the service the ticket was minted for. A missing
+  -- scope on either side (e.g. a pre-fix ticket record, or a path with no
+  -- derivable segment) is a mismatch, never an implicit match.
+  local upgrade_scope = service_scope(kong.request.get_path())
+  if type(record.scope) ~= "string" or record.scope == ""
+    or upgrade_scope == nil
+    or record.scope ~= upgrade_scope
+  then
+    kong.log.warn("WebSocket ticket scope mismatch")
+    return false, {
+      status = 401,
+      message = "Unauthorized",
+      warning_reason = "ws_ticket_scope_mismatch",
     }
   end
 

@@ -74,10 +74,12 @@ With this configuration, both external clients (e.g., browser users) and the int
 
 Browsers cannot set an `Authorization` header on a WebSocket handshake. When `ws_ticket_enabled` is true, the plugin can exchange an authenticated request for a short-lived, single-use ticket:
 
-1. A `POST` matching a configured mint path or suffix uses the existing JWT authentication sources and returns `{ticket, expires_in}`. Redis stores only the ticket hash, user ID, and company ID.
-2. A WebSocket upgrade with `?ticket=…` atomically retrieves and deletes the ticket with Redis `GETDEL`, sets the trusted identity headers, removes the ticket from the upstream query, and proxies the upgrade.
+1. A `POST` matching a configured mint path or suffix uses the existing JWT authentication sources and returns `{ticket, expires_in}`. Redis stores the ticket hash, user ID, company ID, and a scope derived from the first path segment of the mint request (e.g. `/theme/auth/ticket` → `theme`).
+2. A WebSocket upgrade with `?ticket=…` atomically retrieves and deletes the ticket with Redis `GETDEL`, then requires the analogous scope of the upgrade request (e.g. `/theme/graphql` → `theme`) to match the scope stored at mint time. On a match it sets the trusted identity headers, removes the ticket from the upstream query, and proxies the upgrade.
 
-The feature is disabled by default. Requests without `?ticket=` continue through the existing query, cookie, or `Authorization` JWT flow. A request containing an invalid ticket does not fall back to JWT authentication.
+The feature is disabled by default. Requests without `?ticket=` continue through the existing query, cookie, or `Authorization` JWT flow. A request containing an invalid, wrong-scope, or scope-less ticket does not fall back to JWT authentication.
+
+The plugin is a single `KongClusterPlugin` shared across every service, so scope binding cannot come from a static config field. Instead it is derived per-request from the first path segment, which is the same routing fact the plugin already uses to decide whether a request is a mint or upgrade request in the first place — this means every mint-eligible and upgrade-eligible path for a given service must share that first segment (e.g. `/theme/auth/ticket` and `/theme/graphql`). A ticket whose scope cannot be derived at mint time is rejected outright, and a ticket presented where no scope can be derived at consume time (or where the two scopes don't match) is rejected rather than treated as valid — this also rejects tickets minted before scope binding existed.
 
 Path suffixes include the leading slash and match only at the end of the request path. For example, `/graphql` matches `/chat-gen2/graphql` and `/theme/graphql`, but not `/notgraphql` or `/graphql/extra`.
 
