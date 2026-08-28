@@ -81,6 +81,8 @@ The feature is disabled by default. Requests without `?ticket=` continue through
 
 The plugin is a single `KongClusterPlugin` shared across every service, so scope binding cannot come from a static config field. Instead it is derived per-request from the first path segment, which is the same routing fact the plugin already uses to decide whether a request is a mint or upgrade request in the first place — this means every mint-eligible and upgrade-eligible path for a given service must share that first segment (e.g. `/theme/auth/ticket` and `/theme/graphql`). A ticket whose scope cannot be derived at mint time is rejected outright, and a ticket presented where no scope can be derived at consume time (or where the two scopes don't match) is rejected rather than treated as valid — this also rejects tickets minted before scope binding existed.
 
+Set `ticket_scope_binding_enabled: false` to disable this check without disabling ticketing itself — tickets are then minted and consumed without a scope, matching pre-scope-binding behavior, so a ticket minted for one service can be consumed by any other.
+
 Path suffixes include the leading slash and match only at the end of the request path. For example, `/graphql` matches `/chat-gen2/graphql` and `/theme/graphql`, but not `/notgraphql` or `/graphql/extra`.
 
 | Setting | Default | Purpose |
@@ -91,6 +93,7 @@ Path suffixes include the leading slash and match only at the end of the request
 | `ticket_mint_path_suffixes` | `[]` | Path suffixes answered by the plugin for minting, such as `/auth/ticket` across service prefixes. |
 | `ticket_upgrade_paths` | `[]` | Exact WebSocket paths allowed to consume tickets. At least one exact path or suffix is required when enabled. |
 | `ticket_upgrade_path_suffixes` | `[]` | WebSocket path suffixes allowed to consume tickets, such as `/graphql` across service prefixes. |
+| `ticket_scope_binding_enabled` | `true` | Kill switch for the scope check above. Off = a ticket minted for one service can be consumed by any other. |
 | `ticket_ttl` | `20` | Ticket lifetime in seconds (5–60). |
 | `ticket_allowed_origins` | `[]` | Exact Origin allowlist on consume. Empty = not enforced. |
 | `redis_host` / `redis_port` | — / `6379` | Redis endpoint reachable from every Kong replica. |

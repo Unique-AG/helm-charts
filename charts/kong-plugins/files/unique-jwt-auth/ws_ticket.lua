@@ -155,13 +155,16 @@ function _M.create_ticket(conf)
     }
   end
 
-  local scope = service_scope(kong.request.get_path())
-  if not scope then
-    kong.log.err("WebSocket ticket mint rejected because no scope could be derived from the request path")
-    return nil, {
-      status = 401,
-      message = "Unauthorized",
-    }
+  local scope = nil
+  if conf.ticket_scope_binding_enabled then
+    scope = service_scope(kong.request.get_path())
+    if not scope then
+      kong.log.err("WebSocket ticket mint rejected because no scope could be derived from the request path")
+      return nil, {
+        status = 401,
+        message = "Unauthorized",
+      }
+    end
   end
 
   local raw, random_err = openssl_rand.bytes(TICKET_BYTES)
@@ -241,17 +244,19 @@ function _M.do_authentication(conf, ticket)
   -- Bind consumption to the service the ticket was minted for. A missing
   -- scope on either side (e.g. a pre-fix ticket record, or a path with no
   -- derivable segment) is a mismatch, never an implicit match.
-  local upgrade_scope = service_scope(kong.request.get_path())
-  if type(record.scope) ~= "string" or record.scope == ""
-    or upgrade_scope == nil
-    or record.scope ~= upgrade_scope
-  then
-    kong.log.warn("WebSocket ticket scope mismatch")
-    return false, {
-      status = 401,
-      message = "Unauthorized",
-      warning_reason = "ws_ticket_scope_mismatch",
-    }
+  if conf.ticket_scope_binding_enabled then
+    local upgrade_scope = service_scope(kong.request.get_path())
+    if type(record.scope) ~= "string" or record.scope == ""
+      or upgrade_scope == nil
+      or record.scope ~= upgrade_scope
+    then
+      kong.log.warn("WebSocket ticket scope mismatch")
+      return false, {
+        status = 401,
+        message = "Unauthorized",
+        warning_reason = "ws_ticket_scope_mismatch",
+      }
+    end
   end
 
   set_identity_headers(record)
