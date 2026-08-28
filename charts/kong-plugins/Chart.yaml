@@ -5,7 +5,7 @@ maintainers:
   - name: unique-ag
     url: https://unique.ch/
 name: kong-plugins
-version: 2.6.1
+version: 2.6.0
 description: |
   The 'kong-plugins' chart provides a streamlined solution for deploying Kong plugins via ConfigMaps to be used with the Unique Software.
 
@@ -16,5 +16,3 @@ annotations:
   artifacthub.io/changes: |
     - kind: security
       description: add optional Redis-backed single-use WebSocket tickets while preserving existing JWT authentication
-    - kind: fixed
-      description: reject WebSocket ticket minting requests that present the credential via query string or cookie instead of the Authorization header
