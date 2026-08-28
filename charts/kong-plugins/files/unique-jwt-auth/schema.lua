@@ -186,7 +186,6 @@ local schema = {
                 }
             }, {
                 ticket_scope_binding_enabled = {
-                    -- description = "Kill switch for binding a ticket to the service that minted it. Off = a ticket minted for one service can be consumed by any other, matching pre-scope-binding behaviour.",
                     type = "boolean",
                     default = true,
                     required = true
