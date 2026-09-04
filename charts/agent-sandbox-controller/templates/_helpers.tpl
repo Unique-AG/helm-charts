@@ -81,7 +81,22 @@ Controller args
 - "--leader-elect=true"
 {{- end }}
 {{- if .Values.extensions.enabled }}
-- "--extensions"
+- "--extensions=true"
+{{- end }}
+{{- if .Values.webhook.enabled }}
+- "--webhook-service-name={{ .Values.webhook.serviceName | default "agent-sandbox-webhook-service" }}"
+- "--webhook-namespace={{ .Release.Namespace }}"
+{{- else }}
+- "--enable-webhook=false"
+{{- end }}
+{{- with (.Values.controller).sandboxWarmPoolReadinessGracePeriod }}
+- "--sandbox-warm-pool-readiness-grace-period={{ . }}"
+{{- end }}
+{{- with (.Values.controller).sandboxWarmPoolUnschedulableRecheckInterval }}
+- "--sandbox-warm-pool-unschedulable-recheck-interval={{ . }}"
+{{- end }}
+{{- range (.Values.controller).extraArgs | default list }}
+- {{ . | quote }}
 {{- end }}
 {{- end }}
 

@@ -1,0 +1,37 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: Test Metrics Resources
+templates:
+  - servicemonitor.yaml
+  - prometheusrule.yaml
+release:
+  name: ut
+tests:
+  - it: Omits ServiceMonitor and PrometheusRule by default
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: servicemonitor.yaml
+      - hasDocuments:
+          count: 0
+        template: prometheusrule.yaml
+
+  - it: Renders ServiceMonitor and PrometheusRule when enabled
+    set:
+      metrics:
+        serviceMonitor:
+          enabled: true
+          additionalLabels:
+            release: kube-prometheus-stack
+        prometheusRule:
+          enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: servicemonitor.yaml
+      - hasDocuments:
+          count: 1
+        template: prometheusrule.yaml
+      - equal:
+          path: metadata.labels.release
+          value: kube-prometheus-stack
+        template: servicemonitor.yaml

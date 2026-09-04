@@ -13,9 +13,17 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "agent-sandbox.controller.selectorLabels" . | nindent 8 }}
+        {{- merge (fromYaml (include "agent-sandbox.controller.selectorLabels" .)) (.Values.podLabels | default dict) | toYaml | nindent 8 }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
       serviceAccountName: {{ include "agent-sandbox.fullname" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
@@ -33,6 +41,11 @@ spec:
         - name: healthz
           containerPort: 8081
           protocol: TCP
+        {{- if .Values.webhook.enabled }}
+        - name: webhook
+          containerPort: 9443
+          protocol: TCP
+        {{- end }}
         livenessProbe:
           httpGet:
             path: /healthz
@@ -53,6 +66,19 @@ spec:
         resources:
           {{- toYaml . | nindent 10 }}
         {{- end }}
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: config-volume
+          mountPath: /etc/sandbox-config
+          readOnly: true
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: config-volume
+        configMap:
+          name: agent-sandbox-config
+          optional: true
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

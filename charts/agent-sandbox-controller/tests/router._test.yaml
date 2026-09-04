@@ -51,3 +51,41 @@ tests:
       - equal:
           path: metadata.name
           value: ut-agent-sandbox-controller-router-svc
+
+  - it: Requires auth by default (no auth env rendered)
+    template: router-deployment.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: ALLOW_UNAUTHENTICATED_ROUTER
+            value: "true"
+
+  - it: Reads the router auth token from an existing Secret
+    template: router-deployment.yaml
+    set:
+      router:
+        auth:
+          existingSecret: router-auth
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: ROUTER_AUTH_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: router-auth
+                key: token
+
+  - it: Allows explicit unauthenticated mode
+    template: router-deployment.yaml
+    set:
+      router:
+        auth:
+          allowUnauthenticated: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: ALLOW_UNAUTHENTICATED_ROUTER
+            value: "true"

@@ -4,6 +4,8 @@ templates:
   - clusterrole.yaml
   - clusterrolebinding.yaml
   - serviceaccount.yaml
+  - role.yaml
+  - rolebinding.yaml
 release:
   name: ut
 tests:
@@ -18,6 +20,12 @@ tests:
       - hasDocuments:
           count: 2
         template: clusterrolebinding.yaml
+      - hasDocuments:
+          count: 1
+        template: role.yaml
+      - hasDocuments:
+          count: 1
+        template: rolebinding.yaml
 
   - it: Drops the extensions ClusterRole/Binding when extensions.enabled=false
     set:
@@ -30,3 +38,36 @@ tests:
       - hasDocuments:
           count: 1
         template: clusterrolebinding.yaml
+
+  - it: Grants CRD patch verbs so the controller can write conversion caBundles
+    template: clusterrole.yaml
+    documentIndex: 0
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - apiextensions.k8s.io
+            resourceNames:
+              - sandboxclaims.extensions.agents.x-k8s.io
+              - sandboxes.agents.x-k8s.io
+              - sandboxtemplates.extensions.agents.x-k8s.io
+              - sandboxwarmpools.extensions.agents.x-k8s.io
+            resources:
+              - customresourcedefinitions
+            verbs:
+              - get
+              - patch
+              - update
+
+  - it: Drops webhook Role/RoleBinding when webhook.enabled=false
+    set:
+      webhook:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: role.yaml
+      - hasDocuments:
+          count: 0
+        template: rolebinding.yaml
