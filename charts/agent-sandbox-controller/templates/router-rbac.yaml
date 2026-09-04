@@ -1,0 +1,42 @@
+{{- if and .Values.router.enabled .Values.router.cache.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "agent-sandbox.router.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "agent-sandbox.router.labels" . | nindent 4 }}
+---
+# The Pod-IP cache informer LIST/WATCHes with a server-side label selector
+# (agents.x-k8s.io/sandbox-name-hash), but RBAC cannot be label-scoped.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "agent-sandbox.router.name" . }}
+  labels:
+    {{- include "agent-sandbox.router.labels" . | nindent 4 }}
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "agent-sandbox.router.name" . }}
+  labels:
+    {{- include "agent-sandbox.router.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "agent-sandbox.router.name" . }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "agent-sandbox.router.name" . }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}

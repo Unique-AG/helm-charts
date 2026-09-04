@@ -15,7 +15,7 @@ image:
   # -- Overrides the image tag whose default is the chart appVersion.
   tag: ""
   # -- Pin a specific image by digest. Recommended for supply-chain integrity.
-  digest: sha256:dc23fb0d5624c306ca2f8ef0d41848dba670ebaf62beb500f870175aec529ffd
+  digest: sha256:e1787f95cda406e2d81322e8637b6dfa2d77514fbbd0536a872b8e5d409b7154
   # -- This sets the pull policy for images.
   pullPolicy: IfNotPresent
 
@@ -47,14 +47,6 @@ controller:
   sandboxWarmPoolUnschedulableRecheckInterval: ""
   # -- Additional flags not listed above (e.g. zap logging flags).
   extraArgs: []
-
-# -- Conversion webhook used by the multi-version CRDs (`v1alpha1` <-> `v1beta1`).
-# Stock upstream CRDs use `conversion.strategy=Webhook` and must have a live webhook.
-webhook:
-  # -- Toggle the webhook server, Service, and cert Secret RBAC. Disable only if CRDs are rewritten to `conversion.strategy=None`.
-  enabled: true
-  # -- Name of the conversion webhook Service. Must match the name the controller patches onto CRD `clientConfig`.
-  serviceName: agent-sandbox-webhook-service
 
 # -- Prometheus Operator scrape and alerting resources for the controller metrics endpoint.
 metrics:
@@ -125,14 +117,14 @@ router:
   enabled: true
   # -- Number of router replicas.
   replicaCount: 2
-  # -- Container image used by the router.
+  # -- Container image used by the router (official Go router).
   image:
     # -- This sets the router image repository.
-    repository: us-central1-docker.pkg.dev/k8s-staging-images/agent-sandbox/sandbox-router
-    # -- Overrides the router image tag.
-    tag: v20260820-v0.5.6
+    repository: registry.k8s.io/agent-sandbox/sandbox-router-go
+    # -- Overrides the router image tag whose default is the chart appVersion.
+    tag: ""
     # -- Pin a specific router image by digest.
-    digest: sha256:b66415363649ed14e68efbeac02a79681461834c265c9a20867a6ac60c21a74e
+    digest: sha256:25b1a09396306eb056ea5b81d6b5ac96ae685e785eb45c84b6416e7d7fac938e
     # -- This sets the pull policy for the router image.
     pullPolicy: IfNotPresent
   # -- Router `Service` settings.
@@ -145,18 +137,18 @@ router:
     type: ClusterIP
     # -- Service port exposed by the router.
     port: 8080
-  # -- Container port the router listens on inside the pod.
+  # -- Container port the router proxy listens on inside the pod.
   containerPort: 8080
   # -- Upstream proxy timeout in seconds the router applies when forwarding to sandboxes.
   proxyTimeoutSeconds: 180
-  # -- Router request authentication. The router refuses to start without a token unless unauthenticated mode is explicitly allowed.
-  auth:
-    # -- Name of an existing Secret holding the router auth token (`ROUTER_AUTH_TOKEN`).
-    existingSecret: ""
-    # -- Key in the Secret that holds the token.
-    secretKey: token
-    # -- Run the router without authentication (`ALLOW_UNAUTHENTICATED_ROUTER=true`). Ignored when `existingSecret` is set.
-    allowUnauthenticated: false
+  # -- Retry budget for upstream dial failures.
+  upstreamMaxRetries: 3
+  # -- Pod-IP cache: the router watches sandbox pods and dials the live pod IP instead of resolving DNS per request.
+  cache:
+    # -- Enable the cache. Creates a router ServiceAccount plus a ClusterRole to get/list/watch pods cluster-wide, and (with the NetworkPolicy) allows egress to the API server. Disabled means DNS-only routing.
+    enabled: false
+  # -- Additional router flags (e.g. `--path-routing-prefix`, `--cluster-domain`).
+  extraArgs: []
   # -- Router container resource requests and limits.
   resources:
     requests:
@@ -165,15 +157,15 @@ router:
     limits:
       cpu: "250m"
       memory: "512Mi"
-  # -- HTTP readiness probe configuration for the router.
+  # -- HTTP readiness probe configuration for the router (served on the health port 8081).
   readinessProbe:
-    path: /healthz
-    initialDelaySeconds: 5
+    path: /readyz
+    initialDelaySeconds: 1
     periodSeconds: 5
-  # -- HTTP liveness probe configuration for the router.
+  # -- HTTP liveness probe configuration for the router (served on the health port 8081).
   livenessProbe:
     path: /healthz
-    initialDelaySeconds: 10
+    initialDelaySeconds: 5
     periodSeconds: 10
   # -- Pod-level security context applied to the router pod.
   podSecurityContext:

@@ -83,12 +83,6 @@ Controller args
 {{- if .Values.extensions.enabled }}
 - "--extensions=true"
 {{- end }}
-{{- if .Values.webhook.enabled }}
-- "--webhook-service-name={{ .Values.webhook.serviceName | default "agent-sandbox-webhook-service" }}"
-- "--webhook-namespace={{ .Release.Namespace }}"
-{{- else }}
-- "--enable-webhook=false"
-{{- end }}
 {{- with (.Values.controller).sandboxWarmPoolReadinessGracePeriod }}
 - "--sandbox-warm-pool-readiness-grace-period={{ . }}"
 {{- end }}

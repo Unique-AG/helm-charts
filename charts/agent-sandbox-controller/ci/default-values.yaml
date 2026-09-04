@@ -1,3 +1,2 @@
-router:
-  auth:
-    allowUnauthenticated: true
+# Default install is exercised as-is; the Go router starts with --authz-mode=allow-all.
+{}
