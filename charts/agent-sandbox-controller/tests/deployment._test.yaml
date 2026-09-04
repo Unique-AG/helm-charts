@@ -27,13 +27,7 @@ tests:
       - contains:
           path: spec.template.spec.containers[0].args
           content: --extensions=true
-      - contains:
-          path: spec.template.spec.containers[0].args
-          content: --webhook-service-name=agent-sandbox-webhook-service
-      - contains:
-          path: spec.template.spec.containers[0].args
-          content: --webhook-namespace=NAMESPACE
-      - contains:
+      - notContains:
           path: spec.template.spec.containers[0].ports
           content:
             name: webhook
@@ -59,29 +53,22 @@ tests:
             mountPath: /etc/sandbox-config
             readOnly: true
 
-  - it: Disables leader election, extensions and webhook when configured
+  - it: Disables leader election when configured
     set:
       leaderElect: false
-      extensions:
-        enabled: false
-      webhook:
-        enabled: false
     asserts:
-      - contains:
-          path: spec.template.spec.containers[0].args
-          content: --enable-webhook=false
       - notContains:
           path: spec.template.spec.containers[0].args
           content: --leader-elect=true
+
+  - it: Disables extensions when configured
+    set:
+      extensions:
+        enabled: false
+    asserts:
       - notContains:
           path: spec.template.spec.containers[0].args
           content: --extensions=true
-      - notContains:
-          path: spec.template.spec.containers[0].ports
-          content:
-            name: webhook
-            containerPort: 9443
-            protocol: TCP
 
   - it: Honors a custom replica count
     set:
