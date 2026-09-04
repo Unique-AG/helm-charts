@@ -8,8 +8,8 @@ name: agent-sandbox-controller
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/agent-sandbox-controller
   - https://github.com/kubernetes-sigs/agent-sandbox
-version: 0.4.6-rc.1
-appVersion: "v0.4.6"
+version: 0.5.6
+appVersion: "v0.5.6"
 description: |
   Helm chart for the Agent Sandbox controller — a Kubernetes CRD and controller for managing isolated, stateful, singleton workloads (e.g. AI agent runtimes).
 
@@ -18,6 +18,18 @@ annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
     - kind: changed
-      description: Bumped upstream agent-sandbox to v0.4.5 (controller image, router image, and CRDs).
-    - kind: security
-      description: Removed `pods` `create`/`delete` verbs from the extensions ClusterRole to align with upstream RBAC hardening.
+      description: Bumped upstream agent-sandbox to v0.5.6 (controller image, router image, and CRDs). This is a breaking upgrade from v1alpha1 to v1beta1.
+    - kind: added
+      description: Conversion webhook Service, cert Secret RBAC, and webhook port 9443 so CRDs can convert between v1alpha1 and v1beta1.
+    - kind: added
+      description: Controller ClusterRole now patches CRD conversion webhook caBundles on startup (upstream manage-webhook-certs).
+    - kind: added
+      description: Opt-in Prometheus Operator ServiceMonitor and PrometheusRule (disabled by default).
+    - kind: added
+      description: imagePullSecrets, podLabels, podAnnotations, and extra controller flags (warm-pool readiness grace period, unschedulable recheck interval).
+    - kind: added
+      description: Controller mounts the optional `agent-sandbox-config` ConfigMap at /etc/sandbox-config (upstream sandbox controller config).
+    - kind: added
+      description: Router auth (`router.auth`) — token from an existing Secret via ROUTER_AUTH_TOKEN, or explicit ALLOW_UNAUTHENTICATED_ROUTER opt-in. The v0.5.6 router refuses to start without one of these.
+    - kind: changed
+      description: Extensions ClusterRole no longer includes sandboxtemplates/status (upstream dropped empty SandboxTemplate status).

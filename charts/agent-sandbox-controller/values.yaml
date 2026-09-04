@@ -15,9 +15,18 @@ image:
   # -- Overrides the image tag whose default is the chart appVersion.
   tag: ""
   # -- Pin a specific image by digest. Recommended for supply-chain integrity.
-  digest: sha256:93c28f724f34845fcfbd58818959958fd877f9953698c920add3081f61a54429
+  digest: sha256:dc23fb0d5624c306ca2f8ef0d41848dba670ebaf62beb500f870175aec529ffd
   # -- This sets the pull policy for images.
   pullPolicy: IfNotPresent
+
+# -- Image pull secrets for the controller pod.
+imagePullSecrets: []
+
+# -- Extra annotations added to the controller pod template.
+podAnnotations: {}
+
+# -- Extra labels added to the controller pod template (selector labels win on conflict).
+podLabels: {}
 
 # -- Number of controller replicas. Leader election is used to elect a single active leader.
 replicaCount: 1
@@ -29,6 +38,42 @@ extensions:
 
 # -- Enable controller leader election (`--leader-elect=true`).
 leaderElect: true
+
+# -- Optional extra controller flags. Unset values are omitted from the container args.
+controller:
+  # -- How long a warm pool sandbox may stay non-Ready before it is considered stuck (extensions only). Controller default is `5m`.
+  sandboxWarmPoolReadinessGracePeriod: ""
+  # -- Re-check interval for pools holding unschedulable sandboxes past the grace period (extensions only). Controller default is `1m`.
+  sandboxWarmPoolUnschedulableRecheckInterval: ""
+  # -- Additional flags not listed above (e.g. zap logging flags).
+  extraArgs: []
+
+# -- Conversion webhook used by the multi-version CRDs (`v1alpha1` <-> `v1beta1`).
+# Stock upstream CRDs use `conversion.strategy=Webhook` and must have a live webhook.
+webhook:
+  # -- Toggle the webhook server, Service, and cert Secret RBAC. Disable only if CRDs are rewritten to `conversion.strategy=None`.
+  enabled: true
+  # -- Name of the conversion webhook Service. Must match the name the controller patches onto CRD `clientConfig`.
+  serviceName: agent-sandbox-webhook-service
+
+# -- Prometheus Operator scrape and alerting resources for the controller metrics endpoint.
+metrics:
+  serviceMonitor:
+    # -- Create a `ServiceMonitor` for `/metrics`. Requires the prometheus-operator CRDs.
+    enabled: false
+    # -- Extra labels (often required to match Prometheus `serviceMonitorSelector`).
+    additionalLabels: {}
+    # -- Scrape interval.
+    interval: 30s
+    # -- Scrape timeout. Omitted unless set.
+    scrapeTimeout: ""
+  prometheusRule:
+    # -- Create a starter `PrometheusRule`. Requires the prometheus-operator CRDs.
+    enabled: false
+    # -- Extra labels (often required to match Prometheus `ruleSelector`).
+    additionalLabels: {}
+    # -- Additional Prometheus rule groups appended after the chart's starter group.
+    additionalGroups: []
 
 # -- Controller `Service` settings.
 service:
@@ -85,9 +130,9 @@ router:
     # -- This sets the router image repository.
     repository: us-central1-docker.pkg.dev/k8s-staging-images/agent-sandbox/sandbox-router
     # -- Overrides the router image tag.
-    tag: v20260514-v0.4.6
+    tag: v20260820-v0.5.6
     # -- Pin a specific router image by digest.
-    digest: sha256:15213198b19cf4da2ad560d84a6e144a1ed79edaf058f806c5438bc5142b7058
+    digest: sha256:b66415363649ed14e68efbeac02a79681461834c265c9a20867a6ac60c21a74e
     # -- This sets the pull policy for the router image.
     pullPolicy: IfNotPresent
   # -- Router `Service` settings.
@@ -104,6 +149,14 @@ router:
   containerPort: 8080
   # -- Upstream proxy timeout in seconds the router applies when forwarding to sandboxes.
   proxyTimeoutSeconds: 180
+  # -- Router request authentication. The router refuses to start without a token unless unauthenticated mode is explicitly allowed.
+  auth:
+    # -- Name of an existing Secret holding the router auth token (`ROUTER_AUTH_TOKEN`).
+    existingSecret: ""
+    # -- Key in the Secret that holds the token.
+    secretKey: token
+    # -- Run the router without authentication (`ALLOW_UNAUTHENTICATED_ROUTER=true`). Ignored when `existingSecret` is set.
+    allowUnauthenticated: false
   # -- Router container resource requests and limits.
   resources:
     requests:

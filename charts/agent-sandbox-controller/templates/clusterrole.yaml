@@ -41,6 +41,19 @@ rules:
   - patch
   - update
 - apiGroups:
+  - apiextensions.k8s.io
+  resourceNames:
+  - sandboxclaims.extensions.agents.x-k8s.io
+  - sandboxes.agents.x-k8s.io
+  - sandboxtemplates.extensions.agents.x-k8s.io
+  - sandboxwarmpools.extensions.agents.x-k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - coordination.k8s.io
   resources:
   - leases
@@ -52,6 +65,7 @@ rules:
   - update
   - watch
 - apiGroups:
+  - ""
   - events.k8s.io
   resources:
   - events
@@ -130,7 +144,6 @@ rules:
   - sandboxclaims/finalizers
   - sandboxclaims/status
   - sandboxtemplates/finalizers
-  - sandboxtemplates/status
   - sandboxwarmpools/finalizers
   - sandboxwarmpools/status
   verbs:

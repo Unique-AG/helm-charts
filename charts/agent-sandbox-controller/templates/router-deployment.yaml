@@ -37,6 +37,16 @@ spec:
           env:
             - name: PROXY_TIMEOUT_SECONDS
               value: {{ .Values.router.proxyTimeoutSeconds | default 180 | quote }}
+            {{- if .Values.router.auth.existingSecret }}
+            - name: ROUTER_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.router.auth.existingSecret }}
+                  key: {{ .Values.router.auth.secretKey | default "token" }}
+            {{- else if .Values.router.auth.allowUnauthenticated }}
+            - name: ALLOW_UNAUTHENTICATED_ROUTER
+              value: "true"
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.router.containerPort }}

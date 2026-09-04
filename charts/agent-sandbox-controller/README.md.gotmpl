@@ -21,15 +21,32 @@ This chart packages the upstream [`kubernetes-sigs/agent-sandbox`](https://githu
 - The `ClusterRole`/`ClusterRoleBinding` and `ServiceAccount` required by the controller.
 - An optional extensions controller (`SandboxClaim`, `SandboxTemplate`, `SandboxWarmPool`) toggled via `extensions.enabled`.
 - The sandbox `router` deployment, service, and `NetworkPolicy` toggled via `router.enabled`.
+- A conversion webhook `Service` (port 443 → 9443) plus namespaced Role/RoleBinding for the self-signed webhook cert Secret. Required by the multi-version CRDs.
 - The `Sandbox` and extensions CRDs (installed via Helm's `crds/` mechanism, not templated).
 
 ### CRDs
 
-CRDs in `crds/` are installed by Helm on `helm install` but are **not** upgraded or deleted by Helm. To pick up CRD changes on upgrade you must apply them manually:
+CRDs in `crds/` are installed by Helm on `helm install` but are **not** upgraded or deleted by Helm. To pick up CRD changes on upgrade you must apply them manually (Server-Side Apply recommended), from a checkout of this repository:
 
 ```sh
-kubectl apply -f https://raw.githubusercontent.com/Unique-AG/helm-charts/main/charts/{{ template "chart.name" . }}/crds/crds.yaml
+kubectl apply --server-side --force-conflicts -f charts/{{ template "chart.name" . }}/crds/
 ```
+
+The bundled CRDs ship with `conversion.strategy=Webhook` and a placeholder `clientConfig` pointing at `agent-sandbox-webhook-service` in `agent-sandbox-system`. The controller patches `caBundle` plus the Service name/namespace onto those CRDs at startup (`--manage-webhook-certs=true`, `--webhook-namespace=<release namespace>`). Unique deploys this chart into `system`, so the patched webhook Service is `agent-sandbox-webhook-service.system`.
+
+### Upgrading from v0.4.x (v1alpha1 → v1beta1)
+
+This is a **breaking** upgrade. Read the upstream [API Migration Guide](https://agent-sandbox.sigs.k8s.io/docs/getting_started/api-migration-guide/) before applying. In short:
+
+1. Turn Argo auto-sync **off** for the controller and every `SandboxTemplate` / `SandboxWarmPool` app.
+2. Run `files/migrate.sh --phase=bootstrap` **before** applying the new CRDs. This pre-creates `shadow-pool-<template>` warm pools for any cold-start `v1alpha1` SandboxClaims. Skip this only if you have confirmed there are no live claims.
+3. Apply the new CRDs (SSA) then sync the controller chart. Wait until the controller is Ready **and** `kubectl get sandboxwarmpools.extensions.agents.x-k8s.io` succeeds (webhook is serving).
+4. Run `files/migrate.sh --phase=migrate` to rewrite etcd storage to `v1beta1`.
+5. Update SandboxTemplate/SandboxWarmPool manifests to `apiVersion: extensions.agents.x-k8s.io/v1beta1`, and SandboxClaims from `spec.sandboxTemplateRef` to `spec.warmPoolRef.name`.
+
+Upgrade directly to **v0.5.6** (or at least v0.5.2). Do not stop on v0.5.0/v0.5.1 — those have a status-wiping race on warm-started claims.
+
+`files/migrate.sh` is the upstream helper vendored from `kubernetes-sigs/agent-sandbox` v0.5.6.
 
 ### SDK Integration
 
