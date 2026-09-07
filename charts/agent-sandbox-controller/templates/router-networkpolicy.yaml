@@ -15,8 +15,8 @@ spec:
   policyTypes:
     - Ingress
     - Egress
-  {{- if or $allowedSources $allowedCIDRs }}
   ingress:
+    {{- if or $allowedSources $allowedCIDRs }}
     - from:
         {{- range $allowedSources }}
         - podSelector:
@@ -33,7 +33,11 @@ spec:
       ports:
         - protocol: TCP
           port: {{ .Values.router.containerPort }}
-  {{- end }}
+    {{- end }}
+    # Kubelet probes hit the pod IP directly; allow the health port from anywhere.
+    - ports:
+        - protocol: TCP
+          port: 8081
   egress:
     # Allow DNS resolution
     - to:
@@ -64,4 +68,17 @@ spec:
       ports:
         - protocol: TCP
           port: {{ .Values.router.networkPolicy.egress.sandboxPort | default 8888 }}
+    {{- if .Values.router.cache.enabled }}
+    # Pod-IP cache informer needs the API server. NetworkPolicy cannot name the
+    # apiserver directly; allow the default namespace on the standard API ports.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: default
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 6443
+    {{- end }}
 {{- end }}

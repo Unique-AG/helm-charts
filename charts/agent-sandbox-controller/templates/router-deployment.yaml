@@ -16,7 +16,12 @@ spec:
       labels:
         {{- include "agent-sandbox.router.selectorLabels" . | nindent 8 }}
     spec:
+      {{- if .Values.router.cache.enabled }}
+      serviceAccountName: {{ include "agent-sandbox.router.name" . }}
+      {{- else }}
       automountServiceAccountToken: false
+      {{- end }}
+      terminationGracePeriodSeconds: 45
       {{- with .Values.router.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
@@ -32,25 +37,38 @@ spec:
       {{- end }}
       containers:
         - name: router
-          image: "{{ .Values.router.image.repository }}:{{ .Values.router.image.tag }}{{ if .Values.router.image.digest }}@{{ .Values.router.image.digest }}{{ end }}"
+          image: "{{ .Values.router.image.repository }}:{{ .Values.router.image.tag | default .Chart.AppVersion }}{{ if .Values.router.image.digest }}@{{ .Values.router.image.digest }}{{ end }}"
           imagePullPolicy: {{ .Values.router.image.pullPolicy }}
-          env:
-            - name: PROXY_TIMEOUT_SECONDS
-              value: {{ .Values.router.proxyTimeoutSeconds | default 180 | quote }}
+          args:
+            - --http-bind-address=:{{ .Values.router.containerPort }}
+            - --metrics-bind-address=:9090
+            - --health-probe-bind-address=:8081
+            - --proxy-timeout={{ .Values.router.proxyTimeoutSeconds | default 180 }}s
+            - --upstream-max-retries={{ .Values.router.upstreamMaxRetries | default 3 }}
+            - --cache-enabled={{ .Values.router.cache.enabled }}
+            {{- range .Values.router.extraArgs | default list }}
+            - {{ . | quote }}
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.router.containerPort }}
               protocol: TCP
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+            - name: healthz
+              containerPort: 8081
+              protocol: TCP
           readinessProbe:
             httpGet:
               path: {{ .Values.router.readinessProbe.path }}
-              port: http
+              port: healthz
             initialDelaySeconds: {{ .Values.router.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.router.readinessProbe.periodSeconds }}
           livenessProbe:
             httpGet:
               path: {{ .Values.router.livenessProbe.path }}
-              port: http
+              port: healthz
             initialDelaySeconds: {{ .Values.router.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.router.livenessProbe.periodSeconds }}
           {{- with .Values.router.containerSecurityContext }}

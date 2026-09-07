@@ -20,16 +20,42 @@ This chart packages the upstream [`kubernetes-sigs/agent-sandbox`](https://githu
 - The controller `Deployment` with leader election enabled by default.
 - The `ClusterRole`/`ClusterRoleBinding` and `ServiceAccount` required by the controller.
 - An optional extensions controller (`SandboxClaim`, `SandboxTemplate`, `SandboxWarmPool`) toggled via `extensions.enabled`.
-- The sandbox `router` deployment, service, and `NetworkPolicy` toggled via `router.enabled`.
+- The Go sandbox `router` deployment, service, and `NetworkPolicy` toggled via `router.enabled`. The optional Pod-IP cache (`router.cache.enabled`) adds a router ServiceAccount and cluster-wide pod read RBAC.
 - The `Sandbox` and extensions CRDs (installed via Helm's `crds/` mechanism, not templated).
+
+The controller mounts the optional `agent-sandbox-config` ConfigMap at `/etc/sandbox-config`; create it to configure the `SandboxClaim.spec.additionalPodMetadata.labels` allowlist.
 
 ### CRDs
 
-CRDs in `crds/` are installed by Helm on `helm install` but are **not** upgraded or deleted by Helm. To pick up CRD changes on upgrade you must apply them manually:
+CRDs in `crds/` are installed by Helm on `helm install` but are **not** upgraded or deleted by Helm. To pick up CRD changes on upgrade you must apply them manually (Server-Side Apply recommended), from a checkout of this repository:
 
 ```sh
-kubectl apply -f https://raw.githubusercontent.com/Unique-AG/helm-charts/main/charts/{{ template "chart.name" . }}/crds/crds.yaml
+kubectl apply --server-side --force-conflicts -f charts/{{ template "chart.name" . }}/crds/
 ```
+
+### Upgrading to 1.x (v1alpha1 removal)
+
+Upstream v1.0.0 removes the `v1alpha1` API and the conversion webhook. Direct upgrades from chart 0.4.x are **not supported** — the API server rejects CRDs that drop a version still listed in `status.storedVersions`. Read the upstream [API Migration Guide](https://agent-sandbox.sigs.k8s.io/docs/getting_started/api-migration-guide/) before applying.
+
+1. Upgrade to chart **0.5.6** first and complete its `v1alpha1` → `v1beta1` storage migration (that version's README documents the `migrate.sh` procedure).
+2. Verify every CRD stores only `v1beta1`:
+
+   ```sh
+   kubectl get crd sandboxes.agents.x-k8s.io \
+     sandboxclaims.extensions.agents.x-k8s.io \
+     sandboxtemplates.extensions.agents.x-k8s.io \
+     sandboxwarmpools.extensions.agents.x-k8s.io \
+     -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.storedVersions}{"\n"}{end}'
+   ```
+
+3. Apply the new CRDs (SSA, see above), then upgrade the chart.
+4. Delete the webhook cert Secret the old controller created outside of Helm:
+
+   ```sh
+   kubectl delete secret agent-sandbox-webhook-certs -n <release namespace> --ignore-not-found
+   ```
+
+The webhook Service and cert Role/RoleBinding were Helm-managed and are removed by the upgrade itself.
 
 ### SDK Integration
 

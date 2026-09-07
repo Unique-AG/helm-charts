@@ -26,16 +26,49 @@ tests:
           content: --leader-elect=true
       - contains:
           path: spec.template.spec.containers[0].args
-          content: --extensions
+          content: --extensions=true
+      - notContains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: webhook
+            containerPort: 9443
+            protocol: TCP
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: tmp
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: /tmp
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config-volume
+            configMap:
+              name: agent-sandbox-config
+              optional: true
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: config-volume
+            mountPath: /etc/sandbox-config
+            readOnly: true
 
-  - it: Disables leader election and extensions when configured
+  - it: Disables leader election when configured
     set:
       leaderElect: false
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: --leader-elect=true
+
+  - it: Disables extensions when configured
+    set:
       extensions:
         enabled: false
     asserts:
-      - isNullOrEmpty:
+      - notContains:
           path: spec.template.spec.containers[0].args
+          content: --extensions=true
 
   - it: Honors a custom replica count
     set:
@@ -44,3 +77,34 @@ tests:
       - equal:
           path: spec.replicas
           value: 3
+
+  - it: Selector labels win over conflicting podLabels
+    set:
+      podLabels:
+        app.kubernetes.io/name: overridden
+        team: platform
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/name"]
+          value: agent-sandbox-controller
+      - equal:
+          path: spec.template.metadata.labels.team
+          value: platform
+
+  - it: Passes optional warm-pool flags when set
+    set:
+      controller:
+        sandboxWarmPoolReadinessGracePeriod: 10m
+        sandboxWarmPoolUnschedulableRecheckInterval: 2m
+        extraArgs:
+          - --kube-api-qps=50
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --sandbox-warm-pool-readiness-grace-period=10m
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --sandbox-warm-pool-unschedulable-recheck-interval=2m
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --kube-api-qps=50

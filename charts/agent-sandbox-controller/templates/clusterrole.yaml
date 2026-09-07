@@ -52,6 +52,7 @@ rules:
   - update
   - watch
 - apiGroups:
+  - ""
   - events.k8s.io
   resources:
   - events
@@ -130,7 +131,6 @@ rules:
   - sandboxclaims/finalizers
   - sandboxclaims/status
   - sandboxtemplates/finalizers
-  - sandboxtemplates/status
   - sandboxwarmpools/finalizers
   - sandboxwarmpools/status
   verbs:
