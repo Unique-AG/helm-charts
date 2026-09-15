@@ -20,7 +20,7 @@ This will perform all tasks from [`.pre-commit-config.yaml`](./.pre-commit-confi
 
 The documentation for each chart is generated with [helm-docs](https://github.com/norwoodj/helm-docs). This way we can ensure that values are consistent with the chart documentation.
 
-We have a script on the repository which will execute the helm-docs docker container, so that you don't have to worry about downloading the binary etc. Simply execute the script:
+The repository includes a script that runs the helm-docs container:
 
 ```shell
 ./scripts/helm-docs.sh
@@ -53,7 +53,7 @@ Any breaking changes to a chart (backwards incompatible) require:
 
 ### Immutability
 
-Each release for each chart must be immutable. Any change to a chart (even just documentation) requires a version bump. Trying to release the same version twice will result in an error.
+Each chart release is immutable. Every change, including documentation, requires a version bump. Publishing the same version twice results in an error.
 
 ### Chart Versioning
 
@@ -126,6 +126,16 @@ The linting can be invoked manually with the following command:
 ```shell
 ./scripts/lint.sh
 ```
+
+### Testing Kong plugins
+
+Chart tests render plugin ConfigMaps but do not execute their Lua code. Run the `unique-jwt-auth` integration suite against Redis and Redis Cluster with:
+
+```shell
+./charts/kong-plugins/tests/unique-jwt-auth/run.sh
+```
+
+The test images are pinned in `run.sh`. Update each tag and digest together.
 
 ### Locally installing charts
 
