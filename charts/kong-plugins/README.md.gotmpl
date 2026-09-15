@@ -88,17 +88,35 @@ Path suffixes include the leading slash and match only at the end of the request
 | `ticket_upgrade_path_suffixes` | `[]` | WebSocket path suffixes allowed to consume tickets, such as `/graphql` across service prefixes. |
 | `ticket_ttl` | `20` | Ticket lifetime in seconds (5–60). |
 | `ticket_allowed_origins` | `[]` | Exact Origin allowlist on consume. Empty = not enforced. |
-| `redis_host` / `redis_port` | — / `6379` | Redis endpoint reachable from every Kong replica. |
+| `redis_cluster_enabled` | `false` | Use Redis Cluster routing instead of one Redis endpoint. |
+| `redis_cluster_name` | — | Stable, unique topology-cache name. Required in cluster mode. |
+| `redis_cluster_nodes` | — | Non-empty seed list of `{host, port}` records. Required in cluster mode. |
+| `redis_host` / `redis_port` | — / `6379` | Single-node or replication endpoint. `redis_host` is required outside cluster mode. |
 | `redis_username` / `redis_password` | — | Optional Redis ACL credentials; both fields support Kong vault references. |
 | `redis_ssl` / `redis_ssl_verify` | `false` / `true` | TLS to Redis. |
 | `redis_server_name` | — | TLS server name for SNI and certificate verification. |
 | `redis_timeout` | `2000` | Redis timeout in milliseconds. |
-| `redis_database` | `0` | Logical Redis database. |
+| `redis_database` | `0` | Logical database. Must be `0` in cluster mode. |
 | `redis_key_prefix` | `ws_ticket:` | Key prefix for ticket records. |
 
 Redis 6.2 or newer is required for `GETDEL`. Ticket operations return 503 when Redis is unavailable; existing JWT authentication remains available.
 
-**Example** (enable the cluster-wide plugin after Redis is provisioned):
+Redis Cluster mode also requires this Nginx shared dictionary on every Kong gateway:
+
+```yaml
+- name: KONG_NGINX_HTTP_LUA_SHARED_DICT
+  value: redis_cluster_slot_locks 100k
+```
+
+If that environment variable already defines a dictionary, append the full directive in the same value:
+
+```yaml
+value: existing_dict 1m; lua_shared_dict redis_cluster_slot_locks 100k
+```
+
+Every host and port returned by `CLUSTER SLOTS` must be reachable from Kong. With TLS verification, `redis_server_name` must match a certificate identity accepted by every cluster node. The ACL user needs `CLUSTER SLOTS`, `CLUSTER NODES`, `CLUSTER INFO`, and `ASKING`, plus `SET` and `GETDEL` on the configured key prefix. The server `INFO` command is not required; it is used only for an optional Redis version warning and is skipped when unavailable.
+
+**Single-node or replication example:**
 
 ```yaml
 apiVersion: configuration.konghq.com/v1
@@ -125,7 +143,27 @@ config:
   redis_password: '{vault://env/kong-ws-ticket-redis-password}'
 ```
 
-Rollout: deploy with the flag off (no behaviour change) → provision Redis and enable per tenant → migrate clients from `?token=` to `?ticket=` at their own pace. Redact the ticket query parameter in ingress, WAF, and tracing logs (the plugin strips it from the upstream request only).
+**Redis Cluster fields:**
+
+```yaml
+config:
+  redis_cluster_enabled: true
+  redis_cluster_name: tenant-ws-ticket
+  redis_cluster_nodes:
+    - host: redis-cluster-0.redis-headless.example.svc.cluster.local
+      port: 6379
+    - host: redis-cluster-1.redis-headless.example.svc.cluster.local
+      port: 6379
+  redis_username: ws-ticket
+  redis_password: '{vault://env/kong-ws-ticket-redis-password}'
+  redis_ssl: true
+  redis_ssl_verify: true
+  redis_server_name: redis.example.internal
+  redis_database: 0
+  redis_key_prefix: "ws_ticket:tenant:"
+```
+
+Roll out the gateway shared dictionary first, then chart `2.7.0`, and enable cluster mode last. Verify ticket mint and consume before migrating clients from `?token=` to `?ticket=`. Redact the ticket query parameter in ingress, WAF, and tracing logs; the plugin strips it only from the upstream request.
 
 ## Prometheus Metrics
 
