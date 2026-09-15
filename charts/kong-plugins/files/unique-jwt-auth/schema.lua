@@ -2,6 +2,34 @@ local typedefs = require "kong.db.schema.typedefs"
 
 local PLUGIN_NAME = "unique-jwt-auth"
 
+local function is_non_empty_string(value)
+    return type(value) == "string" and value ~= ""
+end
+
+local function validate_redis_topology(entity)
+    local config = entity.config or {}
+
+    if config.redis_cluster_enabled then
+        if not is_non_empty_string(config.redis_cluster_name) then
+            return nil, "redis_cluster_name is required when redis_cluster_enabled is true"
+        end
+
+        if type(config.redis_cluster_nodes) ~= "table"
+            or #config.redis_cluster_nodes == 0
+        then
+            return nil, "redis_cluster_nodes must contain at least one node when redis_cluster_enabled is true"
+        end
+
+        if config.redis_database ~= nil and config.redis_database ~= 0 then
+            return nil, "redis_database must be 0 when redis_cluster_enabled is true"
+        end
+    elseif config.ws_ticket_enabled and not is_non_empty_string(config.redis_host) then
+        return nil, "redis_host is required when WebSocket tickets use single-node Redis"
+    end
+
+    return true
+end
+
 local schema = {
     name = PLUGIN_NAME,
     fields = {{
@@ -199,6 +227,33 @@ local schema = {
                     default = {}
                 }
             }, {
+                redis_cluster_enabled = {
+                    type = "boolean",
+                    default = false
+                }
+            }, {
+                redis_cluster_name = {
+                    type = "string",
+                    len_min = 1
+                }
+            }, {
+                redis_cluster_nodes = {
+                    type = "array",
+                    len_min = 1,
+                    elements = {
+                        type = "record",
+                        fields = {{
+                            host = typedefs.host {
+                                required = true
+                            }
+                        }, {
+                            port = typedefs.port({
+                                default = 6379
+                            })
+                        }}
+                    }
+                }
+            }, {
                 redis_host = typedefs.host
             }, {
                 redis_port = typedefs.port({
@@ -247,15 +302,17 @@ local schema = {
         }
     }},
     entity_checks = {{
-        conditional = {
-            if_field = "config.ws_ticket_enabled",
-            if_match = {
-                eq = true
+        custom_entity_check = {
+            field_sources = {
+                "config.ws_ticket_enabled",
+                "config.redis_cluster_enabled",
+                "config.redis_cluster_name",
+                "config.redis_cluster_nodes",
+                "config.redis_host",
+                "config.redis_database"
             },
-            then_field = "config.redis_host",
-            then_match = {
-                required = true
-            }
+            fn = validate_redis_topology,
+            run_with_missing_fields = true
         }
     }, {
         conditional_at_least_one_of = {
