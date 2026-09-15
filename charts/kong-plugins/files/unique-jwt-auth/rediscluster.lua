@@ -1,6 +1,15 @@
+-- Vendored from Kong/resty-redis-cluster 1.6.0.
+-- Source commit: e7c79c7d16ba85fe9622ee6e48706fcd5c85f641
+-- Licensed under Apache-2.0; see charts/kong-plugins/licenses.
+-- Modified by Unique AG to load xmodem from the Kong plugin namespace,
+-- detect MOVED replies returned through lua-resty-redis's error value, execute
+-- the command after connecting to an ASK redirect target instead of breaking
+-- out of the retry loop early, and treat the server INFO version probe as
+-- non-fatal so a least-privilege ticket ACL user can initialize the cluster.
+
 local redis = require "resty.redis"
 local resty_lock = require "resty.lock"
-local xmodem = require "resty.xmodem"
+local xmodem = require "kong.plugins.unique-jwt-auth.xmodem"
 local new_tab = require "table.new"
 local digest = require "resty.openssl.digest"
 local resty_string = require "resty.string"
@@ -514,11 +523,15 @@ local function try_hosts_slots(self, serv_list)
                 return nil, errors
             end
 
+            -- The version probe only emits a Redis 8 compatibility warning and
+            -- depends on the server INFO command, which a least-privilege ticket
+            -- ACL user is not required to hold. Never fail cluster init on it.
+            -- The version probe only emits a Redis 8 compatibility warning and
+            -- depends on the server INFO command, which a least-privilege ticket
+            -- ACL user is not required to hold. Never fail cluster init on it.
             local _, version_err = check_version(self, redis_client)
             if version_err then
-                redis_client:close()
-                table_insert(errors, version_err)
-                return nil, errors
+                ngx_log(NGX_WARN, "skipping redis version check: ", version_err)
             end
 
             -- cache master nodes before slots
@@ -883,7 +896,6 @@ local function handle_command_with_retry(self, target_ip, target_port, asking, c
 
             set_poolname(ip, port, self.config)
             ok, connerr = redis_client:connect(ip, port, self.config.connect_opts)
-            if ok then break end
         else
             -- Redis 7: try IP first and then hostname as IP does not suffer from stale DNS cache
             local tries = redis7_with_host and 2 or 1
@@ -937,7 +949,7 @@ local function handle_command_with_retry(self, target_ip, target_port, asking, c
 
             if err then
                 -- todo: we can follow the moved target instead of refreshing the slots
-                if has_moved_signal(res) then
+                if has_moved_signal(err) then
                     ngx_log(NGX_DEBUG, "find MOVED signal, trigger retry for normal commands, cmd:", cmd, " key:", key)
                     -- if retry with moved, we will not asking to specific ip:port anymore
                     target_ip = nil

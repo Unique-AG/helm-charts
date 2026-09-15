@@ -1,3 +1,6 @@
+-- Vendored from Kong/resty-redis-cluster 1.6.0.
+-- Source commit: e7c79c7d16ba85fe9622ee6e48706fcd5c85f641
+-- Licensed under Apache-2.0; see charts/kong-plugins/licenses.
 --
 -- This is the CRC16 algorithm used by Redis Cluster to hash keys.
 -- Implementation according to CCITT standards.
