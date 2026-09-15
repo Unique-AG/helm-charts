@@ -1,0 +1,28 @@
+name: "[kong-plugins] Plugin specs"
+# Scoped to the plugin sources and their harness: the specs run the Lua directly
+# rather than through Helm, so chart templates and docs cannot affect the result.
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "charts/kong-plugins/files/unique-jwt-auth/**"
+      - "charts/kong-plugins/tests/unique-jwt-auth/**"
+      - ".github/workflows/charts.kong-plugins.test.yaml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  unique-jwt-auth:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Run unique-jwt-auth plugin specs
+        run: ./charts/kong-plugins/tests/unique-jwt-auth/run.sh
