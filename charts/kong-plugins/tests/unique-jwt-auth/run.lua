@@ -20,8 +20,8 @@ local ok, err = ngx.timer.at(0, function(premature)
 
     local thread, spawn_err = ngx.thread.spawn(function()
         local runner = require "runner"
-        local run_specs = require "redis_store_spec"
-        run_specs()
+        require "redis_store_spec"()
+        require "ws_ticket_spec"()
         return runner.report()
     end)
 
