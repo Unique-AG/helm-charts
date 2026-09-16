@@ -137,6 +137,8 @@ Chart tests render plugin ConfigMaps but do not execute their Lua code. Run the 
 
 The test images are pinned in `run.sh`. Update each tag and digest together.
 
+CI runs the same suite when a pull request touches the plugin sources or the test harness.
+
 ### Locally installing charts
 
 Refer to [LOCAL.md](./LOCAL.md) for instructions on how to test charts locally as this is not mandatory for a Contribution. The CI will take care that the charts in their default version are always installable.
