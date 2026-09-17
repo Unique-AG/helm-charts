@@ -6,7 +6,7 @@ Refer to each plugins readme section to learn more about them.
 
 Please report any security concerns with the plugins via the [Security Policy](https://github.com/Unique-AG/helm-charts/tree/main?tab=security-ov-file).
 
-![Version: 2.7.0](https://img.shields.io/badge/Version-2.7.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 2.7.1](https://img.shields.io/badge/Version-2.7.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -15,7 +15,7 @@ Please report any security concerns with the plugins via the [Security Policy](h
 New releases are published as OCI artifacts only. The Helm repository index is frozen and will not receive new versions—see the [repository README](https://github.com/Unique-AG/helm-charts/blob/main/README.md#migrating-to-oci) for migration steps.
 
 ```sh
-helm install my-kong-plugins oci://ghcr.io/unique-ag/helm-charts/kong-plugins --version 2.7.0
+helm install my-kong-plugins oci://ghcr.io/unique-ag/helm-charts/kong-plugins --version 2.7.1
 ```
 
 <details>
@@ -23,7 +23,7 @@ helm install my-kong-plugins oci://ghcr.io/unique-ag/helm-charts/kong-plugins --
 
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-kong-plugins unique/kong-plugins --version 2.7.0
+helm install my-kong-plugins unique/kong-plugins --version 2.7.1
 ```
 
 </details>
@@ -74,10 +74,12 @@ With this configuration, both external clients (e.g., browser users) and the int
 
 Browsers cannot set an `Authorization` header on a WebSocket handshake. When `ws_ticket_enabled` is true, the plugin can exchange an authenticated request for a short-lived, single-use ticket:
 
-1. A `POST` matching a configured mint path or suffix uses the existing JWT authentication sources and returns `{ticket, expires_in}`. Redis stores only the ticket hash, user ID, and company ID.
-2. A WebSocket upgrade with `?ticket=…` atomically retrieves and deletes the ticket with Redis `GETDEL`, sets the trusted identity headers, removes the ticket from the upstream query, and proxies the upgrade.
+1. A `POST` matching a configured mint path or suffix uses the existing JWT authentication sources and returns `{ticket, expires_in}`. Redis stores the ticket hash plus the validated user, company, project-role, and matched-consumer context. It does not store the JWT.
+2. A WebSocket upgrade with `?ticket=…` atomically retrieves and deletes the ticket with Redis `GETDEL`, restores the same backend-facing identity and consumer context as JWT authentication, removes the ticket from the upstream query, and proxies the upgrade.
 
 The feature is disabled by default. Requests without `?ticket=` continue through the existing query, cookie, or `Authorization` JWT flow. A request containing an invalid ticket does not fall back to JWT authentication.
+
+Identity and roles are a snapshot from the mint request and remain valid only for the ticket TTL. Existing minimal records that contain only user and company IDs remain compatible, but omit the additional headers when consumed.
 
 Path suffixes include the leading slash and match only at the end of the request path. For example, `/graphql` matches `/chat-gen2/graphql` and `/theme/graphql`, but not `/notgraphql` or `/graphql/extra`.
 
@@ -117,7 +119,7 @@ If that environment variable already defines a dictionary, append the full direc
 value: existing_dict 1m; lua_shared_dict redis_cluster_slot_locks 100k
 ```
 
-Every host and port returned by `CLUSTER SLOTS` must be reachable from Kong. With TLS verification, `redis_server_name` must match a certificate identity accepted by every cluster node. The ACL user needs `CLUSTER SLOTS`, `CLUSTER NODES`, `CLUSTER INFO`, and `ASKING`, plus `SET` and `GETDEL` on the configured key prefix. The server `INFO` command is not required; it is used only for an optional Redis version warning and is skipped when unavailable.
+Every host and port returned by `CLUSTER SLOTS` must be reachable from Kong. With TLS verification, `redis_server_name` must match a certificate identity accepted by every cluster node. The ACL user needs `CLUSTER SLOTS`, `CLUSTER NODES`, `CLUSTER INFO`, and `ASKING`, plus `SET` and `GETDEL` on the configured key prefix. The server `INFO` command is not required; it is used only for an optional Redis version warning and is skipped when unavailable. Restrict ticket-key read and write access to Kong because the records supply trusted backend identity and authorization headers.
 
 **Single-node or replication example:**
 
@@ -166,7 +168,7 @@ config:
   redis_key_prefix: "ws_ticket:tenant:"
 ```
 
-Roll out the gateway shared dictionary first, then chart `2.7.0`, and enable cluster mode last. Verify ticket mint and consume before migrating clients from `?token=` to `?ticket=`. Redact the ticket query parameter in ingress, WAF, and tracing logs; the plugin strips it only from the upstream request.
+Roll out the gateway shared dictionary first, then chart `2.7.1`, and enable cluster mode last. Verify ticket mint and consume before migrating clients from `?token=` to `?ticket=`. Redact the ticket query parameter in ingress, WAF, and tracing logs; the plugin strips it only from the upstream request.
 
 ## Prometheus Metrics
 
