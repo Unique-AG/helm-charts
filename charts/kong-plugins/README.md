@@ -6,7 +6,7 @@ Refer to each plugins readme section to learn more about them.
 
 Please report any security concerns with the plugins via the [Security Policy](https://github.com/Unique-AG/helm-charts/tree/main?tab=security-ov-file).
 
-![Version: 2.7.0](https://img.shields.io/badge/Version-2.7.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 2.8.0](https://img.shields.io/badge/Version-2.8.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 ## Implementation Details
 
@@ -15,7 +15,7 @@ Please report any security concerns with the plugins via the [Security Policy](h
 New releases are published as OCI artifacts only. The Helm repository index is frozen and will not receive new versions—see the [repository README](https://github.com/Unique-AG/helm-charts/blob/main/README.md#migrating-to-oci) for migration steps.
 
 ```sh
-helm install my-kong-plugins oci://ghcr.io/unique-ag/helm-charts/kong-plugins --version 2.7.0
+helm install my-kong-plugins oci://ghcr.io/unique-ag/helm-charts/kong-plugins --version 2.8.0
 ```
 
 <details>
@@ -23,7 +23,7 @@ helm install my-kong-plugins oci://ghcr.io/unique-ag/helm-charts/kong-plugins --
 
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-kong-plugins unique/kong-plugins --version 2.7.0
+helm install my-kong-plugins unique/kong-plugins --version 2.8.0
 ```
 
 </details>
@@ -74,8 +74,8 @@ With this configuration, both external clients (e.g., browser users) and the int
 
 Browsers cannot set an `Authorization` header on a WebSocket handshake. When `ws_ticket_enabled` is true, the plugin can exchange an authenticated request for a short-lived, single-use ticket:
 
-1. A `POST` matching a configured mint path or suffix uses the existing JWT authentication sources and returns `{ticket, expires_in}`. Redis stores only the ticket hash, user ID, and company ID.
-2. A WebSocket upgrade with `?ticket=…` atomically retrieves and deletes the ticket with Redis `GETDEL`, sets the trusted identity headers, removes the ticket from the upstream query, and proxies the upgrade.
+1. A `POST` matching a configured mint path or suffix uses the existing JWT authentication sources and returns `{ticket, expires_in}`. Redis stores only the ticket hash and an HMAC-authenticated identity record.
+2. A WebSocket upgrade with `?ticket=…` atomically retrieves and deletes the ticket with Redis `GETDEL`, verifies the record MAC and expiry, sets the trusted identity headers, removes the ticket from the upstream query, and proxies the upgrade.
 
 The feature is disabled by default. Requests without `?ticket=` continue through the existing query, cookie, or `Authorization` JWT flow. A request containing an invalid ticket does not fall back to JWT authentication.
 
@@ -91,6 +91,7 @@ Path suffixes include the leading slash and match only at the end of the request
 | `ticket_upgrade_path_suffixes` | `[]` | WebSocket path suffixes allowed to consume tickets, such as `/graphql` across service prefixes. |
 | `ticket_ttl` | `20` | Ticket lifetime in seconds (5–60). |
 | `ticket_allowed_origins` | `[]` | Exact Origin allowlist on consume. Empty = not enforced. |
+| `ticket_record_secret` | — | Required when tickets are enabled. HMAC key for the Redis identity record; supports Kong vault references. |
 | `redis_cluster_enabled` | `false` | Use Redis Cluster routing instead of one Redis endpoint. |
 | `redis_cluster_name` | — | Stable, unique topology-cache name. Required in cluster mode. |
 | `redis_cluster_nodes` | — | Non-empty seed list of `{host, port}` records. Required in cluster mode. |
@@ -141,6 +142,7 @@ config:
     - /graphql
   ticket_allowed_origins:
     - https://app.example.com
+  ticket_record_secret: '{vault://env/kong-ws-ticket-record-secret}'
   redis_host: redis.kong-system.svc.cluster.local
   redis_port: 6379
   redis_password: '{vault://env/kong-ws-ticket-redis-password}'
@@ -159,6 +161,7 @@ config:
       port: 6379
   redis_username: ws-ticket
   redis_password: '{vault://env/kong-ws-ticket-redis-password}'
+  ticket_record_secret: '{vault://env/kong-ws-ticket-record-secret}'
   redis_ssl: true
   redis_ssl_verify: true
   redis_server_name: redis.example.internal
@@ -166,7 +169,7 @@ config:
   redis_key_prefix: "ws_ticket:tenant:"
 ```
 
-Roll out the gateway shared dictionary first, then chart `2.7.0`, and enable cluster mode last. Verify ticket mint and consume before migrating clients from `?token=` to `?ticket=`. Redact the ticket query parameter in ingress, WAF, and tracing logs; the plugin strips it only from the upstream request.
+Roll out the `ticket_record_secret` before enabling tickets or upgrading existing ticket-enabled tenants to `2.8.0`; missing secrets make plugin validation fail. For Redis Cluster, roll out the gateway shared dictionary first, then chart `2.7.0` or later, and enable cluster mode last. Verify ticket mint and consume before migrating clients from `?token=` to `?ticket=`. Redact the ticket query parameter in ingress, WAF, and tracing logs; the plugin strips it only from the upstream request.
 
 ## Prometheus Metrics
 
@@ -193,6 +196,8 @@ Possible `reason` label values:
 | `max_expiration_exceeded` | Token lifetime exceeds `maximum_expiration` |
 | `ws_ticket_unknown` | Ticket missing, expired, replayed, or presented outside an upgrade |
 | `ws_ticket_origin_rejected` | Upgrade Origin missing or not on the exact allowlist |
+| `ws_ticket_forged` | Redis ticket record is missing a valid MAC or was copied to another key |
+| `ws_ticket_expired` | Redis ticket record expiry has passed even though the key still exists |
 | `ws_ticket_redis_error` | Redis unreachable or errored during mint/consume (fail-closed) |
 
 ### unique-app-repo-auth

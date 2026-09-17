@@ -179,18 +179,21 @@ local function schema()
   return result
 end
 
-local function schema_entity(config)
+local function schema_entity(config, opts)
   config.allowed_iss = {"https://id.example.com"}
   config.ws_ticket_enabled = true
   config.ticket_mint_paths = {"/auth/ticket"}
   config.ticket_upgrade_paths = {"/graphql"}
+  if not (opts and opts.skip_ticket_record_secret) then
+    config.ticket_record_secret = config.ticket_record_secret or "secret"
+  end
   return {
     config = config,
   }
 end
 
-local function validate_schema(plugin_schema, config)
-  local entity = schema_entity(config)
+local function validate_schema(plugin_schema, config, opts)
+  local entity = schema_entity(config, opts)
   entity = plugin_schema:process_auto_fields(entity, "insert")
   return plugin_schema:validate_insert(entity)
 end
@@ -391,6 +394,15 @@ local function run()
           port = 6379,
         }},
         redis_database = 7,
+      })
+      assert_falsy(ok)
+    end)
+
+    it("rejects a missing ticket record secret", function()
+      local ok = validate_schema(plugin_schema, {
+        redis_host = "redis.example.internal",
+      }, {
+        skip_ticket_record_secret = true,
       })
       assert_falsy(ok)
     end)
