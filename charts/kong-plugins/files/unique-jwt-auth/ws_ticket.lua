@@ -9,6 +9,12 @@ local _M = {}
 
 local TICKET_BYTES = 32
 
+local function log_ticket_event(conf, message)
+  if conf.ticket_debug_logging then
+    kong.log.info("ws_ticket ", message)
+  end
+end
+
 local function sha256_hex(value)
   local sha = resty_sha256:new()
   sha:update(value)
@@ -147,7 +153,34 @@ local function copy_optional_string(record, name, value)
   end
 end
 
-local function build_identity_record()
+local function log_identity_presence(conf, identity, stage)
+  if type(identity.user_id) == "string" and identity.user_id ~= "" then
+    log_ticket_event(conf, stage .. " user_id found")
+  end
+  if type(identity.company_id) == "string" and identity.company_id ~= "" then
+    log_ticket_event(conf, stage .. " company_id found")
+  end
+  if type(identity.company_name) == "string"
+    and identity.company_name ~= ""
+  then
+    log_ticket_event(conf, stage .. " company_name found")
+  end
+  if type(identity.company_domain) == "string"
+    and identity.company_domain ~= ""
+  then
+    log_ticket_event(conf, stage .. " company_domain found")
+  end
+  if type(identity.user_roles) == "table" and #identity.user_roles > 0 then
+    log_ticket_event(conf, stage .. " user_roles found")
+  end
+  if type(identity.consumer_id) == "string"
+    and identity.consumer_id ~= ""
+  then
+    log_ticket_event(conf, stage .. " consumer found")
+  end
+end
+
+local function build_identity_record(conf)
   local shared = kong.ctx.shared
   local record = {
     user_id = shared.user_id,
@@ -162,6 +195,7 @@ local function build_identity_record()
     record.user_roles = shared.user_roles
   end
 
+  log_identity_presence(conf, record, "mint")
   return record
 end
 
@@ -184,10 +218,12 @@ local function load_recorded_consumer(conf, record)
   return consumer
 end
 
-local function apply_authentication(record, consumer)
+local function apply_authentication(conf, record, consumer)
   set_identity_headers(record)
+  log_ticket_event(conf, "identity headers restored")
   if consumer then
     consumer_context.set(consumer, nil, nil)
+    log_ticket_event(conf, "consumer context restored")
   else
     consumer_context.clear_headers()
   end
@@ -262,7 +298,7 @@ function _M.validate_upgrade_request(conf)
 end
 
 function _M.create_ticket(conf)
-  local identity = build_identity_record()
+  local identity = build_identity_record(conf)
   if not valid_identity_record(identity) then
     kong.log.warn("WebSocket ticket mint rejected because identity is incomplete")
     return nil, {
@@ -281,6 +317,7 @@ function _M.create_ticket(conf)
   end
 
   local ticket = ngx.encode_base64(raw, true):gsub("%+", "-"):gsub("/", "_")
+  log_ticket_event(conf, "ticket generated")
   local record, encode_err = cjson.encode(identity)
   if not record then
     kong.log.err("WebSocket ticket identity encoding failed: ", encode_err)
@@ -299,6 +336,7 @@ function _M.create_ticket(conf)
       warning_reason = "ws_ticket_redis_error",
     }
   end
+  log_ticket_event(conf, "ticket stored")
 
   return {
     ticket = ticket,
@@ -333,19 +371,26 @@ function _M.do_authentication(conf, ticket)
       warning_reason = "ws_ticket_unknown",
     }
   end
+  log_ticket_event(conf, "ticket record retrieved")
 
   local record = cjson.decode(raw)
   if not valid_identity_record(record) then
     return invalid_identity_error()
   end
+  log_ticket_event(conf, "ticket record validated")
+  log_identity_presence(conf, record, "consume")
 
   local consumer, lookup_err = load_recorded_consumer(conf, record)
   if lookup_err then
     return consumer_error(lookup_err)
   end
+  if consumer then
+    log_ticket_event(conf, "recorded consumer found")
+  end
 
-  apply_authentication(record, consumer)
+  apply_authentication(conf, record, consumer)
   strip_ticket_from_query(conf)
+  log_ticket_event(conf, "ticket query removed")
   return true
 end
 

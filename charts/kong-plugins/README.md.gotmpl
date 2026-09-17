@@ -83,6 +83,7 @@ Path suffixes include the leading slash and match only at the end of the request
 | Setting | Default | Purpose |
 | --- | --- | --- |
 | `ws_ticket_enabled` | `false` | Master switch. Off = identical to previous behaviour. |
+| `ticket_debug_logging` | `false` | Emit presence-only ticket flow milestones at info level. |
 | `ticket_param_name` | `ticket` | Query parameter for the opaque ticket. |
 | `ticket_mint_paths` | `[]` | Exact paths answered by the plugin for minting. At least one exact path or suffix is required when enabled. |
 | `ticket_mint_path_suffixes` | `[]` | Path suffixes answered by the plugin for minting, such as `/auth/ticket` across service prefixes. |
@@ -102,6 +103,8 @@ Path suffixes include the leading slash and match only at the end of the request
 | `redis_key_prefix` | `ws_ticket:` | Key prefix for ticket records. |
 
 Redis 6.2 or newer is required for `GETDEL`. Ticket operations return 503 when Redis is unavailable; existing JWT authentication remains available.
+
+Set `ticket_debug_logging: true` temporarily to trace ticket request selection, identity fields found, Redis write/consume milestones, record validation, consumer restoration, header restoration, and upstream handoff. These logs contain no field values, counts, hashes, tickets, JWTs, Redis records, identifiers, endpoints, or credentials.
 
 Redis Cluster mode also requires this Nginx shared dictionary on every Kong gateway:
 

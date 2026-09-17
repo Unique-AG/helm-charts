@@ -22,6 +22,12 @@ local re_gmatch = ngx.re.gmatch
 
 local counters = {}
 
+local function log_ticket_event(conf, message)
+    if conf.ticket_debug_logging then
+        kong.log.info("ws_ticket ", message)
+    end
+end
+
 local function inc_warn(conf, reason)
     if not _exporter_ok then
         return
@@ -574,6 +580,7 @@ function UniqueJwtAuthHandler:access(conf)
     -- existing ?token= / cookie / Authorization flow is unchanged.
     if conf.ws_ticket_enabled then
         if ws_ticket.is_mint_request(conf) then
+            log_ticket_event(conf, "mint request selected")
             local ok, err = do_authentication(conf)
             if not ok then
                 return kong.response.exit(err.status, err.errors or {
@@ -581,10 +588,12 @@ function UniqueJwtAuthHandler:access(conf)
                 }, err.headers)
             end
 
+            log_ticket_event(conf, "mint jwt authentication completed")
             local created, create_err = ws_ticket.create_ticket(conf)
             if not created then
                 return exit_ws_ticket_error(conf, create_err)
             end
+            log_ticket_event(conf, "mint response ready")
             return kong.response.exit(200, created, {
                 ["Cache-Control"] = "no-store",
                 ["Content-Type"] = "application/json"
@@ -593,16 +602,19 @@ function UniqueJwtAuthHandler:access(conf)
 
         local ticket = ws_ticket.get_ticket_from_request(conf)
         if ticket ~= nil then
+            log_ticket_event(conf, "upgrade request selected")
             local valid, validation_err = ws_ticket.validate_upgrade_request(conf)
             if not valid then
                 return exit_ws_ticket_error(conf, validation_err)
             end
 
+            log_ticket_event(conf, "upgrade request validated")
             -- Exclusive: ?ticket= never falls through to the token path.
             local ok, err = ws_ticket.do_authentication(conf, ticket)
             if not ok then
                 return exit_ws_ticket_error(conf, err)
             end
+            log_ticket_event(conf, "authenticated request forwarded upstream")
             return
         end
     end

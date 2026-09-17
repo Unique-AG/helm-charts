@@ -184,6 +184,12 @@ local schema = {
                     required = true
                 }
             }, {
+                ticket_debug_logging = {
+                    type = "boolean",
+                    default = false,
+                    required = true
+                }
+            }, {
                 ticket_param_name = {
                     type = "string",
                     default = "ticket"
