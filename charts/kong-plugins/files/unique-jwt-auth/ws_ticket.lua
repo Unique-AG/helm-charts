@@ -2,11 +2,18 @@ local cjson = require "cjson.safe"
 local resty_sha256 = require "resty.sha256"
 local to_hex = require "resty.string".to_hex
 local openssl_rand = require "resty.openssl.rand"
+local consumer_context = require "kong.plugins.unique-jwt-auth.consumer_context"
 local redis_store = require "kong.plugins.unique-jwt-auth.redis_store"
 
 local _M = {}
 
 local TICKET_BYTES = 32
+
+local function log_ticket_event(conf, message)
+  if conf.ticket_debug_logging then
+    kong.log.info("ws_ticket ", message)
+  end
+end
 
 local function sha256_hex(value)
   local sha = resty_sha256:new()
@@ -77,11 +84,167 @@ local function strip_ticket_from_query(conf)
 end
 
 local function set_identity_headers(record)
-  kong.service.request.set_header("x-user-id", record.user_id)
-  kong.service.request.set_header("x-company-id", record.company_id)
-  kong.service.request.clear_header("x-user-roles")
-  kong.service.request.clear_header("x-company-name")
-  kong.service.request.clear_header("x-company-domain")
+  local clear_header = kong.service.request.clear_header
+  local set_header = kong.service.request.set_header
+
+  clear_header("x-user-id")
+  clear_header("x-company-id")
+  clear_header("x-user-roles")
+  clear_header("x-company-name")
+  clear_header("x-company-domain")
+
+  set_header("x-user-id", record.user_id)
+  set_header("x-company-id", record.company_id)
+
+  if record.company_name then
+    set_header("x-company-name", record.company_name)
+  end
+  if record.company_domain then
+    set_header("x-company-domain", record.company_domain)
+  end
+  if record.user_roles and #record.user_roles > 0 then
+    set_header("x-user-roles", table.concat(record.user_roles, ","))
+  end
+end
+
+local function valid_optional_string(value)
+  return value == nil or (type(value) == "string" and value ~= "")
+end
+
+local function valid_user_roles(roles)
+  if roles == nil then
+    return true
+  end
+  if type(roles) ~= "table" then
+    return false
+  end
+
+  local count = 0
+  for index, role in pairs(roles) do
+    count = count + 1
+    if type(index) ~= "number"
+      or index < 1
+      or index % 1 ~= 0
+      or type(role) ~= "string"
+      or role == ""
+    then
+      return false
+    end
+  end
+
+  return count == #roles
+end
+
+local function valid_identity_record(record)
+  return type(record) == "table"
+    and type(record.user_id) == "string"
+    and record.user_id ~= ""
+    and type(record.company_id) == "string"
+    and record.company_id ~= ""
+    and valid_optional_string(record.company_name)
+    and valid_optional_string(record.company_domain)
+    and valid_optional_string(record.consumer_id)
+    and valid_user_roles(record.user_roles)
+end
+
+local function copy_optional_string(record, name, value)
+  if type(value) == "string" and value ~= "" then
+    record[name] = value
+  end
+end
+
+local function log_identity_presence(conf, identity, stage)
+  if type(identity.user_id) == "string" and identity.user_id ~= "" then
+    log_ticket_event(conf, stage .. " user_id found")
+  end
+  if type(identity.company_id) == "string" and identity.company_id ~= "" then
+    log_ticket_event(conf, stage .. " company_id found")
+  end
+  if type(identity.company_name) == "string"
+    and identity.company_name ~= ""
+  then
+    log_ticket_event(conf, stage .. " company_name found")
+  end
+  if type(identity.company_domain) == "string"
+    and identity.company_domain ~= ""
+  then
+    log_ticket_event(conf, stage .. " company_domain found")
+  end
+  if type(identity.user_roles) == "table" and #identity.user_roles > 0 then
+    log_ticket_event(conf, stage .. " user_roles found")
+  end
+  if type(identity.consumer_id) == "string"
+    and identity.consumer_id ~= ""
+  then
+    log_ticket_event(conf, stage .. " consumer found")
+  end
+end
+
+local function build_identity_record(conf)
+  local shared = kong.ctx.shared
+  local record = {
+    user_id = shared.user_id,
+    company_id = shared.company_id,
+  }
+
+  copy_optional_string(record, "company_name", shared.company_name)
+  copy_optional_string(record, "company_domain", shared.company_domain)
+  copy_optional_string(record, "consumer_id", shared.consumer_id)
+
+  if type(shared.user_roles) == "table" and #shared.user_roles > 0 then
+    record.user_roles = shared.user_roles
+  end
+
+  log_identity_presence(conf, record, "mint")
+  return record
+end
+
+local function load_recorded_consumer(conf, record)
+  if not record.consumer_id then
+    return nil
+  end
+  if not conf.consumer_match then
+    return nil, "ticket contains consumer identity while consumer matching is disabled"
+  end
+
+  local consumer, err = consumer_context.load_by_id(record.consumer_id)
+  if err then
+    return nil, "consumer lookup failed: " .. tostring(err)
+  end
+  if not consumer then
+    return nil, "consumer no longer exists"
+  end
+
+  return consumer
+end
+
+local function apply_authentication(conf, record, consumer)
+  set_identity_headers(record)
+  log_ticket_event(conf, "identity headers restored")
+  if consumer then
+    consumer_context.set(consumer, nil, nil)
+    log_ticket_event(conf, "consumer context restored")
+  else
+    consumer_context.clear_headers()
+  end
+end
+
+local function invalid_identity_error()
+  kong.log.warn("WebSocket ticket contained an invalid identity")
+  return false, {
+    status = 401,
+    message = "Unauthorized",
+    warning_reason = "ws_ticket_unknown",
+  }
+end
+
+local function consumer_error(err)
+  kong.log.warn("WebSocket ticket consumer rejected: ", err)
+  return false, {
+    status = 401,
+    message = "Unauthorized",
+    warning_reason = "ws_ticket_unknown",
+  }
 end
 
 function _M.is_mint_request(conf)
@@ -135,9 +298,8 @@ function _M.validate_upgrade_request(conf)
 end
 
 function _M.create_ticket(conf)
-  local user_id = kong.ctx.shared.user_id
-  local company_id = kong.ctx.shared.company_id
-  if not user_id or user_id == "" or not company_id or company_id == "" then
+  local identity = build_identity_record(conf)
+  if not valid_identity_record(identity) then
     kong.log.warn("WebSocket ticket mint rejected because identity is incomplete")
     return nil, {
       status = 401,
@@ -155,10 +317,16 @@ function _M.create_ticket(conf)
   end
 
   local ticket = ngx.encode_base64(raw, true):gsub("%+", "-"):gsub("/", "_")
-  local record = cjson.encode({
-    user_id = user_id,
-    company_id = company_id,
-  })
+  log_ticket_event(conf, "ticket generated")
+  local record, encode_err = cjson.encode(identity)
+  if not record then
+    kong.log.err("WebSocket ticket identity encoding failed: ", encode_err)
+    return nil, {
+      status = 500,
+      message = "An unexpected error occurred",
+    }
+  end
+
   local stored, store_err = redis_store.put(conf, sha256_hex(ticket), record)
   if not stored then
     kong.log.err("WebSocket ticket Redis write failed: ", store_err)
@@ -168,6 +336,7 @@ function _M.create_ticket(conf)
       warning_reason = "ws_ticket_redis_error",
     }
   end
+  log_ticket_event(conf, "ticket stored")
 
   return {
     ticket = ticket,
@@ -202,24 +371,26 @@ function _M.do_authentication(conf, ticket)
       warning_reason = "ws_ticket_unknown",
     }
   end
+  log_ticket_event(conf, "ticket record retrieved")
 
   local record = cjson.decode(raw)
-  if type(record) ~= "table"
-    or type(record.user_id) ~= "string"
-    or record.user_id == ""
-    or type(record.company_id) ~= "string"
-    or record.company_id == ""
-  then
-    kong.log.warn("WebSocket ticket contained an invalid identity")
-    return false, {
-      status = 401,
-      message = "Unauthorized",
-      warning_reason = "ws_ticket_unknown",
-    }
+  if not valid_identity_record(record) then
+    return invalid_identity_error()
+  end
+  log_ticket_event(conf, "ticket record validated")
+  log_identity_presence(conf, record, "consume")
+
+  local consumer, lookup_err = load_recorded_consumer(conf, record)
+  if lookup_err then
+    return consumer_error(lookup_err)
+  end
+  if consumer then
+    log_ticket_event(conf, "recorded consumer found")
   end
 
-  set_identity_headers(record)
+  apply_authentication(conf, record, consumer)
   strip_ticket_from_query(conf)
+  log_ticket_event(conf, "ticket query removed")
   return true
 end
 

@@ -1,8 +1,8 @@
-local constants = require "kong.constants"
 local jwt_decoder = require "kong.plugins.jwt.jwt_parser"
 local cjson = require "cjson.safe"
 local _exporter_ok, exporter = pcall(require, "kong.plugins.prometheus.exporter")
 
+local consumer_context = require "kong.plugins.unique-jwt-auth.consumer_context"
 local zitadel_keys = require "kong.plugins.unique-jwt-auth.zitadel_keys"
 local ws_ticket = require "kong.plugins.unique-jwt-auth.ws_ticket"
 
@@ -21,6 +21,12 @@ local tostring = tostring
 local re_gmatch = ngx.re.gmatch
 
 local counters = {}
+
+local function log_ticket_event(conf, message)
+    if conf.ticket_debug_logging then
+        kong.log.info("ws_ticket ", message)
+    end
+end
 
 local function inc_warn(conf, reason)
     if not _exporter_ok then
@@ -185,14 +191,22 @@ end
 local function custom_set_unique_headers(conf, jwt_claims)
     local set_header = kong.service.request.set_header
     local clear_header = kong.service.request.clear_header
+    local identity = {
+        user_id = jwt_claims.sub,
+        company_id = jwt_claims["urn:zitadel:iam:user:resourceowner:id"],
+        company_name = jwt_claims["urn:zitadel:iam:user:resourceowner:name"],
+        company_domain = jwt_claims["urn:zitadel:iam:user:resourceowner:primary_domain"],
+        user_roles = {},
+    }
+
     -- Set x-user-id
-    set_header("x-user-id", jwt_claims.sub)
+    set_header("x-user-id", identity.user_id)
     clear_header("x-user-roles")
 
     -- Set x-company-id, x-company-name, and x-company-domain
-    set_header("x-company-id", jwt_claims["urn:zitadel:iam:user:resourceowner:id"])
-    set_header("x-company-name", jwt_claims["urn:zitadel:iam:user:resourceowner:name"])
-    set_header("x-company-domain", jwt_claims["urn:zitadel:iam:user:resourceowner:primary_domain"])
+    set_header("x-company-id", identity.company_id)
+    set_header("x-company-name", identity.company_name)
+    set_header("x-company-domain", identity.company_domain)
 
     -- Set x-user-roles if conf.zitadel_project_id is specified
     if conf.zitadel_project_id then
@@ -200,13 +214,14 @@ local function custom_set_unique_headers(conf, jwt_claims)
         local project_roles = jwt_claims[project_roles_key]
 
         if project_roles then
-            local role_names = {}
             for role_name, _ in pairs(project_roles) do
-                table.insert(role_names, role_name)
+                table.insert(identity.user_roles, role_name)
             end
-            set_header("x-user-roles", table.concat(role_names, ","))
+            set_header("x-user-roles", table.concat(identity.user_roles, ","))
         end
     end
+
+    return identity
 end
 
 -------------------------------------------------------------------------------
@@ -326,46 +341,6 @@ local function retrieve_tokens(conf)
     return tokens
 end
 
-local function set_consumer(consumer, credential, token)
-    kong.client.authenticate(consumer, credential)
-
-    local set_header = kong.service.request.set_header
-    local clear_header = kong.service.request.clear_header
-
-    if consumer and consumer.id then
-        set_header(constants.HEADERS.CONSUMER_ID, consumer.id)
-    else
-        clear_header(constants.HEADERS.CONSUMER_ID)
-    end
-
-    if consumer and consumer.custom_id then
-        kong.log.debug("found consumer " .. consumer.custom_id)
-        set_header(constants.HEADERS.CONSUMER_CUSTOM_ID, consumer.custom_id)
-    else
-        clear_header(constants.HEADERS.CONSUMER_CUSTOM_ID)
-    end
-
-    if consumer and consumer.username then
-        set_header(constants.HEADERS.CONSUMER_USERNAME, consumer.username)
-    else
-        clear_header(constants.HEADERS.CONSUMER_USERNAME)
-    end
-
-    if credential and credential.key then
-        set_header(constants.HEADERS.CREDENTIAL_IDENTIFIER, credential.key)
-    else
-        clear_header(constants.HEADERS.CREDENTIAL_IDENTIFIER)
-    end
-
-    if credential then
-        clear_header(constants.HEADERS.ANONYMOUS)
-    else
-        set_header(constants.HEADERS.ANONYMOUS, true)
-    end
-
-    kong.ctx.shared.authenticated_jwt_token = token -- TODO: wrap in a PDK function?
-end
-
 -------------------------------------------------------------------------------
 -- custom unique specific extension for the plugin "unique-jwt-auth"
 -- --> This is for one of the main benefits when using this plugin
@@ -407,10 +382,10 @@ local function custom_match_consumer(conf, jwt)
     end
 
     if consumer then
-        set_consumer(consumer, nil, nil)
+        consumer_context.set(consumer, nil, nil)
     end
 
-    return true
+    return true, nil, consumer
 end
 
 -------------------------------------------------------------------------------
@@ -524,18 +499,24 @@ local function do_authentication(conf)
     end
 
     -- Match consumer
+    local matched_consumer
     if conf.consumer_match then
-        local ok, err = custom_match_consumer(conf, jwt)
+        local ok, match_err, consumer = custom_match_consumer(conf, jwt)
         if not ok then
-            return ok, err
+            return ok, match_err
         end
+        matched_consumer = consumer
     end
 
-    custom_set_unique_headers(conf, jwt.claims)
+    local identity = custom_set_unique_headers(conf, jwt.claims)
 
     kong.ctx.shared.unique_jwt_token = token
-    kong.ctx.shared.user_id = jwt.claims.sub
-    kong.ctx.shared.company_id = jwt.claims["urn:zitadel:iam:user:resourceowner:id"]
+    kong.ctx.shared.user_id = identity.user_id
+    kong.ctx.shared.company_id = identity.company_id
+    kong.ctx.shared.company_name = identity.company_name
+    kong.ctx.shared.company_domain = identity.company_domain
+    kong.ctx.shared.user_roles = identity.user_roles
+    kong.ctx.shared.consumer_id = matched_consumer and matched_consumer.id or nil
     return true
 end
 
@@ -558,7 +539,7 @@ local function set_anonymous_consumer(anonymous)
         })
     end
 
-    set_consumer(consumer)
+    consumer_context.set(consumer)
 end
 
 --- When conf.anonymous is enabled we are in "logical OR" authentication flow.
@@ -599,6 +580,7 @@ function UniqueJwtAuthHandler:access(conf)
     -- existing ?token= / cookie / Authorization flow is unchanged.
     if conf.ws_ticket_enabled then
         if ws_ticket.is_mint_request(conf) then
+            log_ticket_event(conf, "mint request selected")
             local ok, err = do_authentication(conf)
             if not ok then
                 return kong.response.exit(err.status, err.errors or {
@@ -606,10 +588,12 @@ function UniqueJwtAuthHandler:access(conf)
                 }, err.headers)
             end
 
+            log_ticket_event(conf, "mint jwt authentication completed")
             local created, create_err = ws_ticket.create_ticket(conf)
             if not created then
                 return exit_ws_ticket_error(conf, create_err)
             end
+            log_ticket_event(conf, "mint response ready")
             return kong.response.exit(200, created, {
                 ["Cache-Control"] = "no-store",
                 ["Content-Type"] = "application/json"
@@ -618,16 +602,19 @@ function UniqueJwtAuthHandler:access(conf)
 
         local ticket = ws_ticket.get_ticket_from_request(conf)
         if ticket ~= nil then
+            log_ticket_event(conf, "upgrade request selected")
             local valid, validation_err = ws_ticket.validate_upgrade_request(conf)
             if not valid then
                 return exit_ws_ticket_error(conf, validation_err)
             end
 
+            log_ticket_event(conf, "upgrade request validated")
             -- Exclusive: ?ticket= never falls through to the token path.
             local ok, err = ws_ticket.do_authentication(conf, ticket)
             if not ok then
                 return exit_ws_ticket_error(conf, err)
             end
+            log_ticket_event(conf, "authenticated request forwarded upstream")
             return
         end
     end

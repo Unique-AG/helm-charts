@@ -8,6 +8,12 @@ local KEEPALIVE_CONNECTIONS = 100
 
 local rediscluster
 
+local function log_ticket_event(conf, message)
+  if conf.ticket_debug_logging then
+    kong.log.info("ws_ticket ", message)
+  end
+end
+
 local function is_present(value)
   return value and value ~= "" and value ~= ngx.null
 end
@@ -252,17 +258,31 @@ local function consume_cluster(conf, ticket_hash)
 end
 
 function _M.put(conf, ticket_hash, value)
+  log_ticket_event(conf, "redis write started")
+  local ok, err
   if conf.redis_cluster_enabled then
-    return put_cluster(conf, ticket_hash, value)
+    ok, err = put_cluster(conf, ticket_hash, value)
+  else
+    ok, err = put_single(conf, ticket_hash, value)
   end
-  return put_single(conf, ticket_hash, value)
+  if ok then
+    log_ticket_event(conf, "redis write completed")
+  end
+  return ok, err
 end
 
 function _M.consume(conf, ticket_hash)
+  log_ticket_event(conf, "redis consume started")
+  local result, err
   if conf.redis_cluster_enabled then
-    return consume_cluster(conf, ticket_hash)
+    result, err = consume_cluster(conf, ticket_hash)
+  else
+    result, err = consume_single(conf, ticket_hash)
   end
-  return consume_single(conf, ticket_hash)
+  if result then
+    log_ticket_event(conf, "redis consume completed")
+  end
+  return result, err
 end
 
 _M._build_cluster_config = build_cluster_config
