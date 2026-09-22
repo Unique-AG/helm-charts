@@ -198,10 +198,17 @@ local function validate_api_key(conf, app_id, company_id, token, user_id)
 
     if res.status == 200 then
         local body = cjson.decode(res.body)
+        -- Stamp a bare comma-separated list, matching unique-jwt-auth.
+        -- cjson.encode() wraps a string in quotes and corrupts split roles.
         if body and body.roles then
-            local roles_json = cjson.encode(body.roles)
-            kong.service.request.set_header("x-user-roles", roles_json)
-            kong.log.debug("Set x-user-roles header: ", roles_json)
+            local roles = body.roles
+            if type(roles) == "table" then
+                roles = table.concat(roles, ",")
+            elseif type(roles) ~= "string" then
+                roles = tostring(roles)
+            end
+            kong.service.request.set_header("x-user-roles", roles)
+            kong.log.debug("Set x-user-roles header: ", roles)
         end
         return true
     else
