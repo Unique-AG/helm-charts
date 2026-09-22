@@ -2,6 +2,7 @@ local constants = require "kong.constants"
 local http = require("resty.http")
 local cjson = require("cjson.safe")
 local _exporter_ok, exporter = pcall(require, "kong.plugins.prometheus.exporter")
+local user_roles = require("kong.plugins.unique-app-repo-auth.user_roles")
 
 local fmt = string.format
 local kong = kong
@@ -200,16 +201,17 @@ local function validate_api_key(conf, app_id, company_id, token, user_id)
         local body = cjson.decode(res.body)
         -- Stamp a bare comma-separated list, matching unique-jwt-auth.
         -- cjson.encode() wraps a string in quotes and corrupts split roles.
-        -- cjson decodes JSON null to a truthy lightuserdata sentinel, so compare explicitly.
-        if body and body.roles and body.roles ~= cjson.null then
-            local roles = body.roles
-            if type(roles) == "table" then
-                roles = table.concat(roles, ",")
-            elseif type(roles) ~= "string" then
-                roles = tostring(roles)
-            end
+        local roles, reason, detail = user_roles.format(body and body.roles)
+        if roles then
             kong.service.request.set_header("x-user-roles", roles)
             kong.log.debug("Set x-user-roles header: ", roles)
+        elseif reason == user_roles.UNEXPECTED then
+            -- Header stays unset: stamping a coerced value would grant or drop
+            -- entitlements based on a shape we do not understand.
+            kong.log.warn("Unusable roles in API key validation response: ", detail)
+            inc_warn(conf, "api_key_roles_unusable")
+        else
+            kong.log.debug("No roles in API key validation response: ", detail)
         end
         return true
     else

@@ -7,7 +7,8 @@ on:
       - main
     paths:
       - "charts/kong-plugins/files/unique-jwt-auth/**"
-      - "charts/kong-plugins/tests/unique-jwt-auth/**"
+      - "charts/kong-plugins/files/unique-app-repo-auth/**"
+      - "charts/kong-plugins/tests/**"
       - ".github/workflows/charts.kong-plugins.test.yaml"
 
 concurrency:
@@ -26,3 +27,12 @@ jobs:
 
       - name: Run unique-jwt-auth plugin specs
         run: ./charts/kong-plugins/tests/unique-jwt-auth/run.sh
+
+  unique-app-repo-auth:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Run unique-app-repo-auth plugin specs
+        run: ./charts/kong-plugins/tests/unique-app-repo-auth/run.sh

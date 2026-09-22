@@ -15,6 +15,9 @@ KEY_PREFIX="ws_ticket_test:"
 
 SPEC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_DIR="$(cd "${SPEC_DIR}/../../files/unique-jwt-auth" && pwd)"
+# Shared harness, mounted alongside /spec because Docker cannot nest a file
+# mount inside a read-only bind.
+SHARED_DIR="$(cd "${SPEC_DIR}/.." && pwd)"
 
 NETWORK="kong-plugin-test-$$"
 SINGLE_NAME="kong-plugin-single-$$"
@@ -117,6 +120,7 @@ docker run --rm \
   --entrypoint /usr/local/openresty/bin/resty \
   --volume "${PLUGIN_DIR}:/usr/local/share/lua/5.1/kong/plugins/unique-jwt-auth:ro" \
   --volume "${SPEC_DIR}:/spec:ro" \
+  --volume "${SHARED_DIR}:/shared:ro" \
   "${KONG_IMAGE}" \
   --errlog-level crit \
   /spec/shared_dict_guard.lua
@@ -133,6 +137,7 @@ docker run --rm \
   --env "REDIS_CLUSTER_MINIMAL_PASSWORD=${MINIMAL_PASSWORD}" \
   --volume "${PLUGIN_DIR}:/usr/local/share/lua/5.1/kong/plugins/unique-jwt-auth:ro" \
   --volume "${SPEC_DIR}:/spec:ro" \
+  --volume "${SHARED_DIR}:/shared:ro" \
   "${KONG_IMAGE}" \
   --shdict 'redis_cluster_slot_locks 1m' \
   --errlog-level crit \
