@@ -1,13 +1,5 @@
--------------------------------------------------------------------------------
 -- Formats the `roles` value from /api-keys/validate into the bare
 -- comma-separated list that `unique-jwt-auth` stamps on `x-user-roles`.
---
--- The documented contract is a comma-separated string. Anything else is
--- rejected rather than coerced: `cjson.encode` used to wrap a string in quotes,
--- which corrupted the first and last role once downstream split on ",". Coercing
--- an unexpected shape trades that bug for a different one, so unusable payloads
--- fail closed and the caller leaves the header unset.
--------------------------------------------------------------------------------
 
 local cjson = require("cjson.safe")
 
@@ -17,14 +9,22 @@ local concat = table.concat
 
 local M = {}
 
--- Reasons a value could not be formatted. MISSING and EMPTY are ordinary (an
--- API key with no roles); UNEXPECTED means the response shape changed.
+-- Re-encodes a raw `roles` value so a debug log can be compared against the
+-- header actually stamped. cjson.safe returns nil for anything it cannot encode.
+function M.encode_for_log(value)
+    if value == nil then
+        return "null"
+    end
+    return cjson.encode(value) or ("<" .. type(value) .. ">")
+end
+
+-- MISSING and EMPTY are ordinary; UNEXPECTED means the response shape changed.
 M.MISSING = "missing"
 M.EMPTY = "empty"
 M.UNEXPECTED = "unexpected"
 
--- Returns the formatted list, or nil plus a reason constant and a detail string
--- safe to log (shapes and types only, never role values).
+-- Returns the list, or nil plus a reason constant and a detail string carrying
+-- shapes and types only, so it stays safe to log at warn level.
 function M.format(roles)
     -- cjson decodes JSON null to a truthy lightuserdata sentinel.
     if roles == nil or roles == cjson.null then
@@ -51,8 +51,7 @@ function M.format(roles)
         return nil, M.EMPTY, "empty roles array"
     end
 
-    -- A JSON object and a sparse array are both tables; concat would silently
-    -- walk only the array part and drop the rest.
+    -- concat walks only the array part, silently dropping an object's keys.
     if keys ~= #roles then
         return nil, M.UNEXPECTED, "roles is an object or a sparse array"
     end

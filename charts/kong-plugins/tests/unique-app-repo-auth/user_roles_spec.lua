@@ -105,6 +105,21 @@ return function()
             assert_equal(user_roles.UNEXPECTED, reason)
         end)
 
+        it("renders the received value for the debug log", function()
+            assert_equal('"chat.chat.basic,chat.debug.read"',
+                user_roles.encode_for_log("chat.chat.basic,chat.debug.read"))
+            assert_equal('["chat.chat.basic","chat.debug.read"]',
+                user_roles.encode_for_log({ "chat.chat.basic", "chat.debug.read" }))
+            assert_equal("null", user_roles.encode_for_log(nil))
+            assert_equal("null", user_roles.encode_for_log(cjson.decode('{"roles":null}').roles))
+        end)
+
+        it("renders an unencodable received value without erroring", function()
+            -- A function cannot be JSON-encoded; the log must still produce a line.
+            assert_equal("<function>", user_roles.encode_for_log(function()
+            end))
+        end)
+
         it("never leaks role values into the logged detail", function()
             local _, _, detail = user_roles.format({ "chat.debug.read", 42 })
             if detail:find("chat.debug.read", 1, true) then
