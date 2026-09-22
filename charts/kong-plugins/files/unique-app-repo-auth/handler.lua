@@ -200,7 +200,8 @@ local function validate_api_key(conf, app_id, company_id, token, user_id)
         local body = cjson.decode(res.body)
         -- Stamp a bare comma-separated list, matching unique-jwt-auth.
         -- cjson.encode() wraps a string in quotes and corrupts split roles.
-        if body and body.roles then
+        -- cjson decodes JSON null to a truthy lightuserdata sentinel, so compare explicitly.
+        if body and body.roles and body.roles ~= cjson.null then
             local roles = body.roles
             if type(roles) == "table" then
                 roles = table.concat(roles, ",")
