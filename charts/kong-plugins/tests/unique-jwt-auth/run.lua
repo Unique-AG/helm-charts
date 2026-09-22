@@ -4,7 +4,7 @@
 -- cosocket yields. Schedule the suite on a timer + light thread so Redis can
 -- yield. Specs are required first (definition only) and run() afterward —
 -- cosockets cannot run while still inside require().
-package.path = "/spec/?.lua;" .. package.path
+package.path = "/spec/?.lua;/shared/?.lua;" .. package.path
 
 local finished = false
 local exit_code = 1

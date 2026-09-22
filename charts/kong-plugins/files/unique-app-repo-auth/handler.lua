@@ -2,6 +2,7 @@ local constants = require "kong.constants"
 local http = require("resty.http")
 local cjson = require("cjson.safe")
 local _exporter_ok, exporter = pcall(require, "kong.plugins.prometheus.exporter")
+local user_roles = require("kong.plugins.unique-app-repo-auth.user_roles")
 
 local fmt = string.format
 local kong = kong
@@ -13,6 +14,8 @@ local tostring = tostring
 local re_gmatch = ngx.re.gmatch
 
 local counters = {}
+
+local encode_for_log = user_roles.encode_for_log
 
 local function inc_warn(conf, reason)
     if not _exporter_ok then
@@ -198,10 +201,22 @@ local function validate_api_key(conf, app_id, company_id, token, user_id)
 
     if res.status == 200 then
         local body = cjson.decode(res.body)
-        if body and body.roles then
-            local roles_json = cjson.encode(body.roles)
-            kong.service.request.set_header("x-user-roles", roles_json)
-            kong.log.debug("Set x-user-roles header: ", roles_json)
+        -- Stamp a bare comma-separated list, matching unique-jwt-auth.
+        -- cjson.encode() wraps a string in quotes and corrupts split roles.
+        local raw = body and body.roles
+        local roles, reason, detail = user_roles.format(raw)
+        if roles then
+            kong.service.request.set_header("x-user-roles", roles)
+            -- Both sides on one line so a dropped role is visible by comparison.
+            kong.log.debug("x-user-roles received ", encode_for_log(raw), " emitted ", roles)
+        elseif reason == user_roles.UNEXPECTED then
+            -- Header stays unset rather than coerced: the shape is unknown, so
+            -- any guess could grant or drop entitlements.
+            kong.log.warn("Unusable roles in API key validation response: ", detail)
+            kong.log.debug("x-user-roles received ", encode_for_log(raw), " emitted nothing")
+            inc_warn(conf, "api_key_roles_unusable")
+        else
+            kong.log.debug("x-user-roles received ", encode_for_log(raw), " emitted nothing: ", detail)
         end
         return true
     else

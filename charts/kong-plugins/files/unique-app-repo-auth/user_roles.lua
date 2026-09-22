@@ -1,0 +1,75 @@
+-- Formats the `roles` value from /api-keys/validate into the bare
+-- comma-separated list that `unique-jwt-auth` stamps on `x-user-roles`.
+
+local cjson = require("cjson.safe")
+
+local type = type
+local pairs = pairs
+local concat = table.concat
+
+local M = {}
+
+-- Re-encodes a raw `roles` value so a debug log can be compared against the
+-- header actually stamped. cjson.safe returns nil for anything it cannot encode.
+function M.encode_for_log(value)
+    if value == nil then
+        return "null"
+    end
+    return cjson.encode(value) or ("<" .. type(value) .. ">")
+end
+
+-- MISSING and EMPTY are ordinary; UNEXPECTED means the response shape changed.
+M.MISSING = "missing"
+M.EMPTY = "empty"
+M.UNEXPECTED = "unexpected"
+
+-- Returns the list, or nil plus a reason constant and a detail string carrying
+-- shapes and types only, so it stays safe to log at warn level.
+function M.format(roles)
+    -- cjson decodes JSON null to a truthy lightuserdata sentinel.
+    if roles == nil or roles == cjson.null then
+        return nil, M.MISSING, "no roles in response"
+    end
+
+    if type(roles) == "string" then
+        if roles == "" then
+            return nil, M.EMPTY, "empty roles string"
+        end
+        return roles
+    end
+
+    if type(roles) ~= "table" then
+        return nil, M.UNEXPECTED, "roles is a " .. type(roles)
+    end
+
+    local keys = 0
+    for _ in pairs(roles) do
+        keys = keys + 1
+    end
+
+    if keys == 0 then
+        return nil, M.EMPTY, "empty roles array"
+    end
+
+    -- concat walks only the array part, silently dropping an object's keys.
+    if keys ~= #roles then
+        return nil, M.UNEXPECTED, "roles is an object or a sparse array"
+    end
+
+    for index = 1, keys do
+        local entry = roles[index]
+        if type(entry) ~= "string" then
+            return nil, M.UNEXPECTED, "roles[" .. index .. "] is a " .. type(entry)
+        end
+        if entry == "" then
+            return nil, M.UNEXPECTED, "roles[" .. index .. "] is empty"
+        end
+        if entry:find(",", 1, true) then
+            return nil, M.UNEXPECTED, "roles[" .. index .. "] contains a comma"
+        end
+    end
+
+    return concat(roles, ",")
+end
+
+return M
