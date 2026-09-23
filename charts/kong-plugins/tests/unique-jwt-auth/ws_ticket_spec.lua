@@ -19,6 +19,7 @@ local REDIS_PORT = tonumber(os.getenv("REDIS_PORT") or "6379")
 local SINGLE_DATABASE = 14
 local KEY_PREFIX = "ws_ticket_spec:"
 local SECRET = "ticket-record-secret"
+local OTHER_SECRET = "wrong-ticket-record-secret"
 
 local function sha256_hex(value)
   local sha = resty_sha256:new()
@@ -158,21 +159,29 @@ local function reset_kong(shared, consumers)
   return state
 end
 
-local function valid_envelope(ticket_hash, record)
+local function valid_envelope(ticket_hash, record, secret)
   local record_json = assert(cjson.encode(record))
   return assert(cjson.encode({
     r = record_json,
-    m = hmac_sha256_hex(SECRET, ticket_hash .. "." .. record_json),
+    m = hmac_sha256_hex(secret or SECRET, ticket_hash .. "." .. record_json),
   }))
 end
 
-local function put_record(cfg, ticket, record)
+local function put_raw_record(cfg, ticket, record)
+  return redis_store.put(
+    cfg,
+    sha256_hex(ticket),
+    assert(cjson.encode(record))
+  )
+end
+
+local function put_record(cfg, ticket, record, secret)
   local ticket_hash = sha256_hex(ticket)
   record.exp = record.exp or (ngx.time() + cfg.ticket_ttl)
   return redis_store.put(
     cfg,
     ticket_hash,
-    valid_envelope(ticket_hash, record)
+    valid_envelope(ticket_hash, record, secret)
   )
 end
 
@@ -241,28 +250,21 @@ local function run()
       assert_equal("ws_ticket_unknown", replay_err.warning_reason)
     end)
 
-    it("accepts minimal signed records and clears unsupported headers", function()
+    it("rejects unsigned legacy records", function()
       reset_single()
       local state = reset_kong()
       local cfg = conf()
       local ticket = "legacy-ticket"
 
-      assert_truthy(put_record(cfg, ticket, {
+      assert_truthy(put_raw_record(cfg, ticket, {
         user_id = "legacy-user",
         company_id = "legacy-company",
       }))
 
       local ok, auth_err = consume(cfg, state, ticket)
-      assert_truthy(ok, cjson.encode(auth_err))
-      assert_equal("legacy-user", state.set_headers["x-user-id"])
-      assert_equal("legacy-company", state.set_headers["x-company-id"])
-      assert_equal(nil, state.set_headers["x-user-roles"])
-      assert_equal(nil, state.set_headers["x-company-name"])
-      assert_equal(nil, state.set_headers["x-company-domain"])
-      assert_truthy(state.cleared_headers["x-user-roles"])
-      assert_truthy(state.cleared_headers["x-company-name"])
-      assert_truthy(state.cleared_headers["x-company-domain"])
-      assert_truthy(state.cleared_headers["x-consumer-id"])
+      assert_falsy(ok)
+      assert_equal("ws_ticket_forged", auth_err.warning_reason)
+      assert_equal(nil, state.set_headers["x-user-id"])
       assert_equal(nil, state.authenticated_consumer)
     end)
 
@@ -340,6 +342,61 @@ local function run()
       assert_falsy(ok)
       assert_equal("ws_ticket_unknown", auth_err.warning_reason)
       assert_equal(nil, state.set_headers["x-consumer-id"])
+    end)
+
+    it("rejects a valid record copied to another ticket key", function()
+      reset_single()
+      local state = reset_kong()
+      local cfg = conf()
+      local real_ticket = "real-ticket"
+      local copied_ticket = "copied-ticket"
+      local real_hash = sha256_hex(real_ticket)
+      local copied_hash = sha256_hex(copied_ticket)
+      local envelope = valid_envelope(real_hash, {
+        user_id = "user-1",
+        company_id = "company-1",
+        exp = ngx.time() + 20,
+      })
+
+      assert_truthy(redis_store.put(cfg, copied_hash, envelope))
+      local authenticated, err = consume(cfg, state, copied_ticket)
+      assert_falsy(authenticated)
+      assert_equal("ws_ticket_forged", err.warning_reason)
+    end)
+
+    it("rejects a record signed with the wrong secret", function()
+      reset_single()
+      local state = reset_kong()
+      local cfg = conf()
+      local ticket = "wrong-secret-ticket"
+
+      assert_truthy(put_record(cfg, ticket, {
+        user_id = "user-1",
+        company_id = "company-1",
+      }, OTHER_SECRET))
+
+      local authenticated, err = consume(cfg, state, ticket)
+      assert_falsy(authenticated)
+      assert_equal("ws_ticket_forged", err.warning_reason)
+    end)
+
+    it("rejects an expired signed record even when Redis still holds it", function()
+      reset_single()
+      local state = reset_kong()
+      local cfg = conf({
+        ticket_ttl = 60,
+      })
+      local ticket = "expired-ticket"
+
+      assert_truthy(put_record(cfg, ticket, {
+        user_id = "user-1",
+        company_id = "company-1",
+        exp = ngx.time() - 1,
+      }))
+
+      local authenticated, err = consume(cfg, state, ticket)
+      assert_falsy(authenticated)
+      assert_equal("ws_ticket_expired", err.warning_reason)
     end)
   end)
 end
