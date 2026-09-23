@@ -30,6 +30,17 @@ local function validate_redis_topology(entity)
     return true
 end
 
+local function validate_ticket_record_secret(entity)
+    local config = entity.config or {}
+    if config.ws_ticket_enabled
+        and not is_non_empty_string(config.ticket_record_secret)
+    then
+        return nil, "ticket_record_secret is required when ws_ticket_enabled is true"
+    end
+
+    return true
+end
+
 local schema = {
     name = PLUGIN_NAME,
     fields = {{
@@ -233,6 +244,12 @@ local schema = {
                     default = {}
                 }
             }, {
+                ticket_record_secret = {
+                    type = "string",
+                    referenceable = true,
+                    len_min = 1
+                }
+            }, {
                 redis_cluster_enabled = {
                     type = "boolean",
                     default = false
@@ -318,6 +335,15 @@ local schema = {
                 "config.redis_database"
             },
             fn = validate_redis_topology,
+            run_with_missing_fields = true
+        }
+    }, {
+        custom_entity_check = {
+            field_sources = {
+                "config.ws_ticket_enabled",
+                "config.ticket_record_secret"
+            },
+            fn = validate_ticket_record_secret,
             run_with_missing_fields = true
         }
     }, {
