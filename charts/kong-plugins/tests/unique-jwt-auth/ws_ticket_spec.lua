@@ -2,6 +2,7 @@ local cjson = require "cjson.safe"
 local redis = require "resty.redis"
 local resty_sha256 = require "resty.sha256"
 local to_hex = require "resty.string".to_hex
+local openssl_hmac = require "resty.openssl.hmac"
 
 local runner = require "runner"
 local redis_store = require "kong.plugins.unique-jwt-auth.redis_store"
@@ -17,11 +18,17 @@ local REDIS_HOST = assert(os.getenv("REDIS_HOST"))
 local REDIS_PORT = tonumber(os.getenv("REDIS_PORT") or "6379")
 local SINGLE_DATABASE = 14
 local KEY_PREFIX = "ws_ticket_spec:"
+local SECRET = "ticket-record-secret"
 
 local function sha256_hex(value)
   local sha = resty_sha256:new()
   sha:update(value)
   return to_hex(sha:final())
+end
+
+local function hmac_sha256_hex(secret, value)
+  local hmac = assert(openssl_hmac.new(secret, "sha256"))
+  return to_hex(assert(hmac:final(value)))
 end
 
 local function connect()
@@ -59,6 +66,7 @@ local function conf(overrides)
     ticket_upgrade_paths = {"/graphql"},
     ticket_upgrade_path_suffixes = {},
     ticket_allowed_origins = {},
+    ticket_record_secret = SECRET,
   }
   for name, value in pairs(overrides or {}) do
     result[name] = value
@@ -150,11 +158,21 @@ local function reset_kong(shared, consumers)
   return state
 end
 
+local function valid_envelope(ticket_hash, record)
+  local record_json = assert(cjson.encode(record))
+  return assert(cjson.encode({
+    r = record_json,
+    m = hmac_sha256_hex(SECRET, ticket_hash .. "." .. record_json),
+  }))
+end
+
 local function put_record(cfg, ticket, record)
+  local ticket_hash = sha256_hex(ticket)
+  record.exp = record.exp or (ngx.time() + cfg.ticket_ttl)
   return redis_store.put(
     cfg,
-    sha256_hex(ticket),
-    assert(cjson.encode(record))
+    ticket_hash,
+    valid_envelope(ticket_hash, record)
   )
 end
 
@@ -223,7 +241,7 @@ local function run()
       assert_equal("ws_ticket_unknown", replay_err.warning_reason)
     end)
 
-    it("accepts legacy records and clears unsupported headers", function()
+    it("accepts minimal signed records and clears unsupported headers", function()
       reset_single()
       local state = reset_kong()
       local cfg = conf()

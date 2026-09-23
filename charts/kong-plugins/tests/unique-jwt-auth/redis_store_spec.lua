@@ -184,6 +184,7 @@ local function schema_entity(config)
   config.ws_ticket_enabled = true
   config.ticket_mint_paths = {"/auth/ticket"}
   config.ticket_upgrade_paths = {"/graphql"}
+  config.ticket_record_secret = config.ticket_record_secret or "secret"
   return {
     config = config,
   }
