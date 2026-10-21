@@ -29,16 +29,6 @@ prometheus:
       appRepoAuthMetricName: kong_unique_app_repo_auth_security_warnings_total
       # -- Per-alert configuration. Each entry controls enabled, severity, for, threshold (number of occurrences in interval), and interval (PromQL range window).
       rules:
-        # Fires when sum(increase(kong_unique_jwt_auth_security_warnings_total{reason="invalid_signature"}[interval])) > threshold.
-        # Measures: count of JWTs rejected because no current JWKS key for the issuer could verify the signature.
-        # Attack signal: issuer was allowed but signature verification failed after JWKS refresh. Near-zero baseline in prod.
-        KongJwtAuthInvalidSignature:
-          enabled: true
-          for: "0m"
-          severity: critical
-          threshold: 3
-          interval: "10m"
-
         # Fires when sum(increase(kong_unique_jwt_auth_security_warnings_total{reason="disallowed_issuer"}[interval])) > threshold.
         # Measures: count of JWTs whose 'iss' claim did not match any entry in allowed_iss.
         # Dev noise: devs pasting tokens from another environment. High volume may indicate reconnaissance.

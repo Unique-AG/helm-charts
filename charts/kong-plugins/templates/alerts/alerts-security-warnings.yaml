@@ -36,23 +36,6 @@ spec:
 {{- define "kongPlugins.jwtAuthRules" -}}
 {{- $jwtMetric := .Values.prometheus.defaultAlerts.securityWarnings.jwtAuthMetricName -}}
 {{- $rules := .Values.prometheus.defaultAlerts.securityWarnings.rules | default dict -}}
-{{- if dig "KongJwtAuthInvalidSignature" "enabled" true $rules }}
-      - alert: KongJwtAuthInvalidSignature
-        expr: |
-          sum(increase({{ $jwtMetric }}{reason="invalid_signature"}[{{ dig "KongJwtAuthInvalidSignature" "interval" "10m" $rules }}])) > {{ dig "KongJwtAuthInvalidSignature" "threshold" 3 $rules }}
-        for: {{ dig "KongJwtAuthInvalidSignature" "for" "0m" $rules }}
-        labels:
-          severity: {{ dig "KongJwtAuthInvalidSignature" "severity" "critical" $rules }}
-          alertGroup: security-warnings
-          {{- with .Values.prometheus.defaultAlerts.securityWarnings.additionalLabels }}
-          {{- toYaml . | nindent 10 }}
-          {{- end }}
-        annotations:
-          summary: "Kong JWT auth rejected tokens with invalid signatures"
-          description: |
-            JWTs were rejected because their signatures could not be verified against any known key for the issuer.
-            Loki: `{app="gateway"} |= "invalid signature"`
-{{- end }}
 {{- if dig "KongJwtAuthDisallowedIssuer" "enabled" true $rules }}
       - alert: KongJwtAuthDisallowedIssuer
         expr: |
