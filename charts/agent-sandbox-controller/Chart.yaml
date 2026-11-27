@@ -17,17 +17,9 @@ description: |
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
-    - kind: changed
-      description: Bumped upstream agent-sandbox to v1.0.1 (controller image, router image, and CRDs). Breaking — v1alpha1 and the conversion webhook are removed; upgrade through chart 0.5.6 first (see README).
-    - kind: removed
-      description: Conversion webhook Service, cert Secret Role/RoleBinding, webhook port 9443, webhook controller flags, and the `webhook` values block (upstream removed v1alpha1 and all webhook infrastructure).
-    - kind: removed
-      description: Controller ClusterRole rule patching CRD conversion webhook caBundles (no longer needed).
-    - kind: changed
-      description: Router now runs the official Go sandbox-router image (registry.k8s.io/agent-sandbox/sandbox-router-go) configured via flags, with metrics (9090) and health (8081) ports and /readyz readiness.
     - kind: added
-      description: Optional router Pod-IP cache (`router.cache.enabled`) with the ServiceAccount and RBAC it requires.
-    - kind: removed
-      description: files/migrate.sh (v1alpha1 storage migration happens on chart 0.5.6, before this upgrade).
-    - kind: removed
-      description: router.auth values — the Go router handles authorization via `--authz-mode` flags (default allow-all); use `router.extraArgs` for tokenreview mode.
+      description: "priorityClassName on the controller and on the router. Unset by default."
+    - kind: added
+      description: "service.trafficDistribution on both Services, resolved against the cluster version: PreferSameZone needs Kubernetes 1.34, 1.31-1.33 get the PreferClose alias, older clusters get no field. Empty by default."
+    - kind: added
+      description: "PodDisruptionBudgets for the controller and the router, each rendered only above one replica. Disabled by default."

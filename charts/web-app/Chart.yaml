@@ -15,7 +15,9 @@ sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/web-app
 annotations:
   artifacthub.io/changes: |
-    - kind: fixed
-      description: "When digest is passed to the image tag, the Deployments version labels strips it again to respect the length limit of kubernetes labels."
     - kind: added
-      description: "Explicit and native support for digest pinning."
+      description: "priorityClassName on the pods. Unset by default."
+    - kind: added
+      description: "service.trafficDistribution for zone-local routing, resolved against the cluster version: PreferSameZone needs Kubernetes 1.34, 1.31-1.33 get the PreferClose alias, older clusters get no field. Empty by default."
+    - kind: added
+      description: "topologySpreadConstraints to spread replicas across a topology domain, with the labelSelector derived by the chart. Disabled by default."
