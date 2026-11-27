@@ -92,7 +92,7 @@ unsupported value is rejected rather than ignored.
 {{- if $want -}}
 {{- if semverCompare ">=1.34-0" .Capabilities.KubeVersion.Version -}}
 {{ $want }}
-{{- else if and (eq $want "PreferSameZone") (semverCompare ">=1.31-0" .Capabilities.KubeVersion.Version) -}}
+{{- else if and (or (eq $want "PreferSameZone") (eq $want "PreferClose")) (semverCompare ">=1.31-0" .Capabilities.KubeVersion.Version) -}}
 PreferClose
 {{- end -}}
 {{- end -}}

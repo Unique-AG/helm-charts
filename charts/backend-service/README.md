@@ -21,7 +21,9 @@ helm install my-backend-service oci://ghcr.io/unique-ag/helm-charts/backend-serv
 
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-backend-service unique/backend-service --version 10.6.0
+# The frozen index holds only versions published before the April 2026
+# cutover, so no --version here.
+helm install my-backend-service unique/backend-service
 ```
 
 </details>

@@ -49,10 +49,10 @@ spec:
           whenUnsatisfiable: {{ .Values.topologySpreadConstraints.whenUnsatisfiable }}
           labelSelector:
             matchLabels:
-              {{- include "common.selectorLabels" . | nindent 10 }}
+              {{- include "common.selectorLabels" . | nindent 14 }}
       {{- end }}
       {{- if .Values.priorityClassName }}
-      priorityClassName: {{ .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName | quote }}
       {{- end }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:

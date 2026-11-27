@@ -973,6 +973,10 @@
       "type": "object",
       "description": "Pod Disruption Budget configuration",
       "properties": {
+        "countKedaMinReplicas": {
+          "type": "boolean",
+          "description": "Count keda.minReplicaCount towards the PodDisruptionBudget replica gate"
+        },
         "maxUnavailable": {
           "description": "Maximum number of unavailable pods",
           "oneOf": [{ "type": "string" }, { "type": "integer", "minimum": 0 }],

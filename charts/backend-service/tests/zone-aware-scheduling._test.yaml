@@ -3,102 +3,171 @@ suite: Zone-aware scheduling and the PDB gate
 release:
   name: ut
 tests:
-  - it: downgrades trafficDistribution to PreferClose below Kubernetes 1.34
-    templates: [service.yaml]
+  - it: adds nothing to the Service by default
+    templates:
+      - service.yaml
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1
+        - keda.sh/v1alpha1
+    asserts:
+      - notExists:
+          path: spec.trafficDistribution
+
+  - it: downgrades PreferSameZone to PreferClose below Kubernetes 1.34
+    templates:
+      - service.yaml
     capabilities:
       majorVersion: 1
       minorVersion: 33
       apiVersions:
         - gateway.networking.k8s.io/v1
         - keda.sh/v1alpha1
+    set:
+      service.trafficDistribution: PreferSameZone
     asserts:
-      - equal: {path: spec.trafficDistribution, value: PreferClose}
+      - equal:
+          path: spec.trafficDistribution
+          value: PreferClose
+
+  - it: keeps an explicitly chosen PreferClose below 1.34
+    templates:
+      - service.yaml
+    capabilities:
+      majorVersion: 1
+      minorVersion: 33
+      apiVersions:
+        - gateway.networking.k8s.io/v1
+        - keda.sh/v1alpha1
+    set:
+      service.trafficDistribution: PreferClose
+    asserts:
+      - equal:
+          path: spec.trafficDistribution
+          value: PreferClose
 
   - it: uses PreferSameZone from 1.34
-    templates: [service.yaml]
+    templates:
+      - service.yaml
     capabilities:
       majorVersion: 1
       minorVersion: 34
       apiVersions:
         - gateway.networking.k8s.io/v1
         - keda.sh/v1alpha1
+    set:
+      service.trafficDistribution: PreferSameZone
     asserts:
-      - equal: {path: spec.trafficDistribution, value: PreferSameZone}
+      - equal:
+          path: spec.trafficDistribution
+          value: PreferSameZone
 
-  - it: omits trafficDistribution where the field does not exist
-    templates: [service.yaml]
+  - it: omits the field where it does not exist
+    templates:
+      - service.yaml
     capabilities:
       majorVersion: 1
       minorVersion: 30
       apiVersions:
         - gateway.networking.k8s.io/v1
         - keda.sh/v1alpha1
-    asserts:
-      - notExists: {path: spec.trafficDistribution}
-
-  - it: omits trafficDistribution when cleared
-    templates: [service.yaml]
     set:
-      service.trafficDistribution: ""
+      service.trafficDistribution: PreferSameZone
+    asserts:
+      - notExists:
+          path: spec.trafficDistribution
+
+  - it: omits PreferSameNode below 1.34 rather than guessing
+    templates:
+      - service.yaml
+    capabilities:
+      majorVersion: 1
+      minorVersion: 33
+      apiVersions:
+        - gateway.networking.k8s.io/v1
+        - keda.sh/v1alpha1
+    set:
+      service.trafficDistribution: PreferSameNode
+    asserts:
+      - notExists:
+          path: spec.trafficDistribution
+
+  - it: adds no spread constraint by default
+    templates:
+      - deployment.yaml
     capabilities:
       apiVersions:
         - gateway.networking.k8s.io/v1
         - keda.sh/v1alpha1
     asserts:
-      - notExists: {path: spec.trafficDistribution}
+      - notExists:
+          path: spec.template.spec.topologySpreadConstraints
 
-  - it: spreads replicas across zones
-    templates: [deployment.yaml]
+  - it: nests the selector under matchLabels when enabled
+    templates:
+      - deployment.yaml
     capabilities:
       apiVersions:
         - gateway.networking.k8s.io/v1
         - keda.sh/v1alpha1
+    set:
+      topologySpreadConstraints.enabled: true
     asserts:
       - equal:
           path: spec.template.spec.topologySpreadConstraints[0].topologyKey
           value: topology.kubernetes.io/zone
       - equal:
-          path: spec.template.spec.topologySpreadConstraints[0].whenUnsatisfiable
-          value: ScheduleAnyway
+          path: spec.template.spec.topologySpreadConstraints[0].labelSelector.matchLabels["app.kubernetes.io/name"]
+          value: ut
 
-  - it: omits the spread constraint when disabled
-    templates: [deployment.yaml]
-    set:
-      topologySpreadConstraints.enabled: false
+  - it: leaves a KEDA workload without a budget by default
+    templates:
+      - pdb.yaml
     capabilities:
       apiVersions:
         - gateway.networking.k8s.io/v1
         - keda.sh/v1alpha1
-    asserts:
-      - notExists: {path: spec.template.spec.topologySpreadConstraints}
-
-  - it: renders a budget for a KEDA workload whose floor is above one
-    templates: [pdb.yaml]
     set:
       keda.enabled: true
       keda.minReplicaCount: 3
       keda.triggers.cpu-trigger.type: cpu
       keda.triggers.cpu-trigger.metricType: Utilization
       keda.triggers.cpu-trigger.metadata.value: "80"
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: counts the KEDA floor once asked
+    templates:
+      - pdb.yaml
     capabilities:
       apiVersions:
         - gateway.networking.k8s.io/v1
         - keda.sh/v1alpha1
-    asserts:
-      - hasDocuments: {count: 1}
-      - isKind: {of: PodDisruptionBudget}
-
-  - it: renders no budget for a KEDA workload that can sit at one
-    templates: [pdb.yaml]
     set:
+      pdb.countKedaMinReplicas: true
       keda.enabled: true
-      keda.minReplicaCount: 1
+      keda.minReplicaCount: 3
       keda.triggers.cpu-trigger.type: cpu
       keda.triggers.cpu-trigger.metricType: Utilization
       keda.triggers.cpu-trigger.metadata.value: "80"
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: PodDisruptionBudget
+
+  - it: accepts an explicit maxUnavailable of zero
+    templates:
+      - pdb.yaml
     capabilities:
       apiVersions:
         - gateway.networking.k8s.io/v1
         - keda.sh/v1alpha1
+    set:
+      replicaCount: 3
+      pdb.maxUnavailable: 0
     asserts:
-      - hasDocuments: {count: 0}
+      - equal:
+          path: spec.maxUnavailable
+          value: 0

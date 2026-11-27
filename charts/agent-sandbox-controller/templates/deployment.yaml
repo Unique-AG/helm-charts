@@ -20,7 +20,7 @@ spec:
       {{- end }}
     spec:
       {{- if .Values.priorityClassName }}
-      priorityClassName: {{ .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName | quote }}
       {{- end }}
       serviceAccountName: {{ include "agent-sandbox.fullname" . }}
       {{- with .Values.imagePullSecrets }}

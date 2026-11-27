@@ -58,7 +58,7 @@ spec:
           whenUnsatisfiable: {{ .Values.topologySpreadConstraints.whenUnsatisfiable }}
           labelSelector:
             matchLabels:
-              {{- include "backendService.selectorLabels" . | nindent 10 }}
+              {{- include "backendService.selectorLabels" . | nindent 14 }}
       {{- end }}
       {{- if .Values.priorityClassName }}
       priorityClassName: {{ .Values.priorityClassName }}

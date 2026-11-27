@@ -3,9 +3,19 @@ suite: PodDisruptionBudgets and priority
 release:
   name: ut
 tests:
-  - it: renders only the router budget at one controller replica
+  - it: renders no budget by default
     templates:
       - pdb.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders only the router budget when enabled at one controller replica
+    templates:
+      - pdb.yaml
+    set:
+      pdb.enabled: true
+      router.pdb.enabled: true
     asserts:
       - hasDocuments:
           count: 1
@@ -14,22 +24,21 @@ tests:
     templates:
       - pdb.yaml
     set:
+      pdb.enabled: true
+      router.pdb.enabled: true
       replicaCount: 2
     asserts:
       - hasDocuments:
           count: 2
 
-  - it: renders none when both are disabled
+  - it: sets no priority class unless asked
     templates:
-      - pdb.yaml
-    set:
-      pdb.enabled: false
-      router.pdb.enabled: false
+      - deployment.yaml
     asserts:
-      - hasDocuments:
-          count: 0
+      - notExists:
+          path: spec.template.spec.priorityClassName
 
-  - it: sets a priority class when asked
+  - it: quotes the priority class when asked
     templates:
       - deployment.yaml
     set:

@@ -21,7 +21,9 @@ helm install my-web-app oci://ghcr.io/unique-ag/helm-charts/web-app --version 5.
 
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-helm install my-web-app unique/web-app --version 5.4.0
+# The frozen index holds only versions published before the April 2026
+# cutover, so no --version here.
+helm install my-web-app unique/web-app
 ```
 
 </details>
@@ -216,15 +218,15 @@ You can find Network Policy examples in the [`ci/networkpolicy-values.yaml`](htt
 | securityContext.runAsNonRoot | bool | `true` | runAsNonRoot, controls if the container must run as a non-root user, defaults to 'true' |
 | securityContext.runAsUser | int | `1000` | runAsUser, controls the user ID that runs the container, defaults to '1000' |
 | service.port | int | `3000` |  |
-| service.trafficDistribution | string | `"PreferSameZone"` | trafficDistribution sends a request to a ready pod in the caller's zone when there is one. Empty disables it. PreferSameZone needs Kubernetes 1.34; on 1.31-1.33 the chart emits the PreferClose alias, and below that nothing. |
+| service.trafficDistribution | string | `""` | trafficDistribution sends a request to a ready pod in the caller's zone when there is one. Empty disables it. PreferSameZone needs Kubernetes 1.34; on 1.31-1.33 the chart emits the PreferClose alias, and below that nothing. |
 | service.type | string | `"ClusterIP"` |  |
 | serviceAccount.annotations | object | `{}` |  |
 | serviceAccount.enabled | bool | `false` |  |
 | serviceAccount.name | string | `""` |  |
 | strategy.type | string | `"RollingUpdate"` |  |
 | tolerations | list | `[]` |  |
-| topologySpreadConstraints | object | `{"enabled":true,"maxSkew":1,"topologyKey":"topology.kubernetes.io/zone","whenUnsatisfiable":"ScheduleAnyway"}` | topologySpreadConstraints spreads the replicas across a topology domain. The chart derives the labelSelector, so it cannot drift from the workload. |
-| topologySpreadConstraints.enabled | bool | `true` | Render the constraint. |
+| topologySpreadConstraints | object | `{"enabled":false,"maxSkew":1,"topologyKey":"topology.kubernetes.io/zone","whenUnsatisfiable":"ScheduleAnyway"}` | topologySpreadConstraints spreads the replicas across a topology domain. The chart derives the labelSelector, so it cannot drift from the workload. |
+| topologySpreadConstraints.enabled | bool | `false` | Render the constraint. |
 | topologySpreadConstraints.maxSkew | int | `1` | Permitted difference in pod count between domains. |
 | topologySpreadConstraints.topologyKey | string | `"topology.kubernetes.io/zone"` | Node label the domains are read from. |
 | topologySpreadConstraints.whenUnsatisfiable | string | `"ScheduleAnyway"` | ScheduleAnyway keeps a replacement schedulable when a domain is gone. |

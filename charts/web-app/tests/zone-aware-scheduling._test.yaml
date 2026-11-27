@@ -3,7 +3,17 @@ suite: Zone-aware scheduling and priority
 release:
   name: ut
 tests:
-  - it: downgrades trafficDistribution below Kubernetes 1.34
+  - it: adds nothing by default
+    templates:
+      - service.yaml
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1
+    asserts:
+      - notExists:
+          path: spec.trafficDistribution
+
+  - it: downgrades PreferSameZone below Kubernetes 1.34
     templates:
       - service.yaml
     capabilities:
@@ -11,6 +21,23 @@ tests:
       minorVersion: 33
       apiVersions:
         - gateway.networking.k8s.io/v1
+    set:
+      service.trafficDistribution: PreferSameZone
+    asserts:
+      - equal:
+          path: spec.trafficDistribution
+          value: PreferClose
+
+  - it: keeps an explicitly chosen PreferClose below 1.34
+    templates:
+      - service.yaml
+    capabilities:
+      majorVersion: 1
+      minorVersion: 33
+      apiVersions:
+        - gateway.networking.k8s.io/v1
+    set:
+      service.trafficDistribution: PreferClose
     asserts:
       - equal:
           path: spec.trafficDistribution
@@ -24,21 +51,38 @@ tests:
       minorVersion: 34
       apiVersions:
         - gateway.networking.k8s.io/v1
+    set:
+      service.trafficDistribution: PreferSameZone
     asserts:
       - equal:
           path: spec.trafficDistribution
           value: PreferSameZone
 
-  - it: spreads replicas across zones
+  - it: adds no spread constraint by default
     templates:
       - deployment.yaml
     capabilities:
       apiVersions:
         - gateway.networking.k8s.io/v1
     asserts:
+      - notExists:
+          path: spec.template.spec.topologySpreadConstraints
+
+  - it: nests the selector under matchLabels when enabled
+    templates:
+      - deployment.yaml
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1
+    set:
+      topologySpreadConstraints.enabled: true
+    asserts:
       - equal:
           path: spec.template.spec.topologySpreadConstraints[0].topologyKey
           value: topology.kubernetes.io/zone
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].labelSelector.matchLabels["app.kubernetes.io/name"]
+          value: ut
 
   - it: sets no priority class unless asked
     templates:
@@ -50,7 +94,7 @@ tests:
       - notExists:
           path: spec.template.spec.priorityClassName
 
-  - it: sets the priority class when asked
+  - it: quotes the priority class when asked
     templates:
       - deployment.yaml
     capabilities:

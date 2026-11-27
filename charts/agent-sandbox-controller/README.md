@@ -91,15 +91,15 @@ The Python SDK tunnel mode auto-discovers a service named `sandbox-router-svc`. 
 | metrics.serviceMonitor.scrapeTimeout | string | `""` | Scrape timeout. Omitted unless set. |
 | nameOverride | string | `""` | This is to override the release name. |
 | nodeSelector | object | `{}` | Node selector for the controller pod. |
-| pdb | object | `{"enabled":true,"maxUnavailable":1}` | PodDisruptionBudget for the controller. Rendered only above one replica. |
-| pdb.enabled | bool | `true` | Render the budget. |
+| pdb | object | `{"enabled":false,"maxUnavailable":1}` | PodDisruptionBudget for the controller. Rendered only above one replica. |
+| pdb.enabled | bool | `false` | Render the budget. |
 | pdb.maxUnavailable | int | `1` | Pods that may be unavailable during a voluntary disruption. |
 | podAnnotations | object | `{}` | Extra annotations added to the controller pod template. |
 | podLabels | object | `{}` | Extra labels added to the controller pod template (selector labels win on conflict). |
 | podSecurityContext | object | `{"fsGroup":65532,"runAsGroup":65532,"runAsNonRoot":true,"runAsUser":65532,"seccompProfile":{"type":"RuntimeDefault"}}` | Pod-level security context applied to the controller pod. |
 | replicaCount | int | `1` | Number of controller replicas. Leader election is used to elect a single active leader. |
 | resources | object | `{"limits":{"cpu":"500m","memory":"256Mi"},"requests":{"cpu":"100m","memory":"128Mi"}}` | Controller container resource requests and limits. |
-| router | object | `{"cache":{"enabled":false},"containerPort":8080,"containerSecurityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000},"enabled":true,"extraArgs":[],"image":{"digest":"sha256:25b1a09396306eb056ea5b81d6b5ac96ae685e785eb45c84b6416e7d7fac938e","pullPolicy":"IfNotPresent","repository":"registry.k8s.io/agent-sandbox/sandbox-router-go","tag":""},"livenessProbe":{"initialDelaySeconds":5,"path":"/healthz","periodSeconds":10},"networkPolicy":{"egress":{"sandboxNamespaceSelector":{},"sandboxPort":8888},"enabled":true,"ingress":{"allowedCIDRs":[],"allowedSources":[]}},"pdb":{"enabled":true,"maxUnavailable":1},"podSecurityContext":{"fsGroup":1000,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000,"seccompProfile":{"type":"RuntimeDefault"}},"proxyTimeoutSeconds":180,"readinessProbe":{"initialDelaySeconds":1,"path":"/readyz","periodSeconds":5},"replicaCount":2,"resources":{"limits":{"cpu":"250m","memory":"512Mi"},"requests":{"cpu":"250m","memory":"512Mi"}},"service":{"name":"","port":8080,"type":"ClusterIP"},"topologySpreadConstraints":{"enabled":true,"maxSkew":1,"topologyKey":"topology.kubernetes.io/zone","whenUnsatisfiable":"ScheduleAnyway"},"upstreamMaxRetries":3}` | Sandbox router subchart configuration. The router proxies traffic to sandbox pods and is required for the Python SDK tunnel mode. |
+| router | object | `{"cache":{"enabled":false},"containerPort":8080,"containerSecurityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000},"enabled":true,"extraArgs":[],"image":{"digest":"sha256:25b1a09396306eb056ea5b81d6b5ac96ae685e785eb45c84b6416e7d7fac938e","pullPolicy":"IfNotPresent","repository":"registry.k8s.io/agent-sandbox/sandbox-router-go","tag":""},"livenessProbe":{"initialDelaySeconds":5,"path":"/healthz","periodSeconds":10},"networkPolicy":{"egress":{"sandboxNamespaceSelector":{},"sandboxPort":8888},"enabled":true,"ingress":{"allowedCIDRs":[],"allowedSources":[]}},"pdb":{"enabled":false,"maxUnavailable":1},"podSecurityContext":{"fsGroup":1000,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000,"seccompProfile":{"type":"RuntimeDefault"}},"proxyTimeoutSeconds":180,"readinessProbe":{"initialDelaySeconds":1,"path":"/readyz","periodSeconds":5},"replicaCount":2,"resources":{"limits":{"cpu":"250m","memory":"512Mi"},"requests":{"cpu":"250m","memory":"512Mi"}},"service":{"name":"","port":8080,"type":"ClusterIP"},"topologySpreadConstraints":{"enabled":true,"maxSkew":1,"topologyKey":"topology.kubernetes.io/zone","whenUnsatisfiable":"ScheduleAnyway"},"upstreamMaxRetries":3}` | Sandbox router subchart configuration. The router proxies traffic to sandbox pods and is required for the Python SDK tunnel mode. |
 | router.cache | object | `{"enabled":false}` | Pod-IP cache: the router watches sandbox pods and dials the live pod IP instead of resolving DNS per request. |
 | router.cache.enabled | bool | `false` | Enable the cache. Creates a router ServiceAccount plus a ClusterRole to get/list/watch pods cluster-wide, and (with the NetworkPolicy) allows egress to the API server. Disabled means DNS-only routing. |
 | router.containerPort | int | `8080` | Container port the router proxy listens on inside the pod. |
@@ -120,8 +120,8 @@ The Python SDK tunnel mode auto-discovers a service named `sandbox-router-svc`. 
 | router.networkPolicy.ingress | object | `{"allowedCIDRs":[],"allowedSources":[]}` | Ingress rules. When both `allowedSources` and `allowedCIDRs` are empty no ingress rule is rendered. |
 | router.networkPolicy.ingress.allowedCIDRs | list | `[]` | List of CIDRs allowed to reach the router (e.g. `10.0.0.0/8`). |
 | router.networkPolicy.ingress.allowedSources | list | `[]` | List of `{ podSelector, namespaceSelector }` pairs allowed to reach the router. |
-| router.pdb | object | `{"enabled":true,"maxUnavailable":1}` | PodDisruptionBudget for the router. Rendered only above one replica. |
-| router.pdb.enabled | bool | `true` | Render the budget. |
+| router.pdb | object | `{"enabled":false,"maxUnavailable":1}` | PodDisruptionBudget for the router. Rendered only above one replica. |
+| router.pdb.enabled | bool | `false` | Render the budget. |
 | router.pdb.maxUnavailable | int | `1` | Pods that may be unavailable during a voluntary disruption. |
 | router.podSecurityContext | object | `{"fsGroup":1000,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000,"seccompProfile":{"type":"RuntimeDefault"}}` | Pod-level security context applied to the router pod. |
 | router.proxyTimeoutSeconds | int | `180` | Upstream proxy timeout in seconds the router applies when forwarding to sandboxes. |
@@ -135,9 +135,9 @@ The Python SDK tunnel mode auto-discovers a service named `sandbox-router-svc`. 
 | router.topologySpreadConstraints | object | `{"enabled":true,"maxSkew":1,"topologyKey":"topology.kubernetes.io/zone","whenUnsatisfiable":"ScheduleAnyway"}` | Spread router replicas across topology domains (defaults to zones). |
 | router.upstreamMaxRetries | int | `3` | Retry budget for upstream dial failures. |
 | securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsGroup":65532,"runAsNonRoot":true,"runAsUser":65532}` | Container-level security context applied to the controller container. |
-| service | object | `{"port":8080,"trafficDistribution":"PreferSameZone"}` | Controller `Service` settings. |
+| service | object | `{"port":8080,"trafficDistribution":""}` | Controller `Service` settings. |
 | service.port | int | `8080` | Service port exposing controller metrics. |
-| service.trafficDistribution | string | `"PreferSameZone"` | trafficDistribution sends a request to a ready pod in the caller's zone when there is one. Empty disables it. PreferSameZone needs Kubernetes 1.34; on 1.31-1.33 the chart emits the PreferClose alias, and below that nothing. |
+| service.trafficDistribution | string | `""` | trafficDistribution sends a request to a ready pod in the caller's zone when there is one. Empty disables it. PreferSameZone needs Kubernetes 1.34; on 1.31-1.33 the chart emits the PreferClose alias, and below that nothing. |
 | tolerations | list | `[]` | Tolerations for the controller pod. |
 
 ----------------------------------------------

@@ -17,7 +17,7 @@ spec:
         {{- include "agent-sandbox.router.selectorLabels" . | nindent 8 }}
     spec:
       {{- if .Values.router.priorityClassName }}
-      priorityClassName: {{ .Values.router.priorityClassName }}
+      priorityClassName: {{ .Values.router.priorityClassName | quote }}
       {{- end }}
       {{- if .Values.router.cache.enabled }}
       serviceAccountName: {{ include "agent-sandbox.router.name" . }}
