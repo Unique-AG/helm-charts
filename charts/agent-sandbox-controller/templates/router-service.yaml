@@ -8,7 +8,7 @@ metadata:
     {{- include "agent-sandbox.router.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.router.service.type }}
-  {{- with (include "agent-sandbox.trafficDistribution" .) }}
+  {{- with (include "agent-sandbox.trafficDistribution" (dict "want" .Values.router.service.trafficDistribution "ctx" .)) }}
   trafficDistribution: {{ . }}
   {{- end }}
   selector:

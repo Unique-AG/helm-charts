@@ -1,0 +1,67 @@
+suite: router Service trafficDistribution
+templates:
+  - router-service.yaml
+  - service.yaml
+tests:
+  - it: is absent by default
+    template: router-service.yaml
+    asserts:
+      - notExists:
+          path: spec.trafficDistribution
+
+  - it: renders as asked on 1.34 and above
+    template: router-service.yaml
+    set:
+      router.service.trafficDistribution: PreferSameZone
+    capabilities:
+      majorVersion: 1
+      minorVersion: 34
+    asserts:
+      - equal:
+          path: spec.trafficDistribution
+          value: PreferSameZone
+
+  - it: degrades PreferSameZone to PreferClose below 1.34
+    template: router-service.yaml
+    set:
+      router.service.trafficDistribution: PreferSameZone
+    capabilities:
+      majorVersion: 1
+      minorVersion: 33
+    asserts:
+      - equal:
+          path: spec.trafficDistribution
+          value: PreferClose
+
+  - it: omits the field entirely below 1.31
+    template: router-service.yaml
+    set:
+      router.service.trafficDistribution: PreferSameZone
+    capabilities:
+      majorVersion: 1
+      minorVersion: 30
+    asserts:
+      - notExists:
+          path: spec.trafficDistribution
+
+  - it: does not downgrade PreferSameNode, which has no predecessor
+    template: router-service.yaml
+    set:
+      router.service.trafficDistribution: PreferSameNode
+    capabilities:
+      majorVersion: 1
+      minorVersion: 33
+    asserts:
+      - notExists:
+          path: spec.trafficDistribution
+
+  - it: never reaches the controller Service, which only carries metrics
+    template: service.yaml
+    set:
+      router.service.trafficDistribution: PreferSameZone
+    capabilities:
+      majorVersion: 1
+      minorVersion: 34
+    asserts:
+      - notExists:
+          path: spec.trafficDistribution

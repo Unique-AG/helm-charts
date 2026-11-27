@@ -125,11 +125,12 @@ PreferSameTrafficDistribution gate — and the field is a validated enum, so an
 unsupported value is rejected rather than ignored.
 */}}
 {{- define "agent-sandbox.trafficDistribution" -}}
-{{- $want := .Values.service.trafficDistribution | default "" -}}
+{{- $want := .want | default "" -}}
+{{- $ctx := .ctx -}}
 {{- if $want -}}
-{{- if semverCompare ">=1.34-0" .Capabilities.KubeVersion.Version -}}
+{{- if semverCompare ">=1.34-0" $ctx.Capabilities.KubeVersion.Version -}}
 {{ $want }}
-{{- else if and (or (eq $want "PreferSameZone") (eq $want "PreferClose")) (semverCompare ">=1.31-0" .Capabilities.KubeVersion.Version) -}}
+{{- else if and (or (eq $want "PreferSameZone") (eq $want "PreferClose")) (semverCompare ">=1.31-0" $ctx.Capabilities.KubeVersion.Version) -}}
 PreferClose
 {{- end -}}
 {{- end -}}

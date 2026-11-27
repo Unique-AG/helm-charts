@@ -78,10 +78,6 @@ metrics:
 service:
   # -- Service port exposing controller metrics.
   port: 8080
-  # -- trafficDistribution sends a request to a ready pod in the caller's zone
-  # when there is one. Empty disables it. PreferSameZone needs Kubernetes 1.34;
-  # on 1.31-1.33 the chart emits the PreferClose alias, and below that nothing.
-  trafficDistribution: ""
 
 # -- Controller container resource requests and limits.
 resources:
@@ -156,6 +152,12 @@ router:
     type: ClusterIP
     # -- Service port exposed by the router.
     port: 8080
+    # -- trafficDistribution sends a request to a ready pod in the caller's zone
+    # when there is one. Empty disables it. PreferSameZone needs Kubernetes 1.34;
+    # on 1.31-1.33 the chart emits the PreferClose alias, and below that nothing.
+    # Only the router Service carries client traffic; the controller Service
+    # exposes metrics, which Prometheus scrapes per pod rather than through it.
+    trafficDistribution: ""
   # -- Container port the router proxy listens on inside the pod.
   containerPort: 8080
   # -- Upstream proxy timeout in seconds the router applies when forwarding to sandboxes.
