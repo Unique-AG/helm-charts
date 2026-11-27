@@ -17,21 +17,6 @@
       "type": "object",
       "description": "Affinity rules for pod placement"
     },
-    "priorityClassName": {
-      "type": "string",
-      "description": "PriorityClass name for the pods",
-      "examples": ["unique-product"]
-    },
-    "topologySpreadConstraints": {
-      "type": "object",
-      "description": "Zone spread for the pods",
-      "properties": {
-        "enabled": {"type": "boolean"},
-        "maxSkew": {"type": "integer", "minimum": 1},
-        "topologyKey": {"type": "string"},
-        "whenUnsatisfiable": {"type": "string", "enum": ["ScheduleAnyway", "DoNotSchedule"]}
-      }
-    },
     "autoscaling": {
       "type": "object",
       "description": "Horizontal Pod Autoscaler configuration",
@@ -706,11 +691,6 @@
       "type": "object",
       "description": "Kubernetes service configuration",
       "properties": {
-        "trafficDistribution": {
-          "type": "string",
-          "enum": ["PreferSameZone", "PreferSameNode", "PreferClose", ""],
-          "description": "Zone-aware endpoint selection; downgraded to PreferClose below Kubernetes 1.34"
-        },
         "type": {
           "type": "string",
           "enum": ["ClusterIP", "NodePort", "LoadBalancer", "ExternalName"],

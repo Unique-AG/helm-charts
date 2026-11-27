@@ -384,10 +384,6 @@ keda:
 # -- PodDisruptionBudget configuration
 # Note: If both maxUnavailable and minAvailable are set, minAvailable takes precedence
 pdb:
-  # -- Count keda.minReplicaCount towards the replica gate below. Off by
-  # default so upgrading the chart renders exactly what it did before: a
-  # KEDA-scaled workload gets a budget only once you ask for one.
-  countKedaMinReplicas: false
   # -- Maximum number of pods that can be unavailable during a disruption
   # Can be either a percentage (e.g., "30%") or an absolute number (e.g., "2")
   maxUnavailable: 30%
@@ -688,10 +684,6 @@ service:
   # -- extraLabels allows you to add additional labels to the service e.g. {"foo": "bar"}
   extraLabels: {}
   annotations: {}
-  # -- trafficDistribution sends a request to a ready pod in the caller's zone
-  # when there is one. Empty disables it. PreferSameZone needs Kubernetes 1.34;
-  # on 1.31-1.33 the chart emits the PreferClose alias, and below that nothing.
-  trafficDistribution: ""
 
 serviceAccount:
   enabled: true
@@ -718,15 +710,3 @@ workloadIdentity:
 volumeMounts: []
 
 volumes: []
-
-# -- topologySpreadConstraints spreads the replicas across a topology domain.
-# The chart derives the labelSelector, so it cannot drift from the workload.
-topologySpreadConstraints:
-  # -- Render the constraint.
-  enabled: false
-  # -- Permitted difference in pod count between domains.
-  maxSkew: 1
-  # -- Node label the domains are read from.
-  topologyKey: topology.kubernetes.io/zone
-  # -- ScheduleAnyway keeps a replacement schedulable when a domain is gone.
-  whenUnsatisfiable: ScheduleAnyway

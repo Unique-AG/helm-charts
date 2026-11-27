@@ -80,20 +80,3 @@ Create the name of the service account to use
 {{- define "webApp.imageVersion" -}}
 {{- .Values.image.tag | splitList "@" | first -}}
 {{- end -}}
-
-{{/*
-Resolve service.trafficDistribution for the cluster actually being targeted.
-PreferSameZone is only unconditionally valid from 1.34 — 1.33 has it behind the
-PreferSameTrafficDistribution gate — and the field is a validated enum, so an
-unsupported value is rejected rather than ignored.
-*/}}
-{{- define "common.trafficDistribution" -}}
-{{- $want := .Values.service.trafficDistribution | default "" -}}
-{{- if $want -}}
-{{- if semverCompare ">=1.34-0" .Capabilities.KubeVersion.Version -}}
-{{ $want }}
-{{- else if and (or (eq $want "PreferSameZone") (eq $want "PreferClose")) (semverCompare ">=1.31-0" .Capabilities.KubeVersion.Version) -}}
-PreferClose
-{{- end -}}
-{{- end -}}
-{{- end -}}

@@ -51,17 +51,8 @@ spec:
         azure.workload.identity/use: 'true'
         {{- end }}
     spec:
-      {{- if .Values.topologySpreadConstraints.enabled }}
-      topologySpreadConstraints:
-        - maxSkew: {{ .Values.topologySpreadConstraints.maxSkew }}
-          topologyKey: {{ .Values.topologySpreadConstraints.topologyKey | quote }}
-          whenUnsatisfiable: {{ .Values.topologySpreadConstraints.whenUnsatisfiable }}
-          labelSelector:
-            matchLabels:
-              {{- include "backendService.selectorLabels" . | nindent 14 }}
-      {{- end }}
       {{- if .Values.priorityClassName }}
-      priorityClassName: {{ .Values.priorityClassName | quote }}
+      priorityClassName: {{ .Values.priorityClassName }}
       {{- end }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:

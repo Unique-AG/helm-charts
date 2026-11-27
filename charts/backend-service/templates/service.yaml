@@ -11,9 +11,6 @@ metadata:
   {{- end }}
 spec:
   type: {{ .Values.service.type }}
-  {{- with (include "backendService.trafficDistribution" .) }}
-  trafficDistribution: {{ . }}
-  {{- end }}
   ports:
     - port: {{ include "backendService.servicePort" . }}
       targetPort: http

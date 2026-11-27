@@ -20,9 +20,7 @@ helm install my-{{ template "chart.name" . }} oci://ghcr.io/unique-ag/helm-chart
 
 ```sh
 helm repo add unique https://unique-ag.github.io/helm-charts/
-# The frozen index holds only versions published before the April 2026
-# cutover, so no --version here.
-helm install my-{{ template "chart.name" . }} unique/{{ template "chart.name" . }}
+helm install my-{{ template "chart.name" . }} unique/{{ template "chart.name" . }} --version {{ template "chart.version" . }}
 ```
 
 </details>

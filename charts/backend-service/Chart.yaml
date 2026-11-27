@@ -8,7 +8,7 @@ name: backend-service
 sources:
   - https://github.com/Unique-AG/helm-charts/tree/main/charts/backend-service
 # changes to consider on next major: enable netpol by default
-version: 10.6.0
+version: 10.5.1
 appVersion: latest
 description: |
   The 'backend-service' chart is a "convenience" chart from Unique AG that can generically be used to deploy backend workloads to Kubernetes.
@@ -17,11 +17,5 @@ description: |
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/changes: |
-    - kind: added
-      description: "service.trafficDistribution for zone-local routing, resolved against the cluster version: PreferSameZone needs Kubernetes 1.34, 1.31-1.33 get the PreferClose alias, older clusters get no field. Empty by default."
-    - kind: added
-      description: "topologySpreadConstraints to spread replicas across a topology domain, with the labelSelector derived by the chart. Disabled by default."
-    - kind: added
-      description: "pdb.countKedaMinReplicas, which counts keda.minReplicaCount towards the PodDisruptionBudget replica gate. Disabled by default; without it a KEDA-scaled workload still gets no budget."
     - kind: fixed
-      description: "An explicit pdb.maxUnavailable of 0 no longer fails the render as though it were unset."
+      description: "Render ArgoCD sync-wave -5 on hook ServiceAccounts so they are applied before hook Jobs."
