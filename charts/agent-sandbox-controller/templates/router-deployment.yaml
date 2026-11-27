@@ -16,6 +16,9 @@ spec:
       labels:
         {{- include "agent-sandbox.router.selectorLabels" . | nindent 8 }}
     spec:
+      {{- if .Values.router.priorityClassName }}
+      priorityClassName: {{ .Values.router.priorityClassName }}
+      {{- end }}
       {{- if .Values.router.cache.enabled }}
       serviceAccountName: {{ include "agent-sandbox.router.name" . }}
       {{- else }}

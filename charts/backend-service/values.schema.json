@@ -23,6 +23,29 @@
       "minimum": 0,
       "examples": [1]
     },
+    "topologySpreadConstraints": {
+      "type": "object",
+      "description": "Zone spread for the pods",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "maxSkew": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "topologyKey": {
+          "type": "string"
+        },
+        "whenUnsatisfiable": {
+          "type": "string",
+          "enum": [
+            "ScheduleAnyway",
+            "DoNotSchedule"
+          ]
+        }
+      }
+    },
     "affinity": {
       "type": "object",
       "description": "Kubernetes affinity rules"
@@ -1686,6 +1709,12 @@
         "annotations": {
           "type": "object",
           "description": "Annotations for the service"
+        },
+        "trafficDistribution": {
+          "type": "string",
+          "enum": ["PreferSameZone", "PreferSameNode", "PreferClose", ""],
+          "description": "Zone-aware endpoint selection; downgraded to PreferClose below Kubernetes 1.34",
+          "examples": ["PreferSameZone"]
         }
       }
     },

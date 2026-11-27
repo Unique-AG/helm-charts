@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: PodDisruptionBudgets and priority
+release:
+  name: ut
+tests:
+  - it: renders only the router budget at one controller replica
+    templates:
+      - pdb.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  - it: renders both once the controller has two
+    templates:
+      - pdb.yaml
+    set:
+      replicaCount: 2
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  - it: renders none when both are disabled
+    templates:
+      - pdb.yaml
+    set:
+      pdb.enabled: false
+      router.pdb.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: sets a priority class when asked
+    templates:
+      - deployment.yaml
+    set:
+      priorityClassName: unique-platform
+    asserts:
+      - equal:
+          path: spec.template.spec.priorityClassName
+          value: unique-platform

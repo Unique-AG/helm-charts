@@ -31,6 +31,13 @@ podLabels: {}
 # -- Number of controller replicas. Leader election is used to elect a single active leader.
 replicaCount: 1
 
+# -- PodDisruptionBudget for the controller. Rendered only above one replica.
+pdb:
+  # -- Render the budget.
+  enabled: true
+  # -- Pods that may be unavailable during a voluntary disruption.
+  maxUnavailable: 1
+
 # -- Enable the upstream sandbox extensions controller (`SandboxClaim`, `SandboxTemplate`, `SandboxWarmPool`).
 extensions:
   # -- Toggle the extensions controller and its RBAC.
@@ -71,6 +78,10 @@ metrics:
 service:
   # -- Service port exposing controller metrics.
   port: 8080
+  # -- trafficDistribution sends a request to a ready pod in the caller's zone
+  # when there is one. Empty disables it. PreferSameZone needs Kubernetes 1.34;
+  # on 1.31-1.33 the chart emits the PreferClose alias, and below that nothing.
+  trafficDistribution: PreferSameZone
 
 # -- Controller container resource requests and limits.
 resources:
@@ -113,10 +124,18 @@ affinity: {}
 # -- Sandbox router subchart configuration.
 # The router proxies traffic to sandbox pods and is required for the Python SDK tunnel mode.
 router:
+  # -- priorityClassName for the router pods
+  # priorityClassName: high-priority
   # -- Toggle the sandbox router deployment, service, and network policy.
   enabled: true
   # -- Number of router replicas.
   replicaCount: 2
+  # -- PodDisruptionBudget for the router. Rendered only above one replica.
+  pdb:
+    # -- Render the budget.
+    enabled: true
+    # -- Pods that may be unavailable during a voluntary disruption.
+    maxUnavailable: 1
   # -- Container image used by the router (official Go router).
   image:
     # -- This sets the router image repository.
@@ -207,3 +226,7 @@ router:
       sandboxPort: 8888
       # -- Namespace selector matching the namespace where sandboxes run. When unset the release namespace is used (`kubernetes.io/metadata.name: <release namespace>`).
       sandboxNamespaceSelector: {}
+
+# -- priorityClassName sets the priority class for pod scheduling priority
+# This can be used to ensure critical workloads are scheduled before less important ones
+# priorityClassName: high-priority

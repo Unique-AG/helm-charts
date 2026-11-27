@@ -6,6 +6,9 @@ metadata:
   labels:
     {{- include "agent-sandbox.controller.labels" . | nindent 4 }}
 spec:
+  {{- with (include "agent-sandbox.trafficDistribution" .) }}
+  trafficDistribution: {{ . }}
+  {{- end }}
   selector:
     {{- include "agent-sandbox.controller.selectorLabels" . | nindent 4 }}
   ports:

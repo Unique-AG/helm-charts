@@ -222,6 +222,10 @@ securityContext:
 service:
   type: ClusterIP
   port: 3000
+  # -- trafficDistribution sends a request to a ready pod in the caller's zone
+  # when there is one. Empty disables it. PreferSameZone needs Kubernetes 1.34;
+  # on 1.31-1.33 the chart emits the PreferClose alias, and below that nothing.
+  trafficDistribution: PreferSameZone
 
 serviceAccount:
   enabled: false
@@ -293,3 +297,19 @@ tolerations: []
 volumeMounts: []
 
 volumes: []
+
+# -- priorityClassName sets the priority class for pod scheduling priority
+# This can be used to ensure critical workloads are scheduled before less important ones
+# priorityClassName: high-priority
+
+# -- topologySpreadConstraints spreads the replicas across a topology domain.
+# The chart derives the labelSelector, so it cannot drift from the workload.
+topologySpreadConstraints:
+  # -- Render the constraint.
+  enabled: true
+  # -- Permitted difference in pod count between domains.
+  maxSkew: 1
+  # -- Node label the domains are read from.
+  topologyKey: topology.kubernetes.io/zone
+  # -- ScheduleAnyway keeps a replacement schedulable when a domain is gone.
+  whenUnsatisfiable: ScheduleAnyway

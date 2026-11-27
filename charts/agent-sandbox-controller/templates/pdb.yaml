@@ -1,0 +1,31 @@
+{{- /* Rendered only above one replica: at one, a percentage budget is
+       vacuous and an absolute one blocks every drain. */ -}}
+{{- if and .Values.pdb.enabled (gt (int .Values.replicaCount) 1) }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "agent-sandbox.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "agent-sandbox.controller.labels" . | nindent 4 }}
+spec:
+  maxUnavailable: {{ .Values.pdb.maxUnavailable }}
+  selector:
+    matchLabels:
+      {{- include "agent-sandbox.controller.selectorLabels" . | nindent 6 }}
+{{- end }}
+---
+{{- if and .Values.router.enabled .Values.router.pdb.enabled (gt (int .Values.router.replicaCount) 1) }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "agent-sandbox.router.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "agent-sandbox.router.labels" . | nindent 4 }}
+spec:
+  maxUnavailable: {{ .Values.router.pdb.maxUnavailable }}
+  selector:
+    matchLabels:
+      {{- include "agent-sandbox.router.selectorLabels" . | nindent 6 }}
+{{- end }}

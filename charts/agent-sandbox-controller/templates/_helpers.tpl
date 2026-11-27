@@ -117,3 +117,20 @@ Router selector labels
 app.kubernetes.io/component: router
 app: sandbox-router
 {{- end }}
+
+{{/*
+Resolve trafficDistribution for the cluster actually being targeted.
+PreferSameZone is only unconditionally valid from 1.34 — 1.33 has it behind the
+PreferSameTrafficDistribution gate — and the field is a validated enum, so an
+unsupported value is rejected rather than ignored.
+*/}}
+{{- define "agent-sandbox.trafficDistribution" -}}
+{{- $want := .Values.service.trafficDistribution | default "" -}}
+{{- if $want -}}
+{{- if semverCompare ">=1.34-0" .Capabilities.KubeVersion.Version -}}
+{{ $want }}
+{{- else if and (eq $want "PreferSameZone") (semverCompare ">=1.31-0" .Capabilities.KubeVersion.Version) -}}
+PreferClose
+{{- end -}}
+{{- end -}}
+{{- end -}}

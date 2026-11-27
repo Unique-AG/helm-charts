@@ -8,6 +8,9 @@ metadata:
     {{- include "agent-sandbox.router.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.router.service.type }}
+  {{- with (include "agent-sandbox.trafficDistribution" .) }}
+  trafficDistribution: {{ . }}
+  {{- end }}
   selector:
     {{- include "agent-sandbox.router.selectorLabels" . | nindent 4 }}
   ports:

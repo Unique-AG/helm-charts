@@ -1,5 +1,6 @@
 {{- if .Values.pdb }}
-{{- if or (gt (int .Values.replicaCount) 1) (and .Values.autoscaling.enabled (gt (int .Values.autoscaling.minReplicas) 1)) }}
+{{- /* A KEDA-scaled workload runs several pods without replicaCount or the HPA, so its floor counts too. */ -}}
+{{- if or (gt (int .Values.replicaCount) 1) (and .Values.autoscaling.enabled (gt (int .Values.autoscaling.minReplicas) 1)) (and .Values.keda.enabled (gt (int .Values.keda.minReplicaCount) 1)) }}
 {{- if and (not .Values.pdb.maxUnavailable) (not .Values.pdb.minAvailable) }}
 {{- fail "You must either set `.Values.pdb.maxUnavailable` or `.Values.pdb.minAvailable` when there is more than 1 replica configured." }}
 {{- else }}
